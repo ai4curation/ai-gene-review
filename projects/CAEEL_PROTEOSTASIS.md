@@ -1,3 +1,10 @@
+---
+title: "C. elegans Proteostasis Network Project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [worm]
+---
+
 # C. elegans Proteostasis Network Project
 
 ## Overview

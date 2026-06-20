@@ -1,4 +1,5 @@
 ---
+title: "ai-methods-tf-prediction-perplexity"
 provider: perplexity
 model: sonar-pro
 cached: false

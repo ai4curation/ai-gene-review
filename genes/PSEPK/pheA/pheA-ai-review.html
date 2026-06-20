@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pheA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pheA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88M06" target="_blank" class="term-link">
+                        Q88M06
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pheA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88M06" data-a="DESCRIPTION: Bifunctional chorismate mutase/prephenate dehydrat..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Bifunctional chorismate mutase/prephenate dehydratase (the bacterial P-protein). It catalyzes two consecutive steps that commit carbon from the shikimate pathway to L-phenylalanine biosynthesis. First, the chorismate mutase reaction (EC 5.4.99.5), a Claisen rearrangement converting chorismate to prephenate; second, the prephenate dehydratase reaction (EC 4.2.1.51), the decarboxylative dehydration of prephenate to phenylpyruvate, the keto-acid precursor of L-phenylalanine. The protein has a modular architecture comprising an N-terminal AroQ-type chorismate mutase domain, a central prephenate dehydratase domain, and a C-terminal ACT-like regulatory domain that mediates allosteric feedback inhibition by L-phenylalanine. In Pseudomonas putida KT2440 the enzyme is essential for endogenous phenylalanine synthesis; loss-of-function mutants are phenylalanine auxotrophs. The protein acts in the cytoplasm on intracellular chorismate and prephenate pools.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004106" target="_blank" class="term-link">
+                                    GO:0004106
+                                </a>
+                            </span>
+                            <span class="term-label">chorismate mutase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M06" data-a="GO:0004106" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. The N-terminal AroQ-type chorismate mutase domain catalyzes chorismate to prephenate (EC 5.4.99.5), supported by domain architecture, EC mapping, and the phenylalanine-auxotroph phenotype of KT2440 pheA mutants.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004664" target="_blank" class="term-link">
+                                    GO:0004664
+                                </a>
+                            </span>
+                            <span class="term-label">prephenate dehydratase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M06" data-a="GO:0004664" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. The prephenate dehydratase domain catalyzes prephenate to phenylpyruvate + CO2 + H2O (EC 4.2.1.51), the committed step toward L-phenylalanine. Well supported by domain architecture and EC mapping.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M06" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with this enzyme acting on intracellular chorismate/prephenate pools in core amino-acid metabolism. Distinct periplasmic AroQ chorismate mutases exist in pseudomonads but are a separate monofunctional class; this bifunctional P-protein is cytosolic.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008652" target="_blank" class="term-link">
+                                    GO:0008652
+                                </a>
+                            </span>
+                            <span class="term-label">amino acid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M06" data-a="GO:0008652" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but a high-level parent of the specific process (L-phenylalanine biosynthesis). Retained as accurate but non-core given the more precise child terms are also annotated.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009073" target="_blank" class="term-link">
+                                    GO:0009073
+                                </a>
+                            </span>
+                            <span class="term-label">aromatic amino acid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M06" data-a="GO:0009073" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct grouping term; phenylalanine is an aromatic amino acid. Less specific than L-phenylalanine biosynthetic process. Retained as accurate but non-core.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009094" target="_blank" class="term-link">
+                                    GO:0009094
+                                </a>
+                            </span>
+                            <span class="term-label">L-phenylalanine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M06" data-a="GO:0009094" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. pheA catalyzes the committed steps of phenylalanine biosynthesis; KT2440 disruption mutants are phenylalanine auxotrophs rescued by phenylalanine but not tyrosine, directly supporting this term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mini-Tn5 insertions in PP_1769 (pheA) produce phenylalanine auxotrophy in P. putida KT2440 (rescued by phenylalanine, not tyrosine), and the gene is operon-linked with serC and the tyrA-region genes, providing organism-specific experimental support beyond the IEA evidence (file:PSEPK/pheA/pheA-deep-research-falcon.md; PMID:21261884).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016829" target="_blank" class="term-link">
+                                    GO:0016829
+                                </a>
+                            </span>
+                            <span class="term-label">lyase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M06" data-a="GO:0016829" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Uninformative grand-parent of prephenate dehydratase activity (a lyase). Over-annotation when the specific EC 4.2.1.51 activity is already captured.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016836" target="_blank" class="term-link">
+                                    GO:0016836
+                                </a>
+                            </span>
+                            <span class="term-label">hydro-lyase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M06" data-a="GO:0016836" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Intermediate parent of prephenate dehydratase activity within the lyase branch. Less informative than the specific child term GO:0004664, which is annotated.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016853" target="_blank" class="term-link">
+                                    GO:0016853
+                                </a>
+                            </span>
+                            <span class="term-label">isomerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M06" data-a="GO:0016853" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Uninformative grand-parent of chorismate mutase activity (an intramolecular isomerase/transferase). Over-annotation when the specific EC 5.4.99.5 activity is already captured by GO:0004106.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046417" target="_blank" class="term-link">
+                                    GO:0046417
+                                </a>
+                            </span>
+                            <span class="term-label">chorismate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M06" data-a="GO:0046417" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate; chorismate is the substrate of the chorismate mutase step. A broader metabolic grouping than L-phenylalanine biosynthesis. Retained as accurate but non-core.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Chorismate mutase activity converting chorismate to prephenate, the first committed step diverting shikimate-pathway flux toward phenylalanine/tyrosine.</h3>
+                <span class="vote-buttons" data-g="Q88M06" data-a="FUNCTION: Chorismate mutase activity converting chorismate t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004106" target="_blank" class="term-link">
+                            chorismate mutase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009094" target="_blank" class="term-link">
+                                L-phenylalanine biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">chorismate mutase activity (EC 5.4.99.5); RHEA:13897 chorismate = prephenate.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Prephenate dehydratase activity converting prephenate to phenylpyruvate, the committed step toward L-phenylalanine; allosterically feedback-inhibited by L-phenylalanine via the C-terminal ACT-like domain.</h3>
+                <span class="vote-buttons" data-g="Q88M06" data-a="FUNCTION: Prephenate dehydratase activity converting prephen..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004664" target="_blank" class="term-link">
+                            prephenate dehydratase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009094" target="_blank" class="term-link">
+                                L-phenylalanine biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">prephenate dehydratase activity (EC 4.2.1.51); RHEA:21648 prephenate + H+ = 3-phenylpyruvate + CO2 + H2O.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21261884" target="_blank" class="term-link">
+                            PMID:21261884
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional analysis of aromatic biosynthetic pathways in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mini-Tn5 insertions in PP_1769 (pheA) cause phenylalanine auxotrophy in P. putida KT2440, rescued by phenylalanine but not tyrosine; pheA is operon-linked with serC and the tyrA-region genes, supporting its essential role in phenylalanine biosynthesis.</div>
+                        
+                        <div class="finding-text">"PP_1769 insertion mutants are phenylalanine auxotrophs in P. putida KT2440."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the chorismate mutase activity of P. putida KT2440 PheA strictly intramolecular (cytosolic P-protein) versus the separate periplasmic AroQ chorismate mutase class found in some pseudomonads?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88M06" data-a="Q: Is the chorismate mutase activity of P. putida KT2..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify recombinant Q88M06 and measure chorismate mutase and prephenate dehydratase kinetics, and test L-phenylalanine feedback inhibition of the prephenate dehydratase activity via the C-terminal ACT-like domain.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88M06" data-a="EXPERIMENT: Purify recombinant Q88M06 and measure chorismate m..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pheA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88M06" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">19 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:42:16.956326</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pheA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-phea-pp_1769-uniprot-q88m06-in-pseudomonas-putida-kt2440">Research report: <strong>pheA (PP_1769; UniProt Q88M06)</strong> in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-mandatory-identity-verification-disambiguation">0) Mandatory identity verification (disambiguation)</h3>
+<p>The target protein <strong>UniProt Q88M06</strong> corresponds to <em>Pseudomonas putida</em> strain KT2440 <strong>PP_1769</strong>, annotated as <strong>pheA</strong>, encoding a <strong>bifunctional chorismate mutase/prephenate dehydratase</strong> (often termed the bacterial “P-protein”). This assignment is supported by direct genetic-functional analysis in KT2440 showing that insertions in <strong>PP_1769</strong> confer <strong>phenylalanine auxotrophy</strong> and by operon mapping placing PP_1769 with other aromatic biosynthesis genes (molinahenares2009functionalanalysisof pages 6-7, molinahenares2009functionalanalysisof pages 1-2). This confirms that the gene symbol <strong>pheA</strong> matches the protein description provided (bifunctional CM/PDT enzyme).</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-the-chorismate-node-and-aromatic-amino-acid-branching">1.1 The chorismate node and aromatic amino-acid branching</h4>
+<p>In bacteria, <strong>chorismate</strong> is a central branch-point metabolite of the shikimate pathway. One major fate is conversion into <strong>prephenate</strong> via <strong>chorismate mutase</strong> activity; prephenate is then processed toward <strong>phenylalanine</strong> and <strong>tyrosine</strong> (dosselaere2001ametabolicnode pages 3-5). The importance of this “chorismate node” is that multiple pathways compete for chorismate, making enzymes such as PheA key control points for flux partitioning (dosselaere2001ametabolicnode pages 3-5).</p>
+<h4 id="12-phea-bifunctional-chorismate-mutaseprephenate-dehydratase">1.2 PheA (bifunctional chorismate mutase/prephenate dehydratase)</h4>
+<p>Bacterial <strong>PheA</strong> proteins are <strong>two-domain (bifunctional)</strong> enzymes that couple:<br />
+- <strong>Chorismate mutase (CM; EC 5.4.99.5):</strong> catalyzes <strong>chorismate → prephenate</strong> (a Claisen rearrangement) (dosselaere2001ametabolicnode pages 3-5).<br />
+- <strong>Prephenate dehydratase (PDT; EC 4.2.1.51):</strong> converts <strong>prephenate → phenylpyruvate</strong> (the keto-acid precursor of L-phenylalanine) (dosselaere2001ametabolicnode pages 3-5).</p>
+<p>This functional definition is consistent with <em>Pseudomonas</em> KT2440 genetics: disrupting PP_1769 blocks phenylalanine biosynthesis (molinahenares2009functionalanalysisof pages 6-7, molinahenares2009functionalanalysisof pages 1-2).</p>
+<h4 id="13-regulatory-concept-phenylalanine-feedback-inhibition-act-like-regulatory-region">1.3 Regulatory concept: phenylalanine feedback inhibition (ACT-like regulatory region)</h4>
+<p>A central property of many bacterial PheA enzymes is <strong>allosteric feedback inhibition by L-phenylalanine</strong>. Authoritative biochemical dissection of model bacterial PheA shows a <strong>separable C-terminal regulatory region</strong> required for full phenylalanine-mediated inhibition; truncation abolishes feedback inhibition and alters substrate affinity (zhang1998chorismatemutaseprephenatedehydratase pages 5-6). Reviews of chorismate-utilizing enzymes similarly describe PheA as allosterically inhibited by phenylalanine with conformational/oligomeric effects (dosselaere2001ametabolicnode pages 3-5).</p>
+<hr />
+<h3 id="2-geneprotein-function-in-pseudomonas-putida-kt2440-primary-evidence">2) Gene/protein function in <em>Pseudomonas putida</em> KT2440 (primary evidence)</h3>
+<h4 id="21-essential-role-in-phenylalanine-biosynthesis-mutant-phenotypes">2.1 Essential role in phenylalanine biosynthesis (mutant phenotypes)</h4>
+<p>A functional genetic analysis in <em>P. putida</em> KT2440 found multiple independent mini-Tn5 insertions in <strong>PP_1769 (pheA)</strong> (insertions reported at codons 6, 37, 42, and 120) that produced mutants whose growth was restored by <strong>phenylalanine</strong> supplementation but <strong>not by tyrosine</strong>, demonstrating <strong>phenylalanine auxotrophy</strong> and arguing against a tyrosine→phenylalanine bypass in this organism (molinahenares2009functionalanalysisof pages 6-7). This provides organism-specific evidence that PP_1769 is required for endogenous phenylalanine synthesis.</p>
+<h4 id="22-operongenomic-context-linkage-to-aromatic-biosynthesis-genes">2.2 Operon/genomic context: linkage to aromatic biosynthesis genes</h4>
+<p>In KT2440, <strong>PP_1769 (pheA)</strong> is tightly linked to aromatic biosynthesis genes: PP_1769 overlaps <strong>serC</strong> by 6 nucleotides and lies 61 nucleotides from <strong>PP_1770</strong>, and RT-PCR supports that <strong>pheA forms an operon with serC and also with PP_1770 (tyrA; prephenate dehydrogenase)</strong> (molinahenares2009functionalanalysisof pages 6-7). This genomic organization strengthens the functional inference that PP_1769 is part of the aromatic amino-acid biosynthetic module in KT2440.</p>
+<hr />
+<h3 id="3-regulation-and-substrate-specificity-evidence-and-inference">3) Regulation and substrate specificity (evidence and inference)</h3>
+<h4 id="31-catalytic-specificity-at-the-pathway-level">3.1 Catalytic specificity at the pathway level</h4>
+<p>The KT2440 mutant phenotypes demonstrate that disrupting pheA blocks phenylalanine synthesis upstream of phenylalanine formation (molinahenares2009functionalanalysisof pages 6-7). While the KT2440 papers retrieved here do not report purified-enzyme kinetics, authoritative biochemical studies of PheA family proteins show that PheA catalyzes the two-step CM/PDT route committing carbon toward <strong>phenylpyruvate</strong> (and thus L-phenylalanine) (dosselaere2001ametabolicnode pages 3-5, zhang1998chorismatemutaseprephenatedehydratase pages 3-5). </p>
+<h4 id="32-feedback-inhibition-by-aromatic-amino-acids-expert-biochemical-characterization">3.2 Feedback inhibition by aromatic amino acids (expert biochemical characterization)</h4>
+<p>Detailed biochemical domain studies of bacterial PheA show that phenylalanine is a strong inhibitor of the dehydratase activity and that the C-terminal regulatory region is required for full feedback control (zhang1998chorismatemutaseprephenatedehydratase pages 5-6, zhang1998chorismatemutaseprephenatedehydratase pages 3-5). A chorismate-node review further describes phenylalanine binding as causing conformational changes and shifts in oligomeric state linked to decreased activity (dosselaere2001ametabolicnode pages 3-5).</p>
+<h4 id="33-pseudomonas-specific-recent-evidence-engineering-feedback-insensitive-phea-to-increase-phenylalanine-supply-2024">3.3 Pseudomonas-specific recent evidence: engineering feedback-insensitive PheA to increase phenylalanine supply (2024)</h4>
+<p>A 2024 study in <em>Pseudomonas putida</em> DOT-T1E (a different <em>P. putida</em> strain, but the same enzyme class and pathway role) identified intracellular <strong>L-phenylalanine</strong> as a limiting substrate for <strong>2-phenylethanol (2-PE)</strong> production and introduced a chorismate mutase/prephenate dehydratase variant described as <strong>insensitive to feedback inhibition by aromatic amino acids</strong>. This intervention increased phenylalanine availability and improved 2-PE titers (godoy2024biosynthesisoffragrance pages 1-2). This provides recent, experimentally supported <em>Pseudomonas</em> evidence that PheA-like feedback control materially constrains flux toward phenylalanine-derived products.</p>
+<hr />
+<h3 id="4-subcellular-localization-and-site-of-action">4) Subcellular localization and site of action</h3>
+<h4 id="41-most-likely-localization-of-kt2440-phea">4.1 Most likely localization of KT2440 PheA</h4>
+<p>No direct subcellular localization experiment for <strong>KT2440 PP_1769/PheA</strong> was found in the retrieved full texts. However, the biochemical role of PheA is within core cytosolic metabolism (shikimate pathway branch), and bifunctional PheA enzymes in bacteria are typically treated as cytosolic enzymes acting on intracellular chorismate and prephenate pools (supported indirectly by the genetic/physiological phenotypes in KT2440) (molinahenares2009functionalanalysisof pages 6-7, molinahenares2009functionalanalysisof pages 1-2).</p>
+<h4 id="42-distinguishing-from-periplasmic-chorismate-mutases-in-pseudomonas">4.2 Distinguishing from periplasmic chorismate mutases in <em>Pseudomonas</em></h4>
+<p>Importantly, <em>Pseudomonas</em> can also encode <strong>periplasm-localized monofunctional AroQ chorismate mutases</strong> (“<em>AroQ”), shown experimentally in </em>Pseudomonas aeruginosa<em> as periplasmic proteins (calhoun2001theemergingperiplasmlocalized pages 1-2). These are </em><em>not</em>* the same as the KT2440 PP_1769 bifunctional PheA (which is genetically tied to cytosolic aromatic biosynthesis genes and is required for phenylalanine prototrophy). This distinction reduces risk of misannotation when interpreting chorismate mutase activity in Pseudomonads (molinahenares2009functionalanalysisof pages 6-7, calhoun2001theemergingperiplasmlocalized pages 1-2).</p>
+<hr />
+<h3 id="5-recent-developments-and-latest-research-emphasis-on-20232024">5) Recent developments and latest research (emphasis on 2023–2024)</h3>
+<h4 id="51-2024-phenylalanine-supply-as-a-bottleneck-for-phenylalanine-derived-aromatics-in-pseudomonas">5.1 2024: phenylalanine supply as a bottleneck for phenylalanine-derived aromatics in <em>Pseudomonas</em></h4>
+<p>Godoy et al. (published <strong>April 2024</strong>) engineered <em>P. putida</em> DOT‑T1E strains for fragrance <strong>2‑phenylethanol</strong> production via the Ehrlich pathway and found phenylalanine supply limiting. Introducing a feedback-insensitive CM/PDT (PheA-class) enzyme increased phenylalanine and improved 2‑PE production, and further random mutagenesis increased titers (godoy2024biosynthesisoffragrance pages 1-2). URL: https://doi.org/10.1186/s13068-024-02498-1 (godoy2024biosynthesisoffragrance pages 1-2).</p>
+<p>Although this is not KT2440 specifically, it is a close-strain <em>P. putida</em> demonstration aligning with the known regulatory role of PheA and is directly relevant for functional annotation in the <em>Pseudomonas</em> context (godoy2024biosynthesisoffragrance pages 1-2).</p>
+<h4 id="52-2023-gap-note">5.2 2023 gap note</h4>
+<p>Within the retrieved corpus, no 2023 primary paper directly characterizing <strong>KT2440 PP_1769/PheA biochemistry</strong> (e.g., kinetics/structure) was obtained. Therefore, KT2440-specific “latest research” in 2023 cannot be asserted here beyond engineering/physiology already cited.</p>
+<hr />
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-redirecting-chorismate-away-from-phenylalaninetyrosine-toward-product-formation-kt2440-phba">6.1 Redirecting chorismate away from phenylalanine/tyrosine toward product formation (KT2440; PHBA)</h4>
+<p>A clear implementation in <em>P. putida</em> KT2440 is metabolic engineering for <strong>para-hydroxybenzoic acid (PHBA)</strong> production from glucose. In this strategy, <strong>pheA was deleted</strong> (along with other edits) specifically to remove competition for chorismate and redirect flux toward PHBA formation (yu2016metabolicengineeringof pages 1-3, yu2016metabolicengineeringof pages 5-6). In fed-batch fermentation, the best engineered strain achieved <strong>1.73 g/L PHBA</strong> and <strong>18.1% carbon yield (C-mol/C-mol)</strong> (yu2016metabolicengineeringof pages 5-6). URL: https://doi.org/10.3389/fbioe.2016.00090 (published <strong>Nov 2016</strong>) (yu2016metabolicengineeringof pages 5-6).</p>
+<h4 id="62-increasing-phenylalanine-derived-product-formation-by-relieving-feedback-inhibition-pseudomonas-2-pe">6.2 Increasing phenylalanine-derived product formation by relieving feedback inhibition (Pseudomonas; 2-PE)</h4>
+<p>Conversely, when the product goal is phenylalanine-derived aromatics (e.g., <strong>2‑phenylethanol</strong>), engineering strategies can increase flux through PheA by relieving feedback control. In <em>P. putida</em> DOT-T1E, introduction of a feedback-insensitive CM/PDT enzyme increased 2‑PE production and enabled use of agricultural waste-derived sugar mixtures as substrates (godoy2024biosynthesisoffragrance pages 1-2).</p>
+<hr />
+<h3 id="7-expert-opinions-and-authoritative-analysis-interpretation">7) Expert opinions and authoritative analysis (interpretation)</h3>
+<h4 id="71-why-phea-is-a-high-leverage-annotation-target">7.1 Why pheA is a “high-leverage” annotation target</h4>
+<p>Reviews of chorismate-utilizing enzymes emphasize that the chorismate node is a heavily competed metabolic branchpoint, and that enzymes like PheA combine catalytic commitment with tight allosteric regulation by end products such as phenylalanine (dosselaere2001ametabolicnode pages 3-5). This explains why pheA deletions can strongly redirect chorismate to alternative products (e.g., PHBA) and why feedback-insensitive variants can boost phenylalanine supply for downstream synthesis (yu2016metabolicengineeringof pages 5-6, godoy2024biosynthesisoffragrance pages 1-2).</p>
+<h4 id="72-regulatory-domain-modularity">7.2 Regulatory domain modularity</h4>
+<p>Biochemical domain dissection of PheA shows that the regulatory region is separable from catalytic fragments, and removal can abolish phenylalanine feedback inhibition (zhang1998chorismatemutaseprephenatedehydratase pages 5-6). This modularity underlies a common metabolic engineering tactic: creating or importing <strong>feedback-resistant</strong> variants to increase flux (as reflected in the 2024 <em>Pseudomonas</em> work) (godoy2024biosynthesisoffragrance pages 1-2, zhang1998chorismatemutaseprephenatedehydratase pages 5-6).</p>
+<hr />
+<h3 id="8-relevant-statistics-and-data-points-from-recent-and-key-studies">8) Relevant statistics and data points (from recent and key studies)</h3>
+<p>Key quantitative outcomes directly tied to manipulating the PheA node include:<br />
+- <strong>PHBA production (KT2440)</strong>: <strong>1.73 g/L</strong> maximum titer; <strong>18.1% C-mol/C-mol carbon yield</strong> in a non-optimized fed-batch fermentation; engineering included deletion of <strong>pheA</strong> to reduce chorismate consumption by aromatic amino-acid biosynthesis (yu2016metabolicengineeringof pages 5-6, yu2016metabolicengineeringof pages 1-3).<br />
+- <strong>2-phenylethanol production (P. putida DOT-T1E; 2024)</strong>: baseline production with glucose about <strong>50–60 ppm</strong>, increasing to about <strong>100 ppm</strong> after introducing a feedback-insensitive CM/PDT variant, and up to <strong>120 ppm</strong> after additional random mutagenesis (godoy2024biosynthesisoffragrance pages 1-2).</p>
+<hr />
+<h3 id="9-consolidated-functional-annotation-summary-table">9) Consolidated functional-annotation summary (table)</h3>
+<p>The following table consolidates direct KT2440 evidence, family-level biochemical understanding, and application-level data.</p>
+<table>
+<thead>
+<tr>
+<th>Gene/locus</th>
+<th>Protein name</th>
+<th>EC numbers</th>
+<th>Domains</th>
+<th>Primary reactions</th>
+<th>Pathway role</th>
+<th>Key experimental evidence in <em>P. putida</em> KT2440</th>
+<th>Evidence of regulation</th>
+<th>Applications</th>
+<th>Key quantitative data</th>
+<th>Primary source (year, URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>pheA / PP_1769 / UniProt Q88M06</strong></td>
+<td>Bifunctional chorismate mutase/prephenate dehydratase (“P-protein”)</td>
+<td><strong>EC 5.4.99.5</strong> (chorismate mutase); <strong>EC 4.2.1.51</strong> (prephenate dehydratase)</td>
+<td>N-terminal chorismate mutase (CM) catalytic region; prephenate dehydratase (PDT) catalytic region; C-terminal ACT-like regulatory domain inferred from family/domain architecture and bacterial PheA literature</td>
+<td><strong>Chorismate → prephenate</strong> (CM step); <strong>prephenate → phenylpyruvate + H2O + CO2</strong> (PDT step), committing flux toward phenylalanine biosynthesis (dosselaere2001ametabolicnode pages 3-5, zhang1998chorismatemutaseprephenatedehydratase pages 3-5)</td>
+<td>Branch-point enzyme at the chorismate node directing carbon from the shikimate pathway into the phenylalanine branch; competes with other chorismate-consuming pathways</td>
+<td>Mini-Tn5 insertions in <strong>PP_1769</strong> caused <strong>phenylalanine auxotrophy</strong>; growth restored by phenylalanine but not tyrosine. RT-PCR showed <strong>serC–pheA–PP1770/tyrA</strong> operon linkage; PP_1769 overlaps <strong>serC</strong> by 6 nt and lies 61 nt from <strong>PP1770</strong>. Deletion of <strong>pheA</strong> in KT2440 was also used to redirect chorismate flux in engineering studies (molinahenares2009functionalanalysisof pages 6-7, molinahenares2009functionalanalysisof pages 1-2, yu2016metabolicengineeringof pages 5-6)</td>
+<td>Canonical bacterial PheA enzymes are allosterically <strong>feedback-inhibited by L-phenylalanine</strong>, mediated by a separable C-terminal regulatory region/ACT-like domain; Phe strongly inhibits PDT activity and alters oligomerization in model bacterial PheA proteins (dosselaere2001ametabolicnode pages 3-5, zhang1998chorismatemutaseprephenatedehydratase pages 5-6, zhang1998chorismatemutaseprephenatedehydratase pages 3-5). In <em>Pseudomonas</em>, engineered <strong>feedback-insensitive CM/PDT (PheA) variants</strong> were introduced to raise intracellular phenylalanine and downstream product formation (godoy2024biosynthesisoffragrance pages 1-2)</td>
+<td><strong>PHBA production:</strong> deleting <strong>pheA</strong> in KT2440 removes competition for chorismate, improving precursor availability for para-hydroxybenzoic acid production. <strong>2-Phenylethanol (2-PE):</strong> relieving CM/PDT feedback inhibition increased phenylalanine supply and improved 2-PE production in <em>Pseudomonas</em> strains (yu2016metabolicengineeringof pages 5-6, yu2016metabolicengineeringof pages 1-3, godoy2024biosynthesisoffragrance pages 1-2)</td>
+<td>PHBA in engineered KT2440 reached <strong>1.73 g/L</strong> maximum titer and <strong>18.1% C-mol/C-mol</strong> carbon yield in fed-batch; strategy included <strong>pheA deletion</strong> (yu2016metabolicengineeringof pages 5-6, yu2016metabolicengineeringof pages 1-3). In <em>Pseudomonas putida</em> DOT-T1E derivatives, introducing a feedback-insensitive CM/PDT increased 2-PE to about <strong>100 ppm</strong>, with random mutagenesis pushing titers to <strong>120 ppm</strong> (godoy2024biosynthesisoffragrance pages 1-2)</td>
+<td>Molina-Henares et al., <strong>2009</strong>, https://doi.org/10.1111/j.1751-7915.2008.00062.x ; Yu et al., <strong>2016</strong>, https://doi.org/10.3389/fbioe.2016.00090 ; Godoy et al., <strong>2024</strong>, https://doi.org/10.1186/s13068-024-02498-1</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes verified functional annotation evidence for </em>Pseudomonas putida<em> KT2440 pheA/PP_1769 (UniProt Q88M06), including catalytic role, operon/genetic evidence, regulation, and engineering applications. It is useful for quickly separating direct KT2440 evidence from broader family-level regulatory inference.</em></p>
+<hr />
+<h3 id="10-evidence-gaps-and-confidence-statement">10) Evidence gaps and confidence statement</h3>
+<ul>
+<li><strong>High confidence (KT2440-specific):</strong> PP_1769 (pheA) is required for phenylalanine biosynthesis; disruption causes phenylalanine auxotrophy; gene is operon-linked with serC and tyrA-region genes (molinahenares2009functionalanalysisof pages 6-7, molinahenares2009functionalanalysisof pages 1-2).</li>
+<li><strong>High confidence (family-level biochemistry):</strong> PheA catalyzes chorismate→prephenate and prephenate→phenylpyruvate and is feedback inhibited by phenylalanine via a separable regulatory region (dosselaere2001ametabolicnode pages 3-5, zhang1998chorismatemutaseprephenatedehydratase pages 5-6, zhang1998chorismatemutaseprephenatedehydratase pages 3-5).</li>
+<li><strong>Moderate confidence (KT2440 localization):</strong> No KT2440-specific localization assay was retrieved; by pathway context it is most consistent with <strong>cytosolic</strong> function. Distinct periplasmic chorismate mutases exist in Pseudomonads but represent a different enzyme class (calhoun2001theemergingperiplasmlocalized pages 1-2).</li>
+</ul>
+<hr />
+<h3 id="key-references-publication-dates-and-urls">Key references (publication dates and URLs)</h3>
+<ul>
+<li>Molina-Henares MA et al. <strong>Dec 2009</strong>. <em>Functional analysis of aromatic biosynthetic pathways in Pseudomonas putida KT2440</em>. Microbial Biotechnology. https://doi.org/10.1111/j.1751-7915.2008.00062.x (molinahenares2009functionalanalysisof pages 6-7)</li>
+<li>Yu S et al. <strong>Nov 2016</strong>. <em>Metabolic engineering of Pseudomonas putida KT2440 for the production of para-hydroxy benzoic acid</em>. Frontiers in Bioengineering and Biotechnology. https://doi.org/10.3389/fbioe.2016.00090 (yu2016metabolicengineeringof pages 5-6)</li>
+<li>Godoy P et al. <strong>Apr 2024</strong>. <em>Biosynthesis of fragrance 2-phenylethanol from sugars by Pseudomonas putida</em>. Biotechnology for Biofuels and Bioproducts. https://doi.org/10.1186/s13068-024-02498-1 (godoy2024biosynthesisoffragrance pages 1-2)</li>
+<li>Dosselaere F, Vanderleyden J. <strong>Jan 2001</strong>. <em>A metabolic node in action: chorismate-utilizing enzymes in microorganisms</em>. Critical Reviews in Microbiology. https://doi.org/10.1080/20014091096710 (dosselaere2001ametabolicnode pages 3-5)</li>
+<li>Calhoun DH et al. <strong>Jul 2001</strong>. <em>The emerging periplasm-localized subclass of AroQ chorismate mutases…</em>. Genome Biology. https://doi.org/10.1186/gb-2001-2-8-research0030 (calhoun2001theemergingperiplasmlocalized pages 1-2)</li>
+<li>Zhang S et al. <strong>1998</strong>. <em>Chorismate mutase-prephenate dehydratase from E. coli: study of catalytic and regulatory domains…</em> (domain/feedback analysis) (zhang1998chorismatemutaseprephenatedehydratase pages 5-6)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 6-7): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 1-2): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dosselaere2001ametabolicnode pages 3-5): Filip Dosselaere and J. Vanderleyden. A metabolic node in action: chorismate-utilizing enzymes in microorganisms. Critical Reviews in Microbiology, 27:131-75, Jan 2001. URL: https://doi.org/10.1080/20014091096710, doi:10.1080/20014091096710. This article has 254 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang1998chorismatemutaseprephenatedehydratase pages 5-6): S Zhang, G Pohnert, P Kongsaeree, and DB Wilson. Chorismate mutase-prephenate dehydratase from escherichia coli: study of catalytic and regulatory domains using genetically engineered proteins. Unknown journal, 1998.</p>
+</li>
+<li>
+<p>(zhang1998chorismatemutaseprephenatedehydratase pages 3-5): S Zhang, G Pohnert, P Kongsaeree, and DB Wilson. Chorismate mutase-prephenate dehydratase from escherichia coli: study of catalytic and regulatory domains using genetically engineered proteins. Unknown journal, 1998.</p>
+</li>
+<li>
+<p>(godoy2024biosynthesisoffragrance pages 1-2): Patricia Godoy, Zulema Udaondo, Estrella Duque, and Juan L. Ramos. Biosynthesis of fragrance 2-phenylethanol from sugars by pseudomonas putida. Biotechnology for Biofuels and Bioproducts, Apr 2024. URL: https://doi.org/10.1186/s13068-024-02498-1, doi:10.1186/s13068-024-02498-1. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(calhoun2001theemergingperiplasmlocalized pages 1-2): David H Calhoun, Carol A Bonner, Wei Gu, Gary Xie, and Roy A Jensen. The emerging periplasm-localized subclass of aroq chorismate mutases, exemplified by those from salmonella typhimurium and pseudomonas aeruginosa. Genome Biology, 2:research0030.1-research0030.16, Jul 2001. URL: https://doi.org/10.1186/gb-2001-2-8-research0030, doi:10.1186/gb-2001-2-8-research0030. This article has 75 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yu2016metabolicengineeringof pages 1-3): Shiqin Yu, Manuel R. Plan, Gal Winter, and Jens O. Krömer. Metabolic engineering of pseudomonas putida kt2440 for the production of para-hydroxy benzoic acid. Frontiers in Bioengineering and Biotechnology, Nov 2016. URL: https://doi.org/10.3389/fbioe.2016.00090, doi:10.3389/fbioe.2016.00090. This article has 76 citations.</p>
+</li>
+<li>
+<p>(yu2016metabolicengineeringof pages 5-6): Shiqin Yu, Manuel R. Plan, Gal Winter, and Jens O. Krömer. Metabolic engineering of pseudomonas putida kt2440 for the production of para-hydroxy benzoic acid. Frontiers in Bioengineering and Biotechnology, Nov 2016. URL: https://doi.org/10.3389/fbioe.2016.00090, doi:10.3389/fbioe.2016.00090. This article has 76 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pheA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>dosselaere2001ametabolicnode pages 3-5</li>
+<li>zhang1998chorismatemutaseprephenatedehydratase pages 5-6</li>
+<li>molinahenares2009functionalanalysisof pages 6-7</li>
+<li>godoy2024biosynthesisoffragrance pages 1-2</li>
+<li>calhoun2001theemergingperiplasmlocalized pages 1-2</li>
+<li>yu2016metabolicengineeringof pages 5-6</li>
+<li>molinahenares2009functionalanalysisof pages 1-2</li>
+<li>zhang1998chorismatemutaseprephenatedehydratase pages 3-5</li>
+<li>yu2016metabolicengineeringof pages 1-3</li>
+<li>https://doi.org/10.1186/s13068-024-02498-1</li>
+<li>https://doi.org/10.3389/fbioe.2016.00090</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x</li>
+<li>https://doi.org/10.1080/20014091096710</li>
+<li>https://doi.org/10.1186/gb-2001-2-8-research0030</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x,</li>
+<li>https://doi.org/10.1080/20014091096710,</li>
+<li>https://doi.org/10.1186/s13068-024-02498-1,</li>
+<li>https://doi.org/10.1186/gb-2001-2-8-research0030,</li>
+<li>https://doi.org/10.3389/fbioe.2016.00090,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88M06
+gene_symbol: pheA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  Bifunctional chorismate mutase/prephenate dehydratase (the bacterial P-protein).
+  It catalyzes two consecutive steps that commit carbon from the shikimate pathway
+  to L-phenylalanine biosynthesis. First, the chorismate mutase reaction (EC 5.4.99.5),
+  a Claisen rearrangement converting chorismate to prephenate; second, the prephenate
+  dehydratase reaction (EC 4.2.1.51), the decarboxylative dehydration of prephenate
+  to phenylpyruvate, the keto-acid precursor of L-phenylalanine. The protein has a
+  modular architecture comprising an N-terminal AroQ-type chorismate mutase domain,
+  a central prephenate dehydratase domain, and a C-terminal ACT-like regulatory
+  domain that mediates allosteric feedback inhibition by L-phenylalanine. In
+  Pseudomonas putida KT2440 the enzyme is essential for endogenous phenylalanine
+  synthesis; loss-of-function mutants are phenylalanine auxotrophs. The protein
+  acts in the cytoplasm on intracellular chorismate and prephenate pools.
+existing_annotations:
+- term:
+    id: GO:0004106
+    label: chorismate mutase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. The N-terminal AroQ-type chorismate mutase domain
+      catalyzes chorismate to prephenate (EC 5.4.99.5), supported by domain
+      architecture, EC mapping, and the phenylalanine-auxotroph phenotype of KT2440
+      pheA mutants.
+    action: ACCEPT
+- term:
+    id: GO:0004664
+    label: prephenate dehydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. The prephenate dehydratase domain catalyzes prephenate
+      to phenylpyruvate + CO2 + H2O (EC 4.2.1.51), the committed step toward
+      L-phenylalanine. Well supported by domain architecture and EC mapping.
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic localization is consistent with this enzyme acting on intracellular
+      chorismate/prephenate pools in core amino-acid metabolism. Distinct periplasmic
+      AroQ chorismate mutases exist in pseudomonads but are a separate monofunctional
+      class; this bifunctional P-protein is cytosolic.
+    action: ACCEPT
+- term:
+    id: GO:0008652
+    label: amino acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct but a high-level parent of the specific process (L-phenylalanine
+      biosynthesis). Retained as accurate but non-core given the more precise child
+      terms are also annotated.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0009073
+    label: aromatic amino acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct grouping term; phenylalanine is an aromatic amino acid. Less specific
+      than L-phenylalanine biosynthetic process. Retained as accurate but non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0009094
+    label: L-phenylalanine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. pheA catalyzes the committed steps of phenylalanine
+      biosynthesis; KT2440 disruption mutants are phenylalanine auxotrophs rescued
+      by phenylalanine but not tyrosine, directly supporting this term.
+    reason: &gt;-
+      Mini-Tn5 insertions in PP_1769 (pheA) produce phenylalanine auxotrophy in
+      P. putida KT2440 (rescued by phenylalanine, not tyrosine), and the gene is
+      operon-linked with serC and the tyrA-region genes, providing organism-specific
+      experimental support beyond the IEA evidence
+      (file:PSEPK/pheA/pheA-deep-research-falcon.md; PMID:21261884).
+    action: ACCEPT
+- term:
+    id: GO:0016829
+    label: lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Uninformative grand-parent of prephenate dehydratase activity (a lyase).
+      Over-annotation when the specific EC 4.2.1.51 activity is already captured.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0016836
+    label: hydro-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Intermediate parent of prephenate dehydratase activity within the lyase branch.
+      Less informative than the specific child term GO:0004664, which is annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0016853
+    label: isomerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Uninformative grand-parent of chorismate mutase activity (an intramolecular
+      isomerase/transferase). Over-annotation when the specific EC 5.4.99.5 activity
+      is already captured by GO:0004106.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0046417
+    label: chorismate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Accurate; chorismate is the substrate of the chorismate mutase step. A broader
+      metabolic grouping than L-phenylalanine biosynthesis. Retained as accurate but
+      non-core.
+    action: KEEP_AS_NON_CORE
+core_functions:
+- description: &gt;-
+    Chorismate mutase activity converting chorismate to prephenate, the first
+    committed step diverting shikimate-pathway flux toward phenylalanine/tyrosine.
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: chorismate mutase activity (EC 5.4.99.5); RHEA:13897 chorismate = prephenate.
+  molecular_function:
+    id: GO:0004106
+    label: chorismate mutase activity
+  directly_involved_in:
+  - id: GO:0009094
+    label: L-phenylalanine biosynthetic process
+- description: &gt;-
+    Prephenate dehydratase activity converting prephenate to phenylpyruvate, the
+    committed step toward L-phenylalanine; allosterically feedback-inhibited by
+    L-phenylalanine via the C-terminal ACT-like domain.
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: prephenate dehydratase activity (EC 4.2.1.51); RHEA:21648 prephenate + H+ = 3-phenylpyruvate + CO2 + H2O.
+  molecular_function:
+    id: GO:0004664
+    label: prephenate dehydratase activity
+  directly_involved_in:
+  - id: GO:0009094
+    label: L-phenylalanine biosynthetic process
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:21261884
+  title: Functional analysis of aromatic biosynthetic pathways in Pseudomonas putida KT2440
+  findings:
+  - statement: &gt;-
+      Mini-Tn5 insertions in PP_1769 (pheA) cause phenylalanine auxotrophy in
+      P. putida KT2440, rescued by phenylalanine but not tyrosine; pheA is
+      operon-linked with serC and the tyrA-region genes, supporting its essential
+      role in phenylalanine biosynthesis.
+    supporting_text: &gt;-
+      PP_1769 insertion mutants are phenylalanine auxotrophs in P. putida KT2440.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Molina-Henares et al., Microbial Biotechnology 2009, 2:91-100,
+      doi:10.1111/j.1751-7915.2008.00062.x. PMID:21261884 recovered via DOI lookup
+      and PubMed-verified: title &#34;Functional analysis of aromatic biosynthetic
+      pathways in Pseudomonas putida KT2440&#34;; abstract confirms PP_1769/pheA forms
+      an operon with serC and tyrA and that mini-Tn5 insertions cause phenylalanine
+      auxotrophy, matching the supporting text. (Note: an earlier wrong identifier,
+      PMID:19302575, resolved to an unrelated dental-examination article.)
+suggested_questions:
+- question: &gt;-
+    Is the chorismate mutase activity of P. putida KT2440 PheA strictly intramolecular
+    (cytosolic P-protein) versus the separate periplasmic AroQ chorismate mutase class
+    found in some pseudomonads?
+suggested_experiments:
+- description: &gt;-
+    Purify recombinant Q88M06 and measure chorismate mutase and prephenate dehydratase
+    kinetics, and test L-phenylalanine feedback inhibition of the prephenate dehydratase
+    activity via the C-terminal ACT-like domain.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

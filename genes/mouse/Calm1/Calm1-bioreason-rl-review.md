@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Calm1 (mouse)
 
-Source: Calm1-deep-research-bioreason-rl.md
+Source: Calm1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

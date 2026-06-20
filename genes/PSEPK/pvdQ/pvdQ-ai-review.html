@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pvdQ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pvdQ</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88IU8" target="_blank" class="term-link">
+                        Q88IU8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pvdQ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88IU8" data-a="DESCRIPTION: PvdQ is a periplasmic N-terminal nucleophile (Ntn)..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PvdQ is a periplasmic N-terminal nucleophile (Ntn) hydrolase of the peptidase S45 family (penicillin amidase fold) that acts as an acyl-homoserine lactone (AHL) acylase (EC 3.5.1.97). It is synthesized as an inactive precursor with a cleavable signal peptide and exported to the periplasm, where it undergoes autoproteolytic maturation into an alpha and a beta subunit; the N-terminal serine of the beta subunit is the catalytic nucleophile. The enzyme hydrolyzes the amide bond linking the acyl chain to the homoserine lactone moiety of N-acyl-L-homoserine lactones, releasing L-homoserine lactone and the corresponding free fatty acid, with a preference for long acyl chains (roughly 11-14 carbons). Through this activity PvdQ has two related physiological roles documented in Pseudomonas. In the pyoverdine biosynthetic pathway it acts as a maturation enzyme, removing a fatty-acyl (e.g. myristoyl/myristoleoyl) group from an acylated ferribactin/pyoverdine precursor in the periplasm, a step required to produce mature fluorescent pyoverdine siderophore. By cleaving long-chain AHL quorum-sensing signals it also confers quorum-quenching activity, degrading the diffusible signals that coordinate population-density-dependent gene expression in many Gram-negative bacteria.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IU8" data-a="GO:0016787" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General hydrolase activity is correct but uninformatively broad for an enzyme whose activity is well defined as an amide hydrolase (AHL acylase).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PvdQ is an Ntn-hydrolase that cleaves the amide bond of N-acyl-homoserine lactones (EC 3.5.1.97). The more specific child term GO:0016811 captures this and is also annotated, so the bare grandparent should be replaced by the specific term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016811" target="_blank" class="term-link">
+                                    hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds, in linear amides
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016811" target="_blank" class="term-link">
+                                    GO:0016811
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds, in linear amides</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IU8" data-a="GO:0016811" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate molecular function. The AHL acylase reaction (EC 3.5.1.97) hydrolyzes the linear amide bond between the acyl chain and the homoserine lactone, which is precisely an amidohydrolase acting on a carbon-nitrogen bond in a linear amide.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most specific molecular-function term available in GO for AHL acylase activity (there is no dedicated &#39;acyl-homoserine lactone acylase activity&#39; term; note GO:0102007 is a lactonohydrolase, a different reaction). Consistent with UniProt EC 3.5.1.97 and the Ntn-hydrolase mechanism of the PvdQ family.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017000" target="_blank" class="term-link">
+                                    GO:0017000
+                                </a>
+                            </span>
+                            <span class="term-label">antibiotic biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IU8" data-a="GO:0017000" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-broad and mischaracterized BP inferred electronically from InterPro. PvdQ participates in biosynthesis of the siderophore pyoverdine, not of an antibiotic; its other documented role is quorum quenching via AHL degradation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IEA InterPro mapping applies a generic &#39;antibiotic biosynthetic process&#39; to S45 peptidases (the family includes penicillin/beta-lactam acylases), but pyoverdine is an iron-chelating siderophore, not an antibiotic. The supported biological role of PvdQ is periplasmic maturation of the pyoverdine precursor. Replace with the specific pyoverdine biosynthesis term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002049" target="_blank" class="term-link">
+                                    pyoverdine biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IU8" data-a="GO:0042597" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct subcellular localization. PvdQ carries a Sec signal peptide and is exported to the periplasm, where it matures (autoproteolysis to alpha/beta subunits) and acts on its periplasmic substrates (acylated pyoverdine precursor; AHLs).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by the UniProt signal-peptide annotation and the well-established periplasmic localization of PvdQ-family enzymes. The mapped term matches the UniProt subcellular location (SL-0200).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acyl-homoserine lactone acylase (Ntn-hydrolase) that hydrolyzes the amide bond of long-chain N-acyl-L-homoserine lactones, releasing L-homoserine lactone and the corresponding fatty acid.</h3>
+                <span class="vote-buttons" data-g="Q88IU8" data-a="FUNCTION: Acyl-homoserine lactone acylase (Ntn-hydrolase) th..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016811" target="_blank" class="term-link">
+                            hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds, in linear amides
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20080736" target="_blank" class="term-link">
+                                PMID:20080736
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Periplasmic maturation of the pyoverdine siderophore by removing the fatty-acyl group from an acylated pyoverdine/ferribactin precursor.</h3>
+                <span class="vote-buttons" data-g="Q88IU8" data-a="FUNCTION: Periplasmic maturation of the pyoverdine sideropho..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002049" target="_blank" class="term-link">
+                                pyoverdine biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20080736" target="_blank" class="term-link">
+                                PMID:20080736
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pvdQ/pvdQ-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report (falcon) for pvdQ (Q88IU8)</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20080736" target="_blank" class="term-link">
+                            PMID:20080736
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The quorum-quenching N-acyl homoserine lactone acylase PvdQ is an Ntn-hydrolase with an unusual substrate-binding pocket.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pvdQ-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88IU8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">27 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:09:15.981891</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pvdQ-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pvdQ-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000015 The requested visual information regarding PvdQ&#39;s structure and substrate interactions is provided in the following figures: - **Ov</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-pvdq-uniprot-q88iu8-pp_2901-in-pseudomonas-putida-kt2440">Research report: <strong>pvdQ (UniProt Q88IU8; PP_2901)</strong> in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="executive-summary-identity-verified">Executive summary (identity-verified)</h3>
+<p>The target protein <strong>PvdQ</strong> (UniProt <strong>Q88IU8</strong>; gene <strong>pvdQ</strong>; locus <strong>PP_2901</strong>) is annotated as an <strong>acyl-homoserine lactone acylase</strong> (AHL acylase; <strong>EC 3.5.1.97</strong>) belonging to the <strong>N-terminal nucleophile (Ntn) hydrolase / peptidase S45 family</strong>, produced as a precursor that maturates into <strong>α/β subunits</strong>. In the tool-retrieved literature set, <strong>direct experimental characterization in <em>P. putida<em> KT2440 is limited</em><em>; most mechanistic/biochemical detail comes from the </em><em>homologous, extensively studied PvdQ from </em>Pseudomonas aeruginosa</em></strong>, which is commonly used as the reference for this enzyme family. All <em>P. aeruginosa</em> claims below are explicitly treated as <strong>orthology-based functional inference</strong> for <em>P. putida</em> Q88IU8 unless otherwise stated. (bokhove2010thequorumquenchingnacyl pages 1-2, bitzenhofer2024exploringengineeredvesiculation pages 10-11)</p>
+<hr />
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-quorum-sensing-qs-and-quorum-quenching-qq">1.1 Quorum sensing (QS) and quorum quenching (QQ)</h3>
+<p>Gram-negative bacteria frequently coordinate group behaviors (e.g., biofilm maturation, secreted factors) using <strong>N-acyl-L-homoserine lactones (AHLs)</strong> as diffusible QS signals. <strong>Quorum quenching</strong> refers to chemical disruption of QS signals; enzymatic QQ includes <strong>AHL lactonases</strong> (ring opening) and <strong>AHL acylases</strong> (amide-bond cleavage). (utari2017decipheringphysiologicalfunctions pages 2-4)</p>
+<h3 id="12-ahl-acylases-and-ec-35197">1.2 AHL acylases and EC 3.5.1.97</h3>
+<p><strong>AHL acylases (EC 3.5.1.97)</strong> catalyze <strong>irreversible amide hydrolysis</strong> of AHLs, producing <strong>homoserine lactone</strong> and the corresponding <strong>fatty acid</strong>. This chemistry is central to the established function of PvdQ-family enzymes and is emphasized in modern engineering studies focused on measuring real-time homoserine lactone product formation. (sompiyachoke2024engineeringquorumquenching pages 1-5, sompiyachoke2024engineeringquorumquenching pages 9-12)</p>
+<h3 id="13-n-terminal-nucleophile-ntn-hydrolases-peptidase-s45-family">1.3 N-terminal nucleophile (Ntn) hydrolases (peptidase S45 family)</h3>
+<p>PvdQ-family enzymes are <strong>Ntn hydrolases</strong>: they are typically translated as <strong>inactive precursors</strong> that undergo <strong>autoproteolysis</strong> to generate active <strong>α- and β-subunits</strong>, exposing an N-terminal catalytic nucleophile (often <strong>Ser/Thr/Cys</strong>) at the start of the β-chain. This activation mechanism and the α/β architecture are highlighted for AHL-acylase families in authoritative reviews. (utari2017decipheringphysiologicalfunctions pages 2-4)</p>
+<hr />
+<h2 id="2-geneprotein-function-reaction-substrate-specificity-and-mechanism">2) Gene/protein function: reaction, substrate specificity, and mechanism</h2>
+<h3 id="21-primary-molecular-function-best-supported">2.1 Primary molecular function (best-supported)</h3>
+<p><strong>Most defensible functional assignment for <em>P. putida</em> Q88IU8</strong> based on domain/family identity and strong homology is:</p>
+<ul>
+<li><strong>Enzyme class:</strong> AHL acylase / amidohydrolase (EC 3.5.1.97) (inference by homology)</li>
+<li><strong>Reaction:</strong> hydrolysis of the <strong>amide bond</strong> linking the AHL acyl chain to the homoserine lactone core (inference by homology)</li>
+<li><strong>Likely substrate preference:</strong> <strong>long-chain AHLs</strong> (inference by homology)</li>
+</ul>
+<p>This assignment is mechanistically anchored by high-resolution structural and catalytic data for homologous PvdQ (see below), but <strong>direct enzymology for KT2440 Q88IU8 was not retrieved</strong> in this run. (bokhove2010thequorumquenchingnacyl pages 1-2, bokhove2010thequorumquenchingnacyl pages 2-3)</p>
+<h3 id="22-structuralmechanistic-evidence-from-the-reference-pvdq-homolog-p-aeruginosa">2.2 Structural/mechanistic evidence from the reference PvdQ (homolog; <em>P. aeruginosa</em>)</h3>
+<p>A landmark structure solved at <strong>1.8 Å</strong> demonstrated that PvdQ is an <strong>α/β heterodimeric Ntn hydrolase</strong> that undergoes <strong>complete autoproteolysis</strong> into an <strong>α-chain (~171 aa)</strong> and <strong>β-chain (~546 aa)</strong>; the <strong>N-terminal serine of the β-chain (Serβ1)</strong> is the catalytic nucleophile. (bokhove2010thequorumquenchingnacyl pages 2-3)</p>
+<p>The same work showed a <strong>deep hydrophobic substrate pocket</strong> specialized for accommodating <strong>long fatty-acid–like acyl chains</strong> of AHLs (e.g., C12), including an <strong>induced-fit gate</strong> involving <strong>Pheβ24</strong> that opens upon substrate/product binding. (bokhove2010thequorumquenchingnacyl pages 2-3)</p>
+<p><strong>Visual structural evidence</strong> in that study includes: (i) the overall α/β heterodimer fold, (ii) the long-chain binding pocket with bound ligands, and (iii) active-site details and a covalent intermediate consistent with Ntn-hydrolase catalysis. (bokhove2010thequorumquenchingnacyl media 88afd601, bokhove2010thequorumquenchingnacyl media b51a75cc, bokhove2010thequorumquenchingnacyl media 58576db1, bokhove2010thequorumquenchingnacyl media 35e54e16)</p>
+<h3 id="23-cellular-localization-and-maturation-homolog-based-inference-to-q88iu8">2.3 Cellular localization and maturation (homolog-based inference to Q88IU8)</h3>
+<p>Multiple sources describe PvdQ as <strong>periplasmic</strong> in the reference system and link this to a <strong>signal peptide / Sec-dependent export</strong> and maturation to α/β subunits characteristic of Ntn hydrolases. (rice2010characterizationofan pages 32-37, drake2011structuralcharacterizationand pages 1-2, utari2017decipheringphysiologicalfunctions pages 2-4)</p>
+<p>The disulfide-rich nature of the crystallized enzyme is also consistent with periplasmic localization (oxidizing environment), and conservation of these features among <em>Pseudomonas</em> homologs is emphasized in the structural work. (bokhove2010thequorumquenchingnacyl pages 2-3)</p>
+<p><strong>For <em>P. putida</em> KT2440 Q88IU8</strong>, periplasmic localization is therefore best treated as a <strong>strong inference</strong> from family biology and precursor annotation; however, <strong>no KT2440-specific localization experiment</strong> was retrieved here. (utari2017decipheringphysiologicalfunctions pages 2-4, bokhove2010thequorumquenchingnacyl pages 2-3)</p>
+<hr />
+<h2 id="3-biological-processes-and-pathway-context">3) Biological processes and pathway context</h2>
+<h3 id="31-nexus-of-quorum-signaling-and-iron-uptake-evidence-primarily-from-p-aeruginosa">3.1 Nexus of quorum signaling and iron uptake (evidence primarily from <em>P. aeruginosa</em>)</h3>
+<p>PvdQ is widely discussed as a protein positioned at the intersection of:</p>
+<ol>
+<li><strong>Quorum quenching:</strong> cleavage of long-chain AHLs to reduce QS signal strength (evidence in reference homolog). (bokhove2010thequorumquenchingnacyl pages 1-2, clevenger2015investigationandengineering pages 28-34)</li>
+<li><strong>Siderophore/pyoverdine pathway:</strong> PvdQ is described as a <strong>periplasmic hydrolase required for pyoverdine production</strong>, with evidence that it can remove a <strong>myristoyl/fatty-acyl moiety</strong> from an acylated pyoverdine precursor (PVDIq) in the periplasm (evidence in reference homolog). (drake2011structuralcharacterizationand pages 1-2, clevenger2015investigationandengineering pages 28-34)</li>
+</ol>
+<p>Because the gene name <strong>pvdQ</strong> is embedded in “pyoverdine (pvd)” gene clusters in fluorescent pseudomonads, these roles are often discussed together; nonetheless, <strong>direct demonstration of pyoverdine precursor deacylation by Q88IU8 in KT2440 was not retrieved</strong>. (drake2011structuralcharacterizationand pages 1-2, bitzenhofer2024exploringengineeredvesiculation pages 10-11)</p>
+<h3 id="32-direct-p-putida-kt2440-phenotype-evidence-2024">3.2 Direct <em>P. putida</em> KT2440 phenotype evidence (2024)</h3>
+<p>A 2024 <em>Microbial Biotechnology</em> study investigating engineered vesiculation in <em>P. putida</em> KT2440 reported that <strong>downregulation of pvdQ by CRISPRi</strong> and a <strong>pvdQ deletion mutant</strong> both yielded increased signals consistent with <strong>enhanced outer membrane vesicle (OMV) production</strong> (hypervesiculation), measured across vesiculation assays (protein/lipid signals and other OMV-related readouts in their screen). This establishes that KT2440 pvdQ (PP_2901) measurably affects envelope/vesicle physiology under the tested conditions, though it does not identify the molecular substrate(s) in KT2440. (bitzenhofer2024exploringengineeredvesiculation pages 10-11)</p>
+<hr />
+<h2 id="4-recent-developments-prioritizing-20232024-and-latest-research">4) Recent developments (prioritizing 2023–2024) and latest research</h2>
+<h3 id="41-2024-enzyme-engineering-stability-assay-innovation-and-formulation">4.1 2024 enzyme engineering: stability, assay innovation, and formulation</h3>
+<p>A 2024 <em>Protein Science</em> study engineered AHL acylases (including <strong>PvdQ</strong>) to improve properties important for real-world use (e.g., coatings, solvent exposure). Key advances include:</p>
+<ul>
+<li><strong>Assay development:</strong> a time-course kinetic assay monitoring <strong>homoserine lactone production</strong> in real time, addressing a bottleneck in low-throughput acylase measurements. (sompiyachoke2024engineeringquorumquenching pages 1-5)</li>
+<li><strong>Thermostabilization:</strong> designed PvdQ variants increased melting temperature by up to <strong>+13.2 °C</strong> compared with WT (WT ~48.8–48.9 °C; variants +9.2, +11.7, +13.2 °C). (sompiyachoke2024engineeringquorumquenching pages 5-9)</li>
+<li><strong>Solvent tolerance and formulation:</strong> variants maintained higher activity than WT under organic solvent exposure; in one example <strong>P3 retained &gt;80% activity at 15% ethanol</strong> and showed <strong>&gt;2×</strong> WT activity under that condition. When formulated into a silicone paint base, variants retained substantial activity over time (e.g., after 21 days, P1 ~60% vs WT nearly inactive). (sompiyachoke2024engineeringquorumquenching pages 9-12)</li>
+<li><strong>Catalytic efficiency reporting:</strong> the same study reports <strong>kcat/KM</strong> values for WT PvdQ (e.g., <strong>2.22×10^4 s−1 M−1</strong> for 3-oxo-C12-HSL; <strong>1.75×10^3 s−1 M−1</strong> for C8-HSL in their assay format) and contrasts these with earlier literature values. (sompiyachoke2024engineeringquorumquenching pages 9-12)</li>
+</ul>
+<p>Although the engineered PvdQ used in this study is not explicitly stated (in the extracted evidence) to be derived from <em>P. putida</em> KT2440, the work is highly relevant to <strong>PvdQ-family enzymes</strong>, and it provides current expert-level mechanistic framing and performance metrics. (sompiyachoke2024engineeringquorumquenching pages 1-5, sompiyachoke2024engineeringquorumquenching pages 9-12)</p>
+<h3 id="42-mechanistic-reinforcement-catalytic-intermediates">4.2 Mechanistic reinforcement: catalytic intermediates</h3>
+<p>The 2024 engineering study also reports crystallographic capture of acyl-enzyme intermediates in related AHL acylases (and discusses analogous intermediates for PvdQ), supporting the Ntn-hydrolase catalytic framework in which the β-chain N-terminal serine participates directly in catalysis. (sompiyachoke2024engineeringquorumquenching pages 18-22)</p>
+<h3 id="43-2024-systems-level-kt2440-connection">4.3 2024 systems-level KT2440 connection</h3>
+<p>The 2024 vesiculation study provides a current KT2440-specific experimental anchor: pvdQ is a manipulable determinant influencing OMV production and may therefore be relevant in <strong>industrial chassis strain engineering</strong> where vesiculation can affect secretion, stress tolerance, and product yields. (bitzenhofer2024exploringengineeredvesiculation pages 10-11)</p>
+<hr />
+<h2 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h2>
+<h3 id="51-anti-biofilm-and-anti-virulence-strategies-quorum-quenching">5.1 Anti-biofilm and anti-virulence strategies (quorum quenching)</h3>
+<p>PvdQ is frequently treated as a prototype enzyme for <strong>non-antibiotic anti-virulence</strong> strategies: rather than killing bacteria, it reduces QS signal availability by <strong>irreversible AHL cleavage</strong>, which can suppress QS-regulated phenotypes such as biofilm-associated traits (general framing). (utari2017decipheringphysiologicalfunctions pages 2-4)</p>
+<p>A practical, formulation-oriented direction is to incorporate AHL acylases into <strong>materials and coatings</strong> (e.g., silicone-based formulations). The 2024 engineering study explicitly targeted this need, demonstrating improved enzyme robustness after formulation in a silicone paint base. (sompiyachoke2024engineeringquorumquenching pages 9-12)</p>
+<h3 id="52-enzyme-engineering-for-deployment">5.2 Enzyme engineering for deployment</h3>
+<p>Engineering improvements that increase <strong>thermal stability, solvent resistance, and coating compatibility</strong> directly address deployment constraints for immobilized enzymes on device or industrial surfaces. The 2024 study’s stabilizing substitutions (PROSS-designed variants) provide a concrete example of this translational path. (sompiyachoke2024engineeringquorumquenching pages 5-9, sompiyachoke2024engineeringquorumquenching pages 9-12)</p>
+<h3 id="53-kt2440-as-a-biotechnological-chassis-indirect-relevance">5.3 KT2440 as a biotechnological chassis (indirect relevance)</h3>
+<p>The 2024 KT2440 vesiculation work used pvdQ manipulation as part of a chassis-optimization strategy; pvdQ deletion increased vesicle-associated protein and lipid signals, suggesting a potential lever for engineering envelope/secretory phenotypes in industrial <em>P. putida</em> KT2440 contexts. (bitzenhofer2024exploringengineeredvesiculation pages 10-11)</p>
+<hr />
+<h2 id="6-expert-opinions-and-authoritative-analysis">6) Expert opinions and authoritative analysis</h2>
+<p>A focused review on AHL acylases emphasizes that these enzymes are broadly distributed across taxa and that <strong>substrate specificity (often chain-length preference)</strong> and <strong>cellular compartmentalization (frequently periplasmic maturation/export)</strong> shape physiological roles. This review explicitly uses PvdQ as an exemplar of Ntn-hydrolase AHL acylases, describing common maturation logic (precursor → α/β) and structural determinants of long-chain specificity. (utari2017decipheringphysiologicalfunctions pages 2-4)</p>
+<p>High-impact primary structural biology work positions PvdQ as a canonical example of a quorum-quenching AHL acylase with an “unusual” substrate-binding pocket adapted to long acyl chains, providing the mechanistic explanation for specificity. (bokhove2010thequorumquenchingnacyl pages 2-3)</p>
+<hr />
+<h2 id="7-relevant-statistics-and-quantitative-data-recent-and-foundational">7) Relevant statistics and quantitative data (recent and foundational)</h2>
+<p>Key quantitative points extracted from the retrieved literature:</p>
+<ul>
+<li><strong>Crystal structure resolution:</strong> 1.8 Å for reference PvdQ structure (foundational mechanistic evidence). (bokhove2010thequorumquenchingnacyl pages 2-3)</li>
+<li><strong>Maturation products:</strong> α-chain ~171 aa and β-chain ~546 aa after autoproteolysis (reference homolog). (bokhove2010thequorumquenchingnacyl pages 2-3)</li>
+<li><strong>Thermal stability improvements (2024):</strong> PvdQ engineered variants with <strong>Tm increases up to +13.2 °C</strong> vs WT. (sompiyachoke2024engineeringquorumquenching pages 5-9)</li>
+<li><strong>Catalytic efficiency (2024):</strong> WT PvdQ <strong>kcat/KM ~2.22×10^4 s−1 M−1</strong> (3-oxo-C12-HSL) and <strong>~1.75×10^3 s−1 M−1</strong> (C8-HSL) in the study’s assay conditions. (sompiyachoke2024engineeringquorumquenching pages 9-12)</li>
+<li><strong>Formulation durability (2024):</strong> in silicone paint base, variants retained <strong>&gt;60% activity after 4 days</strong> while WT lost ~70%; by <strong>21 days</strong>, P1 retained ~60% while WT was nearly inactive. (sompiyachoke2024engineeringquorumquenching pages 9-12)</li>
+</ul>
+<hr />
+<h2 id="8-evidence-limitations-specific-to-p-putida-kt2440-q88iu8">8) Evidence limitations specific to <em>P. putida</em> KT2440 Q88IU8</h2>
+<p>Despite strong functional inference from family/orthology, the retrieved corpus in this run did <strong>not</strong> include:</p>
+<ul>
+<li>a KT2440-specific biochemical assay showing Q88IU8 hydrolyzes particular AHLs,</li>
+<li>a KT2440-specific localization experiment (e.g., periplasmic fractionation), or</li>
+<li>a KT2440-specific demonstration of a pyoverdine precursor deacylation substrate.</li>
+</ul>
+<p>Accordingly, the report separates:</p>
+<ul>
+<li><strong>Direct KT2440 evidence:</strong> pvdQ deletion/downregulation affects OMV vesiculation phenotypes (2024). (bitzenhofer2024exploringengineeredvesiculation pages 10-11)</li>
+<li><strong>Homology-backed functional inference:</strong> AHL acylase activity, long-chain specificity, Ntn-hydrolase processing, periplasmic localization, and active-site mechanism largely established in <em>P. aeruginosa</em> PvdQ structural/biochemical studies. (bokhove2010thequorumquenchingnacyl pages 2-3, drake2011structuralcharacterizationand pages 1-2, utari2017decipheringphysiologicalfunctions pages 2-4)</li>
+</ul>
+<hr />
+<h2 id="summary-table-evidence-scoped">Summary table (evidence-scoped)</h2>
+<p>The following table consolidates functional annotation elements and explicitly flags whether evidence is direct for KT2440 or inferred from homologs.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key details</th>
+<th>Key references</th>
+<th>URL/DOI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reaction</td>
+<td><strong>UniProt Q88IU8 / pvdQ / PP_2901</strong> is annotated as <strong>acyl-homoserine lactone acylase PvdQ (EC 3.5.1.97)</strong>. The catalyzed reaction is <strong>amide-bond hydrolysis</strong> of N-acyl-L-homoserine lactones to release <strong>homoserine lactone + the corresponding fatty acid</strong>; this is the established chemistry for PvdQ-family AHL acylases, but <strong>not directly biochemically demonstrated for the P. putida KT2440 protein in the retrieved literature</strong>. Direct enzymology is from homologous <strong>P. aeruginosa</strong> PvdQ and engineered PvdQ studies (bokhove2010thequorumquenchingnacyl pages 1-2, sompiyachoke2024engineeringquorumquenching pages 1-5).</td>
+<td>Bokhove 2010, <em>PNAS</em>; Sompiyachoke &amp; Elias 2024, <em>Protein Science</em></td>
+<td>https://doi.org/10.1073/pnas.0911839107; https://doi.org/10.1002/pro.4954</td>
+</tr>
+<tr>
+<td>Substrates</td>
+<td>PvdQ shows preference for <strong>long-chain AHLs</strong>. Structural and biochemical work on homologous <strong>P. aeruginosa</strong> PvdQ supports activity toward <strong>C12-HSL and 3-oxo-C12-HSL</strong>; review/engineering sources summarize preference for <strong>acyl chains &gt;8 carbons</strong> and earlier reports of activity on <strong>C8-HSL, C12-HSL, 3-oxo-C12-HSL</strong> but not <strong>C4-HSL</strong> in that species. For <strong>Q88IU8 in P. putida</strong>, substrate range is <strong>inferred by homology</strong>, not directly shown in the retrieved primary literature (clevenger2015investigationandengineering pages 28-34, utari2017decipheringphysiologicalfunctions pages 2-4, bokhove2010thequorumquenchingnacyl pages 1-2, sompiyachoke2024engineeringquorumquenching pages 1-5, sompiyachoke2024engineeringquorumquenching pages 5-9).</td>
+<td>Bokhove 2010, <em>PNAS</em>; Utari et al. 2017, <em>Front. Microbiol.</em>; Sompiyachoke &amp; Elias 2024, <em>Protein Science</em></td>
+<td>https://doi.org/10.1073/pnas.0911839107; https://doi.org/10.3389/fmicb.2017.01123; https://doi.org/10.1002/pro.4954</td>
+</tr>
+<tr>
+<td>Mechanism</td>
+<td>PvdQ is an <strong>N-terminal nucleophile (Ntn) hydrolase</strong>. The mature catalytic nucleophile is <strong>Serβ1</strong>; the <strong>oxyanion hole</strong> includes <strong>Valβ70</strong> and <strong>Asnβ269/278</strong> (numbering differs slightly by source). A <strong>covalent acyl-enzyme intermediate</strong> and induced-fit opening of the acyl pocket gated by <strong>Pheβ24</strong> were observed in structural studies. A high-resolution homolog structure was solved at <strong>1.8 Å</strong>. These mechanistic data are from <strong>P. aeruginosa PvdQ / engineered PvdQ</strong>, and are <strong>inferred for P. putida Q88IU8</strong> because UniProt/domain architecture matches the same S45/Ntn-hydrolase family (bokhove2010thequorumquenchingnacyl pages 2-3, bokhove2010thequorumquenchingnacyl pages 1-2, sompiyachoke2024engineeringquorumquenching pages 18-22, bokhove2010thequorumquenchingnacyl media 88afd601).</td>
+<td>Bokhove 2010, <em>PNAS</em>; Sompiyachoke &amp; Elias 2024, <em>Protein Science</em></td>
+<td>https://doi.org/10.1073/pnas.0911839107; https://doi.org/10.1002/pro.4954</td>
+</tr>
+<tr>
+<td>Processing</td>
+<td>PvdQ is synthesized as a <strong>single precursor</strong> that undergoes <strong>autoproteolytic maturation</strong> to an <strong>α/β heterodimer</strong>. Reported sizes for the homologous mature enzyme are approximately <strong>α-chain 171 aa / ~18 kDa</strong> and <strong>β-chain 546 aa / ~60 kDa</strong>, generated after excision of a short linker/prosegment (including a reported <strong>23-residue prosegment</strong> in structural work). This processing is experimentally demonstrated for <strong>P. aeruginosa</strong> PvdQ and strongly supported for <strong>P. putida Q88IU8</strong> by the UniProt precursor annotation and conserved family assignment, but direct maturation data for KT2440 were not retrieved (bokhove2010thequorumquenchingnacyl pages 2-3, rice2010characterizationofan pages 32-37, utari2017decipheringphysiologicalfunctions pages 2-4, bokhove2010thequorumquenchingnacyl pages 1-2).</td>
+<td>Bokhove 2010, <em>PNAS</em>; Rice 2010 thesis; Utari et al. 2017, <em>Front. Microbiol.</em></td>
+<td>https://doi.org/10.1073/pnas.0911839107; https://doi.org/10.3389/fmicb.2017.01123</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Multiple lines of homolog evidence indicate <strong>periplasmic localization</strong>: presence of an <strong>N-terminal signal peptide / Sec-type export motif</strong>, disulfide-bond-rich mature structure, and explicit reports that PvdQ acts as a <strong>periplasmic hydrolase</strong>. For <strong>P. putida Q88IU8</strong>, localization is therefore <strong>best interpreted as periplasmic, inferred from strong homology and precursor/signal-peptide annotation</strong>, but no direct KT2440 localization experiment was retrieved (bokhove2010thequorumquenchingnacyl pages 2-3, rice2010characterizationofan pages 32-37, drake2011structuralcharacterizationand pages 1-2, rice2010characterizationofan pages 37-42, utari2017decipheringphysiologicalfunctions pages 2-4).</td>
+<td>Rice 2010 thesis; Drake &amp; Gulick 2011, <em>ACS Chem. Biol.</em>; Bokhove 2010, <em>PNAS</em></td>
+<td>https://doi.org/10.1021/cb2002973; https://doi.org/10.1073/pnas.0911839107</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td><strong>Important disambiguation:</strong> the symbol <strong>pvdQ</strong> is associated with pyoverdine gene clusters in fluorescent pseudomonads, but the <strong>best direct pathway evidence is from P. aeruginosa</strong>, where PvdQ removes a <strong>myristoyl/fatty-acyl group</strong> from an acylated pyoverdine precursor (<strong>PVDIq</strong>) in the <strong>periplasm</strong>, linking the enzyme to <strong>pyoverdine maturation</strong> as well as quorum-quenching. For <strong>P. putida KT2440 Q88IU8</strong>, a pyoverdine-related role is <strong>plausible by orthology/name</strong>, but the retrieved literature did <strong>not</strong> provide direct biochemical demonstration in KT2440 (clevenger2015investigationandengineering pages 28-34, drake2011structuralcharacterizationand pages 1-2).</td>
+<td>Drake &amp; Gulick 2011, <em>ACS Chem. Biol.</em>; Clevenger 2015 thesis</td>
+<td>https://doi.org/10.1021/cb2002973; https://doi.org/10.15781/t2j35z</td>
+</tr>
+<tr>
+<td>Evidence in <em>P. putida</em></td>
+<td><strong>Direct species-specific evidence for KT2440 is limited in the retrieved set.</strong> A 2024 study experimentally <strong>deleted pvdQ in P. putida KT2440</strong> and found that loss/downregulation caused <strong>increased outer-membrane-vesicle-associated protein and lipid signal</strong> (hypervesiculation phenotype) in a vesiculation screen. This supports that <strong>PP_2901 is an active cellular determinant in envelope/vesicle physiology</strong>, but it does <strong>not directly establish its biochemical substrate or reaction</strong> in KT2440 (bitzenhofer2024exploringengineeredvesiculation pages 10-11).</td>
+<td>Bitzenhofer et al. 2024, <em>Microbial Biotechnology</em></td>
+<td>https://doi.org/10.1111/1751-7915.14312</td>
+</tr>
+<tr>
+<td>Evidence in <em>P. aeruginosa</em> / other</td>
+<td>The homologous <strong>P. aeruginosa</strong> enzyme is extensively characterized: <strong>1.8 Å</strong> structure; long-chain AHL-binding pocket; <strong>α/β maturation</strong>; <strong>Serβ1</strong> catalytic nucleophile; role in <strong>pyoverdine precursor deacylation</strong>; quorum-quenching activity against <strong>long-chain AHLs</strong>. Engineering work further quantified performance: WT-PvdQ <strong>kcat/KM ~2.22×10^4 s^-1 M^-1 for 3-oxo-C12-HSL</strong> and <strong>~1.75×10^3 s^-1 M^-1 for C8-HSL</strong> in one 2024 assay format; designed variants increased <strong>Tm by 9.2, 11.7, and 13.2 °C</strong> and improved solvent/coating robustness. These data are the main basis for <strong>functional inference to Q88IU8</strong> (bokhove2010thequorumquenchingnacyl pages 2-3, drake2011structuralcharacterizationand pages 1-2, bokhove2010thequorumquenchingnacyl pages 1-2, sompiyachoke2024engineeringquorumquenching pages 9-12, sompiyachoke2024engineeringquorumquenching pages 5-9).</td>
+<td>Bokhove 2010, <em>PNAS</em>; Drake &amp; Gulick 2011, <em>ACS Chem. Biol.</em>; Sompiyachoke &amp; Elias 2024, <em>Protein Science</em></td>
+<td>https://doi.org/10.1073/pnas.0911839107; https://doi.org/10.1021/cb2002973; https://doi.org/10.1002/pro.4954</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the most relevant functional annotation points for UniProt Q88IU8 (Pseudomonas putida KT2440 pvdQ/PP_2901), separating direct evidence in P. putida from stronger mechanistic and biochemical evidence available for homologous PvdQ proteins, especially from P. aeruginosa.</em></p>
+<hr />
+<h2 id="key-sources-urls-and-publication-dates">Key sources (URLs and publication dates)</h2>
+<ul>
+<li>Bokhove M. et al. <strong>2010-12</strong>. <em>PNAS</em>. “The quorum-quenching N-acyl homoserine lactone acylase PvdQ is an Ntn-hydrolase with an unusual substrate-binding pocket.” https://doi.org/10.1073/pnas.0911839107 (bokhove2010thequorumquenchingnacyl pages 2-3)</li>
+<li>Drake EJ &amp; Gulick AM. <strong>2011-11</strong>. <em>ACS Chemical Biology</em>. “Structural characterization and high-throughput screening of inhibitors of PvdQ, an NTN hydrolase involved in pyoverdine synthesis.” https://doi.org/10.1021/cb2002973 (drake2011structuralcharacterizationand pages 1-2)</li>
+<li>Utari PD. et al. <strong>2017-06</strong>. <em>Frontiers in Microbiology</em>. “Deciphering Physiological Functions of AHL Quorum Quenching Acylases.” https://doi.org/10.3389/fmicb.2017.01123 (utari2017decipheringphysiologicalfunctions pages 2-4)</li>
+<li>Bitzenhofer NL. et al. <strong>2024-07</strong>. <em>Microbial Biotechnology</em>. “Exploring engineered vesiculation by Pseudomonas putida KT2440 for natural product biosynthesis.” https://doi.org/10.1111/1751-7915.14312 (bitzenhofer2024exploringengineeredvesiculation pages 10-11)</li>
+<li>Sompiyachoke K &amp; Elias MH. <strong>2024-03</strong>. <em>Protein Science</em>. “Engineering quorum quenching acylases with improved kinetic and biochemical properties.” https://doi.org/10.1002/pro.4954 (sompiyachoke2024engineeringquorumquenching pages 1-5)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(bokhove2010thequorumquenchingnacyl pages 1-2): Marcel Bokhove, Pol Nadal Jimenez, Wim J. Quax, and Bauke W. Dijkstra. The quorum-quenching n-acyl homoserine lactone acylase pvdq is an ntn-hydrolase with an unusual substrate-binding pocket. Proceedings of the National Academy of Sciences, 107:686-691, Dec 2010. URL: https://doi.org/10.1073/pnas.0911839107, doi:10.1073/pnas.0911839107. This article has 182 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bitzenhofer2024exploringengineeredvesiculation pages 10-11): Nora Lisa Bitzenhofer, Carolin Höfel, Stephan Thies, Andrea Jeanette Weiler, Christian Eberlein, Hermann J. Heipieper, Renu Batra‐Safferling, Pia Sundermeyer, Thomas Heidler, Carsten Sachse, Tobias Busche, Jörn Kalinowski, Thomke Belthle, Thomas Drepper, Karl‐Erich Jaeger, and Anita Loeschcke. Exploring engineered vesiculation by pseudomonas putida kt2440 for natural product biosynthesis. Microbial Biotechnology, Jul 2024. URL: https://doi.org/10.1111/1751-7915.14312, doi:10.1111/1751-7915.14312. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(utari2017decipheringphysiologicalfunctions pages 2-4): Putri D. Utari, Jan Vogel, and Wim J. Quax. Deciphering physiological functions of ahl quorum quenching acylases. Frontiers in Microbiology, Jun 2017. URL: https://doi.org/10.3389/fmicb.2017.01123, doi:10.3389/fmicb.2017.01123. This article has 107 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sompiyachoke2024engineeringquorumquenching pages 1-5): Kitty Sompiyachoke and Mikael H. Elias. Engineering quorum quenching acylases with improved kinetic and biochemical properties. Protein Science : A Publication of the Protein Society, Mar 2024. URL: https://doi.org/10.1002/pro.4954, doi:10.1002/pro.4954. This article has 14 citations.</p>
+</li>
+<li>
+<p>(sompiyachoke2024engineeringquorumquenching pages 9-12): Kitty Sompiyachoke and Mikael H. Elias. Engineering quorum quenching acylases with improved kinetic and biochemical properties. Protein Science : A Publication of the Protein Society, Mar 2024. URL: https://doi.org/10.1002/pro.4954, doi:10.1002/pro.4954. This article has 14 citations.</p>
+</li>
+<li>
+<p>(bokhove2010thequorumquenchingnacyl pages 2-3): Marcel Bokhove, Pol Nadal Jimenez, Wim J. Quax, and Bauke W. Dijkstra. The quorum-quenching n-acyl homoserine lactone acylase pvdq is an ntn-hydrolase with an unusual substrate-binding pocket. Proceedings of the National Academy of Sciences, 107:686-691, Dec 2010. URL: https://doi.org/10.1073/pnas.0911839107, doi:10.1073/pnas.0911839107. This article has 182 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bokhove2010thequorumquenchingnacyl media 88afd601): Marcel Bokhove, Pol Nadal Jimenez, Wim J. Quax, and Bauke W. Dijkstra. The quorum-quenching n-acyl homoserine lactone acylase pvdq is an ntn-hydrolase with an unusual substrate-binding pocket. Proceedings of the National Academy of Sciences, 107:686-691, Dec 2010. URL: https://doi.org/10.1073/pnas.0911839107, doi:10.1073/pnas.0911839107. This article has 182 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bokhove2010thequorumquenchingnacyl media b51a75cc): Marcel Bokhove, Pol Nadal Jimenez, Wim J. Quax, and Bauke W. Dijkstra. The quorum-quenching n-acyl homoserine lactone acylase pvdq is an ntn-hydrolase with an unusual substrate-binding pocket. Proceedings of the National Academy of Sciences, 107:686-691, Dec 2010. URL: https://doi.org/10.1073/pnas.0911839107, doi:10.1073/pnas.0911839107. This article has 182 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bokhove2010thequorumquenchingnacyl media 58576db1): Marcel Bokhove, Pol Nadal Jimenez, Wim J. Quax, and Bauke W. Dijkstra. The quorum-quenching n-acyl homoserine lactone acylase pvdq is an ntn-hydrolase with an unusual substrate-binding pocket. Proceedings of the National Academy of Sciences, 107:686-691, Dec 2010. URL: https://doi.org/10.1073/pnas.0911839107, doi:10.1073/pnas.0911839107. This article has 182 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bokhove2010thequorumquenchingnacyl media 35e54e16): Marcel Bokhove, Pol Nadal Jimenez, Wim J. Quax, and Bauke W. Dijkstra. The quorum-quenching n-acyl homoserine lactone acylase pvdq is an ntn-hydrolase with an unusual substrate-binding pocket. Proceedings of the National Academy of Sciences, 107:686-691, Dec 2010. URL: https://doi.org/10.1073/pnas.0911839107, doi:10.1073/pnas.0911839107. This article has 182 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rice2010characterizationofan pages 32-37): LJ Rice. Characterization of an ntn-hydrolase, pvdq, and an l-ornithine n5-monooxygenase, pvda, involved in pyoverdine biosynthesis in pseudomonas aeruginosa …. Unknown journal, 2010.</p>
+</li>
+<li>
+<p>(drake2011structuralcharacterizationand pages 1-2): Eric J. Drake and Andrew M. Gulick. Structural characterization and high-throughput screening of inhibitors of pvdq, an ntn hydrolase involved in pyoverdine synthesis. ACS chemical biology, 6 11:1277-86, Nov 2011. URL: https://doi.org/10.1021/cb2002973, doi:10.1021/cb2002973. This article has 98 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(clevenger2015investigationandengineering pages 28-34): Kenneth David Clevenger. Investigation and engineering of pvdq, a pseudomonas aeruginosa enzyme at the nexus of quorum sensing and iron uptake pathways. Unknown, Jan 2015. URL: https://doi.org/10.15781/t2j35z, doi:10.15781/t2j35z. This article has 0 citations.</p>
+</li>
+<li>
+<p>(sompiyachoke2024engineeringquorumquenching pages 5-9): Kitty Sompiyachoke and Mikael H. Elias. Engineering quorum quenching acylases with improved kinetic and biochemical properties. Protein Science : A Publication of the Protein Society, Mar 2024. URL: https://doi.org/10.1002/pro.4954, doi:10.1002/pro.4954. This article has 14 citations.</p>
+</li>
+<li>
+<p>(sompiyachoke2024engineeringquorumquenching pages 18-22): Kitty Sompiyachoke and Mikael H. Elias. Engineering quorum quenching acylases with improved kinetic and biochemical properties. Protein Science : A Publication of the Protein Society, Mar 2024. URL: https://doi.org/10.1002/pro.4954, doi:10.1002/pro.4954. This article has 14 citations.</p>
+</li>
+<li>
+<p>(rice2010characterizationofan pages 37-42): LJ Rice. Characterization of an ntn-hydrolase, pvdq, and an l-ornithine n5-monooxygenase, pvda, involved in pyoverdine biosynthesis in pseudomonas aeruginosa …. Unknown journal, 2010.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pvdQ-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000015 The requested visual information regarding PvdQ's structure and substrate interactions is provided in the following figures: - **Ov" src="pvdQ-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>utari2017decipheringphysiologicalfunctions pages 2-4</li>
+<li>bokhove2010thequorumquenchingnacyl pages 2-3</li>
+<li>bitzenhofer2024exploringengineeredvesiculation pages 10-11</li>
+<li>sompiyachoke2024engineeringquorumquenching pages 1-5</li>
+<li>sompiyachoke2024engineeringquorumquenching pages 5-9</li>
+<li>sompiyachoke2024engineeringquorumquenching pages 9-12</li>
+<li>sompiyachoke2024engineeringquorumquenching pages 18-22</li>
+<li>drake2011structuralcharacterizationand pages 1-2</li>
+<li>bokhove2010thequorumquenchingnacyl pages 1-2</li>
+<li>rice2010characterizationofan pages 32-37</li>
+<li>clevenger2015investigationandengineering pages 28-34</li>
+<li>rice2010characterizationofan pages 37-42</li>
+<li>https://doi.org/10.1073/pnas.0911839107;</li>
+<li>https://doi.org/10.1002/pro.4954</li>
+<li>https://doi.org/10.3389/fmicb.2017.01123;</li>
+<li>https://doi.org/10.3389/fmicb.2017.01123</li>
+<li>https://doi.org/10.1021/cb2002973;</li>
+<li>https://doi.org/10.1073/pnas.0911839107</li>
+<li>https://doi.org/10.15781/t2j35z</li>
+<li>https://doi.org/10.1111/1751-7915.14312</li>
+<li>https://doi.org/10.1021/cb2002973</li>
+<li>https://doi.org/10.1073/pnas.0911839107,</li>
+<li>https://doi.org/10.1111/1751-7915.14312,</li>
+<li>https://doi.org/10.3389/fmicb.2017.01123,</li>
+<li>https://doi.org/10.1002/pro.4954,</li>
+<li>https://doi.org/10.1021/cb2002973,</li>
+<li>https://doi.org/10.15781/t2j35z,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88IU8
+gene_symbol: pvdQ
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: PvdQ is a periplasmic N-terminal nucleophile (Ntn) hydrolase of the peptidase S45 family (penicillin amidase fold) that acts as an acyl-homoserine lactone (AHL) acylase (EC 3.5.1.97). It is synthesized as an inactive precursor with a cleavable signal peptide and exported to the periplasm, where it undergoes autoproteolytic maturation into an alpha and a beta subunit; the N-terminal serine of the beta subunit is the catalytic nucleophile. The enzyme hydrolyzes the amide bond linking the acyl chain to the homoserine lactone moiety of N-acyl-L-homoserine lactones, releasing L-homoserine lactone and the corresponding free fatty acid, with a preference for long acyl chains (roughly 11-14 carbons). Through this activity PvdQ has two related physiological roles documented in Pseudomonas. In the pyoverdine biosynthetic pathway it acts as a maturation enzyme, removing a fatty-acyl (e.g. myristoyl/myristoleoyl) group from an acylated ferribactin/pyoverdine precursor in the periplasm, a step required to produce mature fluorescent pyoverdine siderophore. By cleaving long-chain AHL quorum-sensing signals it also confers quorum-quenching activity, degrading the diffusible signals that coordinate population-density-dependent gene expression in many Gram-negative bacteria.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Genome sequencing paper for P. putida KT2440; source of the PP_2901 gene model but does not functionally characterize PvdQ.
+- id: file:PSEPK/pvdQ/pvdQ-deep-research-falcon.md
+  title: Deep research report (falcon) for pvdQ (Q88IU8)
+  findings: []
+- id: PMID:20080736
+  title: The quorum-quenching N-acyl homoserine lactone acylase PvdQ is an Ntn-hydrolase with an unusual substrate-binding pocket.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Citation-integrity fix: this reference was originally entered as PMID:20133719,
+      which actually resolves to an unrelated paper (&#34;Deceptive chemical signals
+      induced by a plant virus attract insect vectors&#34;) and was a wrong identifier.
+      The intended source is Bokhove et al. 2010 PNAS structural study of P. aeruginosa
+      PvdQ (&#34;The quorum-quenching N-acyl homoserine lactone acylase PvdQ is an
+      Ntn-hydrolase with an unusual substrate-binding pocket&#34;, doi:10.1073/pnas.0911839107),
+      which establishes the Ntn-hydrolase fold, alpha/beta maturation, Ser-beta1
+      nucleophile, and long-chain AHL specificity; orthology basis for the P. putida
+      ortholog. The correct PMID was recovered from the DOI via doi_to_pmid and
+      independently verified against PubMed (PMID:20080736 -&gt; matching title/DOI).
+      The WRONG_IDENTIFIER code records that the original PMID was incorrect; the
+      replacement PMID:20080736 is VERIFIED on-topic.
+core_functions:
+- description: Acyl-homoserine lactone acylase (Ntn-hydrolase) that hydrolyzes the amide bond of long-chain N-acyl-L-homoserine lactones, releasing L-homoserine lactone and the corresponding fatty acid.
+  supported_by:
+  - reference_id: PMID:20080736
+  molecular_function:
+    id: GO:0016811
+    label: hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds, in linear amides
+- description: Periplasmic maturation of the pyoverdine siderophore by removing the fatty-acyl group from an acylated pyoverdine/ferribactin precursor.
+  supported_by:
+  - reference_id: PMID:20080736
+  directly_involved_in:
+  - id: GO:0002049
+    label: pyoverdine biosynthetic process
+  locations:
+  - id: GO:0042597
+    label: periplasmic space
+existing_annotations:
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: General hydrolase activity is correct but uninformatively broad for an enzyme whose activity is well defined as an amide hydrolase (AHL acylase).
+    action: MODIFY
+    reason: PvdQ is an Ntn-hydrolase that cleaves the amide bond of N-acyl-homoserine lactones (EC 3.5.1.97). The more specific child term GO:0016811 captures this and is also annotated, so the bare grandparent should be replaced by the specific term.
+    proposed_replacement_terms:
+    - id: GO:0016811
+      label: hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds, in linear amides
+- term:
+    id: GO:0016811
+    label: hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds, in linear amides
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Accurate molecular function. The AHL acylase reaction (EC 3.5.1.97) hydrolyzes the linear amide bond between the acyl chain and the homoserine lactone, which is precisely an amidohydrolase acting on a carbon-nitrogen bond in a linear amide.
+    action: ACCEPT
+    reason: This is the most specific molecular-function term available in GO for AHL acylase activity (there is no dedicated &#39;acyl-homoserine lactone acylase activity&#39; term; note GO:0102007 is a lactonohydrolase, a different reaction). Consistent with UniProt EC 3.5.1.97 and the Ntn-hydrolase mechanism of the PvdQ family.
+- term:
+    id: GO:0017000
+    label: antibiotic biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Over-broad and mischaracterized BP inferred electronically from InterPro. PvdQ participates in biosynthesis of the siderophore pyoverdine, not of an antibiotic; its other documented role is quorum quenching via AHL degradation.
+    action: MODIFY
+    reason: The IEA InterPro mapping applies a generic &#39;antibiotic biosynthetic process&#39; to S45 peptidases (the family includes penicillin/beta-lactam acylases), but pyoverdine is an iron-chelating siderophore, not an antibiotic. The supported biological role of PvdQ is periplasmic maturation of the pyoverdine precursor. Replace with the specific pyoverdine biosynthesis term.
+    proposed_replacement_terms:
+    - id: GO:0002049
+      label: pyoverdine biosynthetic process
+- term:
+    id: GO:0042597
+    label: periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Correct subcellular localization. PvdQ carries a Sec signal peptide and is exported to the periplasm, where it matures (autoproteolysis to alpha/beta subunits) and acts on its periplasmic substrates (acylated pyoverdine precursor; AHLs).
+    action: ACCEPT
+    reason: Supported by the UniProt signal-peptide annotation and the well-established periplasmic localization of PvdQ-family enzymes. The mapped term matches the UniProt subcellular location (SL-0200).
+proposed_new_terms: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

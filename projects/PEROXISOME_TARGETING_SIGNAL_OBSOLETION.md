@@ -1,3 +1,9 @@
+---
+title: "Peroxisome Targeting Signal Binding — Obsoletion & Replacement"
+maturity: SCOPING
+tags: [OBSOLETION]
+---
+
 # Peroxisome Targeting Signal Binding — Obsoletion & Replacement
 
 ## Overview

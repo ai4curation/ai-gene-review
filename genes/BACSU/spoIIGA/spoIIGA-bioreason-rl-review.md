@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: spoIIGA (B. subtilis)
 
-Source: spoIIGA-deep-research-bioreason-rl.md
+Source: spoIIGA-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

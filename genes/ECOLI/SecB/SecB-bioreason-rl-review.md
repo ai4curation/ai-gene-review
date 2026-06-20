@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: SecB (E. coli)
 
-Source: SecB-deep-research-bioreason-rl.md
+Source: SecB-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

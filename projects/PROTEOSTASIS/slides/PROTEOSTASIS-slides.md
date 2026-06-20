@@ -1,4 +1,5 @@
 ---
+title: "Human Proteostasis Network"
 marp: true
 theme: default
 paginate: true
@@ -52,11 +53,11 @@ Total nodes: 2029. Leaf nodes: 1348.
 
 | Level | Total | Pending | Mapped | Context | No map | Deferred | Missing |
 |-------|------:|--------:|-------:|--------:|-------:|---------:|--------:|
-| Branch | 9 | 8 | 0 | 1 | 0 | 0 | 0 |
-| Class | 42 | 30 | 9 | 2 | 1 | 0 | 0 |
-| Group | 297 | 229 | 60 | 2 | 1 | 5 | 0 |
-| Type | 800 | 661 | 119 | 2 | 14 | 4 | 0 |
-| Subtype | 881 | 795 | 64 | 1 | 14 | 7 | 0 |
+| Branch | 9 | 0 | 0 | 1 | 8 | 0 | 0 |
+| Class | 42 | 0 | 9 | 16 | 17 | 0 | 0 |
+| Group | 297 | 0 | 133 | 31 | 133 | 0 | 0 |
+| Type | 800 | 0 | 233 | 26 | 541 | 0 | 0 |
+| Subtype | 881 | 0 | 105 | 16 | 760 | 0 | 0 |
 
 Inventory: 2029 subject curation records, one per PN node.
 
@@ -66,7 +67,7 @@ Inventory: 2029 subject curation records, one per PN node.
 
 Every PN node has a curator-facing status.
 
-- pending review: accounted for, not yet manually analyzed in depth
+- pending review: temporary state during a new PN release mapping pass
 - mapped: reviewed and mapped to GO
 - context only: GO relationship recorded, but unsafe to propagate
 - no mapping: reviewed, no GO mapping should be made
@@ -74,11 +75,11 @@ Every PN node has a curator-facing status.
 
 Current curation inventory:
 
-- 1723 pending review
-- 252 mapped
-- 8 context only
-- 30 no mapping
-- 16 deferred
+- 480 mapped
+- 90 context only
+- 1459 no mapping
+- 0 pending review
+- 0 deferred
 
 These are tracked directly in the branch mapping YAMLs.
 
@@ -86,35 +87,35 @@ These are tracked directly in the branch mapping YAMLs.
 
 ## Projection Output
 
-Projection through current propagating mappings produced 2197 unique gene-GO pairs.
+Projection through current propagating mappings produced 3565 unique gene-GO pairs.
 
 GOA source: `~/repos/go-db/db/goa_human.ddb`
 
 | Status | Count |
 |--------|------:|
-| already in GOA exactly | 703 |
-| entailed by GOA closure | 403 |
-| more specific than existing GOA | 238 |
-| supported by GOA regulation | 77 |
-| new to GOA | 760 |
-| no local GOA | 16 |
+| already in GOA exactly | 1928 |
+| entailed by GOA closure | 512 |
+| more specific than existing GOA | 305 |
+| supported by GOA regulation | 35 |
+| new to GOA | 753 |
+| no local GOA | 32 |
 
-Only the 1075 candidate additions enter manual rereview queues.
+Only the 1093 candidate additions enter manual rereview queues.
 
 ---
 
 ## Extra Scrutiny Audit
 
-The current mapping set is intentionally conservative, but 180 GO-bearing records are
+The current mapping set is intentionally conservative, but 430 GO-bearing records are
 flagged as requiring gene-level review before changing AIGR YAML.
 
 Top flag types:
 
-- 151 contextual or regulatory source labels
-- 73 broad or context-losing GO targets
-- 44 domain or family metadata labels
-- 12 branch/class-level mappings
-- 8 `too_broad_to_propagate` mappings excluded from projections
+- 313 contextual or regulatory source labels
+- 262 domain or family metadata labels
+- 190 branch/class-level mappings
+- 131 broad or context-losing GO targets
+- 89 `too_broad_to_propagate` mappings excluded from projections
 
 Report: `reports/pn_mapping_audit/unusual_propagations.tsv`
 
@@ -149,6 +150,23 @@ These should drive expert review, not automatic gene-review edits.
 
 ---
 
+## PN-GO Bridge Product
+
+The deliverable should be a GO-ready companion layer for each PN release.
+
+Each PN row gets:
+
+- GO bridge status: direct annotation, review first, ontology gap, PN context only
+- evidence basis: primary literature, review, domain/family, orthology, database seed
+- directness: direct gene evidence, family inference, module context, regulator, hypothesis
+- candidate GO term, if one exists
+- gene exceptions that must not inherit the row-level mapping
+- ontology-gap status: covered, NTR candidate, NTR justified, design pattern, GO-CAM/extension
+
+Outputs: GO candidate table, exception table, ontology-gap list, PN feedback table.
+
+---
+
 ## Current Artifacts
 
 Primary files:
@@ -167,7 +185,7 @@ Browser: `pages/projects/PROTEOSTASIS-tree.html`
 
 ## Next Work
 
-1. Work the 1075 candidate additions as manual AIGR rereview tasks.
+1. Work the 1093 candidate additions as manual AIGR rereview tasks.
 2. Use unusual-propagation audit as a guardrail.
-3. Promote only evidence-backed gene-level decisions to review YAML.
-4. Keep broad PN membership as project metadata or triage context.
+3. Materialize the PN-GO bridge fields for every mapped/context PN row.
+4. Promote only evidence-backed gene-level decisions to review YAML.

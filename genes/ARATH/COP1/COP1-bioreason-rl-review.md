@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: COP1 (ARATH)
 
-Source: COP1-deep-research-bioreason-rl.md
+Source: COP1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

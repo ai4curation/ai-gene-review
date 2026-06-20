@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: atg38 (S. pombe)
 
-Source: atg38-deep-research-bioreason-rl.md
+Source: atg38-bioreason-rl-predictions.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

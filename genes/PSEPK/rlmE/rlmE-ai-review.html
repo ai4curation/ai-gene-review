@@ -1,0 +1,2837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rlmE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rlmE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DV0" target="_blank" class="term-link">
+                        Q88DV0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rlmE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DV0" data-a="DESCRIPTION: rlmE (synonyms ftsJ, rrmJ; ordered locus PP_4719) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>rlmE (synonyms ftsJ, rrmJ; ordered locus PP_4719) encodes a cytosolic SAM-dependent 23S rRNA (uridine2552-2&#39;-O)-methyltransferase (EC 2.1.1.166) of the class I-like SAM-binding methyltransferase superfamily, RlmE/FtsJ family. It installs the universally conserved 2&#39;-O-methyluridine (Um2552) in the A-loop of 23S rRNA domain V, adjacent to the peptidyl transferase center, acting late on the fully assembled 50S ribosomal subunit. Beyond catalysis, the orthologous bacterial enzyme is functionally coupled to late large ribosomal subunit (LSU) maturation/assembly; loss of RlmE in E. coli causes accumulation of free 30S/50S subunits at the expense of 70S, defective 23S rRNA end processing, cold-sensitive growth, and a ~2-4-fold growth-rate reduction. The P. putida KT2440 assignment is a conservation-based inference from these well-characterized bacterial orthologs.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV0" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cytoplasm annotation is correct for RlmE. The enzyme is a soluble bacterial rRNA modification enzyme that acts on maturing large ribosomal subunits in the cytosol.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RlmE is a soluble bacterial rRNA modification enzyme acting on cytosolic 50S assembly intermediates; the location is accurate but non-core. Falcon deep research confirms the enzyme functions in the cytosol in association with maturing large ribosomal subunits rather than being membrane-bound or secreted.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">RlmE functions in the **cytosol** in association with **maturing large ribosomal subunits**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006364" target="_blank" class="term-link">
+                                    GO:0006364
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA processing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV0" data-a="GO:0006364" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> rRNA processing is correct pathway context, but RlmE directly performs ribose 2&#39;-O-methylation of 23S rRNA, so rRNA 2&#39;-O-methylation is the more specific and accurate process term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RlmE specifically transfers a methyl group to the 2&#39;-O position of the ribose of uridine 2552 in 23S rRNA. The generic rRNA processing parent is therefore best replaced with the precise process GO:0000451 rRNA 2&#39;-O-methylation, which captures the exact chemistry. Falcon deep research confirms the enzyme installs Um2552 (2&#39;-O-methyluridine) in the A-loop of 23S rRNA.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000451" target="_blank" class="term-link">
+                                    rRNA 2&#39;-O-methylation
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Specifically methylates the uridine in position 2552 of 23S</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0006364	rRNA processing</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">transfer of a methyl group from **S-adenosyl-L-methionine (SAM)** to the **2′-O** position of **U2552** in 23S rRNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008168" target="_blank" class="term-link">
+                                    GO:0008168
+                                </a>
+                            </span>
+                            <span class="term-label">methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV0" data-a="GO:0008168" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This generic methyltransferase parent is over-annotated for RlmE; the specific substrate and modified nucleotide are captured by GO:0008650.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0008650 (rRNA uridine-2&#39;-O-ribose methyltransferase activity) captures the specific rRNA substrate and modified nucleotide. Falcon deep research confirms RlmE is a SAM-dependent RNA 2&#39;-O-methyltransferase specific for the 23S rRNA ribose 2&#39;-hydroxyl.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=2.1.1.166</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0008168	methyltransferase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SAM-dependent RNA 2′-O-methyltransferase** that modifies the **ribose 2′-hydroxyl**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008173" target="_blank" class="term-link">
+                                    GO:0008173
+                                </a>
+                            </span>
+                            <span class="term-label">RNA methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV0" data-a="GO:0008173" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNA methyltransferase activity is true but less specific than the RlmE-specific activity term GO:0008650.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0008650 captures the exact 23S rRNA uridine 2&#39;-O-ribose methyltransferase activity, including the specific substrate (U2552 in 23S rRNA). Falcon deep research confirms the enzyme installs the universally conserved Um2552 modification in 23S rRNA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Specifically methylates the uridine in position 2552 of 23S</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0008173	RNA methyltransferase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">it is responsible for installing the universally conserved modification</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008650" target="_blank" class="term-link">
+                                    GO:0008650
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA (uridine-2&#39;-O-ribose)-methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV0" data-a="GO:0008650" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RlmE-specific rRNA uridine 2&#39;-O-ribose methyltransferase activity is the core molecular function, supported by EC 2.1.1.166 and the Rhea reaction for Um2552 formation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 2.1.1.166 and the Rhea reaction for uridine 2552 2&#39;-O-ribose methylation in 23S rRNA. Falcon deep research independently confirms the SAM-dependent transfer of a methyl group to the 2&#39;-O position of U2552 in 23S rRNA, generating Um2552.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Specifically methylates the uridine in position 2552 of 23S</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=2.1.1.166</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0008650	rRNA (uridine-2&#39;-O-ribose)-methyltransferase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">transfer of a methyl group from **S-adenosyl-L-methionine (SAM)** to the **2′-O** position of **U2552** in 23S rRNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000027" target="_blank" class="term-link">
+                                    GO:0000027
+                                </a>
+                            </span>
+                            <span class="term-label">ribosomal large subunit assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV0" data-a="GO:0000027" data-r="GO_REF:0000120" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RlmE is functionally coupled to late 50S/LSU maturation; the orthologous bacterial enzyme stimulates large ribosomal subunit assembly and its loss causes severe LSU assembly defects. This is a proposed NEW biological-process annotation not present in the current GOA, supported by falcon deep research evidence (conservation-based inference from E. coli).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Beyond installing Um2552, RlmE acts like a large-subunit assembly factor. Falcon deep research reports that RlmE stimulates large ribosomal subunit assembly and that ΔrlmE in E. coli produces a severe LSU assembly phenotype. GO:0000027 (ribosomal large subunit assembly) captures this process role for the P. putida ortholog.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">RlmE **stimulates large ribosomal subunit assembly**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ΔrlmE** in *E. coli* produces a **severe LSU assembly phenotype**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">RlmE can act like an **assembly factor** in addition to catalyzing methylation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SAM-dependent 23S rRNA (uridine2552-2&#39;-O)-methyltransferase that installs the conserved Um2552 modification in the A-loop of 23S rRNA domain V, acting on the fully assembled 50S ribosomal subunit.</h3>
+                <span class="vote-buttons" data-g="Q88DV0" data-a="FUNCTION: SAM-dependent 23S rRNA (uridine2552-2&#39;-O)-methyltr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008650" target="_blank" class="term-link">
+                            rRNA (uridine-2&#39;-O-ribose)-methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000451" target="_blank" class="term-link">
+                                rRNA 2&#39;-O-methylation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/rlmE/rlmE-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Specifically methylates the uridine in position 2552 of 23S</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/rlmE/rlmE-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">EC=2.1.1.166</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">transfer of a methyl group from **S-adenosyl-L-methionine (SAM)** to the **2′-O** position of **U2552** in 23S rRNA</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Factor functionally coupled to late large ribosomal subunit (50S/LSU) maturation; the orthologous bacterial enzyme stimulates large ribosomal subunit assembly, and its loss causes severe LSU assembly defects and accumulation of immature particles.</h3>
+                <span class="vote-buttons" data-g="Q88DV0" data-a="FUNCTION: Factor functionally coupled to late large ribosoma..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008650" target="_blank" class="term-link">
+                            rRNA (uridine-2&#39;-O-ribose)-methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000027" target="_blank" class="term-link">
+                                ribosomal large subunit assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">RlmE **stimulates large ribosomal subunit assembly**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">RlmE participates in **23S rRNA maturation** and **late 50S/LSU biogenesis**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">only fully assembled 50S subunits** were substrates in vitro</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/rlmE/rlmE-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB reviewed entry for rlmE</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"Specifically methylates the uridine in position 2552 of 23S"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"EC=2.1.1.166"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/rlmE/rlmE-goa.tsv
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">QuickGO GOA annotations for rlmE</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"GO:0008650	rRNA (uridine-2&#39;-O-ribose)-methyltransferase activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:interpro/panther/PTHR10920/PTHR10920-metadata.yaml
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PANTHER family metadata for rlmE</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PANTHER places RlmE in the ribosomal RNA large subunit methyltransferase RlmE family.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon (Edison) deep research report for rlmE (Q88DV0, P. putida KT2440)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"transfer of a methyl group from **S-adenosyl-L-methionine (SAM)** to the **2′-O** position of **U2552** in 23S rRNA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"it is responsible for installing the universally conserved modification"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"U2552 is in the **A-loop**"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"places Um2552 adjacent to **G2553**, an essential base that anchors the 3′-CCA end of A-site tRNA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"only fully assembled 50S subunits** were substrates in vitro"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"RlmE participates in **23S rRNA maturation** and **late 50S/LSU biogenesis**"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"RlmE **stimulates large ribosomal subunit assembly**"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"RlmE can act like an **assembly factor** in addition to catalyzing methylation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"ΔrlmE** in *E. coli* produces a **severe LSU assembly phenotype**"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"RlmE functions in the **cytosol** in association with **maturing large ribosomal subunits**"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does loss of RlmE in P. putida KT2440 alter ribosome assembly or translation stress phenotypes under environmental stress, as it does in E. coli?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DV0" data-a="Q: Does loss of RlmE in P. putida KT2440 alter riboso..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the assembly-stimulating role of RlmE in P. putida separable from its catalytic (Um2552-forming) activity, as has been suggested for E. coli RlmE?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DV0" data-a="Q: Is the assembly-stimulating role of RlmE in P. put..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Profile 23S rRNA methylation (Um2552 stoichiometry by RiboMethSeq/mass spectrometry) and ribosome assembly (sucrose-gradient subunit profiles) in P. putida rlmE knockout and complemented strains.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: rRNA modification mapping</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DV0" data-a="EXPERIMENT: Profile 23S rRNA methylation (Um2552 stoichiometry..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express catalytically dead RlmE active-site mutants in a P. putida rlmE deletion background to test whether assembly stimulation is separable from methyltransferase chemistry.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: structure-function complementation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DV0" data-a="EXPERIMENT: Express catalytically dead RlmE active-site mutant..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rlmE-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DV0" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: **rlmE** (UniProt **Q88DV0**) in *Pseudomonas putida* KT2440 (PP_4719)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">21 citations</span>
+                    
+                    
+                    <span class="report-badge">3 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-03T04:03:42.600527</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="rlmE-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="rlmE-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="rlmE-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000008 Table 1 lists the modified nucleosides in the 23S rRNA domain V of *E. coli*, including the Um2552 modification and its correspondi</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-rlme-uniprot-q88dv0-in-pseudomonas-putida-kt2440-pp_4719">Research report: <strong>rlmE</strong> (UniProt <strong>Q88DV0</strong>) in <em>Pseudomonas putida</em> KT2440 (PP_4719)</h1>
+<h2 id="0-mandatory-verification-correct-geneprotein-identity">0) Mandatory verification: correct gene/protein identity</h2>
+<p>The UniProt target provided (Q88DV0; PP_4719) is annotated as <strong>ribosomal RNA large subunit methyltransferase E</strong> with synonyms <strong>ftsJ</strong> and <strong>rrmJ</strong>, and EC <strong>2.1.1.166</strong>, i.e., the bacterial enzyme that forms <strong>Um2552</strong> (2′-O-methyluridine at position 2552) in <strong>23S rRNA</strong>. The retrieved primary literature consistently uses <strong>RlmE ≡ FtsJ ≡ RrmJ</strong> for the enzyme catalyzing <strong>2′-O-methylation of U2552</strong> in the 23S rRNA A-loop, matching the UniProt description and ruling out a different “rlmE” usage in the gathered corpus. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 1-2, ero2024ribosomalrnamodification pages 2-3)</p>
+<p><strong>Limitation (organism-specificity):</strong> In the documents retrieved with the tools in this run, I did <strong>not</strong> find a paper that experimentally characterizes <strong>P. putida KT2440</strong> PP_4719/Q88DV0 directly. Therefore, the functional annotation below for <em>P. putida</em> is based on <strong>strong orthology/conservation</strong> and <strong>direct experimental evidence from other bacteria</strong>, particularly <em>E. coli</em>, where the same enzyme and modification site are conserved. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 1-2, ero2024ribosomalrnamodification media c9fd6e76)</p>
+<hr />
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-what-is-rlme-ftsjrrmj">1.1 What is RlmE (FtsJ/RrmJ)?</h3>
+<p><strong>RlmE</strong> is a <strong>SAM-dependent RNA 2′-O-methyltransferase</strong> that modifies the <strong>ribose 2′-hydroxyl</strong> of a specific uridine in the large-subunit rRNA. In bacteria, it is responsible for installing the universally conserved modification <strong>Um2552</strong> in <strong>23S rRNA</strong>. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 1-2)</p>
+<h3 id="12-enzymatic-reaction-and-substrate-specificity">1.2 Enzymatic reaction and substrate specificity</h3>
+<p><strong>Reaction (EC 2.1.1.166):</strong> transfer of a methyl group from <strong>S-adenosyl-L-methionine (SAM)</strong> to the <strong>2′-O</strong> position of <strong>U2552</strong> in 23S rRNA, yielding <strong>Um2552</strong> (2′-O-methyluridine) and S-adenosyl-L-homocysteine (SAH). RrmJ/FtsJ was explicitly described as catalyzing 2′-O methylation of <strong>U2552</strong> in the A-loop of 23S rRNA. (hager2004substratebindinganalysis pages 1-2)</p>
+<p><strong>Substrate locus:</strong> U2552 is in the <strong>A-loop</strong> (23S rRNA domain V) adjacent to functionally critical nucleotides in the <strong>peptidyl transferase center (PTC)</strong> region; recent structural mapping places Um2552 adjacent to <strong>G2553</strong>, an essential base that anchors the 3′-CCA end of A-site tRNA. (ero2024ribosomalrnamodification pages 2-3, ero2024ribosomalrnamodification media c9fd6e76)</p>
+<h3 id="13-biological-role-rrna-modification-coupled-to-ribosome-biogenesis">1.3 Biological role: rRNA modification coupled to ribosome biogenesis</h3>
+<p>A central contemporary view is that many rRNA modification enzymes do more than “decorate” rRNA; they can also <strong>promote ribosomal subunit assembly</strong>. RlmE is a key example: loss of the protein perturbs <strong>50S/LSU assembly</strong>, and RlmE can act like an <strong>assembly factor</strong> in addition to catalyzing methylation. (ero2024ribosomalrnamodification pages 1-2, ero2024ribosomalrnamodification pages 1-1)</p>
+<h3 id="14-cellular-localization-inferred">1.4 Cellular localization (inferred)</h3>
+<p>While the retrieved texts do not provide a dedicated subcellular-localization experiment for RlmE in <em>P. putida</em>, the enzyme’s substrate (23S rRNA) and the described phenotypes (LSU assembly intermediates; rRNA processing defects) support that RlmE functions in the <strong>cytosol</strong> in association with <strong>maturing large ribosomal subunits</strong> rather than being membrane-bound or secreted. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 10-11, ero2024ribosomalrnamodification pages 7-8)</p>
+<hr />
+<h2 id="2-mechanism-and-structuralbiochemical-understanding-authoritative-primary-literature">2) Mechanism and structural/biochemical understanding (authoritative primary literature)</h2>
+<h3 id="21-substrate-recognition-and-a-proposed-catalytic-sequence">2.1 Substrate recognition and a proposed catalytic sequence</h3>
+<p>A biochemical/structural analysis of RrmJ (FtsJ) emphasized a <strong>conserved positively charged ridge</strong> implicated in 23S rRNA binding and proposed a two-step pathway: (i) the A-loop <strong>undocks</strong> from the packed 50S subunit and (ii) <strong>base flipping</strong> of U2552 exposes the ribose 2′-OH for methyl transfer. This model explicitly links catalysis to rRNA conformational dynamics in assembled particles. (hager2004substratebindinganalysis pages 1-2)</p>
+<h3 id="22-timing-during-ribosome-biogenesis-late-stage-activity">2.2 Timing during ribosome biogenesis (late-stage activity)</h3>
+<p>Evidence supports that RlmE acts <strong>late</strong> in large-subunit maturation. Hager et al. report that <strong>only fully assembled 50S subunits</strong> were substrates in vitro, whereas naked 23S rRNA or immature particles were not methylated, supporting late-stage accessibility of the A-loop for modification. (hager2004substratebindinganalysis pages 1-2)</p>
+<hr />
+<h2 id="3-recent-developments-and-latest-research-prioritizing-20232024">3) Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="31-2024-rrna-modification-enzymes-as-active-stimulators-of-lsu-assembly">3.1 2024: rRNA modification enzymes as active stimulators of LSU assembly</h3>
+<p>A 2024 <em>Nucleic Acids Research</em> study systematically tested multiple <strong>23S rRNA modification enzymes</strong> located around the PTC and found that, beyond the established role of RlmE in Um2552 formation, RlmE <strong>stimulates large ribosomal subunit assembly</strong> and is among enzymes whose absence produces clear assembly phenotypes. The work supports the concept of <strong>mutual interdependence</strong> between rRNA modification and LSU assembly and highlights that some modification enzymes can stimulate assembly <strong>independent of catalytic activity</strong> (in general), placing RlmE within a broader “assembly-stimulator” class. (ero2024ribosomalrnamodification pages 1-1, ero2024ribosomalrnamodification pages 1-2)</p>
+<h3 id="32-2024-phenotypic-and-assembly-intermediate-resolution-for-rlme">3.2 2024: phenotypic and assembly-intermediate resolution for ΔrlmE</h3>
+<p>The same 2024 study summarizes that <strong>ΔrlmE</strong> in <em>E. coli</em> produces a <strong>severe LSU assembly phenotype</strong> and a <strong>~2–4-fold reduction in growth rate</strong>, and further reports cold-sensitive growth and accumulation of late-stage assembly intermediates with incomplete processing of 23S rRNA ends (extended +3/+7 nt signatures). (ero2024ribosomalrnamodification pages 2-3, ero2024ribosomalrnamodification pages 10-11, ero2024ribosomalrnamodification pages 7-8)</p>
+<h3 id="33-pseudomonas-specific-status-20232024">3.3 Pseudomonas-specific status (2023–2024)</h3>
+<p>In this tool-based retrieval, no 2023–2024 primary study was found that experimentally dissects <em>P. putida</em> KT2440 <strong>PP_4719/Q88DV0</strong> specifically. Thus, recent advances are incorporated via <strong>high-confidence cross-bacterial conservation</strong>, using <em>E. coli</em> as the primary experimental reference system. (ero2024ribosomalrnamodification pages 1-2, ero2024ribosomalrnamodification media c9fd6e76)</p>
+<hr />
+<h2 id="4-pathwayprocess-placement-for-functional-annotation-for-p-putida-kt2440">4) Pathway/Process placement for functional annotation (for <em>P. putida</em> KT2440)</h2>
+<h3 id="41-process-ribosome-large-subunit-maturation">4.1 Process: ribosome large subunit maturation</h3>
+<p>RlmE participates in <strong>23S rRNA maturation</strong> and <strong>late 50S/LSU biogenesis</strong>, centered on the PTC-adjacent region of 23S rRNA domain V. The Um2552 site is located in the A-loop, a functionally important loop engaging A-site tRNA interactions, consistent with observed impacts on assembly and translation efficiency when the enzyme is absent. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 2-3, ero2024ribosomalrnamodification pages 10-11)</p>
+<h3 id="42-immediate-biochemical-neighborhood-and-functional-context">4.2 Immediate biochemical neighborhood and functional context</h3>
+<p>PTC-proximal modified nucleotides cluster near the catalytic core; the 2024 structural mapping highlights the location of Um2552 among other domain V modifications surrounding the PTC. This supports a model where RlmE’s product can contribute to local rRNA conformational stability and assembly progression in this region. (ero2024ribosomalrnamodification pages 1-2, ero2024ribosomalrnamodification media c9fd6e76, ero2024ribosomalrnamodification media 174e05f1)</p>
+<hr />
+<h2 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h2>
+<h3 id="51-rna-modification-mapping-methodological-implementations">5.1 RNA modification mapping (methodological implementations)</h3>
+<p>A 2021 review describes how rRNA 2′-O-methylation (2′Ome) is studied using historical and modern methodologies, including primer extension/RTL-PCR and mass spectrometry, and highlights <strong>RNA-seq–based approaches</strong> (e.g., RiboMeth-seq principle) that can map rRNA 2′Ome sites in a single experiment and enable quantitative comparisons across samples and conditions—important for both basic research and translational studies. (jaafar20212′oribosemethylationof pages 3-4)</p>
+<p>A 2024 methods-focused thesis describes multiple current high-throughput mapping approaches for 2′-O-methylation (including <strong>RiboMethSeq</strong>, <strong>2’OMe-seq</strong>, <strong>RibOxi-Seq</strong>, <strong>Nm-Seq</strong>) and notes a practical implementation detail: adaptation to Illumina sequencing reduced required input by ~<strong>1,000×</strong>, enabling analysis of <strong>clinical samples</strong>. These methods are directly relevant for confirming Um2552 presence/stoichiometry and for surveying broader RNA modification landscapes. (pichot2024optimisationofnext pages 20-22)</p>
+<h3 id="52-antibiotic-susceptibilityamr-research">5.2 Antibiotic susceptibility/AMR research</h3>
+<p>Work on RNA modification mutants under sub-MIC antibiotics demonstrates an application domain: identifying rRNA/tRNA modification enzymes that modulate <strong>fitness under antibiotic stress</strong>, not necessarily by classic resistance mechanisms but via translation reprogramming and stress tolerance. A TN-seq study under sub-MIC antibiotics found enrichment of RNA modification genes among loci affecting fitness and provides gene-level fitness signatures (including for rlmE/rrmJ in their system). (babosan2022nonessentialtrnaand pages 2-3, babosan2022nonessentialtrnaand pages 3-4)</p>
+<h3 id="53-structure-enabled-mechanistic-studies-and-potential-inhibitor-exploration">5.3 Structure-enabled mechanistic studies and potential inhibitor exploration</h3>
+<p>Although not RlmE-specific, high-resolution structures of bacterial rRNA 2′-O methyltransferases (e.g., RlmM) demonstrate a widely used implementation pattern: combine <strong>knockout strains</strong>, <strong>in vitro transcribed rRNA substrates</strong>, and <strong>crystal structures</strong> of enzyme–SAM complexes to dissect substrate recognition, define assembly stage specificity, and enable structure-informed hypotheses relevant to antimicrobial targeting of ribosome biogenesis factors. (punekar2012crystalstructureof pages 1-1)</p>
+<hr />
+<h2 id="6-expert-opinions-and-analysis-synthesis-across-authoritative-sources">6) Expert opinions and analysis (synthesis across authoritative sources)</h2>
+<h3 id="61-rlme-as-both-writer-and-assembly-factor">6.1 RlmE as both “writer” and “assembly factor”</h3>
+<p>Two evidence streams converge: (i) classical biochemical work that places RrmJ action on assembled 50S and relates loss of the enzyme to subunit/70S imbalance and impaired translation, and (ii) 2024 systems-level genetic/biogenesis work showing RlmE is uniquely impactful among tested modification enzymes for LSU assembly and may contribute to assembly beyond catalytic methyl transfer. Together these support an expert interpretation that RlmE is best annotated not only as <strong>23S rRNA Um2552 methyltransferase</strong>, but also as a factor functionally integrated into <strong>late LSU maturation</strong>. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 10-11, ero2024ribosomalrnamodification pages 1-2)</p>
+<h3 id="62-practical-implication-for-p-putida-annotation">6.2 Practical implication for <em>P. putida</em> annotation</h3>
+<p>Given the high conservation of the Um2552 modification and the consistent functional requirement for RlmE in bacterial LSU assembly, the most defensible annotation for <em>P. putida</em> KT2440 Q88DV0 is:<br />
+- <strong>Molecular function:</strong> SAM-dependent rRNA 2′-O-methyltransferase specific for <strong>23S rRNA U2552</strong>.<br />
+- <strong>Biological process:</strong> <strong>large ribosomal subunit maturation/assembly</strong>, likely at a <strong>late stage</strong>.<br />
+- <strong>Cellular component:</strong> <strong>cytosol; large ribosomal subunit assembly intermediates</strong> (inferred from function/phenotypes).<br />
+This is a conservation-based inference; organism-specific phenotypic magnitude in <em>P. putida</em> remains to be experimentally confirmed. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 10-11)</p>
+<hr />
+<h2 id="7-statistics-and-data-from-recent-studies">7) Statistics and data from recent studies</h2>
+<p>Two structured summaries are provided below.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Evidence-based detail</th>
+<th>Key sources (author year, DOI)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reaction</td>
+<td>RlmE/FtsJ/RrmJ (EC 2.1.1.166) catalyzes SAM-dependent 2'-O-methylation of U2552 in 23S rRNA, generating Um2552. The modification is attributed to RlmE in domain V of the large-subunit rRNA. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 1-2)</td>
+<td>Hager et al. 2004, 10.1128/JB.186.19.6634-6642.2004; Ero et al. 2024, 10.1093/nar/gkae222</td>
+</tr>
+<tr>
+<td>Substrate / structural location</td>
+<td>The target nucleotide is U2552 in the A-loop of 23S rRNA domain V, near the peptidyl transferase center; recent mapping places Um2552 adjacent to G2553, an essential residue that anchors the 3'-CCA end of A-site tRNA. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 2-3, ero2024ribosomalrnamodification media c9fd6e76)</td>
+<td>Hager et al. 2004, 10.1128/JB.186.19.6634-6642.2004; Ero et al. 2024, 10.1093/nar/gkae222</td>
+</tr>
+<tr>
+<td>Timing in ribosome biogenesis</td>
+<td>Evidence supports action at a late stage of large-subunit biogenesis. Hager et al. reported that only fully assembled 50S subunits were substrates in vitro, whereas naked 23S rRNA or immature particles were not; Ero et al. likewise place RlmE among factors acting during late LSU assembly. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 10-11)</td>
+<td>Hager et al. 2004, 10.1128/JB.186.19.6634-6642.2004; Ero et al. 2024, 10.1093/nar/gkae222</td>
+</tr>
+<tr>
+<td>Deletion phenotype: ribosome profile</td>
+<td>rlmE/rrmJ deletion causes accumulation of free 30S and 50S subunits at the expense of 70S ribosomes, consistent with defective subunit maturation/association. (hager2004substratebindinganalysis pages 1-2)</td>
+<td>Hager et al. 2004, 10.1128/JB.186.19.6634-6642.2004</td>
+</tr>
+<tr>
+<td>Deletion phenotype: translation / growth</td>
+<td>Loss of RlmE decreases translational efficiency and causes a growth disadvantage; Ero et al. summarize a notable ~2-4-fold decrease in growth rate for ΔrlmE in E. coli. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 2-3)</td>
+<td>Hager et al. 2004, 10.1128/JB.186.19.6634-6642.2004; Ero et al. 2024, 10.1093/nar/gkae222</td>
+</tr>
+<tr>
+<td>Deletion phenotype: temperature sensitivity</td>
+<td>Absence of RlmE causes cold-sensitive growth, with defects becoming more pronounced at lower temperature. (ero2024ribosomalrnamodification pages 10-11, ero2024ribosomalrnamodification pages 4-5)</td>
+<td>Ero et al. 2024, 10.1093/nar/gkae222</td>
+</tr>
+<tr>
+<td>Deletion phenotype: assembly intermediates / rRNA processing</td>
+<td>Recent work shows that strains lacking RlmE accumulate incompletely assembled LSU particles and exhibit defects in 23S rRNA 5' end maturation, including persistence of precursor ends extended by +3 or +7 nt; ΔrlmE intermediates also show structural perturbations near PTC helices and can lack bL36. (ero2024ribosomalrnamodification pages 10-11, ero2024ribosomalrnamodification pages 7-8)</td>
+<td>Ero et al. 2024, 10.1093/nar/gkae222</td>
+</tr>
+<tr>
+<td>Mechanistic / structural features</td>
+<td>RrmJ/RlmE contains a conserved positively charged ridge implicated in 23S rRNA binding. A two-step model proposes A-loop undocking from the packed 50S particle followed by base flipping of U2552 to expose the ribose 2'-OH for methyl transfer; active-site mutants fail to rescue the deletion phenotype. (hager2004substratebindinganalysis pages 1-2)</td>
+<td>Hager et al. 2004, 10.1128/JB.186.19.6634-6642.2004</td>
+</tr>
+<tr>
+<td>Non-catalytic role in assembly</td>
+<td>Beyond installing Um2552, RlmE appears to stimulate LSU assembly; recent analysis suggests this contribution can be at least partly independent of methyltransferase chemistry, placing RlmE among rRNA-modification enzymes that also function as assembly factors. (ero2024ribosomalrnamodification pages 1-2, ero2024ribosomalrnamodification pages 2-3, ero2024ribosomalrnamodification pages 1-1)</td>
+<td>Ero et al. 2024, 10.1093/nar/gkae222</td>
+</tr>
+<tr>
+<td>Pseudomonas putida KT2440-specific evidence</td>
+<td>In the provided evidence set, no direct experimental study of PP_4719/Q88DV0 from P. putida KT2440 was retrieved. Functional annotation for Q88DV0 is therefore supported primarily by strong orthology/conservation with bacterial RlmE/FtsJ/RrmJ enzymes and by the conserved assignment of Um2552-forming activity. (ero2024ribosomalrnamodification pages 1-2, ero2024ribosomalrnamodification media c9fd6e76)</td>
+<td>Ero et al. 2024, 10.1093/nar/gkae222</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles evidence-supported functional annotation points for bacterial RlmE/FtsJ/RrmJ, including catalytic activity, substrate position, assembly timing, and phenotypes of loss. It is useful as a compact reference for annotating the Pseudomonas putida KT2440 ortholog by conserved function.</em></p>
+<table>
+<thead>
+<tr>
+<th>System/organism</th>
+<th>Perturbation</th>
+<th>Quantitative outcome</th>
+<th>Assay/condition</th>
+<th>Citation (include DOI)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>Escherichia coli</em></td>
+<td>ΔrlmE (single knockout)</td>
+<td>Growth rate decreased by ~2–4-fold</td>
+<td>Growth phenotype summarized in a 2024 study of 23S rRNA modification enzymes around the peptidyl transferase center</td>
+<td>Ero et al. 2024, DOI: 10.1093/nar/gkae222 (ero2024ribosomalrnamodification pages 2-3)</td>
+</tr>
+<tr>
+<td><em>Escherichia coli</em></td>
+<td>Absence of RlmE</td>
+<td>Cold-sensitive growth; defect is more pronounced at lower temperature</td>
+<td>Ribosome biogenesis/growth analysis, including comparison at 30 °C vs 37 °C</td>
+<td>Ero et al. 2024, DOI: 10.1093/nar/gkae222 (ero2024ribosomalrnamodification pages 10-11, ero2024ribosomalrnamodification pages 4-5)</td>
+</tr>
+<tr>
+<td><em>Escherichia coli</em></td>
+<td>ΔrlmE / rrmJ deletion</td>
+<td>Accumulation of free 30S and 50S subunits at the expense of 70S ribosomes; decreased translational efficiency and growth disadvantage</td>
+<td>Ribosome profile and translation phenotype in rrmJ deletion strains</td>
+<td>Hager et al. 2004, DOI: 10.1128/JB.186.19.6634-6642.2004 (hager2004substratebindinganalysis pages 1-2)</td>
+</tr>
+<tr>
+<td><em>Escherichia coli</em></td>
+<td>Absence of RlmE</td>
+<td>Accumulation of incompletely assembled LSU particles; 23S rRNA 5′ ends remain extended by +3 or +7 nt; 45S precursor can lack bL36</td>
+<td>Late LSU assembly and 23S rRNA processing analysis</td>
+<td>Ero et al. 2024, DOI: 10.1093/nar/gkae222 (ero2024ribosomalrnamodification pages 10-11, ero2024ribosomalrnamodification pages 7-8)</td>
+</tr>
+<tr>
+<td><em>Vibrio cholerae</em></td>
+<td>rlmE/rrmJ inactivation</td>
+<td>CIP: +825, <em>P</em> = .003</td>
+<td>TN-seq after 16 generations in sub-MIC ciprofloxacin</td>
+<td>Babosan et al. 2022, DOI: 10.1093/femsml/uqac019 (babosan2022nonessentialtrnaand pages 3-4)</td>
+</tr>
+<tr>
+<td><em>Vibrio cholerae</em></td>
+<td>rlmE/rrmJ inactivation</td>
+<td>TOB: +1.2, NS</td>
+<td>TN-seq after 16 generations in sub-MIC tobramycin</td>
+<td>Babosan et al. 2022, DOI: 10.1093/femsml/uqac019 (babosan2022nonessentialtrnaand pages 3-4)</td>
+</tr>
+<tr>
+<td><em>Vibrio cholerae</em></td>
+<td>RNA modification genes (context, not specific to rlmE)</td>
+<td>2.43× enrichment, <em>P</em> = 4.56 × 10⁻⁴; 23/80 hits for TOB</td>
+<td>TN-seq enrichment of RNA modification genes affecting fitness under sub-MIC tobramycin</td>
+<td>Babosan et al. 2022, DOI: 10.1093/femsml/uqac019 (babosan2022nonessentialtrnaand pages 2-3)</td>
+</tr>
+<tr>
+<td><em>Vibrio cholerae</em></td>
+<td>tRNA modification genes (context, not specific to rlmE)</td>
+<td>1.57× enrichment, <em>P</em> = 2.3 × 10⁻²; 20/48 hits for CIP</td>
+<td>TN-seq enrichment of tRNA/RNA modification genes affecting fitness under sub-MIC ciprofloxacin</td>
+<td>Babosan et al. 2022, DOI: 10.1093/femsml/uqac019 (babosan2022nonessentialtrnaand pages 2-3)</td>
+</tr>
+<tr>
+<td><em>Escherichia coli</em></td>
+<td>Δ10 strain lacking 10 23S rRNA modification enzymes around the PTC (context including RlmE pathway)</td>
+<td>Strain is viable but shows severely compromised growth and ribosome assembly, especially at lower temperature</td>
+<td>Multi-gene deletion analysis of PTC-region modification enzymes</td>
+<td>Ero et al. 2024, DOI: 10.1093/nar/gkae222 (ero2024ribosomalrnamodification pages 1-1)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main quantitative and phenotype-level findings relevant to RlmE/FtsJ/RrmJ, including direct ΔrlmE effects in </em>E. coli<em> and antibiotic-fitness data from </em>V. cholerae<em>. It is useful for functional annotation because it separates direct enzyme-linked evidence from broader RNA-modification context.</em></p>
+<p>Key data highlights from the cited primary studies include: (i) <strong>~2–4× growth-rate decrease</strong> upon ΔrlmE in <em>E. coli</em> (2024), (ii) strong antibiotic-condition-dependent fitness effects of rlmE/rrmJ in TN-seq (e.g., <strong>CIP +825; P = 0.003</strong> in the referenced dataset), and (iii) enrichment of RNA modification genes among loci affecting fitness under sub-MIC antibiotics (e.g., <strong>2.43× enrichment; P = 4.56×10−4</strong> for TOB). (ero2024ribosomalrnamodification pages 2-3, babosan2022nonessentialtrnaand pages 3-4, babosan2022nonessentialtrnaand pages 2-3)</p>
+<hr />
+<h2 id="8-visual-evidence-rrna-site-mapping">8) Visual evidence (rRNA site mapping)</h2>
+<p>The 2024 <em>Nucleic Acids Research</em> paper includes a <strong>table mapping Um2552 to RlmE</strong> and a <strong>structural view</strong> showing the positions of PTC-region modifications (including U2552) in 23S rRNA domain V, supporting both the enzyme–site assignment and the functional context near the PTC. (ero2024ribosomalrnamodification media c9fd6e76, ero2024ribosomalrnamodification media 174e05f1)</p>
+<hr />
+<h2 id="9-curated-key-references-urls-dates">9) Curated key references (URLs, dates)</h2>
+<ol>
+<li><strong>Ero R. et al.</strong> “Ribosomal RNA modification enzymes stimulate large ribosome subunit assembly in <em>E. coli</em>.” <em>Nucleic Acids Research</em> (Publication date: <strong>Mar 2024</strong>). https://doi.org/10.1093/nar/gkae222 (ero2024ribosomalrnamodification pages 1-2, ero2024ribosomalrnamodification pages 2-3, ero2024ribosomalrnamodification pages 10-11, ero2024ribosomalrnamodification pages 1-1)</li>
+<li><strong>Hager J. et al.</strong> “Substrate Binding Analysis of the 23S rRNA Methyltransferase RrmJ.” <em>Journal of Bacteriology</em> (Publication date: <strong>Oct 2004</strong>). https://doi.org/10.1128/jb.186.19.6634-6642.2004 (hager2004substratebindinganalysis pages 1-2)</li>
+<li><strong>Babosan A. et al.</strong> “Nonessential tRNA and rRNA modifications impact the bacterial response to sub-MIC antibiotic stress.” <em>microLife</em> (Publication date: <strong>Feb 2022</strong>). https://doi.org/10.1093/femsml/uqac019 (babosan2022nonessentialtrnaand pages 3-4, babosan2022nonessentialtrnaand pages 2-3)</li>
+<li><strong>Jaafar M. et al.</strong> “2′O-Ribose Methylation of Ribosomal RNAs: Natural Diversity in Living Organisms, Biological Processes, and Diseases.” <em>Cells</em> (Publication date: <strong>Jul 2021</strong>). https://doi.org/10.3390/cells10081948 (jaafar20212′oribosemethylationof pages 3-4)</li>
+<li><strong>Pichot F.</strong> “Optimisation of next generation sequencing methodologies for RNA modifications detection.” PhD thesis (Publication date: <strong>Jan 2024</strong>). https://doi.org/10.25358/openscience-10431 (pichot2024optimisationofnext pages 20-22)</li>
+</ol>
+<hr />
+<h2 id="10-summary-functional-annotation-statement-evidence-weighted">10) Summary functional annotation statement (evidence-weighted)</h2>
+<p>For <em>Pseudomonas putida</em> KT2440, <strong>rlmE (PP_4719; UniProt Q88DV0)</strong> is best annotated as a <strong>cytosolic SAM-dependent 23S rRNA 2′-O-methyltransferase</strong> that methylates <strong>U2552</strong> in the 23S rRNA <strong>A-loop</strong> to produce <strong>Um2552</strong>, and as a factor functionally coupled to <strong>late 50S/LSU assembly</strong>. This conclusion is strongly supported by conserved bacterial evidence (notably <em>E. coli</em>), including mechanistic models of A-loop rearrangement/base flipping, and phenotypes where loss of RlmE perturbs 70S formation, translation efficiency, growth, and cold-temperature ribosome assembly. (hager2004substratebindinganalysis pages 1-2, ero2024ribosomalrnamodification pages 2-3, ero2024ribosomalrnamodification pages 10-11, ero2024ribosomalrnamodification media c9fd6e76)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(hager2004substratebindinganalysis pages 1-2): Jutta Hager, Bart L. Staker, and Ursula Jakob. Substrate binding analysis of the 23s rrna methyltransferase rrmj. Journal of Bacteriology, 186:6634-6642, Oct 2004. URL: https://doi.org/10.1128/jb.186.19.6634-6642.2004, doi:10.1128/jb.186.19.6634-6642.2004. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ero2024ribosomalrnamodification pages 1-2): Rya Ero, Margus Leppik, Kaspar Reier, Aivar Liiv, and Jaanus Remme. Ribosomal rna modification enzymes stimulate large ribosome subunit assembly in e. coli. Nucleic Acids Research, 52:6614-6628, Mar 2024. URL: https://doi.org/10.1093/nar/gkae222, doi:10.1093/nar/gkae222. This article has 24 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ero2024ribosomalrnamodification pages 2-3): Rya Ero, Margus Leppik, Kaspar Reier, Aivar Liiv, and Jaanus Remme. Ribosomal rna modification enzymes stimulate large ribosome subunit assembly in e. coli. Nucleic Acids Research, 52:6614-6628, Mar 2024. URL: https://doi.org/10.1093/nar/gkae222, doi:10.1093/nar/gkae222. This article has 24 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ero2024ribosomalrnamodification media c9fd6e76): Rya Ero, Margus Leppik, Kaspar Reier, Aivar Liiv, and Jaanus Remme. Ribosomal rna modification enzymes stimulate large ribosome subunit assembly in e. coli. Nucleic Acids Research, 52:6614-6628, Mar 2024. URL: https://doi.org/10.1093/nar/gkae222, doi:10.1093/nar/gkae222. This article has 24 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ero2024ribosomalrnamodification pages 1-1): Rya Ero, Margus Leppik, Kaspar Reier, Aivar Liiv, and Jaanus Remme. Ribosomal rna modification enzymes stimulate large ribosome subunit assembly in e. coli. Nucleic Acids Research, 52:6614-6628, Mar 2024. URL: https://doi.org/10.1093/nar/gkae222, doi:10.1093/nar/gkae222. This article has 24 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ero2024ribosomalrnamodification pages 10-11): Rya Ero, Margus Leppik, Kaspar Reier, Aivar Liiv, and Jaanus Remme. Ribosomal rna modification enzymes stimulate large ribosome subunit assembly in e. coli. Nucleic Acids Research, 52:6614-6628, Mar 2024. URL: https://doi.org/10.1093/nar/gkae222, doi:10.1093/nar/gkae222. This article has 24 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ero2024ribosomalrnamodification pages 7-8): Rya Ero, Margus Leppik, Kaspar Reier, Aivar Liiv, and Jaanus Remme. Ribosomal rna modification enzymes stimulate large ribosome subunit assembly in e. coli. Nucleic Acids Research, 52:6614-6628, Mar 2024. URL: https://doi.org/10.1093/nar/gkae222, doi:10.1093/nar/gkae222. This article has 24 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ero2024ribosomalrnamodification media 174e05f1): Rya Ero, Margus Leppik, Kaspar Reier, Aivar Liiv, and Jaanus Remme. Ribosomal rna modification enzymes stimulate large ribosome subunit assembly in e. coli. Nucleic Acids Research, 52:6614-6628, Mar 2024. URL: https://doi.org/10.1093/nar/gkae222, doi:10.1093/nar/gkae222. This article has 24 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jaafar20212′oribosemethylationof pages 3-4): Mariam Jaafar, Hermes Paraqindes, Mathieu Gabut, Jean-Jacques Diaz, Virginie Marcel, and Sébastien Durand. 2′o-ribose methylation of ribosomal rnas: natural diversity in living organisms, biological processes, and diseases. Cells, 10:1948, Jul 2021. URL: https://doi.org/10.3390/cells10081948, doi:10.3390/cells10081948. This article has 39 citations.</p>
+</li>
+<li>
+<p>(pichot2024optimisationofnext pages 20-22): Optimisation of next generation sequencing methodologies for RNA modifications detection This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(babosan2022nonessentialtrnaand pages 2-3): Anamaria Babosan, Louna Fruchard, Evelyne Krin, André Carvalho, Didier Mazel, and Zeynep Baharoglu. Nonessential trna and rrna modifications impact the bacterial response to sub-mic antibiotic stress. microLife, Feb 2022. URL: https://doi.org/10.1093/femsml/uqac019, doi:10.1093/femsml/uqac019. This article has 52 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(babosan2022nonessentialtrnaand pages 3-4): Anamaria Babosan, Louna Fruchard, Evelyne Krin, André Carvalho, Didier Mazel, and Zeynep Baharoglu. Nonessential trna and rrna modifications impact the bacterial response to sub-mic antibiotic stress. microLife, Feb 2022. URL: https://doi.org/10.1093/femsml/uqac019, doi:10.1093/femsml/uqac019. This article has 52 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(punekar2012crystalstructureof pages 1-1): Avinash S. Punekar, Tyson R. Shepherd, Josefine Liljeruhm, Anthony C. Forster, and Maria Selmer. Crystal structure of rlmm, the 2′o-ribose methyltransferase for c2498 of escherichia coli 23s rrna. Nucleic Acids Research, 40:10507-10520, Aug 2012. URL: https://doi.org/10.1093/nar/gks727, doi:10.1093/nar/gks727. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ero2024ribosomalrnamodification pages 4-5): Rya Ero, Margus Leppik, Kaspar Reier, Aivar Liiv, and Jaanus Remme. Ribosomal rna modification enzymes stimulate large ribosome subunit assembly in e. coli. Nucleic Acids Research, 52:6614-6628, Mar 2024. URL: https://doi.org/10.1093/nar/gkae222, doi:10.1093/nar/gkae222. This article has 24 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rlmE-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="rlmE-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a><br />
+<img alt="## Context ID: pqac-00000008 Table 1 lists the modified nucleosides in the 23S rRNA domain V of *E. coli*, including the Um2552 modification and its correspondi" src="rlmE-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hager2004substratebindinganalysis pages 1-2</li>
+<li>pichot2024optimisationofnext pages 20-22</li>
+<li>punekar2012crystalstructureof pages 1-1</li>
+<li>ero2024ribosomalrnamodification pages 2-3</li>
+<li>babosan2022nonessentialtrnaand pages 3-4</li>
+<li>babosan2022nonessentialtrnaand pages 2-3</li>
+<li>ero2024ribosomalrnamodification pages 1-1</li>
+<li>ero2024ribosomalrnamodification pages 1-2</li>
+<li>ero2024ribosomalrnamodification pages 10-11</li>
+<li>ero2024ribosomalrnamodification pages 7-8</li>
+<li>ero2024ribosomalrnamodification pages 4-5</li>
+<li>https://doi.org/10.1093/nar/gkae222</li>
+<li>https://doi.org/10.1128/jb.186.19.6634-6642.2004</li>
+<li>https://doi.org/10.1093/femsml/uqac019</li>
+<li>https://doi.org/10.3390/cells10081948</li>
+<li>https://doi.org/10.25358/openscience-10431</li>
+<li>https://doi.org/10.1128/jb.186.19.6634-6642.2004,</li>
+<li>https://doi.org/10.1093/nar/gkae222,</li>
+<li>https://doi.org/10.3390/cells10081948,</li>
+<li>https://doi.org/10.1093/femsml/uqac019,</li>
+<li>https://doi.org/10.1093/nar/gks727,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DV0
+gene_symbol: rlmE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: rlmE (synonyms ftsJ, rrmJ; ordered locus PP_4719) encodes a cytosolic SAM-dependent
+  23S rRNA (uridine2552-2&#39;-O)-methyltransferase (EC 2.1.1.166) of the class I-like SAM-binding
+  methyltransferase superfamily, RlmE/FtsJ family. It installs the universally conserved
+  2&#39;-O-methyluridine (Um2552) in the A-loop of 23S rRNA domain V, adjacent to the peptidyl
+  transferase center, acting late on the fully assembled 50S ribosomal subunit. Beyond
+  catalysis, the orthologous bacterial enzyme is functionally coupled to late large ribosomal
+  subunit (LSU) maturation/assembly; loss of RlmE in E. coli causes accumulation of free
+  30S/50S subunits at the expense of 70S, defective 23S rRNA end processing, cold-sensitive
+  growth, and a ~2-4-fold growth-rate reduction. The P. putida KT2440 assignment is a
+  conservation-based inference from these well-characterized bacterial orthologs.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: The cytoplasm annotation is correct for RlmE. The enzyme is a soluble bacterial
+      rRNA modification enzyme that acts on maturing large ribosomal subunits in the cytosol.
+    action: KEEP_AS_NON_CORE
+    reason: RlmE is a soluble bacterial rRNA modification enzyme acting on cytosolic 50S
+      assembly intermediates; the location is accurate but non-core. Falcon deep research
+      confirms the enzyme functions in the cytosol in association with maturing large
+      ribosomal subunits rather than being membrane-bound or secreted.
+    supported_by:
+    - reference_id: file:PSEPK/rlmE/rlmE-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+    - reference_id: file:PSEPK/rlmE/rlmE-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+      supporting_text: RlmE functions in the **cytosol** in association with **maturing large
+        ribosomal subunits**
+- term:
+    id: GO:0006364
+    label: rRNA processing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: rRNA processing is correct pathway context, but RlmE directly performs ribose
+      2&#39;-O-methylation of 23S rRNA, so rRNA 2&#39;-O-methylation is the more specific and
+      accurate process term.
+    action: MODIFY
+    reason: RlmE specifically transfers a methyl group to the 2&#39;-O position of the ribose
+      of uridine 2552 in 23S rRNA. The generic rRNA processing parent is therefore best
+      replaced with the precise process GO:0000451 rRNA 2&#39;-O-methylation, which captures
+      the exact chemistry. Falcon deep research confirms the enzyme installs Um2552 (2&#39;-O-methyluridine)
+      in the A-loop of 23S rRNA.
+    proposed_replacement_terms:
+    - id: GO:0000451
+      label: rRNA 2&#39;-O-methylation
+    supported_by:
+    - reference_id: file:PSEPK/rlmE/rlmE-uniprot.txt
+      supporting_text: Specifically methylates the uridine in position 2552 of 23S
+    - reference_id: file:PSEPK/rlmE/rlmE-goa.tsv
+      supporting_text: &#34;GO:0006364\trRNA processing&#34;
+    - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+      supporting_text: transfer of a methyl group from **S-adenosyl-L-methionine (SAM)**
+        to the **2′-O** position of **U2552** in 23S rRNA
+- term:
+    id: GO:0008168
+    label: methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This generic methyltransferase parent is over-annotated for RlmE; the specific
+      substrate and modified nucleotide are captured by GO:0008650.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008650 (rRNA uridine-2&#39;-O-ribose methyltransferase activity) captures the
+      specific rRNA substrate and modified nucleotide. Falcon deep research confirms RlmE
+      is a SAM-dependent RNA 2&#39;-O-methyltransferase specific for the 23S rRNA ribose 2&#39;-hydroxyl.
+    supported_by:
+    - reference_id: file:PSEPK/rlmE/rlmE-uniprot.txt
+      supporting_text: EC=2.1.1.166
+    - reference_id: file:PSEPK/rlmE/rlmE-goa.tsv
+      supporting_text: &#34;GO:0008168\tmethyltransferase activity&#34;
+    - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+      supporting_text: SAM-dependent RNA 2′-O-methyltransferase** that modifies the **ribose
+        2′-hydroxyl**
+- term:
+    id: GO:0008173
+    label: RNA methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: RNA methyltransferase activity is true but less specific than the RlmE-specific
+      activity term GO:0008650.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008650 captures the exact 23S rRNA uridine 2&#39;-O-ribose methyltransferase
+      activity, including the specific substrate (U2552 in 23S rRNA). Falcon deep research
+      confirms the enzyme installs the universally conserved Um2552 modification in 23S
+      rRNA.
+    supported_by:
+    - reference_id: file:PSEPK/rlmE/rlmE-uniprot.txt
+      supporting_text: Specifically methylates the uridine in position 2552 of 23S
+    - reference_id: file:PSEPK/rlmE/rlmE-goa.tsv
+      supporting_text: &#34;GO:0008173\tRNA methyltransferase activity&#34;
+    - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+      supporting_text: it is responsible for installing the universally conserved modification
+- term:
+    id: GO:0008650
+    label: rRNA (uridine-2&#39;-O-ribose)-methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: RlmE-specific rRNA uridine 2&#39;-O-ribose methyltransferase activity is the core
+      molecular function, supported by EC 2.1.1.166 and the Rhea reaction for Um2552 formation.
+    action: ACCEPT
+    reason: UniProt assigns EC 2.1.1.166 and the Rhea reaction for uridine 2552 2&#39;-O-ribose
+      methylation in 23S rRNA. Falcon deep research independently confirms the SAM-dependent
+      transfer of a methyl group to the 2&#39;-O position of U2552 in 23S rRNA, generating Um2552.
+    supported_by:
+    - reference_id: file:PSEPK/rlmE/rlmE-uniprot.txt
+      supporting_text: Specifically methylates the uridine in position 2552 of 23S
+    - reference_id: file:PSEPK/rlmE/rlmE-uniprot.txt
+      supporting_text: EC=2.1.1.166
+    - reference_id: file:PSEPK/rlmE/rlmE-goa.tsv
+      supporting_text: &#34;GO:0008650\trRNA (uridine-2&#39;-O-ribose)-methyltransferase activity&#34;
+    - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+      supporting_text: transfer of a methyl group from **S-adenosyl-L-methionine (SAM)**
+        to the **2′-O** position of **U2552** in 23S rRNA
+- term:
+    id: GO:0000027
+    label: ribosomal large subunit assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: RlmE is functionally coupled to late 50S/LSU maturation; the orthologous bacterial
+      enzyme stimulates large ribosomal subunit assembly and its loss causes severe LSU
+      assembly defects. This is a proposed NEW biological-process annotation not present
+      in the current GOA, supported by falcon deep research evidence (conservation-based
+      inference from E. coli).
+    action: NEW
+    reason: Beyond installing Um2552, RlmE acts like a large-subunit assembly factor. Falcon
+      deep research reports that RlmE stimulates large ribosomal subunit assembly and that
+      ΔrlmE in E. coli produces a severe LSU assembly phenotype. GO:0000027 (ribosomal
+      large subunit assembly) captures this process role for the P. putida ortholog.
+    supported_by:
+    - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+      supporting_text: RlmE **stimulates large ribosomal subunit assembly**
+    - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+      supporting_text: ΔrlmE** in *E. coli* produces a **severe LSU assembly phenotype**
+    - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+      supporting_text: RlmE can act like an **assembly factor** in addition to catalyzing
+        methylation
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based
+    on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/rlmE/rlmE-uniprot.txt
+  title: UniProtKB reviewed entry for rlmE
+  findings:
+  - supporting_text: Specifically methylates the uridine in position 2552 of 23S
+    reference_section_type: OTHER
+  - supporting_text: EC=2.1.1.166
+    reference_section_type: OTHER
+- id: file:PSEPK/rlmE/rlmE-goa.tsv
+  title: QuickGO GOA annotations for rlmE
+  findings:
+  - supporting_text: &#34;GO:0008650\trRNA (uridine-2&#39;-O-ribose)-methyltransferase activity&#34;
+    reference_section_type: OTHER
+- id: file:interpro/panther/PTHR10920/PTHR10920-metadata.yaml
+  title: PANTHER family metadata for rlmE
+  findings:
+  - statement: PANTHER places RlmE in the ribosomal RNA large subunit methyltransferase RlmE family.
+- id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+  title: Falcon (Edison) deep research report for rlmE (Q88DV0, P. putida KT2440)
+  findings:
+  - supporting_text: transfer of a methyl group from **S-adenosyl-L-methionine (SAM)** to
+      the **2′-O** position of **U2552** in 23S rRNA
+    reference_section_type: OTHER
+  - supporting_text: it is responsible for installing the universally conserved modification
+    reference_section_type: OTHER
+  - supporting_text: U2552 is in the **A-loop**
+    reference_section_type: OTHER
+  - supporting_text: places Um2552 adjacent to **G2553**, an essential base that anchors
+      the 3′-CCA end of A-site tRNA
+    reference_section_type: OTHER
+  - supporting_text: only fully assembled 50S subunits** were substrates in vitro
+    reference_section_type: OTHER
+  - supporting_text: RlmE participates in **23S rRNA maturation** and **late 50S/LSU biogenesis**
+    reference_section_type: OTHER
+  - supporting_text: RlmE **stimulates large ribosomal subunit assembly**
+    reference_section_type: OTHER
+  - supporting_text: RlmE can act like an **assembly factor** in addition to catalyzing methylation
+    reference_section_type: OTHER
+  - supporting_text: ΔrlmE** in *E. coli* produces a **severe LSU assembly phenotype**
+    reference_section_type: OTHER
+  - supporting_text: RlmE functions in the **cytosol** in association with **maturing large
+      ribosomal subunits**
+    reference_section_type: OTHER
+core_functions:
+- description: SAM-dependent 23S rRNA (uridine2552-2&#39;-O)-methyltransferase that installs
+    the conserved Um2552 modification in the A-loop of 23S rRNA domain V, acting on the
+    fully assembled 50S ribosomal subunit.
+  molecular_function:
+    id: GO:0008650
+    label: rRNA (uridine-2&#39;-O-ribose)-methyltransferase activity
+  directly_involved_in:
+  - id: GO:0000451
+    label: rRNA 2&#39;-O-methylation
+  supported_by:
+  - reference_id: file:PSEPK/rlmE/rlmE-uniprot.txt
+    supporting_text: Specifically methylates the uridine in position 2552 of 23S
+  - reference_id: file:PSEPK/rlmE/rlmE-uniprot.txt
+    supporting_text: EC=2.1.1.166
+  - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+    supporting_text: transfer of a methyl group from **S-adenosyl-L-methionine (SAM)** to
+      the **2′-O** position of **U2552** in 23S rRNA
+- description: Factor functionally coupled to late large ribosomal subunit (50S/LSU) maturation;
+    the orthologous bacterial enzyme stimulates large ribosomal subunit assembly, and its
+    loss causes severe LSU assembly defects and accumulation of immature particles.
+  molecular_function:
+    id: GO:0008650
+    label: rRNA (uridine-2&#39;-O-ribose)-methyltransferase activity
+  directly_involved_in:
+  - id: GO:0000027
+    label: ribosomal large subunit assembly
+  supported_by:
+  - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+    supporting_text: RlmE **stimulates large ribosomal subunit assembly**
+  - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+    supporting_text: RlmE participates in **23S rRNA maturation** and **late 50S/LSU biogenesis**
+  - reference_id: file:PSEPK/rlmE/rlmE-deep-research-falcon.md
+    supporting_text: only fully assembled 50S subunits** were substrates in vitro
+proposed_new_terms: []
+suggested_questions:
+- question: Does loss of RlmE in P. putida KT2440 alter ribosome assembly or translation
+    stress phenotypes under environmental stress, as it does in E. coli?
+- question: Is the assembly-stimulating role of RlmE in P. putida separable from its catalytic
+    (Um2552-forming) activity, as has been suggested for E. coli RlmE?
+suggested_experiments:
+- description: Profile 23S rRNA methylation (Um2552 stoichiometry by RiboMethSeq/mass spectrometry)
+    and ribosome assembly (sucrose-gradient subunit profiles) in P. putida rlmE knockout
+    and complemented strains.
+  experiment_type: rRNA modification mapping
+- description: Express catalytically dead RlmE active-site mutants in a P. putida rlmE deletion
+    background to test whether assembly stimulation is separable from methyltransferase
+    chemistry.
+  experiment_type: structure-function complementation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

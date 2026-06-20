@@ -1,0 +1,15 @@
+| Sir4 region / motif | Residues | Experimentally supported partner(s) | Functional role in Sir4 biology | Key evidence |
+|---|---:|---|---|---|
+| Ku-binding motif | 100–115 | yKu80 | Contributes to telomere tethering/positioning at the nuclear periphery and links Sir4 to Ku-dependent telomere functions | (pqac-00000009, pqac-00000021) |
+| TOC motif (second of two clusters) | 172–180 | Not clearly assigned | Conserved N-terminal motif in Sir4; specific function remains unresolved in the cited sources | (pqac-00000009, pqac-00000021) |
+| N-terminal Rap1-binding region | 142–591 | Rap1 | Helps recruit the SIR complex to telomeric repeats and supports nucleation of subtelomeric heterochromatin | (pqac-00000009, pqac-00000021, pqac-00000022) |
+| N-terminal linker DNA protection region | N-terminal; precise subregion not fully delimited here | Chromatin/linker DNA | Enhances silencing by protecting linker DNA and supporting heterochromatin architecture; N-terminus is also phosphorylated by Cdc28 | (pqac-00000009, pqac-00000021) |
+| Sir2-interaction domain (SID) | 737–893 | Sir2 | Forms the Sir2–Sir4 core scaffold; recruits/allosterically supports Sir2 and couples deacetylation to SIR spreading | (pqac-00000011, pqac-00000021, pqac-00000022) |
+| C-terminal Rap1-binding region | 839–1358 | Rap1 | Additional Rap1 contact surface that strengthens telomeric recruitment/nucleation of SIR chromatin | (pqac-00000011, pqac-00000021) |
+| Partitioning and anchoring domain (PAD) | 950–1262 | Esc1 | Anchors telomeric SIR domains to the inner nuclear membrane/nuclear periphery and contributes to telomere partitioning | (pqac-00000011, pqac-00000021, pqac-00000022) |
+| H-BRCT-like region within PAD | 961–1085 | Phosphorylated targets including Esc1 | Phospho-target recognition module implicated in perinuclear anchoring of silent chromatin | (pqac-00000011, pqac-00000021) |
+| C-terminal coiled-coil (CC) | 1271–1347 | Sir4 (homodimer), Sir3, yKu70 | Mediates Sir4 homodimerization, generates two Sir3-binding sites, supports effective silencing, and also contacts yKu70 | (pqac-00000011, pqac-00000021) |
+| Full-length Sir4 as SIR scaffold | Full protein | Sir2, Sir3, Rap1, Esc1, yKu70/yKu80 | Structural scaffold of the SIR complex; assembles telomeric/HM heterochromatin, supports spreading after Sir2-dependent H4K16 deacetylation, and helps tether/cluster telomeres at the nuclear envelope | (pqac-00000003, pqac-00000008, pqac-00000012, pqac-00000021, pqac-00000022) |
+
+
+*Table: This table summarizes the mapped domains and motifs of budding yeast Sir4 (UniProt P11978/YDR227W), their major interaction partners, and the core functional roles those regions play in silencing, telomere anchoring, and SIR complex assembly. It is useful as a compact functional annotation map grounded in the available cited evidence.*

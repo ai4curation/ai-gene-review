@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: pol5 (S. pombe)
 
-Source: pol5-deep-research-bioreason-rl.md
+Source: pol5-bioreason-rl-predictions.md
 
 - **Correctness**: 1/5
 - **Completeness**: 1/5

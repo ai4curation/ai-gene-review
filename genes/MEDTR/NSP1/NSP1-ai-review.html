@@ -1,0 +1,2985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSP1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NSP1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q4VYC8" target="_blank" class="term-link">
+                        Q4VYC8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Medicago truncatula</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NSP1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q4VYC8" data-a="DESCRIPTION: NSP1 (NODULATION SIGNALING PATHWAY 1, Q4VYC8) is a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NSP1 (NODULATION SIGNALING PATHWAY 1, Q4VYC8) is a plant-specific GRAS-family transcriptional regulator from the model legume Medicago truncatula and a CORE component of the rhizobial Nod factor (NF) signaling pathway. NSP1 acts in the nucleus downstream of NF perception, nuclear calcium spiking and the calcium/calmodulin-dependent protein kinase CCaMK/DMI3, as part of the transcriptional response module that activates early nodulation (symbiotic) gene expression. NSP1 is a classical DNA-binding transcription factor: in vitro EMSA shows that NSP1 (but not its partner NSP2) directly binds promoter fragments of the early symbiotic marker ENOD11, and random binding-site selection defined an AATTT consensus cis-element (a Nodulation Responsive Element, NRE) recognised by NSP1. NSP1 and NSP2 form a heterocomplex that associates with the promoters of NF-responsive genes (ENOD11, ERN1, NIN); loss-of-function nsp1 mutants abolish or strongly impair NF-induced transcription of these genes and lose the ability to form nitrogen- fixing root nodules (the nsp1-1 and nsp1-2 alleles delete the C-terminal GRAS domain and cause loss of nodulation). NSP1 therefore couples NF-triggered signaling to the developmental program of nodule organogenesis and rhizobial infection. Beyond nodulation, NSP1 has a conserved second role as a transcriptional regulator of strigolactone (SL) biosynthesis in roots: nsp1 mutants do not produce SLs and show strongly reduced expression of the beta-carotene isomerase gene DWARF27 (D27); SL output links NSP1 to broader rhizosphere signaling, including with arbuscular mycorrhizal fungi. The protein is built around the canonical GRAS architecture (LRI, VHIID, LRII, PFYRE and SAW subdomains) and is expressed mainly in roots and nodules, consistent with its symbiotic role.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009877" target="_blank" class="term-link">
+                                    GO:0009877
+                                </a>
+                            </span>
+                            <span class="term-label">nodulation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4VYC8" data-a="GO:0009877" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Nodulation&#34;; snapshot-only, removed in the current GOA release. NSP1 is a GRAS-family transcription factor that is essential for rhizobial Nod-factor-induced gene expression and for the formation of nitrogen-fixing root nodules - &#34;nodulation&#34; is its genuine, central biological process, not an over-annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was NOT justified - this is collateral damage from the blanket retirement of the keyword2GO pipeline. Unlike most SPKW keywords (which map to over-broad or peripheral terms), the &#34;Nodulation&#34; keyword here names the gene&#39;s defining function: NSP1 acts downstream of Nod factor perception, calcium spiking and CCaMK/DMI3 in the core transcriptional module that activates early nodulation genes (ENOD11, ERN1, NIN), and nsp1 loss-of-function mutants lose nodulation entirely (the nsp1-1 and nsp1-2 alleles that delete the GRAS domain cause loss of nodulation, per UniProt). GO:0009877 &#34;nodulation&#34; is defined as &#34;The formation of nitrogen-fixing root nodules on plant roots&#34; and is the correct, appropriately specific process term. Critically, the current (2026) GOA release retains NO nodulation or symbiosis-process term for NSP1 (only a generic &#34;response to symbiotic fungus&#34; ARBA term and &#34;regulation of DNA-templated transcription&#34;), so removing this annotation strips the gene of any representation of its central role. The annotation should be re-added as a CORE process. (This is the RHT1/DELLA-analogous legitimate case where a SwissProt keyword captures the real biology.)
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NSP1 acts **downstream of Nod factor perception, calcium spiking, and CCaMK/DMI3** as part of the core transcriptional response that activates early nodulation genes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">supporting NSP1 as essential for NF-induced transcriptional reprogramming required for nodulation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Loss-of-function nsp backgrounds abolish or strongly impair NF-induced transcriptional responses (e.g., ENOD11, ERN1, NIN induction)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4VYC8" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProt subcellular-location vocabulary mapping. NSP1 is a nuclear GRAS-family transcriptional regulator - nuclear localization is consistent with its DNA- binding, promoter-association function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with the UniProt subcellular location (Nucleus) and with NSP1&#39;s characterized role as a nuclear transcription factor that homo-/hetero-oligomerises and associates with the promoters of NF-responsive genes. NSP1 is described as a nuclear transcriptional regulator, and GRAS-family transcription factors function in the nucleus. The IBA annotation in UniProt also assigns &#34;nucleus&#34; (GO:0005634), corroborating this term.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NSP1 is characterized as a nuclear transcriptional regulator</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NSP1 is a plant-specific **GRAS** transcriptional regulator that functions in the **nucleus**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009610" target="_blank" class="term-link">
+                                    GO:0009610
+                                </a>
+                            </span>
+                            <span class="term-label">response to symbiotic fungus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q4VYC8" data-a="GO:0009610" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation created by an ARBA machine-learning model. NSP1&#39;s experimentally established role is in rhizobial (bacterial) Nod-factor signaling and nodulation; its connection to fungal symbiosis is indirect (via strigolactone biosynthesis, which influences arbuscular mycorrhizal fungi) and is treated in the literature as broader pathway context rather than a directly demonstrated NSP1 function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is not wrong but does not capture NSP1&#39;s core function. The well-supported, gene-specific biology of M. truncatula NSP1 concerns the rhizobial Nod-factor pathway and nodule formation (a bacterial, not fungal, symbiosis). NSP1 contributes to fungal symbiosis only indirectly: it is required for strigolactone biosynthesis, and strigolactones are signals that affect arbuscular mycorrhizal fungi; the deep-research synthesis explicitly flags NSP1&#39;s mycorrhizal/LCO role as &#34;less direct than for nodulation&#34; and &#34;broader pathway context rather than definitive Medicago NSP1-only mechanistic proof.&#34; The annotation is a reasonable computational generalization (NSP-family GRAS regulators do participate in mycorrhizal-responsive programs), so it is retained, but classified as non-core; the core symbiotic process for NSP1 is nodulation (GO:0009877) and the upstream regulation of strigolactone biosynthesis.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">for NSP1 these points are less direct than for nodulation and should be treated as broader pathway context rather than definitive Medicago NSP1-only mechanistic proof.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">These findings support NSP1 as a transcriptional regulator linking symbiosis signaling modules to carotenoid/SL pathway output, which is relevant to broader rhizosphere signaling and potentially to mycorrhizal interactions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001228" target="_blank" class="term-link">
+                                    GO:0001228
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription activator activity, RNA polymerase II-specific</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q4VYC8" data-a="GO:0001228" data-r="file:MEDTR/NSP1/NSP1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NSP1 is a sequence-specific DNA-binding transcription factor that directly binds the ENOD11 promoter in vitro and is required for NF-induced activation of early symbiotic genes, acting as a transcriptional activator.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Current GOA lacks an MF term describing NSP1&#39;s activating transcription-factor activity. NSP1 directly binds promoter DNA (EMSA on the ENOD11 promoter; the AATTT Nodulation Responsive Element is the recognised cis-element) and is genetically required for the Nod-factor-elicited induction of ENOD11, ERN1 and NIN; loss of NSP1 abolishes this transcriptional activation. This positive, sequence-specific transcriptional-activation role is precisely captured by GO:0001228. IDA is justified by the in vitro DNA-binding assays combined with the in vivo induction data.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In vitro EMSA experiments show **NSP1 (but not NSP2) directly binds** fragments of the **ENOD11** promoter.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">supporting NSP1 as essential for NF-induced transcriptional reprogramming required for nodulation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q4VYC8" data-a="GO:0043565" data-r="file:MEDTR/NSP1/NSP1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NSP1 binds a specific DNA cis-element (the AATTT Nodulation Responsive Element) in the promoters of NF-responsive genes; mutation of the motif abolishes binding.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Random binding-site selection plus EMSA defined an NSP1-recognised cis-element with consensus AATTT (Nodulation Responsive Element), and AATTT-&gt;CCCCC mutation strongly reduces binding - the hallmark of sequence-specific DNA binding (GO:0043565). This MF underlies the transcription-activator activity above and is supported by the same Hirsch et al. EMSA data summarised in the deep-research report. UniProt carries the corresponding IBA term (GO:0043565), and the gene-specific Medicago data provide direct (IDA) support.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Random binding-site selection and EMSA define an NSP1-recognized cis-element with consensus **AATTT**, described as a Nodulation Responsive Element</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mutation of this motif (AATTT→CCCCC) strongly reduces binding.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q4VYC8" data-a="GO:0006355" data-r="file:MEDTR/NSP1/NSP1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NSP1 regulates transcription of early symbiotic genes: it directly binds the ENOD11 promoter and is required for NF-induced induction of ENOD11, ERN1 and NIN. UniProt carries the corresponding IBA annotation to this term.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NSP1 is a transcriptional regulator that modulates DNA-templated transcription of NF-responsive genes; loss of NSP1 abolishes their induction. GO:0006355 is the general process term for transcription regulation and corresponds to the IBA annotation in UniProt (DR GO:0006355 ... IBA:GO_Central). It is the parent process under which the more specific activator MF (GO:0001228) operates. IDA is justified by the combination of in vitro promoter binding and in vivo induction-dependence data summarised in the deep-research report.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NSP1 functions as a **DNA-binding transcription factor/regulator**; unlike NSP2, NSP1 directly binds promoter DNA in vitro and associates with symbiosis gene promoters in vivo.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Loss-of-function nsp backgrounds abolish or strongly impair NF-induced transcriptional responses (e.g., ENOD11, ERN1, NIN induction)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901601" target="_blank" class="term-link">
+                                    GO:1901601
+                                </a>
+                            </span>
+                            <span class="term-label">strigolactone biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q4VYC8" data-a="GO:1901601" data-r="file:MEDTR/NSP1/NSP1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NSP1 is required for strigolactone biosynthesis in M. truncatula roots: nsp1 mutants do not produce strigolactones and show strongly reduced expression of the SL-biosynthetic gene DWARF27 (D27).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A conserved, experimentally demonstrated NSP1 function outside nodulation is the regulation of strigolactone biosynthesis. nsp1 mutants fail to produce strigolactones and the DWARF27 (beta-carotene isomerase D27) homolog is ~90% reduced in nsp mutant backgrounds, showing that NSP1 transcriptionally drives the SL pathway. GO:1901601 &#34;strigolactone biosynthetic process&#34; (a sesquiterpenoid/lactone biosynthetic process) captures the pathway NSP1 is required for; this is consistent with the UniProt FUNCTION statement that NSP1 is a &#34;Transcription factor involved in the control of strigolactone biosynthesis.&#34; IMP is justified by the nsp1 loss-of-function metabolite/expression phenotype. (NSP1 acts as the upstream transcriptional regulator rather than as an SL-biosynthetic enzyme itself.)
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**nsp1 mutants do not produce SLs**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">nsp mutants show markedly reduced expression of **DWARF27**, a key SL-biosynthetic gene</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NSP1 is a sequence-specific DNA-binding GRAS-family transcription factor that, downstream of Nod factor perception, calcium spiking and CCaMK/DMI3, directly binds the AATTT Nodulation Responsive Element in the promoters of early symbiotic genes (ENOD11, ERN1, NIN) and activates their transcription, forming a promoter-associated complex with NSP2.
+</h3>
+                <span class="vote-buttons" data-g="Q4VYC8" data-a="FUNCTION: NSP1 is a sequence-specific DNA-binding GRAS-famil..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001228" target="_blank" class="term-link">
+                            DNA-binding transcription activator activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                regulation of DNA-templated transcription
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">In vitro EMSA experiments show **NSP1 (but not NSP2) directly binds** fragments of the **ENOD11** promoter.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Random binding-site selection and EMSA define an NSP1-recognized cis-element with consensus **AATTT**, described as a Nodulation Responsive Element</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NSP1 is essential for the rhizobial Nod-factor signaling program that drives root nodule organogenesis: it couples NF-triggered signaling to early nodulation gene expression, and nsp1 loss-of-function mutants lose the ability to form nitrogen-fixing nodules.
+</h3>
+                <span class="vote-buttons" data-g="Q4VYC8" data-a="FUNCTION: NSP1 is essential for the rhizobial Nod-factor sig..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001228" target="_blank" class="term-link">
+                            DNA-binding transcription activator activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009877" target="_blank" class="term-link">
+                                nodulation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">supporting NSP1 as essential for NF-induced transcriptional reprogramming required for nodulation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">NSP1 acts **downstream of Nod factor perception, calcium spiking, and CCaMK/DMI3** as part of the core transcriptional response that activates early nodulation genes</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Beyond nodulation, NSP1 acts as the upstream transcriptional regulator of strigolactone biosynthesis in roots, driving expression of the beta-carotene isomerase gene DWARF27 (D27); nsp1 mutants fail to produce strigolactones.
+</h3>
+                <span class="vote-buttons" data-g="Q4VYC8" data-a="FUNCTION: Beyond nodulation, NSP1 acts as the upstream trans..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001228" target="_blank" class="term-link">
+                            DNA-binding transcription activator activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901601" target="_blank" class="term-link">
+                                strigolactone biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">**nsp1 mutants do not produce SLs**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">nsp mutants show markedly reduced expression of **DWARF27**, a key SL-biosynthetic gene</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For NSP1, the keyword &#34;Nodulation&#34; mapped to the genuinely correct, core process term GO:0009877 nodulation; its removal left the gene with no nodulation/symbiosis process annotation, so the removal is collateral damage rather than a corrected over-annotation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps the UniProt subcellular location &#34;Nucleus&#34; to GO:0005634; consistent with NSP1&#39;s role as a nuclear GRAS transcription factor.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA machine-learning model assigned &#34;response to symbiotic fungus&#34; (GO:0009610); a reasonable generalization for an NSP-family GRAS regulator but indirect for Medicago NSP1, whose core symbiotic role is rhizobial nodulation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of Medicago truncatula NSP1 (Q4VYC8).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NSP1 is a plant-specific GRAS-family transcriptional regulator that functions in the nucleus as part of a transcriptional module activated downstream of the common symbiosis signaling pathway; it acts downstream of Nod factor perception, calcium spiking and CCaMK/DMI3 in the core transcriptional response that activates early nodulation genes.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NSP1 is a DNA-binding transcription factor that directly binds the ENOD11 promoter in vitro (EMSA), recognises an AATTT Nodulation Responsive Element (NRE), and forms a complex with NSP2 that associates with the promoters of NF-responsive genes ENOD11, ERN1 and NIN; loss-of-function nsp backgrounds abolish or strongly impair NF-induced transcription of these genes and nodulation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NSP1 also has a conserved role outside nodulation in strigolactone biosynthesis - nsp1 mutants do not produce strigolactones and show markedly reduced expression of the SL-biosynthetic gene DWARF27 (~90% reduced in nsp mutant backgrounds); NSP1 is expressed mainly in roots and nodules.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The report synthesises the foundational primary studies Hirsch et al. 2009 (The Plant Cell, DOI 10.1105/tpc.108.064501), Liu et al. 2011 (The Plant Cell, DOI 10.1105/tpc.111.089771) and Smit et al. 2005 (Science 308:1789-1791); these are the primary sources for NSP1 DNA-binding, NSP1-NSP2 complex formation and strigolactone regulation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the complete genome-wide set of direct NSP1 DNA-binding targets in M. truncatula roots and nodules, and which require co-binding of NSP2 versus NSP1 alone?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Giles Oldroyd, Rene Geurts</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4VYC8" data-a="Q: What is the complete genome-wide set of direct NSP..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is NSP1 transcriptional activity at the ENOD11/ERN1/NIN promoters gated by DELLA/gibberellin signaling and by repressive GRAS proteins such as Lateral suppressor?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Florian Frugier</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4VYC8" data-a="Q: How is NSP1 transcriptional activity at the ENOD11..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> To what extent is NSP1&#39;s contribution to arbuscular-mycorrhizal symbiosis mediated solely through strigolactone biosynthesis versus direct transcriptional inputs into the mycorrhizal program?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Rene Geurts</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4VYC8" data-a="Q: To what extent is NSP1&#39;s contribution to arbuscula..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Genome-wide DAP-seq or ChIP-seq of NSP1 (with and without NSP2) in M. truncatula roots, with and without Nod factor treatment, to map direct targets and the in vivo AATTT NRE binding landscape.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: NSP1 directly binds AATTT-containing cis-elements in the promoters of early nodulation genes genome-wide, and NSP2 co-binding extends or stabilises the bound target set upon Nod factor signaling.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genome-wide TF binding assay (DAP-seq/ChIP-seq)</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4VYC8" data-a="EXPERIMENT: Genome-wide DAP-seq or ChIP-seq of NSP1 (with and ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitative transactivation assays in M. truncatula roots using NSP1 with native versus AATTT-&gt;CCCCC-mutated ENOD11/ERN1/NIN promoter reporters, in wild-type and nsp2 mutant backgrounds.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: NSP1 activates these promoters in an AATTT-NRE-dependent manner, and full activation additionally requires NSP2.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: promoter-reporter transactivation assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4VYC8" data-a="EXPERIMENT: Quantitative transactivation assays in M. truncatu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Cross-rescue test of an nsp1 mutant with NSP1 transgenes carrying targeted mutations in the VHIID/SAW GRAS subdomains, scoring both nodulation (nodule number, acetylene-reduction nitrogen fixation) and root strigolactone levels / DWARF27 expression.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Distinct GRAS subdomain residues are separable requirements for NSP1&#39;s nodulation function versus its strigolactone-biosynthesis-regulation function.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: structure-function complementation analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4VYC8" data-a="EXPERIMENT: Cross-rescue test of an nsp1 mutant with NSP1 tran..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NSP1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q4VYC8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">25 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T08:20:32.487904</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="NSP1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="NSP1-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000016 The document provides several figures showing NSP1 and NSP2 binding to the *ENOD11* promoter and characterising the relevant cis-el</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-nodulation-signaling-pathway-1-nsp1-in-medicago-truncatula-uniprot-q4vyc8">Research report: <strong>NODULATION SIGNALING PATHWAY 1 (NSP1)</strong> in <em>Medicago truncatula</em> (UniProt <strong>Q4VYC8</strong>)</h2>
+<h3 id="1-target-verification-critical-disambiguation">1) Target verification (critical disambiguation)</h3>
+<p>The NSP1 discussed here is <strong>NODULATION SIGNALING PATHWAY 1</strong>, a <strong>GRAS-family transcriptional regulator</strong> from the model legume <em>Medicago truncatula</em>, experimentally characterized as a core component of rhizobial Nod factor (NF) signaling and early symbiotic gene expression. This identity matches the UniProt description for Q4VYC8 (NSP1; GRAS/TF_GRAS domain) and is consistent with primary mechanistic studies in <em>M. truncatula</em> that explicitly study “NSP1” in nodulation signaling. (hirsch2009grasproteinsform pages 1-2, liu2011strigolactonebiosynthesisin pages 1-2)</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-gras-family-transcriptional-regulators-in-symbiosis">2.1 GRAS-family transcriptional regulators in symbiosis</h4>
+<p>NSP1 is a plant-specific <strong>GRAS</strong> transcriptional regulator that functions in the <strong>nucleus</strong> as part of a transcriptional module activated downstream of the common symbiosis signaling pathway (CSSP). In the NF signaling cascade, nuclear calcium oscillations are perceived by CCaMK (also referred to as DMI3 in Medicago genetic nomenclature), which activates symbiosis transcriptional programs requiring NSP1/NSP2. (hirsch2009grasproteinsform pages 1-2, liu2011strigolactonebiosynthesisin pages 2-3)</p>
+<h4 id="22-nsp1nsp2-a-dna-binding-transcriptional-complex">2.2 NSP1/NSP2: a DNA-binding transcriptional complex</h4>
+<p>A central mechanistic concept is that <strong>NSP1 and NSP2 form a complex</strong> that associates with promoters of NF-responsive genes. NSP1 has direct DNA-binding activity, while NSP2 is required for full promoter association and transcriptional output in vivo in key contexts. (hirsch2009grasproteinsform pages 6-9, hirsch2009grasproteinsform pages 5-6)</p>
+<h3 id="3-molecular-function-and-mechanistic-evidence">3) Molecular function and mechanistic evidence</h3>
+<h4 id="31-molecular-function-direct-dna-binding-and-transcriptional-regulation">3.1 Molecular function: direct DNA binding and transcriptional regulation</h4>
+<p>NSP1 behaves as a “classical” transcriptional regulator with direct promoter binding. In vitro EMSA experiments show <strong>NSP1 (but not NSP2) directly binds</strong> fragments of the <strong>ENOD11</strong> promoter. (hirsch2009grasproteinsform pages 5-6, hirsch2009grasproteinsform media 4a719841)</p>
+<h4 id="32-dna-binding-specificity-the-aattt-nodulation-responsive-element-nre">3.2 DNA-binding specificity: the AATTT Nodulation Responsive Element (NRE)</h4>
+<p>Random binding-site selection and EMSA define an NSP1-recognized cis-element with consensus <strong>AATTT</strong>, described as a Nodulation Responsive Element (NRE; NRE1/NRE2 in ENOD11 promoter mapping). Mutation of this motif (AATTT→CCCCC) strongly reduces binding. (hirsch2009grasproteinsform pages 6-9, hirsch2009grasproteinsform media 4a719841)</p>
+<h4 id="33-direct-and-promoter-proximal-target-genes">3.3 Direct and promoter-proximal target genes</h4>
+<p>Mechanistic evidence links NSP1 promoter binding/association to multiple early symbiotic regulators/markers:<br />
+- <strong>ENOD11</strong>: NSP1 binds promoter fragments in vitro; ChIP supports in vivo association with promoter regions, enhanced after NF treatment. (hirsch2009grasproteinsform pages 6-9, hirsch2009grasproteinsform media b1d1c4af)<br />
+- <strong>ERN1</strong>: NSP1 associates with defined promoter regions and is required for rhizobial induction of ERN1 in mutant backgrounds. (hirsch2009grasproteinsform pages 9-10, hirsch2009grasproteinsform pages 6-9)<br />
+- <strong>NIN</strong>: NSP1 binds/associates with promoter regions and is required for rhizobial induction of NIN in nsp mutants. (hirsch2009grasproteinsform pages 9-10, hirsch2009grasproteinsform pages 6-9)</p>
+<p>Collectively, these data support NSP1 as a direct transcriptional regulator coupling NF-triggered signaling to early nodulation gene expression programs. (hirsch2009grasproteinsform pages 9-10, hirsch2009grasproteinsform pages 6-9)</p>
+<h3 id="4-pathway-placement-and-interaction-partners">4) Pathway placement and interaction partners</h3>
+<h4 id="41-position-in-nod-factorcssp-signaling">4.1 Position in Nod factor/CSSP signaling</h4>
+<p>NSP1 functions downstream of nuclear signaling and is required for CCaMK-driven symbiotic gene activation: autoactivated CCaMK can induce ENOD11 expression, but this induction requires NSP1/NSP2/ERN1, placing NSP1 in the core transcriptional response module of NF signaling. (hirsch2009grasproteinsform pages 1-2)</p>
+<h4 id="42-physical-and-functional-partners">4.2 Physical and functional partners</h4>
+<p><strong>NSP2</strong> is the best-supported direct partner:<br />
+- NSP1 and NSP2 form homo- and hetero-oligomeric assemblies; NSP2 is required for robust in vivo association of NSP1 with ENOD11 promoter under NF conditions, and disruption of NSP1–NSP2 interaction compromises nodulation outputs. (hirsch2009grasproteinsform pages 6-9, hirsch2009grasproteinsform pages 5-6)</p>
+<p><strong>DELLA-mediated hormonal crosstalk (gibberellin signaling)</strong> provides an additional regulatory layer. A primary mechanistic study reports DELLA proteins interact with NSP2 and proposes DELLA action may regulate <strong>NSP1/NSP2- and NF-YA1-dependent activation</strong> of ERN1 transcription (note: this is evidence for pathway-level integration; direct NSP1–DELLA binding is not established in the provided excerpt). (fonounifarde2016dellamediatedgibberellinsignalling pages 1-2)</p>
+<p>A recent evolutionary/regulatory model (2024) places NSP2/NSP1 alongside CCaMK/CYCLOPS as positive inputs promoting <strong>NIN</strong> transcription and indicates that a GRAS protein (Lateral suppressor) can physically interact with NSP2 and CYCLOPS to repress these inputs on NIN. This supports the view that NSP1 participates in a multi-protein transcriptional control architecture converging on NIN, though the 2024 evidence emphasizes NSP2 and CYCLOPS interactions rather than NSP1 biochemistry per se. (liu2024lossoflateral pages 11-13)</p>
+<h3 id="5-subcellular-localization">5) Subcellular localization</h3>
+<p>NSP1 is characterized as a nuclear transcriptional regulator; NSP1 homopolymerization and promoter association are consistent with nuclear localization expected for GRAS transcription factors. (hirsch2009grasproteinsform pages 1-2, hirsch2009grasproteinsform pages 5-6)</p>
+<h3 id="6-biological-processes-and-phenotypes-including-quantitative-data">6) Biological processes and phenotypes (including quantitative data)</h3>
+<h4 id="61-essential-role-in-nodulation-signaling-and-early-symbiotic-transcription">6.1 Essential role in nodulation signaling and early symbiotic transcription</h4>
+<p>Loss-of-function nsp backgrounds abolish or strongly impair NF-induced transcriptional responses (e.g., ENOD11, ERN1, NIN induction), supporting NSP1 as essential for NF-induced transcriptional reprogramming required for nodulation. (hirsch2009grasproteinsform pages 6-9)</p>
+<h4 id="62-quantitative-phenotypes-tied-to-nsp1nsp2-complex-integrity">6.2 Quantitative phenotypes tied to NSP1/NSP2 complex integrity</h4>
+<p>A quantitative complementation example demonstrates functional dependence on NSP1–NSP2 interaction: an NSP2 point mutation (A168V) that reduces NSP2–NSP1 interaction by ~3-fold results in ~3-fold fewer nodules and reduced acetylene-reduction activity, indicating that NSP1-containing complexes are required for efficient nodule formation and nitrogen fixation-associated function. (hirsch2009grasproteinsform pages 5-6)</p>
+<h3 id="7-roles-beyond-nodulation-strigolactone-biosynthesis-and-nutrient-linked-symbiosis-readiness">7) Roles beyond nodulation: strigolactone biosynthesis and nutrient-linked symbiosis readiness</h3>
+<p>A major expansion of NSP1 functional scope is its role in <strong>strigolactone (SL) biosynthesis</strong>:<br />
+- In <em>M. truncatula</em>, <strong>nsp1 mutants do not produce SLs</strong>, and nsp mutants show markedly reduced expression of <strong>DWARF27</strong>, a key SL-biosynthetic gene; one report quantifies the DWARF27 homolog as ~<strong>90% reduced</strong> in nsp mutant backgrounds. (liu2011strigolactonebiosynthesisin pages 1-2, liu2011strigolactonebiosynthesisin pages 2-3)</p>
+<p>These findings support NSP1 as a transcriptional regulator linking symbiosis signaling modules to carotenoid/SL pathway output, which is relevant to broader rhizosphere signaling and potentially to mycorrhizal interactions (because SLs are well-known signals affecting arbuscular mycorrhizal fungi). (liu2011strigolactonebiosynthesisin pages 1-2)</p>
+<h3 id="8-recent-developments-prioritizing-20232024">8) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="81-regulatory-modules-affecting-nodulation-2024">8.1 Regulatory modules affecting nodulation (2024)</h4>
+<p>A 2024 <em>Genome Biology</em> study identifies an evolutionarily relevant GRAS protein (Lateral suppressor) whose presence suppresses nodulation in legumes when expressed, and proposes a model where it represses the transcriptional activity of both <strong>NSP2/NSP1</strong> and <strong>CCaMK/CYCLOPS</strong> modules on <strong>NIN</strong>. This provides a contemporary, systems-level view of how NSP1-associated modules may be gated by additional GRAS regulators and highlights an engineering-relevant “switch” that can abolish nodulation when manipulated. (liu2024lossoflateral pages 11-13)</p>
+<h4 id="82-expert-synthesis-2024">8.2 Expert synthesis (2024)</h4>
+<p>A 2024 GRAS TF review reiterates the consensus that NSP1/NSP2 complex formation and promoter association are central to NF-induced gene expression and that mapping interaction partners and DNA-binding sites remains important for translational manipulation (e.g., via protein–protein interaction mapping and regulatory element discovery). (mishra2024roleofgras pages 3-5)</p>
+<h4 id="83-hypothesis-generating-network-analyses-2024">8.3 Hypothesis-generating network analyses (2024)</h4>
+<p>A 2024 in-silico co-expression/interaction mapping effort links NSP1 to cytokinin-related nodulation phenomena (e.g., cytokinin-induced primordia dependence on NSP1) and proposes transporter candidates that might connect NSP1-dependent transcriptional states to cytokinin distribution. These results are best interpreted as <strong>hypothesis-generating</strong> rather than definitive functional proof for NSP1 mechanisms. (azarakhsh2024identificationofnew pages 4-6)</p>
+<h4 id="84-engineering-oriented-symbiosis-manipulation-context-2024">8.4 Engineering-oriented symbiosis manipulation context (2024)</h4>
+<p>Although focused on NSP2, a 2024 study in <em>Parasponia</em> frames NSP-family GRAS regulators as engineering-relevant hubs whose expression tuning can change symbiotic permissiveness and architecture, while also introducing trade-offs (e.g., altered nodulation organogenesis when overexpressed). This supports the practical relevance of manipulating NSP-family regulatory nodes, even if NSP1 itself was not the direct transgene target in that work. (alhusayni2024ectopicexpressionof pages 1-2, alhusayni2024ectopicexpressionof pages 9-11)</p>
+<h3 id="9-current-applications-and-real-world-implementations">9) Current applications and real-world implementations</h3>
+<h4 id="91-symbiosis-engineering-targets">9.1 Symbiosis engineering targets</h4>
+<p>Recent work indicates that GRAS regulators and their partners can serve as leverage points to modulate symbiosis traits:<br />
+- Transgenic expression of a “non-symbiotic” GRAS regulator (Lateral suppressor) can abolish nodulation in legumes, implying that manipulating GRAS–GRAS and GRAS–CYCLOPS regulatory interactions can robustly tune nodulation capacity. (liu2024lossoflateral pages 11-13)<br />
+- Reviews emphasize that identifying NSP1/NSP2 partners and promoter-binding logic is a prerequisite for rationally engineering nodulation efficiency and balancing trade-offs with other symbioses and development. (mishra2024roleofgras pages 3-5)</p>
+<h4 id="92-sl-pathway-modulation-as-an-indirect-application">9.2 SL pathway modulation as an indirect application</h4>
+<p>Because NSP1 is required for SL biosynthesis in <em>M. truncatula</em>, NSP1-regulated transcription is potentially relevant for strategies aiming to adjust SL-mediated rhizosphere signaling and symbiosis readiness (including interactions with arbuscular mycorrhizal fungi), though the direct agronomic implementation would require careful balancing due to pleiotropy of SLs. (liu2011strigolactonebiosynthesisin pages 1-2)</p>
+<h3 id="10-visual-evidence-supporting-core-mechanistic-claims">10) Visual evidence supporting core mechanistic claims</h3>
+<p>Key figure panels from Hirsch et al. (2009) provide direct, visual support for NSP1’s molecular function:<br />
+- EMSA showing NSP1 binds ENOD11 promoter DNA and motif mutation disrupts binding (hirsch2009grasproteinsform media 4a719841)<br />
+- Identification/mapping of AATTT NRE motifs and loss of binding upon motif mutation (hirsch2009grasproteinsform media 4a719841)<br />
+- ChIP evidence for in vivo association of NSP1/NSP2 with ENOD11 promoter enhanced by Nod factor (hirsch2009grasproteinsform media b1d1c4af)</p>
+<h3 id="11-evidence-summary-table">11) Evidence summary table</h3>
+<p>The following table consolidates the strongest, directly supported functional-annotation statements for <em>M. truncatula</em> NSP1 and clearly distinguishes primary evidence from review/in-silico inference.</p>
+<table>
+<thead>
+<tr>
+<th>Functional aspect</th>
+<th>Key findings</th>
+<th>Evidence type</th>
+<th>Representative source with year and URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity / disambiguation</td>
+<td>NSP1 here refers specifically to <strong>Medicago truncatula NODULATION SIGNALING PATHWAY 1</strong>, a <strong>GRAS-family transcriptional regulator</strong> acting in symbiosis; literature used aligns with the Medicago nodulation factor signaling protein rather than unrelated NSP1 symbols in other organisms. (hirsch2009grasproteinsform pages 1-2, liu2011strigolactonebiosynthesisin pages 1-2)</td>
+<td>Primary functional studies; family assignment</td>
+<td>Hirsch et al., 2009 (primary), <em>The Plant Cell</em> — https://doi.org/10.1105/tpc.108.064501 ; Liu et al., 2011 (primary), <em>The Plant Cell</em> — https://doi.org/10.1105/tpc.111.089771</td>
+</tr>
+<tr>
+<td>Molecular function</td>
+<td>NSP1 functions as a <strong>DNA-binding transcription factor/regulator</strong>; unlike NSP2, NSP1 directly binds promoter DNA in vitro and associates with symbiosis gene promoters in vivo. (hirsch2009grasproteinsform pages 6-9, hirsch2009grasproteinsform pages 5-6)</td>
+<td>EMSA; ChIP; transcriptional activation assays</td>
+<td>Hirsch et al., 2009 (primary) — https://doi.org/10.1105/tpc.108.064501</td>
+</tr>
+<tr>
+<td>DNA motif / cis-element specificity</td>
+<td>Random binding-site selection and EMSA identified an <strong>AATTT</strong> motif (NRE/Nodulation Responsive Element) as the NSP1-recognized cis-element; mutation of AATTT to CCCCC strongly reduces binding. (hirsch2009grasproteinsform pages 6-9, hirsch2009grasproteinsform media 4a719841)</td>
+<td>Random binding-site selection; EMSA; figure-supported evidence</td>
+<td>Hirsch et al., 2009 (primary) — https://doi.org/10.1105/tpc.108.064501</td>
+</tr>
+<tr>
+<td>Direct target genes</td>
+<td>Direct or promoter-associated NSP1 targets include <strong>ENOD11</strong>, <strong>ERN1</strong>, and <strong>NIN</strong>; induction of NIN and ERN1 by <em>Sinorhizobium meliloti</em> is absent in nsp1/nsp2 mutants. (hirsch2009grasproteinsform pages 9-10, hirsch2009grasproteinsform pages 6-9)</td>
+<td>EMSA; ChIP; mutant expression analysis</td>
+<td>Hirsch et al., 2009 (primary) — https://doi.org/10.1105/tpc.108.064501</td>
+</tr>
+<tr>
+<td>Position in nodulation pathway</td>
+<td>NSP1 acts <strong>downstream of Nod factor perception, calcium spiking, and CCaMK/DMI3</strong> as part of the core transcriptional response that activates early nodulation genes. CCaMK-induced ENOD11 expression requires NSP1/NSP2/ERN1. (hirsch2009grasproteinsform pages 1-2, liu2011strigolactonebiosynthesisin pages 2-3)</td>
+<td>Genetic pathway analysis; induced-expression assays; review/model support</td>
+<td>Hirsch et al., 2009 (primary) — https://doi.org/10.1105/tpc.108.064501 ; Liu et al., 2011 (primary) — https://doi.org/10.1105/tpc.111.089771</td>
+</tr>
+<tr>
+<td>Interaction partners: NSP2</td>
+<td>NSP1 forms <strong>homopolymers</strong> and a functionally critical <strong>NSP1–NSP2 heteropolymer</strong>. NSP2 does not bind ENOD11 DNA directly in vitro but is recruited in vivo in an NSP1-dependent manner; Nod factor enhances promoter association of the complex. (hirsch2009grasproteinsform pages 9-10, hirsch2009grasproteinsform pages 6-9, hirsch2009grasproteinsform pages 5-6)</td>
+<td>Co-IP; BiFC/nuclear fluorescence; EMSA; ChIP</td>
+<td>Hirsch et al., 2009 (primary) — https://doi.org/10.1105/tpc.108.064501</td>
+</tr>
+<tr>
+<td>Interaction partners: DELLA / NF-YA1 context</td>
+<td>In GA-regulated nodulation signaling, DELLA proteins interact with <strong>NSP2</strong> and NF-YA1, and authors propose DELLA may regulate <strong>NSP1/NSP2- and NF-YA1-mediated activation of ERN1</strong>; this supports NSP1 participation in a broader nuclear co-regulatory complex, though direct NSP1–DELLA binding was not shown in the cited excerpt. (fonounifarde2016dellamediatedgibberellinsignalling pages 1-2)</td>
+<td>Primary mechanistic study; interaction/model inference</td>
+<td>Fonouni-Farde et al., 2016 (primary), <em>Nature Communications</em> — https://doi.org/10.1038/ncomms12636</td>
+</tr>
+<tr>
+<td>Interaction partners: CYCLOPS/IPD3 module context</td>
+<td>A recent evolutionary/regulatory model places <strong>NSP2/NSP1</strong> and <strong>CCaMK/CYCLOPS</strong> as parallel positive inputs to <strong>NIN</strong> transcription; Lateral suppressor can interact with NSP2 and CYCLOPS and repress both modules on NIN. Evidence here is strong for pathway context but indirect for NSP1 physical contacts. (liu2024lossoflateral pages 11-13)</td>
+<td>Primary 2024 regulatory/evolutionary study; model/mechanistic genetics</td>
+<td>Liu et al., 2024 (primary), <em>Genome Biology</em> — https://doi.org/10.1186/s13059-024-03393-6</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>NSP1 is <strong>nuclear</strong>, consistent with GRAS-family transcriptional regulator function and observed nuclear complex formation/promoter association. (hirsch2009grasproteinsform pages 1-2, hirsch2009grasproteinsform pages 5-6)</td>
+<td>Nuclear fluorescence/localization; promoter association</td>
+<td>Hirsch et al., 2009 (primary) — https://doi.org/10.1105/tpc.108.064501</td>
+</tr>
+<tr>
+<td>Quantitative symbiotic phenotype</td>
+<td>Disrupting the NSP1–NSP2 interaction impairs nodulation: an NSP2 A168V substitution that reduces NSP2–NSP1 interaction by about <strong>threefold</strong> causes about <strong>threefold fewer nodules</strong> and reduced <strong>acetylene-reduction</strong> activity in complementation assays, demonstrating the functional importance of the NSP1-containing complex. (hirsch2009grasproteinsform pages 5-6)</td>
+<td>Quantitative mutant/complementation phenotype; acetylene reduction assay</td>
+<td>Hirsch et al., 2009 (primary) — https://doi.org/10.1105/tpc.108.064501</td>
+</tr>
+<tr>
+<td>Expression pattern</td>
+<td>NSP1 is reported to be expressed mainly in <strong>roots and nodules</strong>, matching its role in symbiotic signaling and nodulation-associated transcriptional programs. (liu2011strigolactonebiosynthesisin pages 1-2, liu2011strigolactonebiosynthesisin pages 2-3)</td>
+<td>Expression profiling; microarray/qRT-PCR context</td>
+<td>Liu et al., 2011 (primary) — https://doi.org/10.1105/tpc.111.089771</td>
+</tr>
+<tr>
+<td>Roles outside nodulation: strigolactone biosynthesis</td>
+<td>NSP1 has an additional conserved role outside nodulation in <strong>strigolactone (SL) biosynthesis</strong>. In <em>M. truncatula</em>, <strong>nsp1 mutants do not produce SLs</strong>, and nsp1/nsp2 defects correlate with strong reduction of <strong>DWARF27</strong> expression (~<strong>90%</strong> decrease reported for the DWARF27 homolog). (liu2011strigolactonebiosynthesisin pages 1-2, liu2011strigolactonebiosynthesisin pages 2-3)</td>
+<td>Mutant metabolite phenotype; transcriptomics; qRT-PCR</td>
+<td>Liu et al., 2011 (primary) — https://doi.org/10.1105/tpc.111.089771</td>
+</tr>
+<tr>
+<td>Roles outside nodulation: mycorrhizal / LCO-related signaling</td>
+<td>Review and comparative evidence indicate NSP-family GRAS regulators also participate in <strong>mycorrhizal/LCO-responsive transcriptional programs</strong> and nutrient-responsive symbiosis regulation, but for NSP1 these points are less direct than for nodulation and should be treated as broader pathway context rather than definitive Medicago NSP1-only mechanistic proof. (mishra2024roleofgras pages 3-5, alhusayni2024ectopicexpressionof pages 15-16)</td>
+<td>Review/model; comparative symbiosis literature</td>
+<td>Mishra et al., 2024 (review) — https://doi.org/10.18805/ijare.a-6145 ; Alhusayni et al., 2024 (primary/comparative, NSP2-focused) — https://doi.org/10.3389/fpls.2024.1468812</td>
+</tr>
+<tr>
+<td>Cytokinin-related nodulation context</td>
+<td>An <strong>in-silico/co-expression</strong> 2024 analysis proposed that cytokinin-induced nodule primordium formation depends on NSP1 and suggested NSP1-associated transport candidates such as <strong>MtABCG38</strong>. This is hypothesis-generating and lower-confidence than direct biochemical/genetic evidence. (azarakhsh2024identificationofnew pages 4-6)</td>
+<td>In-silico co-expression/network analysis</td>
+<td>Azarakhsh et al., 2024 (in-silico) — URL not available in provided evidence</td>
+</tr>
+<tr>
+<td>Expert synthesis / current understanding</td>
+<td>Authoritative recent synthesis states NSP1/NSP2 are essential GRAS regulators in early symbiotic signaling, with complex formation, promoter binding, and potential engineering value for improving symbiosis-related traits; however, partner mapping and DNA-target catalogs remain incomplete. (mishra2024roleofgras pages 3-5)</td>
+<td>Review/expert analysis</td>
+<td>Mishra et al., 2024 (review) — https://doi.org/10.18805/ijare.a-6145</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally supported and recent contextual evidence for the Medicago truncatula NSP1 protein (UniProt Q4VYC8). It distinguishes high-confidence primary findings from review-based or in-silico inferences to support functional annotation.</em></p>
+<h3 id="12-limitations-and-open-questions-evidence-based">12) Limitations and open questions (evidence-based)</h3>
+<p>Despite strong mechanistic understanding of NSP1 as a DNA-binding GRAS regulator in NF signaling, recent (2023–2024) peer-reviewed studies in the retrieved set provide more <strong>contextual network and evolutionary insights</strong> than new NSP1-specific biochemical mechanism (e.g., most new complex/mechanistic details in 2024 sources emphasize NSP2/CYCLOPS or broader GRAS regulation). Direct, NSP1-specific 2023–2024 datasets such as genome-wide binding maps (ChIP-seq/DAP-seq) or high-resolution structural studies were not present in the accessible evidence here; thus, the most definitive DNA motif/target evidence remains anchored in foundational primary work. (hirsch2009grasproteinsform pages 6-9, liu2024lossoflateral pages 11-13)</p>
+<h2 id="key-sources-publication-dates-and-urls">Key sources (publication dates and URLs)</h2>
+<ul>
+<li>Hirsch S. et al. <strong>Feb 2009</strong>. <em>The Plant Cell</em>. “GRAS Proteins Form a DNA Binding Complex to Induce Gene Expression during Nodulation Signaling in Medicago truncatula.” https://doi.org/10.1105/tpc.108.064501 (hirsch2009grasproteinsform pages 6-9, hirsch2009grasproteinsform pages 5-6)</li>
+<li>Liu W. et al. <strong>Oct 2011</strong>. <em>The Plant Cell</em>. “Strigolactone Biosynthesis in Medicago truncatula and Rice Requires the Symbiotic GRAS-Type Transcription Factors NSP1 and NSP2.” https://doi.org/10.1105/tpc.111.089771 (liu2011strigolactonebiosynthesisin pages 1-2, liu2011strigolactonebiosynthesisin pages 2-3)</li>
+<li>Fonouni-Farde C. et al. <strong>Sep 2016</strong>. <em>Nature Communications</em>. “DELLA-mediated gibberellin signalling regulates Nod factor signalling and rhizobial infection.” https://doi.org/10.1038/ncomms12636 (fonounifarde2016dellamediatedgibberellinsignalling pages 1-2)</li>
+<li>Liu T. et al. <strong>Sep 2024</strong>. <em>Genome Biology</em>. “Loss of Lateral suppressor gene is associated with evolution of root nodule symbiosis in Leguminosae.” https://doi.org/10.1186/s13059-024-03393-6 (liu2024lossoflateral pages 11-13)</li>
+<li>Mishra S. et al. <strong>Oct 2024</strong>. <em>Indian Journal of Agricultural Research</em>. “Role of GRAS Transcription Factor in Plant Growth, Development and Various Stresses: A Review.” https://doi.org/10.18805/ijare.a-6145 (mishra2024roleofgras pages 3-5)</li>
+<li>Alhusayni S. et al. <strong>Oct 2024</strong>. <em>Frontiers in Plant Science</em>. “Ectopic expression of the GRAS-type transcriptional regulator NSP2 in Parasponia triggers contrasting effects on symbioses.” https://doi.org/10.3389/fpls.2024.1468812 (alhusayni2024ectopicexpressionof pages 1-2, alhusayni2024ectopicexpressionof pages 9-11)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(hirsch2009grasproteinsform pages 1-2): Sibylle Hirsch, Jiyoung Kim, Alfonso Muñoz, Anne B. Heckmann, J. Allan Downie, and Giles E.D. Oldroyd. Gras proteins form a dna binding complex to induce gene expression during nodulation signaling in <i>medicago truncatula</i>. The Plant Cell, 21(2):545-557, Feb 2009. URL: https://doi.org/10.1105/tpc.108.064501, doi:10.1105/tpc.108.064501. This article has 500 citations.</p>
+</li>
+<li>
+<p>(liu2011strigolactonebiosynthesisin pages 1-2): Wei Liu, Wouter Kohlen, Alessandra Lillo, Rik Op den Camp, Sergey Ivanov, Marijke Hartog, Erik Limpens, Muhammad Jamil, Cezary Smaczniak, Kerstin Kaufmann, Wei-Cai Yang, Guido J.E.J. Hooiveld, Tatsiana Charnikhova, Harro J. Bouwmeester, Ton Bisseling, and René Geurts. Strigolactone biosynthesis in <i>medicago</i> <i>truncatula</i> and rice requires the symbiotic gras-type transcription factors nsp1 and nsp2. The Plant Cell, 23:3853-3865, Oct 2011. URL: https://doi.org/10.1105/tpc.111.089771, doi:10.1105/tpc.111.089771. This article has 358 citations.</p>
+</li>
+<li>
+<p>(liu2011strigolactonebiosynthesisin pages 2-3): Wei Liu, Wouter Kohlen, Alessandra Lillo, Rik Op den Camp, Sergey Ivanov, Marijke Hartog, Erik Limpens, Muhammad Jamil, Cezary Smaczniak, Kerstin Kaufmann, Wei-Cai Yang, Guido J.E.J. Hooiveld, Tatsiana Charnikhova, Harro J. Bouwmeester, Ton Bisseling, and René Geurts. Strigolactone biosynthesis in <i>medicago</i> <i>truncatula</i> and rice requires the symbiotic gras-type transcription factors nsp1 and nsp2. The Plant Cell, 23:3853-3865, Oct 2011. URL: https://doi.org/10.1105/tpc.111.089771, doi:10.1105/tpc.111.089771. This article has 358 citations.</p>
+</li>
+<li>
+<p>(hirsch2009grasproteinsform pages 6-9): Sibylle Hirsch, Jiyoung Kim, Alfonso Muñoz, Anne B. Heckmann, J. Allan Downie, and Giles E.D. Oldroyd. Gras proteins form a dna binding complex to induce gene expression during nodulation signaling in <i>medicago truncatula</i>. The Plant Cell, 21(2):545-557, Feb 2009. URL: https://doi.org/10.1105/tpc.108.064501, doi:10.1105/tpc.108.064501. This article has 500 citations.</p>
+</li>
+<li>
+<p>(hirsch2009grasproteinsform pages 5-6): Sibylle Hirsch, Jiyoung Kim, Alfonso Muñoz, Anne B. Heckmann, J. Allan Downie, and Giles E.D. Oldroyd. Gras proteins form a dna binding complex to induce gene expression during nodulation signaling in <i>medicago truncatula</i>. The Plant Cell, 21(2):545-557, Feb 2009. URL: https://doi.org/10.1105/tpc.108.064501, doi:10.1105/tpc.108.064501. This article has 500 citations.</p>
+</li>
+<li>
+<p>(hirsch2009grasproteinsform media 4a719841): Sibylle Hirsch, Jiyoung Kim, Alfonso Muñoz, Anne B. Heckmann, J. Allan Downie, and Giles E.D. Oldroyd. Gras proteins form a dna binding complex to induce gene expression during nodulation signaling in <i>medicago truncatula</i>. The Plant Cell, 21(2):545-557, Feb 2009. URL: https://doi.org/10.1105/tpc.108.064501, doi:10.1105/tpc.108.064501. This article has 500 citations.</p>
+</li>
+<li>
+<p>(hirsch2009grasproteinsform media b1d1c4af): Sibylle Hirsch, Jiyoung Kim, Alfonso Muñoz, Anne B. Heckmann, J. Allan Downie, and Giles E.D. Oldroyd. Gras proteins form a dna binding complex to induce gene expression during nodulation signaling in <i>medicago truncatula</i>. The Plant Cell, 21(2):545-557, Feb 2009. URL: https://doi.org/10.1105/tpc.108.064501, doi:10.1105/tpc.108.064501. This article has 500 citations.</p>
+</li>
+<li>
+<p>(hirsch2009grasproteinsform pages 9-10): Sibylle Hirsch, Jiyoung Kim, Alfonso Muñoz, Anne B. Heckmann, J. Allan Downie, and Giles E.D. Oldroyd. Gras proteins form a dna binding complex to induce gene expression during nodulation signaling in <i>medicago truncatula</i>. The Plant Cell, 21(2):545-557, Feb 2009. URL: https://doi.org/10.1105/tpc.108.064501, doi:10.1105/tpc.108.064501. This article has 500 citations.</p>
+</li>
+<li>
+<p>(fonounifarde2016dellamediatedgibberellinsignalling pages 1-2): Camille Fonouni-Farde, Sovanna Tan, Maël Baudin, Mathias Brault, Jiangqi Wen, Kirankumar S. Mysore, Andreas Niebel, Florian Frugier, and Anouck Diet. Della-mediated gibberellin signalling regulates nod factor signalling and rhizobial infection. Nature Communications, Sep 2016. URL: https://doi.org/10.1038/ncomms12636, doi:10.1038/ncomms12636. This article has 190 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2024lossoflateral pages 11-13): Tengfei Liu, Zhi Liu, Jingwei Fan, Yaqin Yuan, Haiyue Liu, Wenfei Xian, Shuaiying Xiang, Xia Yang, Yucheng Liu, Shulin Liu, Min Zhang, Yuannian Jiao, Shifeng Cheng, Jeff J. Doyle, Fang Xie, Jiayang Li, and Zhixi Tian. Loss of lateral suppressor gene is associated with evolution of root nodule symbiosis in leguminosae. Genome Biology, Sep 2024. URL: https://doi.org/10.1186/s13059-024-03393-6, doi:10.1186/s13059-024-03393-6. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mishra2024roleofgras pages 3-5): Shefali Mishra, Pradeep Sharma, and Reeti Chaudhary. Role of gras transcription factor in plant growth, development and various stresses: a review. Indian Journal Of Agricultural Research, Oct 2024. URL: https://doi.org/10.18805/ijare.a-6145, doi:10.18805/ijare.a-6145. This article has 2 citations.</p>
+</li>
+<li>
+<p>(azarakhsh2024identificationofnew pages 4-6): M Azarakhsh, S Eslami, and M Moghadas. Identification of new genes regulating nodule development in medicago truncatula: an in-silico approach. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(alhusayni2024ectopicexpressionof pages 1-2): Sultan Alhusayni, Nick Kersten, Rik Huisman, Rene Geurts, and Joël Klein. Ectopic expression of the gras-type transcriptional regulator nsp2 in parasponia triggers contrasting effects on symbioses. Frontiers in Plant Science, Oct 2024. URL: https://doi.org/10.3389/fpls.2024.1468812, doi:10.3389/fpls.2024.1468812. This article has 0 citations.</p>
+</li>
+<li>
+<p>(alhusayni2024ectopicexpressionof pages 9-11): Sultan Alhusayni, Nick Kersten, Rik Huisman, Rene Geurts, and Joël Klein. Ectopic expression of the gras-type transcriptional regulator nsp2 in parasponia triggers contrasting effects on symbioses. Frontiers in Plant Science, Oct 2024. URL: https://doi.org/10.3389/fpls.2024.1468812, doi:10.3389/fpls.2024.1468812. This article has 0 citations.</p>
+</li>
+<li>
+<p>(alhusayni2024ectopicexpressionof pages 15-16): Sultan Alhusayni, Nick Kersten, Rik Huisman, Rene Geurts, and Joël Klein. Ectopic expression of the gras-type transcriptional regulator nsp2 in parasponia triggers contrasting effects on symbioses. Frontiers in Plant Science, Oct 2024. URL: https://doi.org/10.3389/fpls.2024.1468812, doi:10.3389/fpls.2024.1468812. This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="NSP1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000016 The document provides several figures showing NSP1 and NSP2 binding to the *ENOD11* promoter and characterising the relevant cis-el" src="NSP1-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hirsch2009grasproteinsform pages 1-2</li>
+<li>fonounifarde2016dellamediatedgibberellinsignalling pages 1-2</li>
+<li>liu2024lossoflateral pages 11-13</li>
+<li>hirsch2009grasproteinsform pages 6-9</li>
+<li>hirsch2009grasproteinsform pages 5-6</li>
+<li>liu2011strigolactonebiosynthesisin pages 1-2</li>
+<li>mishra2024roleofgras pages 3-5</li>
+<li>azarakhsh2024identificationofnew pages 4-6</li>
+<li>liu2011strigolactonebiosynthesisin pages 2-3</li>
+<li>hirsch2009grasproteinsform pages 9-10</li>
+<li>alhusayni2024ectopicexpressionof pages 1-2</li>
+<li>alhusayni2024ectopicexpressionof pages 9-11</li>
+<li>alhusayni2024ectopicexpressionof pages 15-16</li>
+<li>https://doi.org/10.1105/tpc.108.064501</li>
+<li>https://doi.org/10.1105/tpc.111.089771</li>
+<li>https://doi.org/10.1038/ncomms12636</li>
+<li>https://doi.org/10.1186/s13059-024-03393-6</li>
+<li>https://doi.org/10.18805/ijare.a-6145</li>
+<li>https://doi.org/10.3389/fpls.2024.1468812</li>
+<li>https://doi.org/10.1105/tpc.108.064501,</li>
+<li>https://doi.org/10.1105/tpc.111.089771,</li>
+<li>https://doi.org/10.1038/ncomms12636,</li>
+<li>https://doi.org/10.1186/s13059-024-03393-6,</li>
+<li>https://doi.org/10.18805/ijare.a-6145,</li>
+<li>https://doi.org/10.3389/fpls.2024.1468812,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q4VYC8
+gene_symbol: NSP1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3880
+  label: Medicago truncatula
+description: &gt;
+  NSP1 (NODULATION SIGNALING PATHWAY 1, Q4VYC8) is a plant-specific GRAS-family transcriptional
+  regulator from the model legume Medicago truncatula and a CORE component of the rhizobial Nod
+  factor (NF) signaling pathway. NSP1 acts in the nucleus downstream of NF perception, nuclear
+  calcium spiking and the calcium/calmodulin-dependent protein kinase CCaMK/DMI3, as part of the
+  transcriptional response module that activates early nodulation (symbiotic) gene expression.
+  NSP1 is a classical DNA-binding transcription factor: in vitro EMSA shows that NSP1 (but not its
+  partner NSP2) directly binds promoter fragments of the early symbiotic marker ENOD11, and
+  random binding-site selection defined an AATTT consensus cis-element (a Nodulation Responsive
+  Element, NRE) recognised by NSP1. NSP1 and NSP2 form a heterocomplex that associates with the
+  promoters of NF-responsive genes (ENOD11, ERN1, NIN); loss-of-function nsp1 mutants abolish or
+  strongly impair NF-induced transcription of these genes and lose the ability to form nitrogen-
+  fixing root nodules (the nsp1-1 and nsp1-2 alleles delete the C-terminal GRAS domain and cause
+  loss of nodulation). NSP1 therefore couples NF-triggered signaling to the developmental program
+  of nodule organogenesis and rhizobial infection. Beyond nodulation, NSP1 has a conserved second
+  role as a transcriptional regulator of strigolactone (SL) biosynthesis in roots: nsp1 mutants do
+  not produce SLs and show strongly reduced expression of the beta-carotene isomerase gene DWARF27
+  (D27); SL output links NSP1 to broader rhizosphere signaling, including with arbuscular
+  mycorrhizal fungi. The protein is built around the canonical GRAS architecture (LRI, VHIID,
+  LRII, PFYRE and SAW subdomains) and is expressed mainly in roots and nodules, consistent with
+  its symbiotic role.
+existing_annotations:
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb) but REMOVED from the
+# current (2026) GOA release when GOA retired the keyword2GO (keyword2GO / SPKW) pipeline for
+# cellular organisms. Reviewed retrospectively below to assess whether removal was justified.
+# This is the LEGITIMATE case: the UniProt keyword &#34;Nodulation&#34; names NSP1&#39;s genuine, central
+# biological role, and the current GOA release retains NO nodulation/symbiosis process term, so
+# its removal is collateral damage rather than the correction of an over-annotation.
+- term:
+    id: GO:0009877
+    label: nodulation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Nodulation&#34;;
+      snapshot-only, removed in the current GOA release. NSP1 is a GRAS-family transcription
+      factor that is essential for rhizobial Nod-factor-induced gene expression and for the
+      formation of nitrogen-fixing root nodules - &#34;nodulation&#34; is its genuine, central
+      biological process, not an over-annotation.
+    action: ACCEPT
+    reason: &gt;
+      GOA&#39;s removal of this annotation was NOT justified - this is collateral damage from the
+      blanket retirement of the keyword2GO pipeline. Unlike most SPKW keywords (which map to
+      over-broad or peripheral terms), the &#34;Nodulation&#34; keyword here names the gene&#39;s defining
+      function: NSP1 acts downstream of Nod factor perception, calcium spiking and CCaMK/DMI3 in
+      the core transcriptional module that activates early nodulation genes (ENOD11, ERN1, NIN),
+      and nsp1 loss-of-function mutants lose nodulation entirely (the nsp1-1 and nsp1-2 alleles
+      that delete the GRAS domain cause loss of nodulation, per UniProt). GO:0009877 &#34;nodulation&#34;
+      is defined as &#34;The formation of nitrogen-fixing root nodules on plant roots&#34; and is the
+      correct, appropriately specific process term. Critically, the current (2026) GOA release
+      retains NO nodulation or symbiosis-process term for NSP1 (only a generic
+      &#34;response to symbiotic fungus&#34; ARBA term and &#34;regulation of DNA-templated transcription&#34;),
+      so removing this annotation strips the gene of any representation of its central role.
+      The annotation should be re-added as a CORE process. (This is the RHT1/DELLA-analogous
+      legitimate case where a SwissProt keyword captures the real biology.)
+    supported_by:
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        NSP1 acts **downstream of Nod factor perception, calcium spiking, and CCaMK/DMI3** as
+        part of the core transcriptional response that activates early nodulation genes
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        supporting NSP1 as essential for NF-induced transcriptional reprogramming required for
+        nodulation
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        Loss-of-function nsp backgrounds abolish or strongly impair NF-induced transcriptional
+        responses (e.g., ENOD11, ERN1, NIN induction)
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProt subcellular-location vocabulary mapping. NSP1 is a nuclear
+      GRAS-family transcriptional regulator - nuclear localization is consistent with its DNA-
+      binding, promoter-association function.
+    action: ACCEPT
+    reason: &gt;
+      Correct and consistent with the UniProt subcellular location (Nucleus) and with NSP1&#39;s
+      characterized role as a nuclear transcription factor that homo-/hetero-oligomerises and
+      associates with the promoters of NF-responsive genes. NSP1 is described as a nuclear
+      transcriptional regulator, and GRAS-family transcription factors function in the nucleus.
+      The IBA annotation in UniProt also assigns &#34;nucleus&#34; (GO:0005634), corroborating this term.
+    supported_by:
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        NSP1 is characterized as a nuclear transcriptional regulator
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        NSP1 is a plant-specific **GRAS** transcriptional regulator that functions in the
+        **nucleus**
+- term:
+    id: GO:0009610
+    label: response to symbiotic fungus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation created by an ARBA machine-learning model. NSP1&#39;s experimentally established
+      role is in rhizobial (bacterial) Nod-factor signaling and nodulation; its connection to
+      fungal symbiosis is indirect (via strigolactone biosynthesis, which influences arbuscular
+      mycorrhizal fungi) and is treated in the literature as broader pathway context rather than
+      a directly demonstrated NSP1 function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The term is not wrong but does not capture NSP1&#39;s core function. The well-supported,
+      gene-specific biology of M. truncatula NSP1 concerns the rhizobial Nod-factor pathway and
+      nodule formation (a bacterial, not fungal, symbiosis). NSP1 contributes to fungal symbiosis
+      only indirectly: it is required for strigolactone biosynthesis, and strigolactones are
+      signals that affect arbuscular mycorrhizal fungi; the deep-research synthesis explicitly
+      flags NSP1&#39;s mycorrhizal/LCO role as &#34;less direct than for nodulation&#34; and &#34;broader pathway
+      context rather than definitive Medicago NSP1-only mechanistic proof.&#34; The annotation is a
+      reasonable computational generalization (NSP-family GRAS regulators do participate in
+      mycorrhizal-responsive programs), so it is retained, but classified as non-core; the core
+      symbiotic process for NSP1 is nodulation (GO:0009877) and the upstream regulation of
+      strigolactone biosynthesis.
+    supported_by:
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        for NSP1 these points are less direct than for nodulation and should be treated as
+        broader pathway context rather than definitive Medicago NSP1-only mechanistic proof.
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        These findings support NSP1 as a transcriptional regulator linking symbiosis signaling
+        modules to carotenoid/SL pathway output, which is relevant to broader rhizosphere
+        signaling and potentially to mycorrhizal interactions
+# --- NEW annotations proposed from the literature ---
+# Current GOA has no molecular-function term capturing NSP1&#39;s transcription-factor activity
+# beyond the generic IBA &#34;DNA-binding transcription factor activity&#34; carried in UniProt; the
+# experimental data support a more informative activator MF and a sequence-specific DNA-binding
+# MF, plus the upstream strigolactone-regulation process.
+- term:
+    id: GO:0001228
+    label: DNA-binding transcription activator activity, RNA polymerase II-specific
+  evidence_type: IDA
+  original_reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+  review:
+    summary: &gt;
+      NSP1 is a sequence-specific DNA-binding transcription factor that directly binds the ENOD11
+      promoter in vitro and is required for NF-induced activation of early symbiotic genes,
+      acting as a transcriptional activator.
+    action: NEW
+    reason: &gt;
+      Current GOA lacks an MF term describing NSP1&#39;s activating transcription-factor activity.
+      NSP1 directly binds promoter DNA (EMSA on the ENOD11 promoter; the AATTT Nodulation
+      Responsive Element is the recognised cis-element) and is genetically required for the
+      Nod-factor-elicited induction of ENOD11, ERN1 and NIN; loss of NSP1 abolishes this
+      transcriptional activation. This positive, sequence-specific transcriptional-activation
+      role is precisely captured by GO:0001228. IDA is justified by the in vitro DNA-binding
+      assays combined with the in vivo induction data.
+    supported_by:
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        In vitro EMSA experiments show **NSP1 (but not NSP2) directly binds** fragments of the
+        **ENOD11** promoter.
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        supporting NSP1 as essential for NF-induced transcriptional reprogramming required for
+        nodulation
+- term:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  evidence_type: IDA
+  original_reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+  review:
+    summary: &gt;
+      NSP1 binds a specific DNA cis-element (the AATTT Nodulation Responsive Element) in the
+      promoters of NF-responsive genes; mutation of the motif abolishes binding.
+    action: NEW
+    reason: &gt;
+      Random binding-site selection plus EMSA defined an NSP1-recognised cis-element with
+      consensus AATTT (Nodulation Responsive Element), and AATTT-&gt;CCCCC mutation strongly reduces
+      binding - the hallmark of sequence-specific DNA binding (GO:0043565). This MF underlies the
+      transcription-activator activity above and is supported by the same Hirsch et al. EMSA data
+      summarised in the deep-research report. UniProt carries the corresponding IBA term
+      (GO:0043565), and the gene-specific Medicago data provide direct (IDA) support.
+    supported_by:
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        Random binding-site selection and EMSA define an NSP1-recognized cis-element with
+        consensus **AATTT**, described as a Nodulation Responsive Element
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        Mutation of this motif (AATTT→CCCCC) strongly reduces binding.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IDA
+  original_reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+  review:
+    summary: &gt;
+      NSP1 regulates transcription of early symbiotic genes: it directly binds the ENOD11
+      promoter and is required for NF-induced induction of ENOD11, ERN1 and NIN. UniProt carries
+      the corresponding IBA annotation to this term.
+    action: NEW
+    reason: &gt;
+      NSP1 is a transcriptional regulator that modulates DNA-templated transcription of
+      NF-responsive genes; loss of NSP1 abolishes their induction. GO:0006355 is the general
+      process term for transcription regulation and corresponds to the IBA annotation in UniProt
+      (DR GO:0006355 ... IBA:GO_Central). It is the parent process under which the more specific
+      activator MF (GO:0001228) operates. IDA is justified by the combination of in vitro
+      promoter binding and in vivo induction-dependence data summarised in the deep-research
+      report.
+    supported_by:
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        NSP1 functions as a **DNA-binding transcription factor/regulator**; unlike NSP2, NSP1
+        directly binds promoter DNA in vitro and associates with symbiosis gene promoters in vivo.
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        Loss-of-function nsp backgrounds abolish or strongly impair NF-induced transcriptional
+        responses (e.g., ENOD11, ERN1, NIN induction)
+- term:
+    id: GO:1901601
+    label: strigolactone biosynthetic process
+  evidence_type: IMP
+  original_reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+  review:
+    summary: &gt;
+      NSP1 is required for strigolactone biosynthesis in M. truncatula roots: nsp1 mutants do not
+      produce strigolactones and show strongly reduced expression of the SL-biosynthetic gene
+      DWARF27 (D27).
+    action: NEW
+    reason: &gt;
+      A conserved, experimentally demonstrated NSP1 function outside nodulation is the regulation
+      of strigolactone biosynthesis. nsp1 mutants fail to produce strigolactones and the DWARF27
+      (beta-carotene isomerase D27) homolog is ~90% reduced in nsp mutant backgrounds, showing
+      that NSP1 transcriptionally drives the SL pathway. GO:1901601 &#34;strigolactone biosynthetic
+      process&#34; (a sesquiterpenoid/lactone biosynthetic process) captures the pathway NSP1 is
+      required for; this is consistent with the UniProt FUNCTION statement that NSP1 is a
+      &#34;Transcription factor involved in the control of strigolactone biosynthesis.&#34; IMP is
+      justified by the nsp1 loss-of-function metabolite/expression phenotype. (NSP1 acts as the
+      upstream transcriptional regulator rather than as an SL-biosynthetic enzyme itself.)
+    supported_by:
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        **nsp1 mutants do not produce SLs**
+    - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+      supporting_text: &gt;-
+        nsp mutants show markedly reduced expression of **DWARF27**, a key SL-biosynthetic gene
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the
+      keyword2GO pipeline for cellular organisms.
+  - statement: For NSP1, the keyword &#34;Nodulation&#34; mapped to the genuinely correct, core process
+      term GO:0009877 nodulation; its removal left the gene with no nodulation/symbiosis process
+      annotation, so the removal is collateral damage rather than a corrected over-annotation.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+  - statement: Maps the UniProt subcellular location &#34;Nucleus&#34; to GO:0005634; consistent with
+      NSP1&#39;s role as a nuclear GRAS transcription factor.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: ARBA machine-learning model assigned &#34;response to symbiotic fungus&#34; (GO:0009610);
+      a reasonable generalization for an NSP-family GRAS regulator but indirect for Medicago
+      NSP1, whose core symbiotic role is rhizobial nodulation.
+- id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation of
+    Medicago truncatula NSP1 (Q4VYC8).
+  findings:
+  - statement: NSP1 is a plant-specific GRAS-family transcriptional regulator that functions in
+      the nucleus as part of a transcriptional module activated downstream of the common
+      symbiosis signaling pathway; it acts downstream of Nod factor perception, calcium spiking
+      and CCaMK/DMI3 in the core transcriptional response that activates early nodulation genes.
+  - statement: NSP1 is a DNA-binding transcription factor that directly binds the ENOD11 promoter
+      in vitro (EMSA), recognises an AATTT Nodulation Responsive Element (NRE), and forms a
+      complex with NSP2 that associates with the promoters of NF-responsive genes ENOD11, ERN1
+      and NIN; loss-of-function nsp backgrounds abolish or strongly impair NF-induced
+      transcription of these genes and nodulation.
+  - statement: NSP1 also has a conserved role outside nodulation in strigolactone biosynthesis -
+      nsp1 mutants do not produce strigolactones and show markedly reduced expression of the
+      SL-biosynthetic gene DWARF27 (~90% reduced in nsp mutant backgrounds); NSP1 is expressed
+      mainly in roots and nodules.
+  - statement: The report synthesises the foundational primary studies Hirsch et al. 2009 (The
+      Plant Cell, DOI 10.1105/tpc.108.064501), Liu et al. 2011 (The Plant Cell, DOI
+      10.1105/tpc.111.089771) and Smit et al. 2005 (Science 308:1789-1791); these are the primary
+      sources for NSP1 DNA-binding, NSP1-NSP2 complex formation and strigolactone regulation.
+core_functions:
+- description: &gt;
+    NSP1 is a sequence-specific DNA-binding GRAS-family transcription factor that, downstream of
+    Nod factor perception, calcium spiking and CCaMK/DMI3, directly binds the AATTT Nodulation
+    Responsive Element in the promoters of early symbiotic genes (ENOD11, ERN1, NIN) and activates
+    their transcription, forming a promoter-associated complex with NSP2.
+  molecular_function:
+    id: GO:0001228
+    label: DNA-binding transcription activator activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0006355
+    label: regulation of DNA-templated transcription
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+    supporting_text: &gt;-
+      In vitro EMSA experiments show **NSP1 (but not NSP2) directly binds** fragments of the
+      **ENOD11** promoter.
+  - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+    supporting_text: &gt;-
+      Random binding-site selection and EMSA define an NSP1-recognized cis-element with consensus
+      **AATTT**, described as a Nodulation Responsive Element
+- description: &gt;
+    NSP1 is essential for the rhizobial Nod-factor signaling program that drives root nodule
+    organogenesis: it couples NF-triggered signaling to early nodulation gene expression, and
+    nsp1 loss-of-function mutants lose the ability to form nitrogen-fixing nodules.
+  molecular_function:
+    id: GO:0001228
+    label: DNA-binding transcription activator activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0009877
+    label: nodulation
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+    supporting_text: &gt;-
+      supporting NSP1 as essential for NF-induced transcriptional reprogramming required for
+      nodulation
+  - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+    supporting_text: &gt;-
+      NSP1 acts **downstream of Nod factor perception, calcium spiking, and CCaMK/DMI3** as part
+      of the core transcriptional response that activates early nodulation genes
+- description: &gt;
+    Beyond nodulation, NSP1 acts as the upstream transcriptional regulator of strigolactone
+    biosynthesis in roots, driving expression of the beta-carotene isomerase gene DWARF27 (D27);
+    nsp1 mutants fail to produce strigolactones.
+  molecular_function:
+    id: GO:0001228
+    label: DNA-binding transcription activator activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:1901601
+    label: strigolactone biosynthetic process
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+    supporting_text: &gt;-
+      **nsp1 mutants do not produce SLs**
+  - reference_id: file:MEDTR/NSP1/NSP1-deep-research-falcon.md
+    supporting_text: &gt;-
+      nsp mutants show markedly reduced expression of **DWARF27**, a key SL-biosynthetic gene
+proposed_new_terms: []
+suggested_questions:
+- question: What is the complete genome-wide set of direct NSP1 DNA-binding targets in M.
+    truncatula roots and nodules, and which require co-binding of NSP2 versus NSP1 alone?
+  experts:
+  - Giles Oldroyd
+  - Rene Geurts
+- question: How is NSP1 transcriptional activity at the ENOD11/ERN1/NIN promoters gated by
+    DELLA/gibberellin signaling and by repressive GRAS proteins such as Lateral suppressor?
+  experts:
+  - Florian Frugier
+- question: To what extent is NSP1&#39;s contribution to arbuscular-mycorrhizal symbiosis mediated
+    solely through strigolactone biosynthesis versus direct transcriptional inputs into the
+    mycorrhizal program?
+  experts:
+  - Rene Geurts
+suggested_experiments:
+- description: Genome-wide DAP-seq or ChIP-seq of NSP1 (with and without NSP2) in M. truncatula
+    roots, with and without Nod factor treatment, to map direct targets and the in vivo AATTT
+    NRE binding landscape.
+  hypothesis: NSP1 directly binds AATTT-containing cis-elements in the promoters of early
+    nodulation genes genome-wide, and NSP2 co-binding extends or stabilises the bound target set
+    upon Nod factor signaling.
+  experiment_type: genome-wide TF binding assay (DAP-seq/ChIP-seq)
+- description: Quantitative transactivation assays in M. truncatula roots using NSP1 with native
+    versus AATTT-&gt;CCCCC-mutated ENOD11/ERN1/NIN promoter reporters, in wild-type and nsp2 mutant
+    backgrounds.
+  hypothesis: NSP1 activates these promoters in an AATTT-NRE-dependent manner, and full
+    activation additionally requires NSP2.
+  experiment_type: promoter-reporter transactivation assay
+- description: Cross-rescue test of an nsp1 mutant with NSP1 transgenes carrying targeted
+    mutations in the VHIID/SAW GRAS subdomains, scoring both nodulation (nodule number,
+    acetylene-reduction nitrogen fixation) and root strigolactone levels / DWARF27 expression.
+  hypothesis: Distinct GRAS subdomain residues are separable requirements for NSP1&#39;s nodulation
+    function versus its strigolactone-biosynthesis-regulation function.
+  experiment_type: structure-function complementation analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

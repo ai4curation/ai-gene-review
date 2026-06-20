@@ -14,3 +14,9 @@
 - Some annotations should be removed or down-weighted on evidence quality grounds. `substantia nigra development` is based on proteomic detection in diseased tissue rather than developmental perturbation [PMID:22926577 "Using a quantitative proteomic approach, we investigated protein expressions in the substantia nigra"].
 - Generic `protein binding` annotations are not informative for calmodulin and should not be favored when more specific regulator/binding terms are available.
 - Current UniProt entries for `CALM1`, `CALM2`, and `CALM3` all show the same 149 aa sequence summary and I found no `ALTERNATIVE PRODUCTS` block in these local records, so there is no isoform-specific caveat comparable to the splice-isoform project genes [file:human/CALM1/CALM1-uniprot.txt "SQ   SEQUENCE   149 AA"] [file:human/CALM2/CALM2-uniprot.txt "SQ   SEQUENCE   149 AA"] [file:human/CALM3/CALM3-uniprot.txt "SQ   SEQUENCE   149 AA"].
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: annotations were interpreted at the protein level for this review because CALM1, CALM2, and CALM3 encode identical calmodulin proteins.

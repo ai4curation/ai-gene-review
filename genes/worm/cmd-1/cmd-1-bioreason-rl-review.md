@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: cmd-1 (C. elegans)
 
-Source: cmd-1-deep-research-bioreason-rl.md
+Source: cmd-1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

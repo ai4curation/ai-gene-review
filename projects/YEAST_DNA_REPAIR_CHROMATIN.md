@@ -1,3 +1,10 @@
+---
+title: "Yeast DNA Repair & Chromatin Dynamics"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [yeast]
+---
+
 # Yeast DNA Repair & Chromatin Dynamics
 
 ## Overview

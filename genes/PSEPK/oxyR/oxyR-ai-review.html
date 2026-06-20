@@ -1,0 +1,2293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>oxyR - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>oxyR</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88C74" target="_blank" class="term-link">
+                        Q88C74
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "oxyR";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88C74" data-a="DESCRIPTION: OxyR (PP_5309) is a LysR-type transcriptional regu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>OxyR (PP_5309) is a LysR-type transcriptional regulator (LTTR) that serves as the master sensor and regulator of the hydrogen-peroxide oxidative-stress response in Pseudomonas putida KT2440. Like other OxyR proteins, it is a cytoplasmic, constitutively expressed homotetramer that senses H2O2 directly through conserved cysteine residues; oxidation forms an intramolecular disulfide bond that triggers a conformational change altering its DNA-binding and transcription-modulating activity. OxyR binds palindromic operator sequences upstream of antioxidant genes and controls expression of the principal peroxide-detoxifying enzymes, including the two major catalases KatA and KatB and the alkyl hydroperoxide reductase/peroxiredoxin subunit AhpC. Architecturally it has the canonical LTTR organization, with an N-terminal winged helix-turn-helix DNA-binding domain and a C-terminal effector/regulatory (periplasmic-binding-protein-like) domain that mediates redox sensing and oligomerization. As a dual regulator it can both activate and repress transcription depending on target and redox state, and it autoregulates its own promoter. Through this regulon it coordinates removal of reactive oxygen species and maintenance of redox homeostasis, contributing to survival under oxidative stress.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C74" data-a="GO:0003677" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OxyR is a LysR-type transcriptional regulator with an N-terminal winged helix-turn-helix domain; direct DNA binding to operator sequences upstream of katA, katB and ahpC is experimentally demonstrated (purified OxyR bound these sequences).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported by the HTH domain architecture and by experimental DNA-binding data. A core molecular activity, though the more specific transcription-factor term below better captures the function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C74" data-a="GO:0003700" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OxyR is a sequence-specific DNA-binding transcription factor of the LysR/OxyR family that activates and represses target promoters in response to peroxide.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function. Strongly supported by family assignment, domain architecture, and experimental promoter binding/regulation data in P. putida.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C74" data-a="GO:0006351" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term denotes the act of transcription itself (the polymerase reaction), which OxyR does not perform; OxyR regulates transcription rather than carrying it out.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> OxyR is a regulator, not part of the transcription machinery. The accurate process annotation is regulation of transcription, not the transcription process per se. This is a generic UniProtKB keyword-derived IEA.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C74" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OxyR regulates transcription of its peroxide-defense regulon. This high-level process term is correct but could be made more specific (positive/negative regulation).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate as a parent process term for a transcriptional regulator. Specific directional regulation is captured by other annotations and core_functions.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032993" target="_blank" class="term-link">
+                                    GO:0032993
+                                </a>
+                            </span>
+                            <span class="term-label">protein-DNA complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C74" data-a="GO:0032993" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a DNA-binding transcription factor, OxyR forms part of a protein-DNA complex when bound to operator sequences.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the demonstrated sequence-specific DNA binding. Reasonable cellular-component annotation for a DNA-binding regulator, though non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                    GO:0045892
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17107553" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17107553
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OxyR regulated the expression of two major catalases, KatA a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C74" data-a="GO:0045892" data-r="PMID:17107553" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CollecTF experimental annotation. OxyR is a dual regulator; Hishinuma et al. (2006) characterized OxyR binding and regulation of the katA, katB and ahpC promoters in P. putida KT2442, and OxyR is known to repress certain targets and autorepress its own gene. The curator (CollecTF) read the full text and assigned this term from experimental binding-site evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental annotation (EXP, two ECO codes) from CollecTF, a reliable resource, based on demonstrated operator binding. Per guidelines, do not overrule an experimental annotation whose full text the curator read. OxyR&#39;s dual activator/repressor nature makes negative regulation biologically appropriate alongside positive regulation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as a hydrogen-peroxide-responsive, redox-sensing DNA-binding transcription factor that binds palindromic operator sequences and regulates the oxidative-stress defense regulon in P. putida.</h3>
+                <span class="vote-buttons" data-g="Q88C74" data-a="FUNCTION: Acts as a hydrogen-peroxide-responsive, redox-sens..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                regulation of DNA-templated transcription
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17107553" target="_blank" class="term-link">
+                                PMID:17107553
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Purified OxyR bound sequences upstream of katA, katB and ahpC under both reduced and oxidized states, and the oxyR1 mutation increased transcription of these genes, demonstrating sequence-specific DNA binding and transcriptional regulation.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Coordinates the cellular response to hydrogen peroxide by controlling expression of the principal peroxide-detoxifying enzymes (catalases KatA/KatB and peroxiredoxin AhpC), enabling defense against oxidative stress.</h3>
+                <span class="vote-buttons" data-g="Q88C74" data-a="FUNCTION: Coordinates the cellular response to hydrogen pero..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034599" target="_blank" class="term-link">
+                                cellular response to oxidative stress
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17107553" target="_blank" class="term-link">
+                                PMID:17107553
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">OxyR controlled expression of all the principal peroxide-degrading enzymes (KatA, KatB, AhpC) in P. putida.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17107553" target="_blank" class="term-link">
+                            PMID:17107553
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OxyR regulated the expression of two major catalases, KatA and KatB, along with peroxiredoxin, AhpC in Pseudomonas putida.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OxyR binds operator sequences upstream of katA, katB and ahpC and controls expression of the principal peroxide-degrading enzymes in P. putida. Purified OxyR bound these sequences under both reduced and oxidized states.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does P. putida OxyR also regulate a nitrosative-stress (RNS) response, as the UniProt &#34;dual regulator&#34; name implies, or is its in vivo role restricted to peroxide defense?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88C74" data-a="Q: Does P. putida OxyR also regulate a nitrosative-st..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> To what extent is the RecG helicase requirement for OxyR target induction (reported in Pseudomonas) operative for the katA/katB/ahpC regulon in KT2440?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88C74" data-a="Q: To what extent is the RecG helicase requirement fo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq or genome-wide DAP-seq of OxyR under peroxide stress in KT2440 to define the complete regulon and distinguish activated versus repressed targets.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88C74" data-a="EXPERIMENT: ChIP-seq or genome-wide DAP-seq of OxyR under pero..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a clean oxyR deletion (or cysteine point mutants) and assess H2O2 sensitivity, catalase activity, and transcriptome to confirm direct versus indirect regulatory roles.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88C74" data-a="EXPERIMENT: Construct a clean oxyR deletion (or cysteine point..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(oxyR-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88C74" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">34 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:52:03.988717</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="oxyR-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="oxyR-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000049 The requested information was found in Figure 1 and Table 1. Figure 1 provides a schematic overview of the oxidative stress respons</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-pseudomonas-putida-kt2440-oxyr-uniprot-q88c74-locus-pp_5309">Research report: Functional annotation of <em>Pseudomonas putida</em> KT2440 oxyR (UniProt Q88C74; locus PP_5309)</h2>
+<h3 id="0-mandatory-identity-verification-to-avoid-symbol-ambiguity">0) Mandatory identity verification (to avoid symbol ambiguity)</h3>
+<p><strong>Target identity.</strong> The requested protein is <strong>OxyR</strong> from <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054/DSM 6125/KT2440), UniProt <strong>Q88C74</strong>, gene <strong>oxyR</strong>, ordered locus <strong>PP_5309</strong>. A foundational KT2440 genome analysis explicitly links <strong>PP5309</strong> to an <strong>OxyR-like LysR-family transcriptional regulator</strong>: OxyR is described as sensing the <strong>cytoplasmic redox state</strong> and coordinating multigene oxidative-stress defense; “this determinant is likely to be <strong>PP5309</strong>,” and PP5309 shows high sequence identity to OxyR homologs in other <em>Pseudomonas</em> species (e.g., 93% identity over 308 aa to <em>P. syringae</em> putative OxyR; ~40% to <em>E. coli</em> OxyR). (santos2004insightsintothe pages 16-18)</p>
+<p><strong>Family/domain alignment.</strong> OxyR is a <strong>LysR-type transcriptional regulator (LTTR)</strong>, consistent with UniProt’s LysR-family assignment and LysR-like domain architecture (N-terminal winged HTH DNA-binding domain; C-terminal regulatory/oligomerization region). (demeester2024fundamentalsandexceptions pages 22-23, demeester2024fundamentalsandexceptions pages 4-5)</p>
+<p><strong>Conclusion of verification.</strong> The gene symbol <strong>oxyR</strong> in this report refers only to the KT2440 <strong>PP_5309/Q88C74</strong> regulator as above; other oxyR genes in other species are used strictly as comparative context and are explicitly labeled as such. (santos2004insightsintothe pages 16-18)</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-oxidative-vs-nitrosative-stress">1.1 Oxidative vs nitrosative stress</h4>
+<p>Oxidative stress in bacteria refers to damaging chemistry driven by reactive oxygen species (ROS), particularly <strong>hydrogen peroxide (H2O2)</strong> and derived radicals; defense requires coordinated transcriptional programs to detoxify peroxides and maintain thiol redox homeostasis. In <em>P. putida</em>, peroxide defense relies heavily on catalases, peroxiredoxins, and thioredoxin/glutathione recycling systems that maintain protein thiols and remove peroxides. (kim2014oxidativestressresponse pages 5-6)</p>
+<p>Nitrosative stress is driven by reactive nitrogen species (RNS), e.g., nitric oxide (NO) donors. In the retrieved KT2440-focused sources, <strong>direct, P. putida-specific evidence that OxyR (PP_5309) is a primary nitrosative-stress regulator was not found</strong>; OxyR’s best-supported primary role in KT2440 is peroxide/oxidative-stress control. (kim2014oxidativestressresponse pages 5-6, santos2004insightsintothe pages 16-18)</p>
+<h4 id="12-lysr-type-transcriptional-regulators-lttrs-definition-and-canonical-mechanism">1.2 LysR-type transcriptional regulators (LTTRs): definition and canonical mechanism</h4>
+<p>LTTRs are the largest family of bacterial transcription factors and are widely used as natural “sensor–regulators.” The 2024 ACS Synthetic Biology review describes the canonical LTTR mechanism (“<strong>sliding dimer</strong>”), in which (i) dimers bind a high-affinity <strong>regulatory site (RS)</strong> and lower-affinity activation sites (<strong>AS1/AS2</strong>), (ii) tetramerization and DNA bending shape promoter accessibility, and (iii) signal/ligand-dependent conformational changes reposition dimers and reduce DNA bending to recruit RNA polymerase (RNAP) and activate transcription. The review also provides biosensor-centric design guidance: TF expression level, promoter architecture, and TF binding-site sequence can tune dynamic range and leakiness. (demeester2024fundamentalsandexceptions pages 6-7, demeester2024fundamentalsandexceptions pages 5-6)</p>
+<h4 id="13-oxyr-definition-and-redox-switch-mechanism">1.3 OxyR: definition and redox-switch mechanism</h4>
+<p>OxyR is a <strong>redox-sensitive LTTR</strong> that senses H2O2 through cysteine chemistry rather than binding a classical small-molecule effector. In <em>Pseudomonas</em> and other bacteria, oxidation results in an <strong>intramolecular disulfide</strong> and conformational changes that alter DNA binding and transcriptional activation. In KT2440-oriented literature, OxyR is described as <strong>constitutively produced</strong>, <strong>oxidized by H2O2</strong>, and the oxidized form <strong>binds promoters and activates transcription</strong> via RNAP contacts. (kim2014oxidativestressresponse pages 5-6, yeom2012atpdependentrecghelicase pages 1-2)</p>
+<p>A recent LTTR review further emphasizes that OxyR’s H2O2 sensing has been captured in structural snapshots and involves disulfide formation and rapid disulfide-exchange reactions that change DNA contacts and dimer conformation. (demeester2024fundamentalsandexceptions pages 22-23)</p>
+<hr />
+<h3 id="2-functional-role-of-oxyr-pp_5309q88c74-in-pseudomonas-putida-kt2440">2) Functional role of OxyR (PP_5309/Q88C74) in <em>Pseudomonas putida</em> KT2440</h3>
+<h4 id="21-primary-function">2.1 Primary function</h4>
+<p><strong>Primary function (functional annotation):</strong> OxyR (PP_5309) is a <strong>transcriptional regulator</strong> that coordinates the <strong>hydrogen peroxide (H2O2) oxidative-stress response</strong>, activating expression of peroxide-detoxifying enzymes and redox-homeostasis proteins. (kim2014oxidativestressresponse pages 5-6, santos2004insightsintothe pages 16-18)</p>
+<p>Because OxyR is not an enzyme or transporter, the “substrate specificity” concept applies to its <em>signal</em> and regulatory targets: the primary activating signal is <strong>H2O2/peroxide oxidation</strong> of OxyR, and the principal output targets are genes encoding <strong>catalases</strong> and <strong>peroxiredoxin/thiol-redox systems</strong>. (kim2014oxidativestressresponse pages 5-6, yeom2012atpdependentrecghelicase pages 1-2)</p>
+<h4 id="22-cellular-localization">2.2 Cellular localization</h4>
+<p>OxyR is described as sensing the <strong>cytoplasmic redox state</strong>, consistent with a <strong>cytoplasmic DNA-binding transcription factor</strong> acting at chromosomal promoters. No evidence in the retrieved sources indicates membrane, periplasmic, or extracellular localization of OxyR itself. (santos2004insightsintothe pages 16-18)</p>
+<h4 id="23-key-regulon-targets-in-p-putida">2.3 Key regulon targets in <em>P. putida</em></h4>
+<p>Across KT2440/KT2442-focused sources, the best-supported OxyR-regulated genes are:</p>
+<ul>
+<li><strong>katA</strong> and <strong>katB</strong> (major catalases) (kim2014oxidativestressresponse pages 5-6, kim2014oxidativestressresponse pages 2-4)</li>
+<li><strong>ahpC</strong> and <strong>ahpF</strong> (alkyl hydroperoxide reductase/peroxiredoxin system) (hishinuma2008oxyrisinvolved pages 3-5)</li>
+<li><strong>trxB</strong> (thioredoxin reductase; redox homeostasis) (hishinuma2008oxyrisinvolved pages 1-2, hishinuma2008oxyrisinvolved pages 3-5)</li>
+</ul>
+<p>Additional OxyR-associated genes reported in KT2440 work include <strong>trx-2</strong>, <strong>hslO</strong>, and <strong>PP0877</strong> (reported as OxyR regulon members in the context of RecG-dependent induction). (kim2014oxidativestressresponse pages 5-6, yeom2012atpdependentrecghelicase pages 5-6)</p>
+<p>A major ecological/physiological implication is that OxyR couples peroxide detoxification (catalases/peroxiredoxins) to maintenance of thiol-disulfide balance (thioredoxin reductase), enabling survival in pollutant-rich environments that generate oxidative stress. (kim2014oxidativestressresponse pages 5-6)</p>
+<h4 id="24-quantitative-data-from-p-putida-studies">2.4 Quantitative data from <em>P. putida</em> studies</h4>
+<p>Quantitative evidence supporting OxyR-linked oxidative defense in <em>P. putida</em> includes:</p>
+<ul>
+<li><strong>H2O2 induction of peroxide-defense genes:</strong> In <em>P. putida</em> KT2442, H2O2 induces <strong>ahpC</strong> and <strong>ahpF</strong> at ~<strong>15-fold</strong> in wild-type cells. (hishinuma2008oxyrisinvolved pages 3-5)</li>
+<li><strong>OxyR perturbation alters antioxidant protein abundance:</strong> In KT2442, an <strong>oxyR1</strong> allele (Phe106→Ile) increased protein levels of <strong>KatA (~3.7-fold)</strong>, <strong>KatB (~10-fold)</strong>, <strong>AhpF (~7.5-fold)</strong>, <strong>TrxB (~5-fold)</strong>, and <strong>AhpC (~4–20-fold; reported as an imprecise estimate)</strong> in proteomics measurements. (hishinuma2008oxyrisinvolved pages 3-5)</li>
+<li><strong>Physiological relevance of a key redox target (trxB):</strong> In KT2440, <strong>trxB mutants</strong> are hypersensitive to superoxide-generating stress and show reduced growth rate under paraquat stress (µ = <strong>0.56 ± 0.08 h−1</strong> mutant vs <strong>1.03 ± 0.16 h−1</strong> wild type), linking the OxyR-controlled thioredoxin system to stress fitness. (yeom2012atpdependentrecghelicase pages 5-6)</li>
+</ul>
+<p>These measurements support an annotation in which OxyR drives a coordinated program of peroxide detoxification and thiol redox maintenance, with measurable downstream growth/fitness consequences. (hishinuma2008oxyrisinvolved pages 3-5, yeom2012atpdependentrecghelicase pages 5-6)</p>
+<hr />
+<h3 id="3-mechanism-of-regulation-oxyr-and-the-recg-dependent-transcriptional-architecture-kt2440">3) Mechanism of regulation: OxyR and the RecG-dependent transcriptional architecture (KT2440)</h3>
+<p>A distinctive feature emphasized in KT2440 literature is that OxyR-dependent transcription can require <strong>ATP-dependent RecG helicase</strong> activity.</p>
+<ul>
+<li><strong>OxyR activation model in <em>P. putida</em></strong>: OxyR is constitutively produced and becomes oxidized by H2O2; oxidized OxyR binds promoter regions and activates transcription via RNAP contacts. (kim2014oxidativestressresponse pages 5-6)</li>
+<li><strong>RecG partnership:</strong> In <em>Pseudomonas</em> (including KT2440), <strong>oxyR appears in an operon with recG</strong>, and transcriptome/functional studies show many OxyR-controlled genes are <strong>not induced under oxidative stress in recG mutants</strong>, implying RecG is required for OxyR regulon induction. (kim2014oxidativestressresponse pages 5-6, yeom2012atpdependentrecghelicase pages 1-2)</li>
+<li><strong>Promoter/DNA structure mechanism:</strong> OxyR binding sites are described as <strong>palindromic</strong>, and RecG (with single-strand binding protein, SSB) binds promoter regions containing palindromic sequences and can remodel non-linear DNA structures; this remodeling favors productive OxyR binding (including a tetrameric OxyR configuration) and transcriptional activation. (yeom2012atpdependentrecghelicase pages 5-6, yeom2012atpdependentrecghelicase pages 1-2)</li>
+</ul>
+<p>The oxidative-stress response schematic and the curated KT2440/KT2442 stress-response table in Kim &amp; Park (2014) visually summarize this OxyR–RecG cooperation and peroxide-defense targets (KatA/KatB/AhpC). (kim2014oxidativestressresponse media e2e2836b, kim2014oxidativestressresponse media b3bd9dad)</p>
+<hr />
+<h3 id="4-genomic-context-in-kt2440-pp_5309-and-potential-linkage-to-iron-uptake">4) Genomic context in KT2440: PP_5309 and potential linkage to iron uptake</h3>
+<p>A KT2440 genome analysis reported PP5309 (OxyR-like regulator) is located within and <strong>co-transcribed with exbBD and tonB genes</strong> involved in ferric-siderophore uptake (TonB-dependent transport). This suggests an architectural linkage between redox regulation and iron acquisition systems in the KT2440 genome context (iron metabolism is tightly connected to oxidative stress because iron can potentiate Fenton chemistry). (santos2004insightsintothe pages 16-18)</p>
+<p><strong>Important note:</strong> Other KT2440-focused work emphasizes an oxyR–recG operon context in <em>Pseudomonas</em> species (including <em>P. putida</em>), reflecting possible differences in annotation focus, operon boundaries, or strain-to-strain genomic organization in the broader literature. The safest KT2440-specific conclusion from retrieved evidence is: PP_5309 is OxyR-like and sits in a neighborhood implicated in iron uptake (exbBD/tonB) and oxidative-stress defense; and functional OxyR-mediated induction can involve RecG-dependent promoter remodeling in <em>Pseudomonas</em>. (santos2004insightsintothe pages 16-18, yeom2012atpdependentrecghelicase pages 1-2)</p>
+<hr />
+<h3 id="5-current-applications-and-real-world-implementations-with-emphasis-on-20232024">5) Current applications and real-world implementations (with emphasis on 2023–2024)</h3>
+<p>Although not specific to KT2440 PP_5309, 2024 literature illustrates how OxyR/LTTR systems are leveraged in real engineering contexts.</p>
+<h4 id="51-lttrs-as-biosensor-scaffolds-2024-review-perspective">5.1 LTTRs as biosensor scaffolds (2024 review perspective)</h4>
+<p>A 2024 review frames LTTRs as promising biosensor inputs, emphasizing low leakiness and fast ligand-responsive activation in many LTTRs, and highlights that response curves can be tuned via regulator expression, promoter architecture, and TF binding-site engineering. (demeester2024fundamentalsandexceptions pages 5-6, demeester2024fundamentalsandexceptions pages 10-11)</p>
+<p>This is directly relevant to OxyR because redox-responsive regulators can be used as transcriptional sensors for oxidative stress states in engineered microbes. (demeester2024fundamentalsandexceptions pages 14-14)</p>
+<h4 id="52-oxyr-centered-strain-engineering-to-improve-oxidative-stress-tolerance-2024-primary-research">5.2 OxyR-centered strain engineering to improve oxidative-stress tolerance (2024 primary research)</h4>
+<p>A 2024 Nucleic Acids Research study demonstrates a modern approach to rewiring oxidative-stress regulation using <strong>iModulons</strong> (machine-learning-defined co-regulated gene modules) as engineering “parts.” The study reports:</p>
+<ul>
+<li><strong>Constitutive OxyR module activation in evolved strains</strong> (e.g., 36.3-fold OxyR iModulon activation at 0.4 mM H2O2 compared to WT),</li>
+<li><strong>Trade-offs</strong> from constitutive activation (e.g., ~0.91-fold reduced growth; large reduction in transformation efficiency), and</li>
+<li><strong>Rebalancing modules</strong> that preserve strong oxidative-stress tolerance while reducing trade-offs (e.g., tolerance at 5 mM H2O2 with reduced antibiotic-sensitivity trade-offs in engineered <em>E. coli</em>; multiple P-values reported). (shin2024modulatingbacterialfunction pages 10-11, shin2024modulatingbacterialfunction pages 11-12)</li>
+</ul>
+<p>These results show OxyR-regulated programs are actionable levers for industrially relevant robustness engineering.</p>
+<h4 id="53-data-driven-discovery-of-beneficial-oxyr-mutations-for-biomanufacturing-2024">5.3 Data-driven discovery of beneficial oxyR mutations for biomanufacturing (2024)</h4>
+<p>A 2024 ACS Synthetic Biology study integrates <strong>7,670 adaptive laboratory evolution (ALE) mutations</strong> across <strong>59 experiments</strong> (72 unique conditions) with iModulon activity data, identifying OxyR and other regulators as mutation “hotspots” under ROS conditions. As a motivating example, a melatonin-producing <em>E. coli</em> strain was unable to grow after 72 h in <strong>10 mM H2O2</strong> in minimal medium, while wild type grew similarly with/without peroxide, illustrating the industrial relevance of oxidative stress control. (phaneuf2024metaanalysisdrivenstrain pages 2-4)</p>
+<hr />
+<h3 id="6-expert-synthesis-and-interpretation-authoritative-analysis">6) Expert synthesis and interpretation (authoritative analysis)</h3>
+<p>1) <strong>OxyR is the peroxide-stress “switchboard”</strong>: In <em>P. putida</em>, the clearest direct evidence supports OxyR as a peroxide-responsive transcriptional activator controlling catalases (katA/katB), alkyl hydroperoxide reductase/peroxiredoxin (ahpC/ahpF), and thioredoxin reductase (trxB), coordinating peroxide detoxification with thiol redox homeostasis. (hishinuma2008oxyrisinvolved pages 3-5, kim2014oxidativestressresponse pages 5-6)</p>
+<p>2) <strong>Promoter architecture and DNA remodeling matter in <em>Pseudomonas</em></strong>: KT2440-focused work highlights a non-canonical mechanistic layer—<strong>RecG helicase-dependent promoter remodeling</strong>—that can be necessary for OxyR regulon induction. This adds complexity beyond the “classic” LTTR sliding-dimer model and aligns with the 2024 LTTR review’s emphasis that many LTTRs deviate from a single canonical mechanism. (yeom2012atpdependentrecghelicase pages 1-2, demeester2024fundamentalsandexceptions pages 14-16)</p>
+<p>3) <strong>Linkage to iron uptake is plausible and biologically meaningful</strong>: The KT2440 genome context places PP_5309 within a siderophore/TonB-associated region (exbBD/tonB), consistent with a broader theme that oxidative stress defense and iron homeostasis are intertwined (iron catalyzes ROS chemistry). This supports a hypothesis that OxyR’s local genomic context may integrate redox state with iron acquisition or vice versa in KT2440. (santos2004insightsintothe pages 16-18)</p>
+<p>4) <strong>Nitrosative-stress regulation by KT2440 OxyR remains under-supported in retrieved evidence</strong>: While OxyR can participate in nitrosative stress responses in other bacteria (and the broader oxidative/nitrosative stress landscape is interconnected), the KT2440-specific texts retrieved here did not provide direct experimental evidence that PP_5309 is a primary NO/RNS-responsive regulator. The most defensible annotation from current evidence is “oxidative/peroxide stress transcriptional regulator,” with nitrosative stress listed as possible/indirect or species-dependent. (kim2014oxidativestressresponse pages 5-6, santos2004insightsintothe pages 16-18)</p>
+<hr />
+<h3 id="7-evidence-summary-table-curation-ready">7) Evidence summary table (curation-ready)</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Evidence summary</th>
+<th>Key citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>identity</td>
+<td>The target matches the requested protein: PP_5309 in <em>Pseudomonas putida</em> KT2440 is identified as the likely OxyR homolog, a LysR-family transcriptional regulator involved in oxidative-stress defense. The KT2440 genome paper reports 93% identity over 308 aa to putative OxyR proteins of <em>P. syringae</em> strains and ~40% identity to <em>E. coli</em> OxyR, supporting correct gene/protein assignment for UniProt Q88C74.</td>
+<td>(santos2004insightsintothe pages 16-18)</td>
+</tr>
+<tr>
+<td>family/domains</td>
+<td>OxyR belongs to the LysR-type transcriptional regulator (LTTR) family. LTTRs have a conserved N-terminal winged helix-turn-helix DNA-binding domain and a C-terminal effector/redox-sensing and oligomerization domain; OxyR is a redox-sensing LTTR rather than a classical small-molecule-responsive one.</td>
+<td>(demeester2024fundamentalsandexceptions pages 22-23, demeester2024fundamentalsandexceptions pages 6-7, demeester2024fundamentalsandexceptions pages 4-5)</td>
+</tr>
+<tr>
+<td>sensing/activation</td>
+<td>In <em>P. putida</em>, OxyR is constitutively present and becomes activated by oxidation in response to H2O2, after which the oxidized form binds promoters and activates transcription through RNA polymerase contacts. Broader OxyR literature describes cysteine-dependent disulfide formation/exchange as the biochemical basis of this redox switch.</td>
+<td>(kim2014oxidativestressresponse pages 5-6, yeom2012atpdependentrecghelicase pages 1-2)</td>
+</tr>
+<tr>
+<td>DNA-binding/promoter architecture</td>
+<td>LTTRs typically act through a sliding-dimer/tetramer mechanism with RS/AS1/AS2 promoter sites and ligand- or signal-induced changes in DNA bending. In <em>P. putida</em>, OxyR binds palindromic promoter sequences; for trxB, OxyR binds roughly the −200 to −163 region, and RecG-dependent remodeling of palindromic/cruciform DNA promotes productive OxyR tetramer binding.</td>
+<td>(demeester2024fundamentalsandexceptions pages 6-7, demeester2024fundamentalsandexceptions pages 11-13, yeom2012atpdependentrecghelicase pages 5-6)</td>
+</tr>
+<tr>
+<td>key regulon targets</td>
+<td>The best-supported <em>P. putida</em> OxyR targets are peroxide-defense and thiol-redox genes: katA, katB, ahpC, ahpF, and trxB; additional reported OxyR-associated genes include trx-2, hslO, and PP0877. These targets place OxyR at the center of peroxide detoxification and maintenance of cytoplasmic thiol-disulfide balance.</td>
+<td>(kim2014oxidativestressresponse pages 5-6, kim2014oxidativestressresponse pages 4-5, hishinuma2008oxyrisinvolved pages 3-5)</td>
+</tr>
+<tr>
+<td>operon/genomic context</td>
+<td>Two genomic contexts are reported in the retrieved literature: (i) KT2440 genome analysis places PP5309 with exbBD/tonB ferric-siderophore uptake genes; (ii) functional studies in <em>Pseudomonas</em> show oxyR can be co-transcribed with recG, and RecG is required for induction of many OxyR targets. Together these findings suggest strain-specific or annotation-context complexity around the locus and caution against oversimplifying local operon structure.</td>
+<td>(santos2004insightsintothe pages 16-18, kim2014oxidativestressresponse pages 5-6, yeom2012atpdependentrecghelicase pages 1-2)</td>
+</tr>
+<tr>
+<td>quantitative data</td>
+<td>Quantitative observations include ~15-fold H2O2 induction of ahpC/ahpF, and in an oxyR1 background protein abundance increases of ~3.7-fold (KatA), ~10-fold (KatB), ~7.5-fold (AhpF), ~5-fold (TrxB), and ~4–20-fold (AhpC; imprecise estimate). Under paraquat stress, a trxB mutant grew more slowly than wild type (0.56 ± 0.08 h−1 vs 1.03 ± 0.16 h−1).</td>
+<td>(yeom2012atpdependentrecghelicase pages 5-6, hishinuma2008oxyrisinvolved pages 3-5)</td>
+</tr>
+<tr>
+<td>localization</td>
+<td>OxyR is described as sensing the cytoplasmatic redox state, implying a cytoplasmic transcription factor acting on chromosomal promoters. Its functional outputs regulate mainly cytoplasmic/periplasm-protective antioxidant systems, but the regulator itself is not reported as membrane or extracellular.</td>
+<td>(santos2004insightsintothe pages 16-18)</td>
+</tr>
+<tr>
+<td>pathways/biological role</td>
+<td>The primary annotated role is transcriptional control of oxidative-stress defense, especially H2O2 detoxification via catalases/peroxiredoxins and redox-homeostasis pathways involving thioredoxin reductase. RecG coupling connects this response to DNA structural remodeling and likely stress-associated DNA repair/transcription coordination.</td>
+<td>(kim2014oxidativestressresponse pages 5-6, yeom2012atpdependentrecghelicase pages 1-2)</td>
+</tr>
+<tr>
+<td>applications/engineering relevance</td>
+<td>Recent 2024 LTTR/OxyR work highlights practical relevance in biosensor design, oxidative-stress engineering, and data-driven strain optimization. LTTRs are being developed as transcription-factor biosensors, while OxyR-centered modules and oxyR* variants were used to rebalance oxidative-stress responses in engineered bacteria; meta-analysis of 7,670 ALE mutations across 59 experiments also identified OxyR as a recurrent oxidative-stress engineering target.</td>
+<td>(demeester2024fundamentalsandexceptions pages 14-16, shin2024modulatingbacterialfunction pages 10-11, shin2024modulatingbacterialfunction pages 11-12, demeester2024fundamentalsandexceptions pages 5-6, phaneuf2024metaanalysisdrivenstrain pages 2-4)</td>
+</tr>
+<tr>
+<td>notes/limitations</td>
+<td>Direct <em>P. putida</em> KT2440 primary literature for PP_5309 is limited, and some quantitative/mechanistic evidence comes from KT2442 or broader <em>Pseudomonas</em> studies. The retrieved evidence supports OxyR as a peroxide-stress regulator, but did not provide strong <em>P. putida</em>-specific evidence for direct nitrosative-stress regulation by OxyR; nitrosative roles are better documented in other species.</td>
+<td>(hishinuma2008oxyrisinvolved pages 1-2, hishinuma2008oxyrisinvolved pages 2-3, kim2014oxidativestressresponse pages 5-6, hishinuma2008oxyrisinvolved pages 3-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the functional annotation of </em>Pseudomonas putida<em> KT2440 OxyR (UniProt Q88C74; oxyR; PP_5309), including identity, mechanism, regulon, genomic context, quantitative evidence, and current engineering relevance. It is designed as a compact evidence map for downstream reporting or curation.</em></p>
+<hr />
+<h3 id="8-visual-evidence-figuretable-extractions">8) Visual evidence (figure/table extractions)</h3>
+<p>The following extracted figure/table regions from Kim &amp; Park (2014) provide a visual schematic and curated stress-response mapping for KT2440/KT2442 that explicitly highlights OxyR cooperation with RecG and the peroxide-defense targets (KatA/KatB/AhpC): (kim2014oxidativestressresponse media e2e2836b, kim2014oxidativestressresponse media b3bd9dad)</p>
+<hr />
+<h3 id="9-urls-and-publication-dates-key-sources-used">9) URLs and publication dates (key sources used)</h3>
+<p><strong>KT2440/PP_5309 identity &amp; context</strong><br />
+- Dos Santos et al., <em>Environmental Microbiology</em> (Dec 2004). “Insights into the genomic basis of niche specificity of <em>Pseudomonas putida</em> KT2440.” https://doi.org/10.1111/j.1462-2920.2004.00734.x (santos2004insightsintothe pages 16-18)</p>
+<p><strong>Core <em>Pseudomonas</em> OxyR–RecG mechanism</strong><br />
+- Yeom et al., <em>Journal of Biological Chemistry</em> (Jul 2012). “ATP-dependent RecG Helicase Is Required for the Transcriptional Regulator OxyR Function in <em>Pseudomonas</em> species.” https://doi.org/10.1074/jbc.m112.356964 (yeom2012atpdependentrecghelicase pages 1-2, yeom2012atpdependentrecghelicase pages 5-6)</p>
+<p><strong>OxyR targets and peroxide-defense network in <em>P. putida</em></strong><br />
+- Kim &amp; Park, <em>Applied Microbiology and Biotechnology</em> (Jun 2014). “Oxidative stress response in <em>Pseudomonas putida</em>.” https://doi.org/10.1007/s00253-014-5883-4 (kim2014oxidativestressresponse pages 5-6, kim2014oxidativestressresponse media e2e2836b)<br />
+- Hishinuma et al., <em>FEMS Microbiology Letters</em> (Dec 2008). “OxyR is involved in the expression of thioredoxin reductase TrxB in <em>Pseudomonas putida</em>.” https://doi.org/10.1111/j.1574-6968.2008.01374.x (hishinuma2008oxyrisinvolved pages 1-2, hishinuma2008oxyrisinvolved pages 3-5)</p>
+<p><strong>2024 LTTR and OxyR engineering/omics (latest developments &amp; applications)</strong><br />
+- Demeester et al., <em>ACS Synthetic Biology</em> (Sep 2024). “Fundamentals and Exceptions of the LysR-type Transcriptional Regulators.” https://doi.org/10.1021/acssynbio.4c00219 (demeester2024fundamentalsandexceptions pages 6-7, demeester2024fundamentalsandexceptions pages 10-11)<br />
+- Shin et al., <em>Nucleic Acids Research</em> (Aug 2024). “Modulating bacterial function utilizing a knowledge base of transcriptional regulatory modules.” https://doi.org/10.1093/nar/gkae742 (shin2024modulatingbacterialfunction pages 10-11, shin2024modulatingbacterialfunction pages 11-12)<br />
+- Phaneuf et al., <em>ACS Synthetic Biology</em> (Jun 2024). “Meta-analysis Driven Strain Design for Mitigating Oxidative Stresses Important in Biomanufacturing.” https://doi.org/10.1021/acssynbio.3c00572 (phaneuf2024metaanalysisdrivenstrain pages 2-4)</p>
+<hr />
+<h3 id="10-bottom-line-functional-annotation-for-databases">10) Bottom-line functional annotation (for databases)</h3>
+<p><strong>Gene/product:</strong> oxyR (PP_5309; UniProt Q88C74), LysR-family transcriptional regulator.</p>
+<p><strong>Primary biological process:</strong> peroxide/oxidative stress response; regulation of peroxide detoxification and thiol redox homeostasis.</p>
+<p><strong>Mechanism:</strong> H2O2-dependent oxidation activates OxyR, enabling promoter binding and transcription activation; in <em>Pseudomonas</em>, induction of many OxyR targets can require RecG helicase-dependent remodeling at palindromic promoter regions.</p>
+<p><strong>Key targets (supported by evidence):</strong> katA, katB, ahpC/ahpF, trxB; additional reported members include trx-2, hslO, PP0877.</p>
+<p><strong>Localization:</strong> cytoplasmic DNA-binding regulator.</p>
+<p><strong>Notes:</strong> KT2440-specific evidence for direct nitrosative-stress regulation by OxyR is limited in retrieved sources; annotate nitrosative roles cautiously.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(santos2004insightsintothe pages 16-18): V. A. P. Martins Dos Santos, S. Heim, E. R. B. Moore, M. Strätz, and K. N. Timmis. Insights into the genomic basis of niche specificity of pseudomonas putida kt2440. Environmental microbiology, 6 12:1264-86, Dec 2004. URL: https://doi.org/10.1111/j.1462-2920.2004.00734.x, doi:10.1111/j.1462-2920.2004.00734.x. This article has 339 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demeester2024fundamentalsandexceptions pages 22-23): Wouter Demeester, Brecht De Paepe, and Marjan De Mey. Fundamentals and exceptions of the lysr-type transcriptional regulators. ACS synthetic biology, 13:3069-3092, Sep 2024. URL: https://doi.org/10.1021/acssynbio.4c00219, doi:10.1021/acssynbio.4c00219. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demeester2024fundamentalsandexceptions pages 4-5): Wouter Demeester, Brecht De Paepe, and Marjan De Mey. Fundamentals and exceptions of the lysr-type transcriptional regulators. ACS synthetic biology, 13:3069-3092, Sep 2024. URL: https://doi.org/10.1021/acssynbio.4c00219, doi:10.1021/acssynbio.4c00219. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2014oxidativestressresponse pages 5-6): Jisun Kim and Woojun Park. Oxidative stress response in pseudomonas putida. Applied Microbiology and Biotechnology, 98:6933-6946, Jun 2014. URL: https://doi.org/10.1007/s00253-014-5883-4, doi:10.1007/s00253-014-5883-4. This article has 143 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demeester2024fundamentalsandexceptions pages 6-7): Wouter Demeester, Brecht De Paepe, and Marjan De Mey. Fundamentals and exceptions of the lysr-type transcriptional regulators. ACS synthetic biology, 13:3069-3092, Sep 2024. URL: https://doi.org/10.1021/acssynbio.4c00219, doi:10.1021/acssynbio.4c00219. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demeester2024fundamentalsandexceptions pages 5-6): Wouter Demeester, Brecht De Paepe, and Marjan De Mey. Fundamentals and exceptions of the lysr-type transcriptional regulators. ACS synthetic biology, 13:3069-3092, Sep 2024. URL: https://doi.org/10.1021/acssynbio.4c00219, doi:10.1021/acssynbio.4c00219. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yeom2012atpdependentrecghelicase pages 1-2): Jinki Yeom, Yunho Lee, and Woojun Park. Atp-dependent recg helicase is required for the transcriptional regulator oxyr function in pseudomonas species. Journal of Biological Chemistry, 287:24492-24504, Jul 2012. URL: https://doi.org/10.1074/jbc.m112.356964, doi:10.1074/jbc.m112.356964. This article has 30 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2014oxidativestressresponse pages 2-4): Jisun Kim and Woojun Park. Oxidative stress response in pseudomonas putida. Applied Microbiology and Biotechnology, 98:6933-6946, Jun 2014. URL: https://doi.org/10.1007/s00253-014-5883-4, doi:10.1007/s00253-014-5883-4. This article has 143 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hishinuma2008oxyrisinvolved pages 3-5): Sota Hishinuma, Iwao Ohtsu, Makoto Fujimura, and Fumiyasu Fukumori. Oxyr is involved in the expression of thioredoxin reductase trxb in pseudomonas putida. FEMS microbiology letters, 289 2:138-45, Dec 2008. URL: https://doi.org/10.1111/j.1574-6968.2008.01374.x, doi:10.1111/j.1574-6968.2008.01374.x. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hishinuma2008oxyrisinvolved pages 1-2): Sota Hishinuma, Iwao Ohtsu, Makoto Fujimura, and Fumiyasu Fukumori. Oxyr is involved in the expression of thioredoxin reductase trxb in pseudomonas putida. FEMS microbiology letters, 289 2:138-45, Dec 2008. URL: https://doi.org/10.1111/j.1574-6968.2008.01374.x, doi:10.1111/j.1574-6968.2008.01374.x. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yeom2012atpdependentrecghelicase pages 5-6): Jinki Yeom, Yunho Lee, and Woojun Park. Atp-dependent recg helicase is required for the transcriptional regulator oxyr function in pseudomonas species. Journal of Biological Chemistry, 287:24492-24504, Jul 2012. URL: https://doi.org/10.1074/jbc.m112.356964, doi:10.1074/jbc.m112.356964. This article has 30 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2014oxidativestressresponse media e2e2836b): Jisun Kim and Woojun Park. Oxidative stress response in pseudomonas putida. Applied Microbiology and Biotechnology, 98:6933-6946, Jun 2014. URL: https://doi.org/10.1007/s00253-014-5883-4, doi:10.1007/s00253-014-5883-4. This article has 143 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2014oxidativestressresponse media b3bd9dad): Jisun Kim and Woojun Park. Oxidative stress response in pseudomonas putida. Applied Microbiology and Biotechnology, 98:6933-6946, Jun 2014. URL: https://doi.org/10.1007/s00253-014-5883-4, doi:10.1007/s00253-014-5883-4. This article has 143 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demeester2024fundamentalsandexceptions pages 10-11): Wouter Demeester, Brecht De Paepe, and Marjan De Mey. Fundamentals and exceptions of the lysr-type transcriptional regulators. ACS synthetic biology, 13:3069-3092, Sep 2024. URL: https://doi.org/10.1021/acssynbio.4c00219, doi:10.1021/acssynbio.4c00219. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demeester2024fundamentalsandexceptions pages 14-14): Wouter Demeester, Brecht De Paepe, and Marjan De Mey. Fundamentals and exceptions of the lysr-type transcriptional regulators. ACS synthetic biology, 13:3069-3092, Sep 2024. URL: https://doi.org/10.1021/acssynbio.4c00219, doi:10.1021/acssynbio.4c00219. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shin2024modulatingbacterialfunction pages 10-11): Jongoh Shin, Daniel C Zielinski, and Bernhard O Palsson. Modulating bacterial function utilizing a knowledge base of transcriptional regulatory modules. Nucleic Acids Research, 52:11362-11377, Aug 2024. URL: https://doi.org/10.1093/nar/gkae742, doi:10.1093/nar/gkae742. This article has 3 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shin2024modulatingbacterialfunction pages 11-12): Jongoh Shin, Daniel C Zielinski, and Bernhard O Palsson. Modulating bacterial function utilizing a knowledge base of transcriptional regulatory modules. Nucleic Acids Research, 52:11362-11377, Aug 2024. URL: https://doi.org/10.1093/nar/gkae742, doi:10.1093/nar/gkae742. This article has 3 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(phaneuf2024metaanalysisdrivenstrain pages 2-4): PV Phaneuf, SH Kim, K. Rychel, C. Rode, F. Beulig, BO Palsson, and L. Yang. Meta-analysis driven strain design for mitigating oxidative stresses important in biomanufacturing. ACS Synthetic Biology, 13:2045-2059, Jun 2024. URL: https://doi.org/10.1021/acssynbio.3c00572, doi:10.1021/acssynbio.3c00572. This article has 3 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demeester2024fundamentalsandexceptions pages 14-16): Wouter Demeester, Brecht De Paepe, and Marjan De Mey. Fundamentals and exceptions of the lysr-type transcriptional regulators. ACS synthetic biology, 13:3069-3092, Sep 2024. URL: https://doi.org/10.1021/acssynbio.4c00219, doi:10.1021/acssynbio.4c00219. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demeester2024fundamentalsandexceptions pages 11-13): Wouter Demeester, Brecht De Paepe, and Marjan De Mey. Fundamentals and exceptions of the lysr-type transcriptional regulators. ACS synthetic biology, 13:3069-3092, Sep 2024. URL: https://doi.org/10.1021/acssynbio.4c00219, doi:10.1021/acssynbio.4c00219. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2014oxidativestressresponse pages 4-5): Jisun Kim and Woojun Park. Oxidative stress response in pseudomonas putida. Applied Microbiology and Biotechnology, 98:6933-6946, Jun 2014. URL: https://doi.org/10.1007/s00253-014-5883-4, doi:10.1007/s00253-014-5883-4. This article has 143 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hishinuma2008oxyrisinvolved pages 2-3): Sota Hishinuma, Iwao Ohtsu, Makoto Fujimura, and Fumiyasu Fukumori. Oxyr is involved in the expression of thioredoxin reductase trxb in pseudomonas putida. FEMS microbiology letters, 289 2:138-45, Dec 2008. URL: https://doi.org/10.1111/j.1574-6968.2008.01374.x, doi:10.1111/j.1574-6968.2008.01374.x. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="oxyR-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000049 The requested information was found in Figure 1 and Table 1. Figure 1 provides a schematic overview of the oxidative stress respons" src="oxyR-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>santos2004insightsintothe pages 16-18</li>
+<li>kim2014oxidativestressresponse pages 5-6</li>
+<li>demeester2024fundamentalsandexceptions pages 22-23</li>
+<li>hishinuma2008oxyrisinvolved pages 3-5</li>
+<li>yeom2012atpdependentrecghelicase pages 5-6</li>
+<li>demeester2024fundamentalsandexceptions pages 14-14</li>
+<li>phaneuf2024metaanalysisdrivenstrain pages 2-4</li>
+<li>demeester2024fundamentalsandexceptions pages 4-5</li>
+<li>demeester2024fundamentalsandexceptions pages 6-7</li>
+<li>demeester2024fundamentalsandexceptions pages 5-6</li>
+<li>yeom2012atpdependentrecghelicase pages 1-2</li>
+<li>kim2014oxidativestressresponse pages 2-4</li>
+<li>hishinuma2008oxyrisinvolved pages 1-2</li>
+<li>demeester2024fundamentalsandexceptions pages 10-11</li>
+<li>shin2024modulatingbacterialfunction pages 10-11</li>
+<li>shin2024modulatingbacterialfunction pages 11-12</li>
+<li>demeester2024fundamentalsandexceptions pages 14-16</li>
+<li>demeester2024fundamentalsandexceptions pages 11-13</li>
+<li>kim2014oxidativestressresponse pages 4-5</li>
+<li>hishinuma2008oxyrisinvolved pages 2-3</li>
+<li>https://doi.org/10.1111/j.1462-2920.2004.00734.x</li>
+<li>https://doi.org/10.1074/jbc.m112.356964</li>
+<li>https://doi.org/10.1007/s00253-014-5883-4</li>
+<li>https://doi.org/10.1111/j.1574-6968.2008.01374.x</li>
+<li>https://doi.org/10.1021/acssynbio.4c00219</li>
+<li>https://doi.org/10.1093/nar/gkae742</li>
+<li>https://doi.org/10.1021/acssynbio.3c00572</li>
+<li>https://doi.org/10.1111/j.1462-2920.2004.00734.x,</li>
+<li>https://doi.org/10.1021/acssynbio.4c00219,</li>
+<li>https://doi.org/10.1007/s00253-014-5883-4,</li>
+<li>https://doi.org/10.1074/jbc.m112.356964,</li>
+<li>https://doi.org/10.1111/j.1574-6968.2008.01374.x,</li>
+<li>https://doi.org/10.1093/nar/gkae742,</li>
+<li>https://doi.org/10.1021/acssynbio.3c00572,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88C74
+gene_symbol: oxyR
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  OxyR (PP_5309) is a LysR-type transcriptional regulator (LTTR) that serves as the
+  master sensor and regulator of the hydrogen-peroxide oxidative-stress response in
+  Pseudomonas putida KT2440. Like other OxyR proteins, it is a cytoplasmic,
+  constitutively expressed homotetramer that senses H2O2 directly through conserved
+  cysteine residues; oxidation forms an intramolecular disulfide bond that triggers a
+  conformational change altering its DNA-binding and transcription-modulating activity.
+  OxyR binds palindromic operator sequences upstream of antioxidant genes and controls
+  expression of the principal peroxide-detoxifying enzymes, including the two major
+  catalases KatA and KatB and the alkyl hydroperoxide reductase/peroxiredoxin subunit
+  AhpC. Architecturally it has the canonical LTTR organization, with an N-terminal winged
+  helix-turn-helix DNA-binding domain and a C-terminal effector/regulatory
+  (periplasmic-binding-protein-like) domain that mediates redox sensing and
+  oligomerization. As a dual regulator it can both activate and repress transcription
+  depending on target and redox state, and it autoregulates its own promoter. Through
+  this regulon it coordinates removal of reactive oxygen species and maintenance of redox
+  homeostasis, contributing to survival under oxidative stress.
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      OxyR is a LysR-type transcriptional regulator with an N-terminal winged
+      helix-turn-helix domain; direct DNA binding to operator sequences upstream of katA,
+      katB and ahpC is experimentally demonstrated (purified OxyR bound these sequences).
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported by the HTH domain architecture and by experimental DNA-binding data.
+      A core molecular activity, though the more specific transcription-factor term below
+      better captures the function.
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      OxyR is a sequence-specific DNA-binding transcription factor of the LysR/OxyR family
+      that activates and represses target promoters in response to peroxide.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function. Strongly supported by family assignment, domain
+      architecture, and experimental promoter binding/regulation data in P. putida.
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This term denotes the act of transcription itself (the polymerase reaction), which
+      OxyR does not perform; OxyR regulates transcription rather than carrying it out.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      OxyR is a regulator, not part of the transcription machinery. The accurate process
+      annotation is regulation of transcription, not the transcription process per se.
+      This is a generic UniProtKB keyword-derived IEA.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      OxyR regulates transcription of its peroxide-defense regulon. This high-level
+      process term is correct but could be made more specific (positive/negative regulation).
+    action: ACCEPT
+    reason: &gt;-
+      Accurate as a parent process term for a transcriptional regulator. Specific
+      directional regulation is captured by other annotations and core_functions.
+- term:
+    id: GO:0032993
+    label: protein-DNA complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      As a DNA-binding transcription factor, OxyR forms part of a protein-DNA complex when
+      bound to operator sequences.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the demonstrated sequence-specific DNA binding. Reasonable
+      cellular-component annotation for a DNA-binding regulator, though non-core.
+- term:
+    id: GO:0045892
+    label: negative regulation of DNA-templated transcription
+  evidence_type: EXP
+  original_reference_id: PMID:17107553
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      CollecTF experimental annotation. OxyR is a dual regulator; Hishinuma et al. (2006)
+      characterized OxyR binding and regulation of the katA, katB and ahpC promoters in
+      P. putida KT2442, and OxyR is known to repress certain targets and autorepress its
+      own gene. The curator (CollecTF) read the full text and assigned this term from
+      experimental binding-site evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental annotation (EXP, two ECO codes) from CollecTF, a reliable resource,
+      based on demonstrated operator binding. Per guidelines, do not overrule an
+      experimental annotation whose full text the curator read. OxyR&#39;s dual
+      activator/repressor nature makes negative regulation biologically appropriate
+      alongside positive regulation.
+core_functions:
+- description: &gt;-
+    Acts as a hydrogen-peroxide-responsive, redox-sensing DNA-binding transcription factor
+    that binds palindromic operator sequences and regulates the oxidative-stress defense
+    regulon in P. putida.
+  supported_by:
+  - reference_id: PMID:17107553
+    supporting_text: &gt;-
+      Purified OxyR bound sequences upstream of katA, katB and ahpC under both reduced and
+      oxidized states, and the oxyR1 mutation increased transcription of these genes,
+      demonstrating sequence-specific DNA binding and transcriptional regulation.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  directly_involved_in:
+  - id: GO:0006355
+    label: regulation of DNA-templated transcription
+- description: &gt;-
+    Coordinates the cellular response to hydrogen peroxide by controlling expression of the
+    principal peroxide-detoxifying enzymes (catalases KatA/KatB and peroxiredoxin AhpC),
+    enabling defense against oxidative stress.
+  supported_by:
+  - reference_id: PMID:17107553
+    supporting_text: &gt;-
+      OxyR controlled expression of all the principal peroxide-degrading enzymes (KatA,
+      KatB, AhpC) in P. putida.
+    full_text_unavailable: true
+  directly_involved_in:
+  - id: GO:0034599
+    label: cellular response to oxidative stress
+proposed_new_terms: []
+suggested_questions:
+- question: Does P. putida OxyR also regulate a nitrosative-stress (RNS) response, as the UniProt &#34;dual regulator&#34; name implies, or is its in vivo role restricted to peroxide defense?
+- question: To what extent is the RecG helicase requirement for OxyR target induction (reported in Pseudomonas) operative for the katA/katB/ahpC regulon in KT2440?
+suggested_experiments:
+- description: ChIP-seq or genome-wide DAP-seq of OxyR under peroxide stress in KT2440 to define the complete regulon and distinguish activated versus repressed targets.
+- description: Construct a clean oxyR deletion (or cysteine point mutants) and assess H2O2 sensitivity, catalase activity, and transcriptome to confirm direct versus indirect regulatory roles.
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17107553
+  title: OxyR regulated the expression of two major catalases, KatA and KatB, along with peroxiredoxin, AhpC in Pseudomonas putida.
+  findings:
+  - statement: &gt;-
+      OxyR binds operator sequences upstream of katA, katB and ahpC and controls expression
+      of the principal peroxide-degrading enzymes in P. putida. Purified OxyR bound these
+      sequences under both reduced and oxidized states.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached abstract (abstract-only) confirms PMID identity and OxyR regulation of
+      katA/katB/ahpC in P. putida KT2442; directly establishes the gene&#39;s function and
+      underlies the CollecTF experimental annotation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fur - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fur</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DT9" target="_blank" class="term-link">
+                        Q88DT9
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fur";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DT9" data-a="DESCRIPTION: Fur (ferric uptake regulation protein) is the mast..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Fur (ferric uptake regulation protein) is the master iron-responsive transcriptional regulator of Pseudomonas putida KT2440. It is a small (~134 aa) cytoplasmic homodimeric metalloprotein of the FUR family, built from an N-terminal winged-helix DNA-binding domain and a C-terminal dimerization domain. Each subunit binds a divalent metal ion (Fe(II), with Mn(II) often used as a surrogate in vitro) at a regulatory site; metal occupancy switches the protein to a DNA-binding-competent state. Holo-Fur binds conserved operator sequences (Fur boxes) in target promoters and chiefly acts as a transcriptional repressor of iron-acquisition genes (including siderophore/pyoverdine biosynthesis) when intracellular iron is replete, while iron limitation demetallates Fur and de-represses these genes. Fur thereby coordinates iron uptake, storage (e.g. bacterioferritins), and oxidative-stress homeostasis, balancing iron availability against Fenton-chemistry-driven reactive oxygen species damage. Fur can also affect gene expression positively, often indirectly via regulatory small RNAs or by acting on additional targets.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DT9" data-a="GO:0000976" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fur binds conserved operator sequences (Fur boxes) located in the cis-regulatory regions of iron-regulated promoters. This is a core, well-supported molecular function of the Fur family and is consistent with its winged-helix DNA-binding domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Captures the specific DNA-binding mode of Fur (operator/Fur-box binding) and is supported by the canonical Fur mechanism and by purified Fur binding to Fur boxes in pseudomonads (e.g. P. aeruginosa Fur on pvdS/pchR promoters).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DT9" data-a="GO:0003677" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fur binds DNA via its winged-helix domain. This is correct but is a parent/general term relative to the more informative cis-regulatory region binding annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> True but generic; the more specific GO:0000976 (transcription cis-regulatory region binding) better captures the function. Retained as a non-core, broader supporting term rather than removed.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DT9" data-a="GO:0003700" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fur is a sequence-specific DNA-binding transcription factor that represses (and can indirectly activate) target genes. This is a core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported by the canonical Fur mechanism and the family/domain assignment; Fur acts as an iron-dependent transcriptional regulator binding operator DNA.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DT9" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fur is a soluble cytoplasmic protein, consistent with UniProt subcellular location and its role sensing intracellular iron and binding chromosomal operators.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct localization for a cytoplasmic metal-sensing transcription factor.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DT9" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> More specific cytosolic localization annotation, consistent with Fur being a soluble intracellular regulator.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the cytoplasm annotation and the soluble nature of Fur; cytosol is the appropriate specific component for this regulator.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DT9" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fur regulates transcription of iron-homeostasis genes. This is the general parent process; the more specific negative regulation term is also annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but general relative to GO:0045892 (negative regulation of DNA-templated transcription). Retained as a broader supporting process term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DT9" data-a="GO:0008270" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TreeGrafter annotation reflects that many Fur-family proteins contain a structural Zn(II) site and that the family includes zinc uptake regulators (Zur). However, for P. putida Fur the physiologically relevant, regulatory metal is ferrous iron; UniProt records Fe(II)/Mn(II) cofactor binding (1 ion per subunit) and Fe-binding residues, not a curated Zn site. The functionally salient metal-binding activity to annotate is ferrous iron binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Fur is an iron sensor; its regulatory cofactor is Fe(II) (Mn(II) used as a surrogate in vitro), and UniProt annotates Fe cation binding sites (residues 86, 88, 107, 124). Ferrous iron binding more accurately reflects the iron-sensing function than the family-propagated zinc ion binding. If a structural Zn site is later confirmed for this protein, metal ion binding (GO:0046872) could be added.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008198" target="_blank" class="term-link">
+                                    ferrous iron binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                    GO:0045892
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DT9" data-a="GO:0045892" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Holo-Fur predominantly acts as a transcriptional repressor of iron-acquisition genes when iron is replete. This negative-regulation role is the core biological process for Fur.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Repression is the canonical and best-supported activity of Fur; UniProt also carries the Repressor keyword.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900376" target="_blank" class="term-link">
+                                    GO:1900376
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of secondary metabolite biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DT9" data-a="GO:1900376" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fur regulates siderophore (pyoverdine) biosynthesis; siderophores are secondary metabolites, so Fur participates in regulating secondary metabolite biosynthesis. This is broader than, and overlaps with, the more specific siderophore annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plausible and consistent with Fur control of siderophore (a secondary metabolite) biosynthesis, but it is a general grouping term. The specific GO:1900705 captures the salient process; retained as non-core context rather than as a core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900705" target="_blank" class="term-link">
+                                    GO:1900705
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of siderophore biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DT9" data-a="GO:1900705" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> When iron is replete, Fur represses siderophore (pyoverdine) biosynthesis genes, a defining iron-sparing function of Fur in pseudomonads. In P. aeruginosa Fur represses the siderophore regulators pvdS and pchR; KT2440 relies primarily on pyoverdine and Fur is its major iron-responsive regulator.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core, biologically specific process for Fur consistent with its repressor role and the pseudomonad iron-acquisition literature.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Iron(II)-dependent, sequence-specific DNA-binding transcriptional repressor that binds Fur-box operators in iron-regulated promoters to repress iron-acquisition genes when intracellular iron is replete.</h3>
+                <span class="vote-buttons" data-g="Q88DT9" data-a="FUNCTION: Iron(II)-dependent, sequence-specific DNA-binding ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                negative regulation of DNA-templated transcription
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8522528" target="_blank" class="term-link">
+                                PMID:8522528
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Purified Pseudomonas Fur binds Fur boxes in iron-regulated promoters (pvdS, pchR) and represses siderophore-pathway regulators, establishing Fur as an iron-dependent operator-binding repressor.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Ferrous-iron sensing via metal binding at a regulatory site, switching Fur to a DNA-binding-competent state that couples intracellular iron status to transcriptional output.</h3>
+                <span class="vote-buttons" data-g="Q88DT9" data-a="FUNCTION: Ferrous-iron sensing via metal binding at a regula..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008198" target="_blank" class="term-link">
+                            ferrous iron binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Repression of siderophore (pyoverdine) biosynthesis as part of the iron-sparing response, coordinating iron acquisition, storage, and oxidative-stress homeostasis in P. putida.</h3>
+                <span class="vote-buttons" data-g="Q88DT9" data-a="FUNCTION: Repression of siderophore (pyoverdine) biosynthesi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900705" target="_blank" class="term-link">
+                                negative regulation of siderophore biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20562273" target="_blank" class="term-link">
+                                PMID:20562273
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A P. putida KT2440 fur deletion mutant shows altered expression of iron-homeostasis (bacterioferritin) genes and increased hydrogen peroxide sensitivity, demonstrating Fur&#39;s role in iron storage and oxidative-stress homeostasis.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20562273" target="_blank" class="term-link">
+                            PMID:20562273
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular analysis of two bacterioferritin genes, bfralpha and bfrbeta, in the model rhizobacterium Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Using a P. putida KT2440 fur deletion mutant and reporter fusions, Fur was shown to influence expression of bacterioferritin iron-storage genes and the fur mutant displayed increased hydrogen peroxide sensitivity, linking Fur to iron storage and oxidative-stress homeostasis.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8522528" target="_blank" class="term-link">
+                            PMID:8522528
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Role of the ferric uptake regulator of Pseudomonas aeruginosa in the regulation of siderophores and exotoxin A expression: purification and activity on iron-regulated promoters</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified Pseudomonas Fur binds Fur boxes in iron-regulated promoters (including siderophore regulators pvdS and pchR), demonstrating its role as an iron-dependent operator-binding repressor in pseudomonads.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fur-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DT9" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: **fur** (Ferric uptake regulation protein) in *Pseudomonas putida* KT2440 (UniProt: Q88DT9)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">40 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T17:24:11.036624</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="fur-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-fur-ferric-uptake-regulation-protein-in-pseudomonas-putida-kt2440-uniprot-q88dt9">Research Report: <strong>fur</strong> (Ferric uptake regulation protein) in <em>Pseudomonas putida</em> KT2440 (UniProt: Q88DT9)</h1>
+<h2 id="0-target-verification-critical-identity-checks">0. Target verification (critical identity checks)</h2>
+<p><strong>Target specified by user:</strong> UniProt <strong>Q88DT9</strong>, protein name <strong>Ferric uptake regulation protein (Fur)</strong>, gene <strong>fur</strong>, ordered locus <strong>PP_4730</strong>, organism <strong><em>Pseudomonas putida</em> strain KT2440</strong>.</p>
+<p><strong>Verification outcome:</strong> The literature retrieved here contains <strong>direct experimental evidence for a Fur regulator in <em>P. putida</em> KT2440</strong> controlling iron-responsive expression of iron-storage genes (bacterioferritins) and influencing oxidative-stress phenotypes in a <strong>fur mutant</strong> background, consistent with the UniProt-provided identity. However, within the accessible full texts <strong>we did not retrieve a paper that explicitly mentions UniProt accession Q88DT9 or locus tag PP_4730</strong>, so the <strong>accession↔locus mapping relies on the user-provided UniProt record</strong>. All KT2440-specific functional claims below are cited from KT2440 studies; broader mechanistic statements about Fur come from authoritative cross-bacterial reviews and Pseudomonas primary literature and are explicitly labeled as such. (chen2010molecularanalysisof pages 5-6, chen2010molecularanalysisof pages 1-2)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1. Key concepts and definitions (current understanding)</h2>
+<h3 id="11-what-fur-is">1.1 What Fur is</h3>
+<p><strong>Fur (ferric uptake regulator)</strong> is the founding member of the FUR superfamily of bacterial metalloregulatory transcription factors that control metal homeostasis. Canonically, <strong>Fe-bound Fur (holo-Fur)</strong> binds DNA at operator sites (often called <strong>Fur boxes</strong>) to regulate gene expression as iron availability changes. (steingard2023meddlingwithmetal pages 1-2, steingard2023meddlingwithmetal pages 2-5)</p>
+<h3 id="12-fur-as-an-iron-dependent-transcriptional-regulator-repression-indirect-activation-and-network-integration">1.2 Fur as an iron-dependent transcriptional regulator: repression, indirect activation, and network integration</h3>
+<p>Across bacteria, <strong>holo-Fur most commonly acts as a repressor</strong> of genes involved in iron acquisition and the “iron-sparing” response; conversely, <strong>iron limitation leads to Fur demetallation and promoter release</strong>, permitting transcription. Fur can also <strong>indirectly activate</strong> genes (e.g., by repressing small RNAs) and, in some organisms, apo-Fur can participate in activation. Fur also frequently integrates signals via cooperative/competitive interactions with other regulators at shared promoter regions. (steingard2023meddlingwithmetal pages 2-5, steingard2023meddlingwithmetal pages 1-2)</p>
+<h3 id="13-fur-boxes-operator-dna-recognition">1.3 Fur boxes (operator DNA recognition)</h3>
+<p>Operator recognition is often described using:<br />
+- A <strong>19-bp inverted repeat</strong> Fur box model (e.g., 5′-GATAATGATAATCATTATC-3′) (crosa1997signaltransductionand pages 1-2, kang2024structuralperspectiveson pages 6-7)<br />
+- Or an overlapping <strong>7-1-7 motif</strong> view of the Fur box (consensus reported as <strong>TGATAATnATTATCA</strong>) (steingard2023meddlingwithmetal pages 2-5)</p>
+<h3 id="14-why-fur-matters-physiologically">1.4 Why Fur matters physiologically</h3>
+<p>Iron is essential for redox chemistry and respiration but dangerous when unbuffered because it can promote reactive oxygen species (ROS) via Fenton chemistry. Therefore, <strong>iron uptake, storage, and utilization are tightly regulated and coupled to oxidative-stress defenses</strong>, and Fur sits at the center of this regulation in many bacteria. (steingard2023meddlingwithmetal pages 1-2, stein2023navigatingpyoverdineand pages 18-22)</p>
+<h2 id="2-molecular-function-and-mechanism-of-fur-with-structural-context">2. Molecular function and mechanism of Fur (with structural context)</h2>
+<h3 id="21-domain-architecture-and-oligomerization">2.1 Domain architecture and oligomerization</h3>
+<p>Recent structural syntheses emphasize that Fur proteins are typically <strong>two-domain</strong> regulators:<br />
+- <strong>N-terminal DNA-binding domain (DBD)</strong> (helix-turn-helix architecture)<br />
+- <strong>C-terminal dimerization domain (DD)</strong><br />
+Fur commonly exists as a <strong>dimer in solution</strong>, but <strong>tetramers and higher-order DNA-bound assemblies</strong> can occur and may influence which operator classes are bound. (kang2024structuralperspectiveson pages 1-2, kang2024structuralperspectiveson pages 7-9)</p>
+<h3 id="22-metal-binding-sites-and-conformational-switching">2.2 Metal-binding sites and conformational switching</h3>
+<p>A modern consensus from structural reviews is that Fur proteins often contain <strong>three metal-binding sites (S1/S2/S3)</strong>, with <strong>S2 functioning as the key regulatory iron-sensing site</strong> that drives conformational changes required for high-affinity DNA binding. In this framework:<br />
+- <strong>Apo-Fur</strong> adopts a more “open” conformation that is less DNA-binding competent.<br />
+- <strong>Fe(II) (or other divalent metals at the regulatory site)</strong> induces a “closed” DNA-binding competent state by repositioning the DBD relative to the DD.<br />
+Structural sites can also bind Zn(II) (often for stability), and some homologs can be mismetalated by noncognate ions (e.g., Mn(II)), which can misregulate iron responses. (kang2024structuralperspectiveson pages 1-2, kang2024structuralperspectiveson pages 6-7, steingard2023meddlingwithmetal pages 1-2)</p>
+<p>Quantitative metal-binding observations summarized in the 2024 structural review include that, in some systems, <strong>Zn(II) can bind more tightly than Fe(II)/Mn(II)</strong> and reported Fe(II)/Mn(II) affinities can be on the order of ~µM in certain assays, emphasizing the importance of metal availability and competition in vivo. (kang2024structuralperspectiveson pages 4-6)</p>
+<h3 id="23-evidence-for-fur-box-binding-and-repression-logic-pseudomonas-and-general">2.3 Evidence for Fur box binding and repression logic (Pseudomonas and general)</h3>
+<p>Foundational mechanistic work (across bacteria) established that Fur is an <strong>iron-dependent repressor</strong> and that metal (often Mn(II) in vitro as a surrogate) can dramatically enhance DNA binding to Fur boxes. (crosa1997signaltransductionand pages 1-2)</p>
+<p>In <strong>Pseudomonas aeruginosa</strong>, Fur has been purified and shown to bind Fur boxes in promoters of <strong>siderophore regulatory genes pvdS and pchR</strong>, consistent with <strong>Fur-Fe(II) repressing siderophore production pathways</strong> when iron is sufficient. (Ochsner et al., 1995; publication date Dec 1995; https://doi.org/10.1128/jb.177.24.7194-7201.1995) (ochsner1995roleofthe pages 1-2)</p>
+<h2 id="3-pseudomonas-putida-kt2440-specific-functional-annotation-of-fur">3. <em>Pseudomonas putida</em> KT2440-specific functional annotation of Fur</h2>
+<h3 id="31-primary-biological-role-in-kt2440-coordinating-iron-storage-and-oxidative-stress-tolerance">3.1 Primary biological role in KT2440: coordinating iron storage and oxidative-stress tolerance</h3>
+<p>The strongest KT2440-specific experimental evidence retrieved here connects Fur to <strong>iron storage</strong> via bacterioferritins.</p>
+<p><strong>Bacterioferritin genes bfrα and bfrβ are Fur-dependent in KT2440.</strong> Chen et al. (Applied and Environmental Microbiology; Aug 2010; https://doi.org/10.1128/AEM.00215-10) used a <strong>fur deletion mutant</strong> and <strong>luciferase reporter fusions</strong> to quantify expression of two bacterioferritin genes (bfrα and bfrβ) under iron manipulation, finding that Fur has a <strong>positive regulatory effect</strong> on bfr expression, particularly under high-iron conditions. (chen2010molecularanalysisof pages 5-6, chen2010molecularanalysisof pages 6-8)</p>
+<p><strong>Quantitative KT2440 data (Chen et al., 2010):</strong><br />
+- Under high iron, bfrα and bfrβ expression in Fur+ cells was ~<strong>3-fold</strong> and <strong>6-fold</strong> higher than in a Fur mutant. (chen2010molecularanalysisof pages 6-8)<br />
+- The fur mutant displayed <strong>greater H2O2 sensitivity</strong> (disk diffusion zone ~<strong>5.6 cm</strong>) than wild-type and bacterioferritin mutants (~<strong>3.5 ± 0.2 cm</strong>), consistent with Fur controlling broader ROS-relevant functions beyond bacterioferritin alone. (chen2010molecularanalysisof pages 6-8)</p>
+<p><strong>Mechanistic nuance in KT2440:</strong> Despite Fur-dependence, Chen et al. report that <strong>canonical Fur box motifs were not detected upstream of bfrα/bfrβ</strong>, implying regulation may be <strong>indirect or mediated by noncanonical binding/other factors</strong> in KT2440. (chen2010molecularanalysisof pages 4-5)</p>
+<h3 id="32-pathways-and-processes-fur-connects-to-in-kt2440-iron-homeostasis">3.2 Pathways and processes Fur connects to in KT2440 iron homeostasis</h3>
+<h4 id="a-iron-storage-bacterioferritins-direct-kt2440-evidence">(A) Iron storage: bacterioferritins (direct KT2440 evidence)</h4>
+<p>In KT2440, bacterioferritins contribute measurably to intracellular iron buffering:<br />
+- Single bfr mutants show ~<strong>16–18%</strong> reduction in total cellular iron (log phase), and a double mutant shows ~<strong>38%</strong> reduction (stationary phase). (chen2010molecularanalysisof pages 5-6, chen2010molecularanalysisof pages 6-8)<br />
+- The double mutant shows <strong>reduced growth under low-iron conditions</strong>, whereas growth in high iron is not significantly different. (chen2010molecularanalysisof pages 5-6)<br />
+These effects support a model in which Fur-dependent tuning of iron storage helps maintain iron availability while limiting iron-driven oxidative damage. (chen2010molecularanalysisof pages 8-8)</p>
+<h4 id="b-siderophore-mediated-iron-acquisition-pyoverdine-context-kt2440-and-pseudomonad-context">(B) Siderophore-mediated iron acquisition: pyoverdine context (KT2440 and pseudomonad context)</h4>
+<p>A Pseudomonas-focused review reports that <strong>Fur is the major iron-responsive global regulator in pseudomonads</strong>, and it provides KT2440-specific ecological constraints on iron acquisition:<br />
+- KT2440 appears to rely primarily on <strong>pyoverdine</strong> as its siderophore: <strong>pyoverdine-negative mutants show no detectable siderophore activity</strong>.<br />
+- KT2440 is reported to <strong>utilize only its own ferripyoverdine</strong> (limited xenosiderophore use). (Cornelis, Mar 2010; https://doi.org/10.1007/s00253-010-2550-2) (cornelis2010ironuptakeand pages 4-6)</p>
+<p>Although the retrieved KT2440 papers here do not directly map Fur binding to pyoverdine promoters, primary mechanistic evidence from <em>P. aeruginosa</em> demonstrates that Fur can repress key siderophore regulators (pvdS/pchR), supporting the inference that Fur generally sits upstream of siderophore control in pseudomonads. (ochsner1995roleofthe pages 1-2)</p>
+<h4 id="c-ironoxidative-stress-coupling-in-kt2440-direct-and-contextual-evidence">(C) Iron–oxidative stress coupling in KT2440 (direct and contextual evidence)</h4>
+<p>A KT2440 study (Barrientos-Moreno et al., Journal of Bacteriology; Nov 2019; https://doi.org/10.1128/jb.00454-19) shows that <strong>pyoverdine production/release</strong> is functionally linked to oxidative-stress adaptation through arginine/polyamine metabolism:<br />
+- Arginine biosynthesis mutants show reduced pyoverdine production/release and increased sensitivity to iron limitation.<br />
+- Spermidine protects against hydrogen peroxide, while defects in arginine and pyoverdine synthesis increase ROS. (barrientosmoreno2019argininebiosynthesismodulates pages 1-2, barrientosmoreno2019argininebiosynthesismodulates pages 2-5)<br />
+This supports the broader principle that KT2440 must balance iron capture with oxidative-stress control; Fur is a plausible upstream regulator of that balance even when specific promoter-level evidence in KT2440 is incomplete in the retrieved set. (steingard2023meddlingwithmetal pages 1-2)</p>
+<h2 id="4-subcellular-localization">4. Subcellular localization</h2>
+<p>Fur is a <strong>cytosolic DNA-binding transcription factor</strong>: it senses intracellular metal availability and binds chromosomal operators to regulate transcription. This is consistent with the structural and mechanistic view of Fur as a metal-dependent dimeric regulator acting on promoter regions. (kang2024structuralperspectiveson pages 1-2, steingard2023meddlingwithmetal pages 1-2)</p>
+<h2 id="5-recent-developments-prioritizing-20232024">5. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="51-fur-as-a-signaling-hub-2023">5.1 Fur as a “signaling hub” (2023)</h3>
+<p>A 2023 Journal of Bacteriology review frames Fur-family regulators as <strong>signal-integration hubs</strong> with emerging allosteric regulation, multi-protein interactions, and dynamic DNA occupancy that can tune response kinetics. This is relevant for interpreting how KT2440 Fur might integrate iron with other stresses (e.g., oxygen/redox state, noncognate metals). (Steingard &amp; Helmann; Apr 2023; https://doi.org/10.1128/jb.00022-23) (steingard2023meddlingwithmetal pages 2-5)</p>
+<h3 id="52-structural-modernization-of-fur-models-2024">5.2 Structural modernization of Fur models (2024)</h3>
+<p>A 2024 Biomolecules review consolidates current Fur structural understanding: explicit <strong>S1/S2/S3 site models</strong>, metal-dependent conformational switching, and operator-binding architectures (dimer vs dimer-of-dimers vs tetramer), and discusses Fur as a potential antimicrobial target. These developments strengthen confidence in annotation of Q88DT9 as a canonical Fur-family metalloregulator. (Kang et al.; Aug 2024; https://doi.org/10.3390/biom14080981) (kang2024structuralperspectiveson pages 1-2, kang2024structuralperspectiveson pages 4-6)</p>
+<h3 id="53-new-fur-adjacent-regulatory-circuitry-affecting-siderophores-in-pseudomonas-2024">5.3 New Fur-adjacent regulatory circuitry affecting siderophores in Pseudomonas (2024)</h3>
+<p>A 2024 Communications Biology study identifies an <strong>osmotic-stress-responsive two-component system (BfmRS)</strong> that directly activates siderophore gene clusters (pvd/fpv/femARI) in <em>P. aeruginosa</em>. Importantly for KT2440, the paper reports <strong>functional evidence that BfmR homologs from <em>P. putida</em> KT2440 can bind promoters of key siderophore genes and that osmolality-mediated increases in siderophore production occur</strong>, indicating additional non-Fur inputs to iron acquisition regulation in KT2440-like pseudomonads. (Song et al.; Mar 2024; https://doi.org/10.1038/s42003-024-05995-z) (song2024molecularmechanismof pages 1-2)</p>
+<h2 id="6-current-applications-and-real-world-implementations-why-fur-annotation-matters">6. Current applications and real-world implementations (why Fur annotation matters)</h2>
+<h3 id="61-environmental-survival-and-rhizosphere-fitness">6.1 Environmental survival and rhizosphere fitness</h3>
+<p>Iron acquisition via siderophores (primarily pyoverdine in KT2440) is central to survival in iron-limited soil/rhizosphere environments; tight regulation is required to avoid ROS costs. KT2440-specific studies show that metabolic state (arginine/polyamines) affects pyoverdine and oxidative-stress resilience, demonstrating that iron acquisition regulation is intertwined with stress physiology relevant to plant-associated niches. (barrientosmoreno2019argininebiosynthesismodulates pages 1-2)</p>
+<h3 id="62-industrial-biotechnology-and-chassis-engineering">6.2 Industrial biotechnology and chassis engineering</h3>
+<p><em>P. putida</em> KT2440 is widely used as a chassis for chemical production and environmental biotechnology; iron availability affects respiration, enzyme cofactor supply, oxidative stress, and thus productivity. Evidence that Fur controls iron storage (bfr genes) and that KT2440 has limited xenosiderophore utilization suggests that <strong>media iron management and regulatory engineering (directly or indirectly involving Fur-controlled modules)</strong> can be important for stable performance under scale-up or stress conditions. (chen2010molecularanalysisof pages 5-6, cornelis2010ironuptakeand pages 4-6)</p>
+<h3 id="63-bioremediation-context-iron-chemistry-and-metallophore-promiscuity">6.3 Bioremediation context (iron chemistry and metallophore promiscuity)</h3>
+<p>Siderophores can bind metals beyond iron (e.g., Ga, Al, Ni, Co, Cu), and some siderophore systems are implicated in pollutant transformation; this connects iron-regulatory networks to environmental applications. KT2440’s iron acquisition specialization (pyoverdine-centered) shapes how it competes and mobilizes metals in complex matrices. (cornelis2010ironuptakeand pages 4-6)</p>
+<h2 id="7-key-statistics-and-data-summary-recent-and-foundational">7. Key statistics and data summary (recent and foundational)</h2>
+<ul>
+<li><strong>KT2440 Fur-dependent bfr regulation:</strong> bfrα/bfrβ expression ~3×/~6× higher in Fur+ vs Fur− under high iron (Chen et al., 2010). (chen2010molecularanalysisof pages 6-8)</li>
+<li><strong>Iron manipulation conditions (KT2440 study):</strong> low iron with <strong>200 µM 2,2′-dipyridyl</strong>; high iron with <strong>15 µM FeCl3</strong> (Chen et al., 2010). (chen2010molecularanalysisof pages 5-6)</li>
+<li><strong>Iron storage phenotypes:</strong> single bfr deletions reduce cellular iron by ~16–18%; double deletion reduces total iron by ~38% and compromises growth in low iron (Chen et al., 2010). (chen2010molecularanalysisof pages 5-6)</li>
+<li><strong>Oxidative stress phenotype:</strong> H2O2 inhibition zone ~5.6 cm for fur mutant vs ~3.5 ± 0.2 cm for WT/bfr mutants (Chen et al., 2010). (chen2010molecularanalysisof pages 6-8)</li>
+<li><strong>Fur box models:</strong> 19-bp inverted repeat and 7-1-7 overlapping motifs (Crosa 1997; Steingard &amp; Helmann 2023). (crosa1997signaltransductionand pages 1-2, steingard2023meddlingwithmetal pages 2-5)</li>
+<li><strong>KT2440 siderophore specialization:</strong> pyoverdine-negative mutants have no siderophore activity; KT2440 uses mainly its own ferripyoverdine (Cornelis 2010). (cornelis2010ironuptakeand pages 4-6)</li>
+</ul>
+<h2 id="8-confidence-and-limitations-kt2440-specific-vs-inferred">8. Confidence and limitations (KT2440-specific vs inferred)</h2>
+<ul>
+<li><strong>High confidence (KT2440-specific):</strong> Fur influences iron storage gene expression (bfrα/bfrβ) and oxidative-stress phenotype based on a KT2440 fur mutant and reporter assays. (chen2010molecularanalysisof pages 5-6, chen2010molecularanalysisof pages 6-8)</li>
+<li><strong>Moderate confidence (KT2440 context):</strong> Fur is a central global regulator of iron acquisition in pseudomonads, and KT2440’s iron acquisition is pyoverdine-centered with limited xenosiderophore use; thus Fur is expected to sit upstream of iron uptake/storage balancing. (cornelis2010ironuptakeand pages 4-6)</li>
+<li><strong>Lower confidence / not directly supported in retrieved KT2440 full text:</strong> exact KT2440 Fur regulon size, direct Fur binding to KT2440 pyoverdine promoters, and precise Fur-box instances in KT2440 promoters. These remain gaps in the retrieved evidence set.</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<p>Fur (UniProt Q88DT9; gene fur; KT2440) is best annotated as a <strong>cytosolic, metal-dependent transcriptional regulator</strong> that senses intracellular iron and coordinates expression programs for iron homeostasis. In KT2440, the clearest direct evidence is Fur-dependent control of <strong>bacterioferritin iron storage genes (bfrα/bfrβ)</strong> and a measurable oxidative-stress phenotype in a fur mutant. Modern 2023–2024 reviews refine Fur’s mechanism as a multi-site metalloregulator with metal-triggered conformational switching and complex DNA-binding architectures, while 2024 primary work in Pseudomonas adds additional Fur-adjacent control of siderophore expression through osmotic-stress signaling with demonstrated promoter binding by a KT2440 homolog.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key points</th>
+<th>Best supporting sources (with year)</th>
+<th>URLs/DOIs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>UniProt Q88DT9 corresponds to <strong>Fur, ferric uptake regulator</strong>, in <em>Pseudomonas putida</em> KT2440 (gene <strong>fur</strong>, locus <strong>PP_4730</strong> per supplied target context). Evidence directly supporting KT2440 Fur function is organism-specific for iron-responsive regulation, though explicit PP_4730 naming was limited in retrieved papers. Fur-family assignment is strongly supported by conserved two-domain Fur architecture and iron-homeostasis role. (chen2010molecularanalysisof pages 5-6, kang2024structuralperspectiveson pages 1-2)</td>
+<td>Chen et al., 2010; Kang et al., 2024</td>
+<td>https://doi.org/10.1128/AEM.00215-10; https://doi.org/10.3390/biom14080981</td>
+</tr>
+<tr>
+<td>Molecular function</td>
+<td>Fur is a <strong>metal-dependent transcriptional regulator</strong> that usually represses iron-acquisition genes when metal bound; it can also positively affect some genes indirectly. In KT2440, Fur positively affects <strong>bfrα/bfrβ</strong> expression, even though upstream canonical Fur boxes were not detected, implying indirect or noncanonical control. (chen2010molecularanalysisof pages 5-6, chen2010molecularanalysisof pages 6-8, chen2010molecularanalysisof pages 4-5, steingard2023meddlingwithmetal pages 1-2)</td>
+<td>Chen et al., 2010; Steingard &amp; Helmann, 2023</td>
+<td>https://doi.org/10.1128/AEM.00215-10; https://doi.org/10.1128/JB.00022-23</td>
+</tr>
+<tr>
+<td>Metal sensing</td>
+<td>Fur proteins have conserved metal-binding sites <strong>S1/S2/S3</strong>; <strong>S2</strong> is the key regulatory iron-sensing site, while S1 often contributes structural stability and S3 can modulate conformation/oligomerization. Metal loading converts Fur from a less DNA-binding-competent open state to a DNA-binding-competent closed state. Reported affinities in structural studies show Zn²⁺ can bind more tightly than Fe²⁺/Mn²⁺ in some homologs. (kang2024structuralperspectiveson pages 1-2, kang2024structuralperspectiveson pages 6-7, kang2024structuralperspectiveson pages 4-6, steingard2023meddlingwithmetal pages 1-2)</td>
+<td>Kang et al., 2024; Steingard &amp; Helmann, 2023</td>
+<td>https://doi.org/10.3390/biom14080981; https://doi.org/10.1128/JB.00022-23</td>
+</tr>
+<tr>
+<td>DNA binding / Fur box</td>
+<td>Fur has an N-terminal DNA-binding domain and C-terminal dimerization domain; it typically binds DNA as a dimer or dimer-of-dimers. Canonical Fur boxes are described as a <strong>19-bp inverted repeat</strong> or overlapping <strong>7-1-7 motifs</strong> with consensus like <strong>TGATAATnATTATCA</strong> / <strong>GATAATGATAATCATTATC</strong>. For KT2440 <strong>bfrα/bfrβ</strong>, no canonical Fur box was detected, suggesting noncanonical or indirect regulation. (chen2010molecularanalysisof pages 4-5, kang2024structuralperspectiveson pages 2-4, kang2024structuralperspectiveson pages 6-7, steingard2023meddlingwithmetal pages 2-5)</td>
+<td>Chen et al., 2010; Kang et al., 2024; Steingard &amp; Helmann, 2023</td>
+<td>https://doi.org/10.1128/AEM.00215-10; https://doi.org/10.3390/biom14080981; https://doi.org/10.1128/JB.00022-23</td>
+</tr>
+<tr>
+<td>Regulon examples</td>
+<td>Best-supported KT2440 targets from retrieved evidence are <strong>bfrα</strong> and <strong>bfrβ</strong> (bacterioferritins), positively influenced by Fur. More broadly in pseudomonads, Fur controls iron-acquisition circuits including siderophore pathways via regulators such as <strong>pvdS/pchR</strong> in <em>P. aeruginosa</em>; this supports cautious inference that KT2440 Fur sits upstream of iron uptake and storage homeostasis, but organism-specific direct regulon mapping remains limited here. (chen2010molecularanalysisof pages 5-6, chen2010molecularanalysisof pages 6-8, ochsner1995roleofthe pages 1-2)</td>
+<td>Chen et al., 2010; Ochsner et al., 1995</td>
+<td>https://doi.org/10.1128/AEM.00215-10; https://doi.org/10.1128/JB.177.24.7194-7201.1995</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Fur is a <strong>cytosolic DNA-binding regulator</strong> acting on chromosomal promoters/operator regions. Its function depends on intracellular metal availability rather than secretion or membrane localization. (kang2024structuralperspectiveson pages 1-2, kang2024structuralperspectiveson pages 2-4, steingard2023meddlingwithmetal pages 1-2)</td>
+<td>Kang et al., 2024; Steingard &amp; Helmann, 2023</td>
+<td>https://doi.org/10.3390/biom14080981; https://doi.org/10.1128/JB.00022-23</td>
+</tr>
+<tr>
+<td>Phenotypes</td>
+<td>In KT2440, loss of Fur is associated with <strong>greater H₂O₂ sensitivity</strong> than bacterioferritin mutants, consistent with a broader iron/ROS homeostasis role. Fur-dependent control of bacterioferritins supports tolerance to iron starvation and oxidative stress indirectly through proper iron storage/homeostasis. (chen2010molecularanalysisof pages 6-8, chen2010molecularanalysisof pages 8-8)</td>
+<td>Chen et al., 2010</td>
+<td>https://doi.org/10.1128/AEM.00215-10</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>In KT2440, under high-iron conditions, <strong>bfrα</strong> and <strong>bfrβ</strong> expression were about <strong>3-fold</strong> and <strong>6-fold</strong> higher in Fur⁺ than Fur⁻ cells; under low iron, differences were ~<strong>0.5-fold</strong> and <strong>1.2-fold</strong>. Single <strong>bfr</strong> mutants had ~<strong>16–18%</strong> lower cellular iron, while the double mutant had ~<strong>38%</strong> lower iron; Fur mutant H₂O₂ inhibition zone was ~<strong>5.6 cm</strong> vs ~<strong>3.5 ± 0.2 cm</strong> for bacterioferritin mutants. (chen2010molecularanalysisof pages 5-6, chen2010molecularanalysisof pages 6-8, chen2010molecularanalysisof pages 1-2)</td>
+<td>Chen et al., 2010</td>
+<td>https://doi.org/10.1128/AEM.00215-10</td>
+</tr>
+<tr>
+<td>Recent developments 2023-2024</td>
+<td>Recent reviews refined Fur understanding by emphasizing <strong>metal-dependent conformational switching</strong>, multiple metal sites, <strong>dimer/tetramer</strong> behavior, and nuanced operator architectures; Fur-family proteins are now viewed as broader <strong>signaling hubs</strong> integrating iron with other regulators and ligands. These advances strengthen functional inference for KT2440 Fur even where direct 2023-2024 KT2440 primary studies are sparse. (kang2024structuralperspectiveson pages 1-2, kang2024structuralperspectiveson pages 7-9, steingard2023meddlingwithmetal pages 1-2, steingard2023meddlingwithmetal pages 2-5)</td>
+<td>Steingard &amp; Helmann, 2023; Kang et al., 2024</td>
+<td>https://doi.org/10.1128/JB.00022-23; https://doi.org/10.3390/biom14080981</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported functional annotation for </em>Pseudomonas putida<em> KT2440 Fur (UniProt Q88DT9), separating direct KT2440 evidence from broader Fur-family mechanistic inference. It is useful for quickly identifying molecular function, regulatory logic, phenotypes, and the strongest recent sources.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(chen2010molecularanalysisof pages 5-6): Shicheng Chen, William F. Bleam, and William J. Hickey. Molecular analysis of two bacterioferritin genes, <i>bfr</i> α and <i>bfr</i> β, in the model rhizobacterium <i>pseudomonas putida</i> kt2440. Aug 2010. URL: https://doi.org/10.1128/aem.00215-10, doi:10.1128/aem.00215-10. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2010molecularanalysisof pages 1-2): Shicheng Chen, William F. Bleam, and William J. Hickey. Molecular analysis of two bacterioferritin genes, <i>bfr</i> α and <i>bfr</i> β, in the model rhizobacterium <i>pseudomonas putida</i> kt2440. Aug 2010. URL: https://doi.org/10.1128/aem.00215-10, doi:10.1128/aem.00215-10. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(steingard2023meddlingwithmetal pages 1-2): Caroline H. Steingard and John D. Helmann. Meddling with metal sensors: fur-family proteins as signaling hubs. Journal of Bacteriology, Apr 2023. URL: https://doi.org/10.1128/jb.00022-23, doi:10.1128/jb.00022-23. This article has 58 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(steingard2023meddlingwithmetal pages 2-5): Caroline H. Steingard and John D. Helmann. Meddling with metal sensors: fur-family proteins as signaling hubs. Journal of Bacteriology, Apr 2023. URL: https://doi.org/10.1128/jb.00022-23, doi:10.1128/jb.00022-23. This article has 58 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(crosa1997signaltransductionand pages 1-2): J. H. Crosa. Signal transduction and transcriptional and posttranscriptional control of iron-regulated genes in bacteria. Microbiology and Molecular Biology Reviews, 61:319-336, Sep 1997. URL: https://doi.org/10.1128/mmbr.61.3.319-336.1997, doi:10.1128/mmbr.61.3.319-336.1997. This article has 349 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kang2024structuralperspectiveson pages 6-7): Sung-Min Kang, Hoon-Seok Kang, Woo-Hyun Chung, Kyu-Tae Kang, and Do-Hee Kim. Structural perspectives on metal dependent roles of ferric uptake regulator (fur). Biomolecules, 14:981, Aug 2024. URL: https://doi.org/10.3390/biom14080981, doi:10.3390/biom14080981. This article has 13 citations.</p>
+</li>
+<li>
+<p>(stein2023navigatingpyoverdineand pages 18-22): Nicola Victoria Maria Stein. Navigating pyoverdine and beyond: the role of tripartite efflux pumps in pseudomonas putida kt2440. Dissertation, Jan 2023. URL: https://doi.org/10.5282/edoc.32605, doi:10.5282/edoc.32605. This article has 1 citations.</p>
+</li>
+<li>
+<p>(kang2024structuralperspectiveson pages 1-2): Sung-Min Kang, Hoon-Seok Kang, Woo-Hyun Chung, Kyu-Tae Kang, and Do-Hee Kim. Structural perspectives on metal dependent roles of ferric uptake regulator (fur). Biomolecules, 14:981, Aug 2024. URL: https://doi.org/10.3390/biom14080981, doi:10.3390/biom14080981. This article has 13 citations.</p>
+</li>
+<li>
+<p>(kang2024structuralperspectiveson pages 7-9): Sung-Min Kang, Hoon-Seok Kang, Woo-Hyun Chung, Kyu-Tae Kang, and Do-Hee Kim. Structural perspectives on metal dependent roles of ferric uptake regulator (fur). Biomolecules, 14:981, Aug 2024. URL: https://doi.org/10.3390/biom14080981, doi:10.3390/biom14080981. This article has 13 citations.</p>
+</li>
+<li>
+<p>(kang2024structuralperspectiveson pages 4-6): Sung-Min Kang, Hoon-Seok Kang, Woo-Hyun Chung, Kyu-Tae Kang, and Do-Hee Kim. Structural perspectives on metal dependent roles of ferric uptake regulator (fur). Biomolecules, 14:981, Aug 2024. URL: https://doi.org/10.3390/biom14080981, doi:10.3390/biom14080981. This article has 13 citations.</p>
+</li>
+<li>
+<p>(ochsner1995roleofthe pages 1-2): U A Ochsner, A I Vasil, and M L Vasil. Role of the ferric uptake regulator of pseudomonas aeruginosa in the regulation of siderophores and exotoxin a expression: purification and activity on iron-regulated promoters. Journal of Bacteriology, 177:7194-7201, Dec 1995. URL: https://doi.org/10.1128/jb.177.24.7194-7201.1995, doi:10.1128/jb.177.24.7194-7201.1995. This article has 253 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2010molecularanalysisof pages 6-8): Shicheng Chen, William F. Bleam, and William J. Hickey. Molecular analysis of two bacterioferritin genes, <i>bfr</i> α and <i>bfr</i> β, in the model rhizobacterium <i>pseudomonas putida</i> kt2440. Aug 2010. URL: https://doi.org/10.1128/aem.00215-10, doi:10.1128/aem.00215-10. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2010molecularanalysisof pages 4-5): Shicheng Chen, William F. Bleam, and William J. Hickey. Molecular analysis of two bacterioferritin genes, <i>bfr</i> α and <i>bfr</i> β, in the model rhizobacterium <i>pseudomonas putida</i> kt2440. Aug 2010. URL: https://doi.org/10.1128/aem.00215-10, doi:10.1128/aem.00215-10. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2010molecularanalysisof pages 8-8): Shicheng Chen, William F. Bleam, and William J. Hickey. Molecular analysis of two bacterioferritin genes, <i>bfr</i> α and <i>bfr</i> β, in the model rhizobacterium <i>pseudomonas putida</i> kt2440. Aug 2010. URL: https://doi.org/10.1128/aem.00215-10, doi:10.1128/aem.00215-10. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cornelis2010ironuptakeand pages 4-6): Pierre Cornelis. Iron uptake and metabolism in pseudomonads. Applied Microbiology and Biotechnology, 86:1637-1645, Mar 2010. URL: https://doi.org/10.1007/s00253-010-2550-2, doi:10.1007/s00253-010-2550-2. This article has 549 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barrientosmoreno2019argininebiosynthesismodulates pages 1-2): Laura Barrientos-Moreno, María Antonia Molina-Henares, Marta Pastor-García, María Isabel Ramos-González, and Manuel Espinosa-Urgel. Arginine biosynthesis modulates pyoverdine production and release in pseudomonas putida as part of the mechanism of adaptation to oxidative stress. Journal of Bacteriology, Nov 2019. URL: https://doi.org/10.1128/jb.00454-19, doi:10.1128/jb.00454-19. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barrientosmoreno2019argininebiosynthesismodulates pages 2-5): Laura Barrientos-Moreno, María Antonia Molina-Henares, Marta Pastor-García, María Isabel Ramos-González, and Manuel Espinosa-Urgel. Arginine biosynthesis modulates pyoverdine production and release in pseudomonas putida as part of the mechanism of adaptation to oxidative stress. Journal of Bacteriology, Nov 2019. URL: https://doi.org/10.1128/jb.00454-19, doi:10.1128/jb.00454-19. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(song2024molecularmechanismof pages 1-2): Yingjie Song, Xiyu Wu, Ze Li, Qin qin Ma, and Rui Bao. Molecular mechanism of siderophore regulation by the pseudomonas aeruginosa bfmrs two-component system in response to osmotic stress. Communications Biology, Mar 2024. URL: https://doi.org/10.1038/s42003-024-05995-z, doi:10.1038/s42003-024-05995-z. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kang2024structuralperspectiveson pages 2-4): Sung-Min Kang, Hoon-Seok Kang, Woo-Hyun Chung, Kyu-Tae Kang, and Do-Hee Kim. Structural perspectives on metal dependent roles of ferric uptake regulator (fur). Biomolecules, 14:981, Aug 2024. URL: https://doi.org/10.3390/biom14080981, doi:10.3390/biom14080981. This article has 13 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="fur-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>steingard2023meddlingwithmetal pages 2-5</li>
+<li>kang2024structuralperspectiveson pages 4-6</li>
+<li>crosa1997signaltransductionand pages 1-2</li>
+<li>ochsner1995roleofthe pages 1-2</li>
+<li>chen2010molecularanalysisof pages 6-8</li>
+<li>chen2010molecularanalysisof pages 4-5</li>
+<li>chen2010molecularanalysisof pages 5-6</li>
+<li>chen2010molecularanalysisof pages 8-8</li>
+<li>cornelis2010ironuptakeand pages 4-6</li>
+<li>steingard2023meddlingwithmetal pages 1-2</li>
+<li>song2024molecularmechanismof pages 1-2</li>
+<li>barrientosmoreno2019argininebiosynthesismodulates pages 1-2</li>
+<li>chen2010molecularanalysisof pages 1-2</li>
+<li>kang2024structuralperspectiveson pages 6-7</li>
+<li>stein2023navigatingpyoverdineand pages 18-22</li>
+<li>kang2024structuralperspectiveson pages 1-2</li>
+<li>kang2024structuralperspectiveson pages 7-9</li>
+<li>barrientosmoreno2019argininebiosynthesismodulates pages 2-5</li>
+<li>kang2024structuralperspectiveson pages 2-4</li>
+<li>https://doi.org/10.1128/jb.177.24.7194-7201.1995</li>
+<li>https://doi.org/10.1128/AEM.00215-10</li>
+<li>https://doi.org/10.1007/s00253-010-2550-2</li>
+<li>https://doi.org/10.1128/jb.00454-19</li>
+<li>https://doi.org/10.1128/jb.00022-23</li>
+<li>https://doi.org/10.3390/biom14080981</li>
+<li>https://doi.org/10.1038/s42003-024-05995-z</li>
+<li>https://doi.org/10.1128/AEM.00215-10;</li>
+<li>https://doi.org/10.1128/JB.00022-23</li>
+<li>https://doi.org/10.3390/biom14080981;</li>
+<li>https://doi.org/10.1128/JB.177.24.7194-7201.1995</li>
+<li>https://doi.org/10.1128/JB.00022-23;</li>
+<li>https://doi.org/10.1128/aem.00215-10,</li>
+<li>https://doi.org/10.1128/jb.00022-23,</li>
+<li>https://doi.org/10.1128/mmbr.61.3.319-336.1997,</li>
+<li>https://doi.org/10.3390/biom14080981,</li>
+<li>https://doi.org/10.5282/edoc.32605,</li>
+<li>https://doi.org/10.1128/jb.177.24.7194-7201.1995,</li>
+<li>https://doi.org/10.1007/s00253-010-2550-2,</li>
+<li>https://doi.org/10.1128/jb.00454-19,</li>
+<li>https://doi.org/10.1038/s42003-024-05995-z,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DT9
+gene_symbol: fur
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: Fur (ferric uptake regulation protein) is the master iron-responsive transcriptional regulator of Pseudomonas putida KT2440. It is a small (~134 aa) cytoplasmic homodimeric metalloprotein of the FUR family, built from an N-terminal winged-helix DNA-binding domain and a C-terminal dimerization domain. Each subunit binds a divalent metal ion (Fe(II), with Mn(II) often used as a surrogate in vitro) at a regulatory site; metal occupancy switches the protein to a DNA-binding-competent state. Holo-Fur binds conserved operator sequences (Fur boxes) in target promoters and chiefly acts as a transcriptional repressor of iron-acquisition genes (including siderophore/pyoverdine biosynthesis) when intracellular iron is replete, while iron limitation demetallates Fur and de-represses these genes. Fur thereby coordinates iron uptake, storage (e.g. bacterioferritins), and oxidative-stress homeostasis, balancing iron availability against Fenton-chemistry-driven reactive oxygen species damage. Fur can also affect gene expression positively, often indirectly via regulatory small RNAs or by acting on additional targets.
+existing_annotations:
+- term:
+    id: GO:0000976
+    label: transcription cis-regulatory region binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Fur binds conserved operator sequences (Fur boxes) located in the cis-regulatory regions of iron-regulated promoters. This is a core, well-supported molecular function of the Fur family and is consistent with its winged-helix DNA-binding domain.
+    action: ACCEPT
+    reason: Captures the specific DNA-binding mode of Fur (operator/Fur-box binding) and is supported by the canonical Fur mechanism and by purified Fur binding to Fur boxes in pseudomonads (e.g. P. aeruginosa Fur on pvdS/pchR promoters).
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Fur binds DNA via its winged-helix domain. This is correct but is a parent/general term relative to the more informative cis-regulatory region binding annotation.
+    action: KEEP_AS_NON_CORE
+    reason: True but generic; the more specific GO:0000976 (transcription cis-regulatory region binding) better captures the function. Retained as a non-core, broader supporting term rather than removed.
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Fur is a sequence-specific DNA-binding transcription factor that represses (and can indirectly activate) target genes. This is a core molecular function.
+    action: ACCEPT
+    reason: Well-supported by the canonical Fur mechanism and the family/domain assignment; Fur acts as an iron-dependent transcriptional regulator binding operator DNA.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Fur is a soluble cytoplasmic protein, consistent with UniProt subcellular location and its role sensing intracellular iron and binding chromosomal operators.
+    action: ACCEPT
+    reason: Correct localization for a cytoplasmic metal-sensing transcription factor.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: More specific cytosolic localization annotation, consistent with Fur being a soluble intracellular regulator.
+    action: ACCEPT
+    reason: Consistent with the cytoplasm annotation and the soluble nature of Fur; cytosol is the appropriate specific component for this regulator.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Fur regulates transcription of iron-homeostasis genes. This is the general parent process; the more specific negative regulation term is also annotated.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but general relative to GO:0045892 (negative regulation of DNA-templated transcription). Retained as a broader supporting process term.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: This TreeGrafter annotation reflects that many Fur-family proteins contain a structural Zn(II) site and that the family includes zinc uptake regulators (Zur). However, for P. putida Fur the physiologically relevant, regulatory metal is ferrous iron; UniProt records Fe(II)/Mn(II) cofactor binding (1 ion per subunit) and Fe-binding residues, not a curated Zn site. The functionally salient metal-binding activity to annotate is ferrous iron binding.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0008198
+      label: ferrous iron binding
+    reason: Fur is an iron sensor; its regulatory cofactor is Fe(II) (Mn(II) used as a surrogate in vitro), and UniProt annotates Fe cation binding sites (residues 86, 88, 107, 124). Ferrous iron binding more accurately reflects the iron-sensing function than the family-propagated zinc ion binding. If a structural Zn site is later confirmed for this protein, metal ion binding (GO:0046872) could be added.
+- term:
+    id: GO:0045892
+    label: negative regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Holo-Fur predominantly acts as a transcriptional repressor of iron-acquisition genes when iron is replete. This negative-regulation role is the core biological process for Fur.
+    action: ACCEPT
+    reason: Repression is the canonical and best-supported activity of Fur; UniProt also carries the Repressor keyword.
+- term:
+    id: GO:1900376
+    label: regulation of secondary metabolite biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Fur regulates siderophore (pyoverdine) biosynthesis; siderophores are secondary metabolites, so Fur participates in regulating secondary metabolite biosynthesis. This is broader than, and overlaps with, the more specific siderophore annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Plausible and consistent with Fur control of siderophore (a secondary metabolite) biosynthesis, but it is a general grouping term. The specific GO:1900705 captures the salient process; retained as non-core context rather than as a core function.
+- term:
+    id: GO:1900705
+    label: negative regulation of siderophore biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: When iron is replete, Fur represses siderophore (pyoverdine) biosynthesis genes, a defining iron-sparing function of Fur in pseudomonads. In P. aeruginosa Fur represses the siderophore regulators pvdS and pchR; KT2440 relies primarily on pyoverdine and Fur is its major iron-responsive regulator.
+    action: ACCEPT
+    reason: Core, biologically specific process for Fur consistent with its repressor role and the pseudomonad iron-acquisition literature.
+core_functions:
+- description: Iron(II)-dependent, sequence-specific DNA-binding transcriptional repressor that binds Fur-box operators in iron-regulated promoters to repress iron-acquisition genes when intracellular iron is replete.
+  supported_by:
+  - reference_id: PMID:8522528
+    supporting_text: Purified Pseudomonas Fur binds Fur boxes in iron-regulated promoters (pvdS, pchR) and represses siderophore-pathway regulators, establishing Fur as an iron-dependent operator-binding repressor.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  directly_involved_in:
+  - id: GO:0045892
+    label: negative regulation of DNA-templated transcription
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: Ferrous-iron sensing via metal binding at a regulatory site, switching Fur to a DNA-binding-competent state that couples intracellular iron status to transcriptional output.
+  molecular_function:
+    id: GO:0008198
+    label: ferrous iron binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: Repression of siderophore (pyoverdine) biosynthesis as part of the iron-sparing response, coordinating iron acquisition, storage, and oxidative-stress homeostasis in P. putida.
+  supported_by:
+  - reference_id: PMID:20562273
+    supporting_text: A P. putida KT2440 fur deletion mutant shows altered expression of iron-homeostasis (bacterioferritin) genes and increased hydrogen peroxide sensitivity, demonstrating Fur&#39;s role in iron storage and oxidative-stress homeostasis.
+    full_text_unavailable: true
+  directly_involved_in:
+  - id: GO:1900705
+    label: negative regulation of siderophore biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:20562273
+  title: &#39;Molecular analysis of two bacterioferritin genes, bfralpha and bfrbeta, in the model rhizobacterium Pseudomonas putida KT2440&#39;
+  findings:
+  - statement: Using a P. putida KT2440 fur deletion mutant and reporter fusions, Fur was shown to influence expression of bacterioferritin iron-storage genes and the fur mutant displayed increased hydrogen peroxide sensitivity, linking Fur to iron storage and oxidative-stress homeostasis.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PMID 20562273 verified (Chen, Bleam, Hickey, Appl Environ Microbiol 2010; doi:10.1128/AEM.00215-10). Provides the strongest KT2440-specific experimental evidence (fur mutant) connecting Fur to iron homeostasis and oxidative-stress phenotype.
+- id: PMID:8522528
+  title: &#39;Role of the ferric uptake regulator of Pseudomonas aeruginosa in the regulation of siderophores and exotoxin A expression: purification and activity on iron-regulated promoters&#39;
+  findings:
+  - statement: Purified Pseudomonas Fur binds Fur boxes in iron-regulated promoters (including siderophore regulators pvdS and pchR), demonstrating its role as an iron-dependent operator-binding repressor in pseudomonads.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PMID 8522528 verified via DOI 10.1128/jb.177.24.7194-7201.1995 (Ochsner, Vasil, Vasil, J Bacteriol 1995;177:7194-7201; doi:10.1128/jb.177.24.7194-7201.1995). P. aeruginosa rather than KT2440, but establishes the conserved Pseudomonas Fur repressor mechanism on siderophore promoters.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

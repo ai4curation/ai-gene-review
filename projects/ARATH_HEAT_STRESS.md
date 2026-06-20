@@ -1,3 +1,10 @@
+---
+title: "Arabidopsis Heat Stress Gene Curation Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [ARATH]
+---
+
 # Arabidopsis Heat Stress Gene Curation Project
 
 **Project Start Date:** 2025-11-07

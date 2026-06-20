@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: tam10 (S. pombe)
 
-Source: tam10-deep-research-bioreason-rl.md
+Source: tam10-bioreason-rl-predictions.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

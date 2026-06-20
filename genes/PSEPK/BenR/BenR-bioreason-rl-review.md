@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: BenR (P. putida)
 
-Source: BenR-deep-research-bioreason-rl.md
+Source: BenR-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

@@ -1,3 +1,10 @@
+---
+title: "ER-phagy (Selective ER Autophagy) Project"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]
+---
+
 # ER-phagy (Selective ER Autophagy) Project
 
 ## Overview

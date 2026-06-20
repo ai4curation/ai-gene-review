@@ -73,7 +73,7 @@ gene_symbol: <HGNC symbol>
 taxon:
   id: <NCBI taxon id>
   label: <taxon label>
-description: <your own summary of the gene>
+description: <your own standalone biological summary of the gene>
 references:
   <all relevant reference, including both literature and bioinformatics sources; includes all but not limited to those used in existing_annotations>
 existing_annotations:
@@ -89,6 +89,18 @@ suggested_experiments:
 ```
 
 See the schema and existing files for more details.
+
+### Description field quality
+
+The top-level `description` field is for a project-independent biological summary
+that a biologist can read without knowing the current curation project. It should
+describe what the gene product is, where it acts, and its major biological roles.
+
+Do not put project, workflow, or curation commentary in `description`, including
+phrases such as `Proteostasis Network`, `PN`, `this review`, `curation`, `GOA
+correctly captures`, or `should/should not be annotated`. Put that material in
+the gene notes file (`GENE-notes.md`), in `review.reason` for a specific
+annotation, or in `core_functions`/`suggested_questions` as appropriate.
 
 When creating a new review, always make sure files are in place:
 
@@ -137,6 +149,95 @@ ActionEnum:
       NEW:
         
 ```      
+
+### Do not overrule curators from incomplete evidence
+
+PomBase, and the GO consortium databases generally, are highly reliable. Curators
+who make an experimental annotation (IDA, IMP, IPI, IGI, etc.) have read the **full
+text**, which is often NOT in our `publications/PMID_*.md` cache — many cached entries
+are **abstract-only** (check the `full_text_available:` field). A paper's **title or
+abstract frequently foregrounds one gene (or a paralog) while the full text also assays
+the gene being annotated** — this is normal, not a curation error.
+
+Therefore:
+
+- **Never use `REMOVE` (or assert "wrong gene / paralog mis-attribution / name confusion")
+  for an experimental annotation just because the cached title/abstract is about a
+  different gene, paralog, or organism.** You cannot see what the curator saw. If you
+  genuinely cannot verify the supporting evidence, use `UNDECIDED` (per the enum) or, if
+  the function is clearly correct for the gene, `ACCEPT` and defer to the curator.
+- Before claiming an annotation is mis-attributed, **verify the actual GO term definition**
+  (via the OLS MCP / QuickGO) and the **organism in the paper** (read the abstract; for
+  abstract-only papers, try WebSearch or the article MCP for full text). E.g. GO:0003925
+  "G protein activity" includes small monomeric GTPases; a title naming a paralog does not
+  mean the gene was not also assayed.
+- `REMOVE` is appropriate for: genuinely contradicted functions, EC/IEA mappings that are
+  demonstrably wrong, or over-propagated electronic (IEA/IBA) inferences you can argue
+  against on biological grounds — **not** for second-guessing an experimental annotation
+  whose full text you have not read.
+- Reserve confident "this reference is about organism/gene X" caveats for cases where the
+  **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
+  not infer the organism or assay details that the abstract does not state.
+
+### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
+
+Validation deliberately treats the two sources of GO term ids differently:
+
+- **`existing_annotations[].term.id` is NOT hard-validated.** These ids come from GOA, not
+  from you, so there is no hallucination risk — and GOA legitimately lags or leads the
+  ontology version used for validation. `linkml-term-validator` therefore does **not**
+  reject unresolvable or obsolete ids here (e.g. a non-existent `GO:9999999` passes); label
+  correctness is instead checked against GOA in the best-practices rules. **Do not rewrite
+  an existing-annotation id just to satisfy validation.**
+- **`core_functions` term ids ARE strictly validated.** These you author, so the
+  `molecular_function`, `contributes_to_molecular_function`, `locations`, and `in_complex`
+  slots are bound to dynamic enums (branch-reachability). A wrong-branch term — e.g. a
+  cellular-component term placed in `molecular_function` — is a blocking `❌ ERROR`.
+
+Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
+are real GOA terms); author-supplied ids are checked hard.
+
+## Reviewing references
+
+Entries in the top-level `references:` list can carry an optional `reference_review` object recording
+your **manual** assessment of each reference. The `id` and `title` are machine-fetched (title comes
+from the cached `publications/PMID_xxxx.md`); `reference_review` is reviewer-supplied judgment. Use it
+especially to flag citation problems that format validation cannot catch (e.g. a well-formed PMID that
+points to the wrong paper).
+
+The reference validator already catches the *mechanical* citation failures automatically: it
+verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
+title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
+cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+`reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
+citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
+simply the wrong choice for this gene.
+
+```yaml
+references:
+  - id: PMID:24268103
+    title: "The KCTD family of proteins: structure, function, disease relevance"
+    reference_review:
+      relevance: HIGH          # how relevant the reference is to THIS gene's function/review
+      correctness: VERIFIED    # citation correctness + scientific soundness (most salient issue)
+      review_notes: "PubMed-verified; supports the family-level 'mostly unknown' framing"
+```
+
+- **`relevance`** (`ReferenceRelevanceEnum`): `HIGH` (directly establishes/strongly informs the gene's
+  function) · `MEDIUM` (supporting/corroborating) · `LOW` (background/contextual or passing mention) ·
+  `NONE` (not relevant to this gene; candidate for removal).
+- **`correctness`** (`ReferenceCorrectnessEnum`, single-valued — record the most salient issue, detail
+  in `review_notes`): `VERIFIED` (identifier resolves to the intended, supporting paper, no soundness
+  concerns) · `UNVERIFIED` (not yet checked) · `WRONG_IDENTIFIER` (resolves to a different paper than
+  intended) · `MISCITED` (right paper, but it does not support the claim) · `DISPUTED` (correctly cited
+  but the claim is contested) · `LOW_QUALITY` (correctly cited but methodologically weak/preliminary).
+- **`review_notes`**: free text explaining the judgment (e.g. what you verified, or why it is wrong).
+
+This complements (does not replace) the existing `is_invalid` (retracted/replaced) and
+`full_text_unavailable` flags. All fields are optional; an absent `reference_review` simply means the
+reference has not been manually adjudicated. **Verify, don't trust**: confirm a PMID against PubMed (or
+anchor a claim to a checkable fact such as the GOA evidence code) before marking it `VERIFIED` — an
+LLM-generated deep-research summary asserting a citation is not sufficient.
 
 ## Tools
 
@@ -256,14 +357,73 @@ just render-all                  # render all genes (~1200 files)
 Output: `genes/<org>/<gene>/<gene>-ai-review.html`
 
 ### Project pages
-Project docs live in `projects/*.md`. Render with:
+Project docs live in `projects/`. Render with:
 ```bash
 just render-projects                          # render all
 ai-gene-review render-projects projects/FOO.md -o pages/projects  # render one
 ```
 Output: `pages/projects/<NAME>.html`
 
+**Folder structure convention.** Each project is a top-level markdown file
+`projects/FOO.md`, optionally accompanied by a same-named folder `projects/FOO/`
+holding its supporting material (sub-pages, data, scripts, reports):
+
+```
+projects/
+  FOO.md            # the project page
+  FOO/              # supporting material for FOO (optional)
+    FOO-pathway.md  # sub-pages, notes, data, scripts, ...
+    ...
+```
+
+Put a project's pathway summaries, curation-recommendation docs, sub-analyses,
+data files, and scripts inside `FOO/` rather than as loose `FOO-*.md` siblings at
+the top level. `render-projects` renders the whole `projects/` tree recursively
+and **mirrors the subfolder structure** into `pages/projects/` (so `FOO/bar.md`
+renders to `pages/projects/FOO/bar.html`). Use ordinary relative links between a
+project page and its sub-pages (`[x](FOO/bar.md)` from `FOO.md`; `[parent](../FOO.md)`
+from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the path.
+
 **Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
+
+**Manual reviews.** A project page may record reviewer sign-offs in frontmatter
+under `manual_reviews` (a list). Each entry needs a `reviewed_by`; `status` (if
+given) must be `READY` or `CHANGES_REQUESTED`; `date` is `YYYY-MM-DD`; `notes` is
+free text and `todos` is a list. Unknown keys are rejected by validation.
+
+```yaml
+manual_reviews:
+  - reviewed_by: cjm
+    date: 2024-06-01
+    status: CHANGES_REQUESTED
+    notes: needs stronger evidence for the X claim
+    todos:
+      - cite PMID:12345
+      - drop the speculative pathway diagram
+```
+
+Reviews render as a block on the project page, and the **latest** review's status
+(most recent `date`) surfaces as a filterable "Review" column in the all-projects
+table.
+
+**Gene-symbol auto-linking.** Project pages auto-link prose gene symbols to their
+review pages — never hardcode `genes/...` URLs. Linking is convention + metadata
+driven:
+
+- **Bare symbols** (`GPX4`, `CASPL4C1`) link automatically when the symbol maps to
+  exactly one species directory. When a symbol exists in several species, list the
+  project's species in frontmatter; `species:` is treated as a **priority-ordered**
+  preference, so the first listed species that has the review wins (this also fills
+  the all-projects table). Add `genes: [...]` to populate the table's gene count.
+- **`CODE/symbol`** (e.g. `POPTR/CASPL4C1`, `human/TP53`) is the inline convention
+  for explicit, per-mention disambiguation in genuinely multi-species prose. `CODE`
+  is a 5-character uppercase UniProt mnemonic (e.g. `ARATH`, `9INFA`) or one of the
+  lowercase model-organism dirs (`human`, `mouse`, `rat`, `worm`, `yeast`). It links
+  only when `genes/CODE/symbol/` exists; a known species with a missing symbol warns.
+- **`<gene species="…" symbol="…">label</gene>`** tags are for cases where the visible
+  text differs from the symbol (e.g. `E/P00720`).
+- Set `autolink_gene_symbols: false` in frontmatter for paper-like pages where prose
+  symbols should not become links.
 
 ### Browser app
 ```bash
@@ -283,4 +443,3 @@ The `generate-pages` workflow runs on push to main when gene YAMLs, schema, temp
 
 There is also support code in `src/ai_gene_review`, see the CLAUDE.md file in that directory for more details
 on best practices for working with the code.
-

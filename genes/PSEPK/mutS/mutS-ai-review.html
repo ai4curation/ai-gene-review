@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mutS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mutS</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88ME7" target="_blank" class="term-link">
+                        Q88ME7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mutS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88ME7" data-a="DESCRIPTION: DNA mismatch repair protein MutS, the mismatch-rec..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DNA mismatch repair protein MutS, the mismatch-recognition ATPase that initiates post-replicative mismatch repair (MMR). As a homodimer, MutS scans newly replicated double-stranded DNA, recognizes base-base mismatches and small insertion/deletion loops, and bends the DNA at the mismatch. Upon ADP-to-ATP exchange it converts into a ring-like sliding clamp that releases the mismatch and recruits the MutL endonuclease, coordinating strand-specific excision and resynthesis to correct replication errors. MutS therefore maintains replication fidelity and suppresses spontaneous mutation; its loss produces a strong mutator phenotype. In Pseudomonas putida KT2440, MMR comprises MutS and MutL homologs but lacks a MutH homolog, so strand incision is MutH-independent. The protein is cytoplasmic and acts on chromosomal DNA at the replisome/nucleoid.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003684" target="_blank" class="term-link">
+                                    GO:0003684
+                                </a>
+                            </span>
+                            <span class="term-label">damaged DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME7" data-a="GO:0003684" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MutS binds DNA containing mismatches/distortions; &#34;damaged DNA binding&#34; is a defensible parent-level molecular function for a mismatch-recognition protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct in essence but more general than the precise activity. The specific function (mismatched DNA binding, GO:0030983) is separately annotated and is more informative, so this broader term is retained as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003690" target="_blank" class="term-link">
+                                    GO:0003690
+                                </a>
+                            </span>
+                            <span class="term-label">double-stranded DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME7" data-a="GO:0003690" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MutS recognizes mismatches within double-stranded DNA, so dsDNA binding is accurate but generic.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate but a general binding term; the substrate-specific mismatched DNA binding term captures the core molecular function. Retain as supporting, non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME7" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MutS has a conserved Walker A/B P-loop ATPase domain (MutS_V) and binds/hydrolyzes ATP; nucleotide exchange drives the conformational switch to the sliding-clamp state. ATP binding is well supported by domain architecture and the MutS family mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by the conserved C-terminal ABC-ATPase domain and the established MutS catalytic cycle; a genuine molecular function of the protein.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME7" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MutS is a soluble cytoplasmic protein that acts on chromosomal DNA; cytosolic localization is consistent with conserved bacterial MutS biology, though no P. putida-specific localization imaging was found.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Appropriate cellular component for a cytoplasmic DNA-repair enzyme in a bacterium lacking a nucleus; consistent with the MutS family.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006298" target="_blank" class="term-link">
+                                    GO:0006298
+                                </a>
+                            </span>
+                            <span class="term-label">mismatch repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME7" data-a="GO:0006298" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MutS is the initiating mismatch sensor of the MMR pathway. In P. putida KT2440, deletion of mutS produces a strong mutator phenotype (~1000-fold higher rifampicin-resistance frequency) and a mismatch-recognition hierarchy was experimentally established, directly confirming its role in mismatch repair.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process for MutS, supported by conserved function and direct organism-specific genetic evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030983" target="_blank" class="term-link">
+                                    GO:0030983
+                                </a>
+                            </span>
+                            <span class="term-label">mismatched DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME7" data-a="GO:0030983" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The defining molecular function of MutS is recognition/binding of base-base mismatches and small insertion/deletion loops in DNA, initiating repair.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Most specific and informative molecular function term for the mismatch-recognition activity that defines MutS; core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140664" target="_blank" class="term-link">
+                                    GO:0140664
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-dependent DNA damage sensor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME7" data-a="GO:0140664" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MutS couples mismatch (damage) sensing to ATP binding/hydrolysis, undergoing an ATP-driven conformational change to a sliding clamp upon recognizing a mismatch. This captures the integrated ATP-dependent damage-sensing activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurately describes MutS as an ATP-dependent sensor that detects DNA mismatches/distortions and transmits the signal; well supported by the family mechanism. Core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent recognition of base-base mismatches and small insertion/deletion loops in newly replicated double-stranded DNA, initiating mismatch repair</h3>
+                <span class="vote-buttons" data-g="Q88ME7" data-a="FUNCTION: ATP-dependent recognition of base-base mismatches ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030983" target="_blank" class="term-link">
+                            mismatched DNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006298" target="_blank" class="term-link">
+                                mismatch repair
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP binding and hydrolysis driving the conformational switch from a DNA-scanning state to a sliding-clamp state that recruits MutL and signals downstream strand excision/repair</h3>
+                <span class="vote-buttons" data-g="Q88ME7" data-a="FUNCTION: ATP binding and hydrolysis driving the conformatio..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140664" target="_blank" class="term-link">
+                            ATP-dependent DNA damage sensor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006298" target="_blank" class="term-link">
+                                mismatch repair
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31599106" target="_blank" class="term-link">
+                            PMID:31599106
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mismatch repair hierarchy of Pseudomonas putida revealed by mutagenic ssDNA recombineering of the pyrF gene</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does P. putida KT2440 MutS localize to the replisome/nucleoid and interact directly with the beta-clamp (DnaN) for strand discrimination, as suggested for MutH-lacking systems?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ME7" data-a="Q: Does P. putida KT2440 MutS localize to the repliso..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro reconstitution of P. putida MutS mismatch-binding and ATPase activity to confirm substrate specificity and the ATP-driven sliding-clamp transition.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ME7" data-a="EXPERIMENT: In vitro reconstitution of P. putida MutS mismatch..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine how strand discrimination is achieved in the MutH-independent P. putida MMR system (e.g., role of MutL endonuclease activity and pre-existing strand discontinuities).</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ME7" data-a="EXPERIMENT: Determine how strand discrimination is achieved in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mutS-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88ME7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **mutS** (UniProt: **Q88ME7**; locus **PP_1626**) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">28 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:28:13.877826</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="mutS-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="mutS-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000024 Figure 3 on page 4 reports the mutation frequencies and fold-changes for the pS2311M and pS2514M conditional mutator devices. Speci</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-muts-uniprot-q88me7-locus-pp_1626-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>mutS</strong> (UniProt: <strong>Q88ME7</strong>; locus <strong>PP_1626</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-target-verification-geneprotein-identity">1. Target verification (gene/protein identity)</h2>
+<p>The target protein is <strong>MutS</strong>, a canonical <strong>DNA mismatch repair (MMR) mismatch-recognition ATPase</strong> in <em>Pseudomonas putida</em> strain KT2440 (gene <strong>mutS</strong>, locus <strong>PP_1626</strong>, UniProt <strong>Q88ME7</strong>). <em>P. putida</em> KT2440 is reported to encode <strong>mutS</strong> and <strong>mutL</strong> but <strong>lacks a bona fide mutH homolog</strong>, indicating an “abridged” bacterial MMR architecture relative to <em>E. coli</em>’s MutS/MutL/MutH pathway. (aparicio2020mismatchrepairhierarchy pages 1-2)</p>
+<h2 id="2-key-concepts-current-mechanistic-understanding-2024-focused">2. Key concepts &amp; current mechanistic understanding (2024-focused)</h2>
+<h3 id="21-definition-what-muts-does">2.1 Definition: what MutS does</h3>
+<p><strong>MutS is the initiating sensor of post-replicative mismatch repair</strong>, detecting replication errors (base–base mismatches and small insertion–deletion loops, IDLs), and then coordinating recruitment/activation of downstream repair factors (notably MutL-family proteins) to remove the error-containing nascent strand segment and restore the correct sequence. (waters2024newdiscoverieson pages 8-9, zarb2024singlemoleculeprobing pages 20-28)</p>
+<h3 id="22-substrate-specificity-mismatch-types">2.2 Substrate specificity (mismatch types)</h3>
+<p>MutS recognizes <strong>single-base mismatches</strong> and <strong>small IDLs</strong>, with strong preference for <strong>single-base IDLs</strong> over larger loops (larger IDLs are inefficiently recognized/processed by MutS alone, implying different handling or reduced repair). (zarb2024singlemoleculeprobing pages 57-61, zarb2024singlemoleculeprobing pages 61-65)</p>
+<h3 id="23-core-muts-catalytic-cycle-atpadp-driven-conformational-switching-and-sliding-clamp">2.3 Core MutS catalytic cycle: ATP/ADP-driven conformational switching and sliding clamp</h3>
+<p>Recent single-molecule kinetic work (largely in <em>E. coli</em> MutS, used here as mechanistic inference for bacterial MutS family members) supports a nucleotide-state model:</p>
+<ul>
+<li><strong>Scanning state</strong>: MutS in an <strong>ADP-bound/open</strong> conformation scans dsDNA for helix distortions from mismatches. (zarb2024singlemoleculeprobing pages 57-61)</li>
+<li><strong>Mismatch recognition</strong>: mismatch binding is <strong>ATP-independent</strong> in the sense that MutS can bind mismatches without ATP, but <strong>ATP strongly enhances productive transitions</strong>. Binding induces a sharp DNA bend/kink (≈ <strong>60°</strong>) and involves localized mismatch-contact residues including a conserved Phe-X-Glu motif. (zarb2024singlemoleculeprobing pages 15-20)</li>
+<li><strong>Activation and “sliding clamp” formation</strong>: after mismatch binding, <strong>ADP→ATP exchange</strong> and binding of <strong>two ATP molecules per MutS dimer</strong> triggers a conformational change into a <strong>ring-like sliding clamp</strong> that releases the mismatch site and <strong>diffuses along dsDNA</strong>, facilitating recruitment/loading of MutL. (zarb2024singlemoleculeprobing pages 20-28, zarb2024singlemoleculeprobing pages 57-61)</li>
+<li><strong>Resetting</strong>: the sliding-clamp state is long-lived on dsDNA; <strong>ATP hydrolysis and reopening/reset</strong> is associated with encountering <strong>ssDNA regions, gaps, or DNA breaks</strong>, returning MutS to a scanning-competent state. (zarb2024singlemoleculeprobing pages 57-61)</li>
+</ul>
+<p>Quantitative kinetic parameters from single-molecule measurements illustrate nucleotide control. For example, for a CC mismatch, the conformational-change rate <strong>k2</strong> was reported as <strong>0.007 ± 0.001 s⁻¹</strong> with 1 mM ADP versus <strong>0.57 ± 0.01 s⁻¹</strong> with 1 mM ATP, highlighting strong ATP dependence and ADP dampening; clamp-formation rate is reduced by physiologic ADP levels. (zarb2024singlemoleculeprobing pages 52-57, zarb2024singlemoleculeprobing pages 57-61)</p>
+<h3 id="24-action-at-a-distance-in-mmr-how-mismatch-recognition-communicates-with-distant-incision-sites-2024-expert-synthesis">2.4 “Action-at-a-distance” in MMR: how mismatch recognition communicates with distant incision sites (2024 expert synthesis)</h3>
+<p>A key unresolved/active research area is <strong>how mismatch detection by MutS leads to strand incision/excision at sites that may be distant from the mismatch</strong>. A 2024 review synthesizes evidence into three non-exclusive model classes:</p>
+<ol>
+<li><strong>Tracking/sliding</strong>: ATP-bound MutS (and/or MutL) moves along DNA as a sliding clamp, creating a distribution of repair factors along the DNA that enables incision at a distance. (collingwood2024actionatadistanceindna pages 1-3, collingwood2024actionatadistanceindna pages 4-6)</li>
+<li><strong>DNA looping/loop extrusion</strong>: ATP-dependent translocation could extrude DNA loops, bridging mismatch and incision sites. (collingwood2024actionatadistanceindna pages 4-6, collingwood2024actionatadistanceindna pages 1-3)</li>
+<li><strong>Oligomerization/bridging</strong>: MutS can remain mismatch-bound while MutL-family assemblies bridge the gap, potentially altering DNA topology and facilitating incision. (collingwood2024actionatadistanceindna pages 4-6, collingwood2024actionatadistanceindna pages 1-3)</li>
+</ol>
+<p>Crucially, this review contrasts <em>E. coli</em>’s <strong>MutH-dependent</strong> pathway with <strong>MutH-lacking systems</strong> where <strong>MutL-family proteins provide endonuclease activity</strong> to create nicks on the nascent strand, requiring robust long-range communication mechanisms. This distinction is directly relevant to <em>P. putida</em> KT2440, which lacks MutH. (collingwood2024actionatadistanceindna pages 3-4, aparicio2020mismatchrepairhierarchy pages 1-2)</p>
+<h2 id="3-pseudomonas-putida-kt2440em42-specific-functional-evidence">3. <em>Pseudomonas putida</em> KT2440/EM42-specific functional evidence</h2>
+<h3 id="31-pathway-context-in-p-putida-abridged-mutsmutl-system">3.1 Pathway context in <em>P. putida</em>: abridged MutS/MutL system</h3>
+<p>In <em>P. putida</em> KT2440, MMR is described as comprising <strong>MutS and MutL homologs</strong> without MutH, motivating empirical measurement of mismatch-type sensitivity in this organism. (aparicio2020mismatchrepairhierarchy pages 1-2)</p>
+<h3 id="32-organism-specific-mismatch-recognitionrepair-hierarchy">3.2 Organism-specific mismatch recognition/repair hierarchy</h3>
+<p>Using ssDNA recombineering of <strong>pyrF</strong> under wild-type conditions, <strong>ΔmutS</strong>, and <strong>transient MutL inhibition</strong> (dominant-negative <strong>mutL E36K</strong>), a <strong>mismatch-recognition hierarchy</strong> was established for <em>P. putida</em>:</p>
+<p><strong>A:G &lt; C:C &lt; G:A &lt; C:A, A:A, G:G, T:T, T:G, A:C, C:T &lt; G:T, T:C</strong>. (aparicio2020mismatchrepairhierarchy pages 1-2)</p>
+<p>This is a key, direct <em>P. putida</em>-specific functional annotation point: <strong>MutS-dependent MMR does not correct all mismatches equally</strong>; rather, mismatch identity strongly affects whether introduced base substitutions are rejected or tolerated. (aparicio2020mismatchrepairhierarchy pages 1-2)</p>
+<h2 id="4-cellular-localization-and-interaction-partners-with-organism-specific-caveats">4. Cellular localization and interaction partners (with organism-specific caveats)</h2>
+<h3 id="41-where-muts-acts-in-the-cell">4.1 Where MutS acts in the cell</h3>
+<p>Direct imaging or subcellular localization measurements for <strong>MutS in <em>P. putida</em> KT2440</strong> were <strong>not</strong> found in the retrieved corpus. However, based on conserved bacterial MutS biochemistry, its site of action is <strong>intracellular on chromosomal DNA</strong> (nucleoid-associated) during/after replication when mismatches arise. (zarb2024singlemoleculeprobing pages 20-28, waters2024newdiscoverieson pages 8-9)</p>
+<h3 id="42-interaction-partners-and-pathway-components">4.2 Interaction partners and pathway components</h3>
+<p><em>P. putida</em> sources explicitly describe <strong>MutS recruiting MutL</strong> as an initiating step (canonical MMR). (fernandezcabezon2021spatiotemporalmanipulationof pages 2-3)</p>
+<p>Because <em>P. putida</em> lacks MutH, its strand incision is expected to be <strong>MutL-mediated (endonuclease-capable MutL systems)</strong> or reliant on pre-existing discontinuities, consistent with the broader MutH-lacking MMR paradigm described in 2024 expert synthesis. (collingwood2024actionatadistanceindna pages 3-4, collingwood2024actionatadistanceindna pages 1-3)</p>
+<p>A <em>P. putida</em> KT2440 study discussing MMR notes that strand discrimination “could involve the <strong>beta clamp</strong> of the replication machinery,” citing prior work (in other bacteria) connecting replication clamps to MMR positioning, but this is not direct biochemical evidence in <em>P. putida</em>. (aparicio2020mismatchrepairhierarchy pages 8-9)</p>
+<h2 id="5-recent-developments-and-latest-research-prioritizing-20232024">5. Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="51-2024-mechanistic-models-for-long-range-communication-in-mmr">5.1 2024: Mechanistic models for long-range communication in MMR</h3>
+<p>The 2024 Biomolecules review emphasizes that “action-at-a-distance” remains incompletely explained and that <strong>multiple mechanisms likely coexist</strong>, with organism-specific differences between bacterial and eukaryotic systems and between MutH-dependent vs MutH-lacking pathways. (collingwood2024actionatadistanceindna pages 4-6, collingwood2024actionatadistanceindna pages 3-4)</p>
+<h3 id="52-2024-single-molecule-quantification-of-nucleotide-effects-on-muts-clamp-formation">5.2 2024: Single-molecule quantification of nucleotide effects on MutS clamp formation</h3>
+<p>Recent single-molecule work quantifies how <strong>ATP promotes</strong> mismatch binding and sliding-clamp formation, while <strong>physiologic ADP buffers/dampens</strong> clamp formation and conformational changes, providing a kinetic basis for how cellular nucleotide pools can tune MMR initiation. (zarb2024singlemoleculeprobing pages 52-57, zarb2024singlemoleculeprobing pages 57-61)</p>
+<h3 id="53-2024-review-level-synthesis-of-early-recruitmentregulation">5.3 2024: Review-level synthesis of early recruitment/regulation</h3>
+<p>A 2024 review of early DNA damage response steps summarizes the widely accepted MMR recruitment cascade in which MutS-family sensors detect replication errors, then recruit MutL-family proteins whose nuclease activity (in MutH-lacking systems) can be activated in coordination with replication-associated clamps (e.g., PCNA in eukaryotes), followed by excision and resynthesis. (waters2024newdiscoverieson pages 8-9)</p>
+<h2 id="6-current-applications-and-real-world-implementations-with-quantitative-results">6. Current applications and real-world implementations (with quantitative results)</h2>
+<h3 id="61-controllable-mutator-devices-in-p-putida-kt2440-synthetic-biology-2021-foundational-implementation">6.1 Controllable “mutator devices” in <em>P. putida</em> KT2440 (synthetic biology; 2021 foundational implementation)</h3>
+<p>A demonstrated real-world implementation for <em>P. putida</em> is <strong>spatiotemporal manipulation of MMR</strong> to accelerate evolution/phenotype emergence using inducible expression of a dominant-negative <strong>mutL E36K</strong> allele on broad-host-range plasmids.</p>
+<p>Quantitative outcomes (mutation frequency readouts in rpoB and rpsL via antibiotic resistance):</p>
+<ul>
+<li>Cyclohexanone-inducible device <strong>pS2311M</strong>: up to <strong>438-fold</strong> increase in <strong>rifampicin-resistant</strong> mutants and <strong>10-fold</strong> increase in <strong>streptomycin-resistant</strong> mutants vs control (early exponential induction condition). (fernandezcabezon2021spatiotemporalmanipulationof pages 3-4, fernandezcabezon2021spatiotemporalmanipulationof media 45d6effd)</li>
+<li>Thermoinducible device <strong>pS2514M</strong>: <strong>45-fold</strong> increase in rifampicin-resistant mutants and <strong>14-fold</strong> increase in streptomycin-resistant mutants vs control (under the described induction protocol). (fernandezcabezon2021spatiotemporalmanipulationof pages 3-4, fernandezcabezon2021spatiotemporalmanipulationof media 45d6effd)</li>
+</ul>
+<p>The same work cites prior evidence that a <strong>ΔmutS KT2440 derivative</strong> has ~<strong>1000-fold</strong> higher frequency of rifampicin-resistant mutants than wild type, illustrating the strong constitutive mutator phenotype expected when MutS is removed. (fernandezcabezon2021spatiotemporalmanipulationof pages 8-8)</p>
+<p>These mutator devices were used to accelerate emergence of selectable phenotypes (e.g., antibiotic resistance) and to revert a synthetic uracil auxotrophy, and were positioned as tools to support adaptive laboratory evolution and metabolic cell factory optimization. (fernandezcabezon2021spatiotemporalmanipulationof pages 1-2)</p>
+<h3 id="62-genome-engineering-recombineering-workflows-using-transient-mmr-suppression">6.2 Genome engineering / recombineering workflows using transient MMR suppression</h3>
+<p>A <em>P. putida</em> recombineering study explicitly frames <strong>permanent ΔmutS</strong> or <strong>transient MMR suppression</strong> (dominant-negative MutL) as a strategy to enable “bias-free” incorporation of base substitutions during ssDNA recombineering, supporting strain engineering methods for precise single-nucleotide changes. (aparicio2020mismatchrepairhierarchy pages 1-2, aparicio2020mismatchrepairhierarchy pages 8-9)</p>
+<h2 id="7-interpretation-for-functional-annotation-of-q88me7-muts-in-p-putida-kt2440">7. Interpretation for functional annotation of Q88ME7 (MutS) in <em>P. putida</em> KT2440</h2>
+<h3 id="71-primary-molecular-function">7.1 Primary molecular function</h3>
+<p><strong>MutS (Q88ME7)</strong> functions as a <strong>DNA mismatch-recognition ATPase</strong> that initiates MMR by detecting mismatches/small IDLs in dsDNA and transitioning (ATP-driven) into a <strong>sliding clamp</strong> state that recruits MutL-family proteins to trigger downstream incision/excision and repair synthesis. (zarb2024singlemoleculeprobing pages 20-28, zarb2024singlemoleculeprobing pages 57-61)</p>
+<h3 id="72-biological-processespathways">7.2 Biological processes/pathways</h3>
+<p>MutS participates in <strong>replication fidelity maintenance</strong> through the <strong>DNA mismatch repair pathway</strong>, thereby suppressing spontaneous mutation accumulation; disabling MMR (ΔmutS or dominant-negative MutL) yields strong <strong>mutator phenotypes</strong>, directly demonstrated in <em>P. putida</em> KT2440 by large increases in antibiotic-resistant mutants. (fernandezcabezon2021spatiotemporalmanipulationof pages 3-4, fernandezcabezon2021spatiotemporalmanipulationof pages 8-8)</p>
+<h3 id="73-cellular-compartment">7.3 Cellular compartment</h3>
+<p>MutS action is best annotated as <strong>cytoplasmic / nucleoid-associated (DNA-bound)</strong>, acting on chromosomal DNA. Direct <em>P. putida</em>-specific localization measurements were not identified in the retrieved sources, so this localization is inferred from conserved MutS family mechanism. (zarb2024singlemoleculeprobing pages 20-28, waters2024newdiscoverieson pages 8-9)</p>
+<h3 id="74-p-putida-specific-nuance-mismatch-preference-matters">7.4 <em>P. putida</em>-specific nuance: mismatch preference matters</h3>
+<p>For <em>P. putida</em>, experimental evidence indicates that <strong>mismatch identity strongly controls repair sensitivity</strong>, yielding a specific mismatch hierarchy that should be considered when interpreting mutation spectra, designing recombineering oligos, or engineering directed evolution schemes. (aparicio2020mismatchrepairhierarchy pages 1-2)</p>
+<h2 id="8-summary-table-evidence-map">8. Summary table (evidence map)</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Concise finding</th>
+<th>Quantitative / specific details</th>
+<th>Key citations, DOI/URL, year</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verified target identity</td>
+<td>Target matches <strong>MutS DNA mismatch repair protein</strong>: <strong>UniProt Q88ME7</strong>, gene <strong>mutS</strong>, ordered locus <strong>PP_1626</strong>, organism <strong>Pseudomonas putida KT2440</strong>; literature on <em>P. putida</em> MMR consistently treats <strong>MutS</strong> as the mismatch-recognition factor acting with <strong>MutL</strong> in an abridged, <strong>MutH-lacking</strong> bacterial MMR system. Conserved family/domain assignment is consistent with a canonical <strong>MutS DNA mismatch repair family</strong> ATPase/sliding-clamp protein.</td>
+<td><em>P. putida</em> encodes <strong>MutS</strong> and <strong>MutL</strong> but lacks a bona fide <strong>MutH</strong> homolog; therefore pathway inference should follow MutH-independent bacterial MMR, not the full <em>E. coli</em> 3-protein methyl-directed pathway.</td>
+<td>(aparicio2020mismatchrepairhierarchy pages 1-2, collingwood2024actionatadistanceindna pages 3-4) Aparicio et al., <em>Environ. Microbiol.</em> DOI: https://doi.org/10.1111/1462-2920.14814 (2020); Collingwood et al., <em>Biomolecules</em> DOI: https://doi.org/10.3390/biom14111442 (2024)</td>
+</tr>
+<tr>
+<td>Core MutS mechanism</td>
+<td>MutS is the <strong>primary mismatch sensor</strong>. It scans dsDNA in an <strong>ADP-bound/open</strong> state, binds mismatches or small IDLs, then undergoes <strong>ADP→ATP exchange</strong>; binding of <strong>two ATP molecules</strong> converts the dimer to a <strong>closed/sliding-clamp</strong> state that leaves the mismatch and diffuses on DNA to <strong>recruit/load MutL</strong>. ATP hydrolysis resets the complex after encountering ssDNA/gaps or breaks.</td>
+<td>MutS binds mismatched DNA with ~<strong>10–20-fold</strong> higher affinity than matched DNA; ATP can enhance mismatch binding up to <strong>~29-fold</strong> for some mismatches; ADP reduces clamp-formation kinetics; example for CC mismatch: <strong>k2 = 0.007 ± 0.001 s⁻¹</strong> with 1 mM ADP vs <strong>0.57 ± 0.01 s⁻¹</strong> with 1 mM ATP. DNA is kinked by ~<strong>60°</strong> upon mismatch recognition.</td>
+<td>(zarb2024singlemoleculeprobing pages 57-61, zarb2024singlemoleculeprobing pages 20-28, zarb2024singlemoleculeprobing pages 61-65, zarb2024singlemoleculeprobing pages 15-20, zarb2024singlemoleculeprobing pages 52-57) Zarb (2024, single-molecule thesis/manuscript in retrieved corpus); Waters &amp; Spratt, DOI: https://doi.org/10.3390/ijms25031676 (2024)</td>
+</tr>
+<tr>
+<td>P. putida mismatch-recognition hierarchy</td>
+<td>In <em>P. putida</em>, MMR shows a clear mismatch-recognition hierarchy rather than equal correction of all mismatches. This hierarchy was inferred by ssDNA recombineering in WT, <strong>ΔmutS</strong>, and transient <strong>mutL E36K</strong> inhibition backgrounds.</td>
+<td>Reported hierarchy: <strong>A:G &lt; C:C &lt; G:A &lt; C:A, A:A, G:G, T:T, T:G, A:C, C:T &lt; G:T, T:C</strong>. This is the key organism-specific specificity result available for KT2440/EM42-related strains.</td>
+<td>(aparicio2020mismatchrepairhierarchy pages 1-2) Aparicio et al., DOI: https://doi.org/10.1111/1462-2920.14814 (2020)</td>
+</tr>
+<tr>
+<td>P. putida mutator phenotypes / MMR perturbation</td>
+<td>Conditional inhibition of MMR in <em>P. putida</em> was implemented with plasmid-borne <strong>dominant-negative mutL E36K</strong> devices; these transiently elevate mutation frequency and accelerate phenotype emergence. A cited KT2440 <strong>ΔmutS</strong> strain shows a much stronger constitutive mutator phenotype.</td>
+<td><strong>KT2440/pS2311M</strong>: <strong>438-fold</strong> increase in RifR and <strong>10-fold</strong> increase in StrR vs control when induction ended in early exponential phase. <strong>KT2440/pS2514M</strong>: <strong>45-fold</strong> RifR and <strong>14-fold</strong> StrR increases. A cited prior study found <strong>ΔmutS KT2440 ~1000-fold</strong> higher RifR frequency vs WT. Mutation frequencies were reported as mutants per <strong>10⁹ viable cells</strong>.</td>
+<td>(fernandezcabezon2021spatiotemporalmanipulationof pages 3-4, fernandezcabezon2021spatiotemporalmanipulationof pages 8-8, fernandezcabezon2021spatiotemporalmanipulationof pages 4-5, fernandezcabezon2021spatiotemporalmanipulationof pages 1-2, fernandezcabezon2021spatiotemporalmanipulationof pages 6-7) Fernández-Cabezón et al., <em>ACS Synth. Biol.</em> DOI: https://doi.org/10.1021/acssynbio.1c00031 (2021)</td>
+</tr>
+<tr>
+<td>Action-at-a-distance models</td>
+<td>Recent expert synthesis concludes that communication between a mismatch-bound MutS complex and distant incision/excision sites can be explained by three non-exclusive model classes: <strong>tracking/sliding</strong>, <strong>DNA looping</strong>, and <strong>oligomerization/bridging</strong>. In MutH-lacking bacteria, MutL-family endonuclease activity substitutes for MutH-mediated nicking.</td>
+<td>Sliding-clamp models: ATP-bound MutS diffuses away from the mismatch and recruits MutL. Looping models: ATP-driven translocation/extrusion brings distant sites together. Oligomerization models: MutS remains mismatch-bound while MutL/other factors bridge distance. Review emphasizes that mechanisms likely differ by organism and may coexist.</td>
+<td>(collingwood2024actionatadistanceindna pages 4-6, collingwood2024actionatadistanceindna pages 3-4, collingwood2024actionatadistanceindna pages 1-3, collingwood2024actionatadistanceindna pages 12-14) Collingwood et al., <em>Biomolecules</em> DOI: https://doi.org/10.3390/biom14111442 (2024)</td>
+</tr>
+<tr>
+<td>Pathway context and localization</td>
+<td>Functional localization is <strong>intracellular, chromosome-associated (nucleoid/DNA-bound)</strong>: MutS acts on newly replicated genomic DNA where replication errors arise, then coordinates with MutL and downstream excision/resynthesis factors. For <em>P. putida</em>, localization is inferred from conserved bacterial MutS biochemistry and organism-specific MMR genetics rather than direct localization imaging in the retrieved sources.</td>
+<td>In canonical bacterial descriptions, downstream factors include <strong>MutL</strong>, helicase/excision factors such as <strong>UvrD</strong> and exonucleases, followed by DNA polymerase and ligase. In MutH-lacking systems, strand discrimination relies on <strong>MutL endonuclease/nicks</strong> or pre-existing discontinuities rather than MutH cleavage at hemimethylated GATC sites.</td>
+<td>(aparicio2020mismatchrepairhierarchy pages 1-2, aparicio2020mismatchrepairhierarchy pages 12-13, collingwood2024actionatadistanceindna pages 3-4, collingwood2024actionatadistanceindna pages 1-3, waters2024newdiscoverieson pages 8-9) Aparicio et al., DOI: https://doi.org/10.1111/1462-2920.14814 (2020); Collingwood et al., DOI: https://doi.org/10.3390/biom14111442 (2024); Waters &amp; Spratt, DOI: https://doi.org/10.3390/ijms25031676 (2024)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the verified identity, conserved mechanism, organism-specific mismatch preferences, quantitative mutator phenotypes, and current mechanistic models relevant to Pseudomonas putida KT2440 MutS (Q88ME7/PP_1626). It separates direct P. putida evidence from broader bacterial MutS mechanism needed for functional annotation.</em></p>
+<h2 id="9-key-limitations-of-available-evidence-for-this-specific-protein">9. Key limitations of available evidence for this specific protein</h2>
+<ul>
+<li>Direct <strong>MutS localization/interaction</strong> experiments in <em>P. putida</em> KT2440 (e.g., imaging at the replisome, co-IP with β-clamp) were <strong>not present</strong> in the retrieved corpus; thus, localization is annotated primarily by conserved mechanism with explicit caveats. (aparicio2020mismatchrepairhierarchy pages 8-9)</li>
+<li>Some <em>P. putida</em>-specific quantitative results for <strong>ΔmutS</strong> (e.g., full mutation rate estimates, genome-wide spectra) are indicated to exist in supporting materials (e.g., “mutational activity” in supplementary figures) but were not extractable from the provided excerpts. (aparicio2020mismatchrepairhierarchy pages 13-14)</li>
+</ul>
+<h2 id="references-urls-and-publication-dates-as-available">References (URLs and publication dates as available)</h2>
+<ul>
+<li>Aparicio T. et al. “Mismatch repair hierarchy of <em>Pseudomonas putida</em>…” <em>Environmental Microbiology</em> <strong>Nov 2020</strong>. https://doi.org/10.1111/1462-2920.14814 (aparicio2020mismatchrepairhierarchy pages 1-2)</li>
+<li>Fernández-Cabezón L. et al. “Spatiotemporal manipulation of the mismatch repair system of <em>Pseudomonas putida</em>…” <em>ACS Synthetic Biology</em> <strong>Apr 2021</strong>. https://doi.org/10.1021/acssynbio.1c00031 (fernandezcabezon2021spatiotemporalmanipulationof pages 3-4)</li>
+<li>Collingwood B.W. et al. “Action-At-A-Distance in DNA Mismatch Repair…” <em>Biomolecules</em> <strong>Nov 2024</strong>. https://doi.org/10.3390/biom14111442 (collingwood2024actionatadistanceindna pages 4-6)</li>
+<li>Waters K.L., Spratt D.E. “New Discoveries on Protein Recruitment…” <em>International Journal of Molecular Sciences</em> <strong>Jan 2024</strong>. https://doi.org/10.3390/ijms25031676 (waters2024newdiscoverieson pages 8-9)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 1-2): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(waters2024newdiscoverieson pages 8-9): Kelly L. Waters and Donald E. Spratt. New discoveries on protein recruitment and regulation during the early stages of the dna damage response pathways. International Journal of Molecular Sciences, 25:1676, Jan 2024. URL: https://doi.org/10.3390/ijms25031676, doi:10.3390/ijms25031676. This article has 15 citations.</p>
+</li>
+<li>
+<p>(zarb2024singlemoleculeprobing pages 20-28): J Zarb. Single molecule probing of mismatch type and sequence dependence of dna mismatch repair by muts. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(zarb2024singlemoleculeprobing pages 57-61): J Zarb. Single molecule probing of mismatch type and sequence dependence of dna mismatch repair by muts. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(zarb2024singlemoleculeprobing pages 61-65): J Zarb. Single molecule probing of mismatch type and sequence dependence of dna mismatch repair by muts. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(zarb2024singlemoleculeprobing pages 15-20): J Zarb. Single molecule probing of mismatch type and sequence dependence of dna mismatch repair by muts. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(zarb2024singlemoleculeprobing pages 52-57): J Zarb. Single molecule probing of mismatch type and sequence dependence of dna mismatch repair by muts. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(collingwood2024actionatadistanceindna pages 1-3): Bryce W. Collingwood, Scott J. Witte, and Carol M. Manhart. Action-at-a-distance in dna mismatch repair: mechanistic insights and models for how dna and repair proteins facilitate long-range communication. Biomolecules, 14:1442, Nov 2024. URL: https://doi.org/10.3390/biom14111442, doi:10.3390/biom14111442. This article has 1 citations.</p>
+</li>
+<li>
+<p>(collingwood2024actionatadistanceindna pages 4-6): Bryce W. Collingwood, Scott J. Witte, and Carol M. Manhart. Action-at-a-distance in dna mismatch repair: mechanistic insights and models for how dna and repair proteins facilitate long-range communication. Biomolecules, 14:1442, Nov 2024. URL: https://doi.org/10.3390/biom14111442, doi:10.3390/biom14111442. This article has 1 citations.</p>
+</li>
+<li>
+<p>(collingwood2024actionatadistanceindna pages 3-4): Bryce W. Collingwood, Scott J. Witte, and Carol M. Manhart. Action-at-a-distance in dna mismatch repair: mechanistic insights and models for how dna and repair proteins facilitate long-range communication. Biomolecules, 14:1442, Nov 2024. URL: https://doi.org/10.3390/biom14111442, doi:10.3390/biom14111442. This article has 1 citations.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof pages 2-3): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 8-9): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof pages 3-4): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof media 45d6effd): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof pages 8-8): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof pages 1-2): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof pages 4-5): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof pages 6-7): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collingwood2024actionatadistanceindna pages 12-14): Bryce W. Collingwood, Scott J. Witte, and Carol M. Manhart. Action-at-a-distance in dna mismatch repair: mechanistic insights and models for how dna and repair proteins facilitate long-range communication. Biomolecules, 14:1442, Nov 2024. URL: https://doi.org/10.3390/biom14111442, doi:10.3390/biom14111442. This article has 1 citations.</p>
+</li>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 12-13): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 13-14): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="mutS-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000024 Figure 3 on page 4 reports the mutation frequencies and fold-changes for the pS2311M and pS2514M conditional mutator devices. Speci" src="mutS-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>aparicio2020mismatchrepairhierarchy pages 1-2</li>
+<li>zarb2024singlemoleculeprobing pages 57-61</li>
+<li>zarb2024singlemoleculeprobing pages 15-20</li>
+<li>fernandezcabezon2021spatiotemporalmanipulationof pages 2-3</li>
+<li>aparicio2020mismatchrepairhierarchy pages 8-9</li>
+<li>waters2024newdiscoverieson pages 8-9</li>
+<li>fernandezcabezon2021spatiotemporalmanipulationof pages 8-8</li>
+<li>fernandezcabezon2021spatiotemporalmanipulationof pages 1-2</li>
+<li>aparicio2020mismatchrepairhierarchy pages 13-14</li>
+<li>fernandezcabezon2021spatiotemporalmanipulationof pages 3-4</li>
+<li>collingwood2024actionatadistanceindna pages 4-6</li>
+<li>zarb2024singlemoleculeprobing pages 20-28</li>
+<li>zarb2024singlemoleculeprobing pages 61-65</li>
+<li>zarb2024singlemoleculeprobing pages 52-57</li>
+<li>collingwood2024actionatadistanceindna pages 1-3</li>
+<li>collingwood2024actionatadistanceindna pages 3-4</li>
+<li>fernandezcabezon2021spatiotemporalmanipulationof pages 4-5</li>
+<li>fernandezcabezon2021spatiotemporalmanipulationof pages 6-7</li>
+<li>collingwood2024actionatadistanceindna pages 12-14</li>
+<li>aparicio2020mismatchrepairhierarchy pages 12-13</li>
+<li>https://doi.org/10.1111/1462-2920.14814</li>
+<li>https://doi.org/10.3390/biom14111442</li>
+<li>https://doi.org/10.3390/ijms25031676</li>
+<li>https://doi.org/10.1021/acssynbio.1c00031</li>
+<li>https://doi.org/10.1111/1462-2920.14814,</li>
+<li>https://doi.org/10.3390/ijms25031676,</li>
+<li>https://doi.org/10.3390/biom14111442,</li>
+<li>https://doi.org/10.1021/acssynbio.1c00031,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88ME7
+gene_symbol: mutS
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: DNA mismatch repair protein MutS, the mismatch-recognition ATPase that initiates post-replicative mismatch repair (MMR). As a homodimer, MutS scans newly replicated double-stranded DNA, recognizes base-base mismatches and small insertion/deletion loops, and bends the DNA at the mismatch. Upon ADP-to-ATP exchange it converts into a ring-like sliding clamp that releases the mismatch and recruits the MutL endonuclease, coordinating strand-specific excision and resynthesis to correct replication errors. MutS therefore maintains replication fidelity and suppresses spontaneous mutation; its loss produces a strong mutator phenotype. In Pseudomonas putida KT2440, MMR comprises MutS and MutL homologs but lacks a MutH homolog, so strand incision is MutH-independent. The protein is cytoplasmic and acts on chromosomal DNA at the replisome/nucleoid.
+existing_annotations:
+- term:
+    id: GO:0003684
+    label: damaged DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: MutS binds DNA containing mismatches/distortions; &#34;damaged DNA binding&#34; is a defensible parent-level molecular function for a mismatch-recognition protein.
+    action: KEEP_AS_NON_CORE
+    reason: Correct in essence but more general than the precise activity. The specific function (mismatched DNA binding, GO:0030983) is separately annotated and is more informative, so this broader term is retained as non-core.
+- term:
+    id: GO:0003690
+    label: double-stranded DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: MutS recognizes mismatches within double-stranded DNA, so dsDNA binding is accurate but generic.
+    action: KEEP_AS_NON_CORE
+    reason: Accurate but a general binding term; the substrate-specific mismatched DNA binding term captures the core molecular function. Retain as supporting, non-core.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: MutS has a conserved Walker A/B P-loop ATPase domain (MutS_V) and binds/hydrolyzes ATP; nucleotide exchange drives the conformational switch to the sliding-clamp state. ATP binding is well supported by domain architecture and the MutS family mechanism.
+    action: ACCEPT
+    reason: Strongly supported by the conserved C-terminal ABC-ATPase domain and the established MutS catalytic cycle; a genuine molecular function of the protein.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: MutS is a soluble cytoplasmic protein that acts on chromosomal DNA; cytosolic localization is consistent with conserved bacterial MutS biology, though no P. putida-specific localization imaging was found.
+    action: ACCEPT
+    reason: Appropriate cellular component for a cytoplasmic DNA-repair enzyme in a bacterium lacking a nucleus; consistent with the MutS family.
+- term:
+    id: GO:0006298
+    label: mismatch repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: MutS is the initiating mismatch sensor of the MMR pathway. In P. putida KT2440, deletion of mutS produces a strong mutator phenotype (~1000-fold higher rifampicin-resistance frequency) and a mismatch-recognition hierarchy was experimentally established, directly confirming its role in mismatch repair.
+    action: ACCEPT
+    reason: Core biological process for MutS, supported by conserved function and direct organism-specific genetic evidence.
+- term:
+    id: GO:0030983
+    label: mismatched DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The defining molecular function of MutS is recognition/binding of base-base mismatches and small insertion/deletion loops in DNA, initiating repair.
+    action: ACCEPT
+    reason: Most specific and informative molecular function term for the mismatch-recognition activity that defines MutS; core function.
+- term:
+    id: GO:0140664
+    label: ATP-dependent DNA damage sensor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: MutS couples mismatch (damage) sensing to ATP binding/hydrolysis, undergoing an ATP-driven conformational change to a sliding clamp upon recognizing a mismatch. This captures the integrated ATP-dependent damage-sensing activity.
+    action: ACCEPT
+    reason: Accurately describes MutS as an ATP-dependent sensor that detects DNA mismatches/distortions and transmits the signal; well supported by the family mechanism. Core function.
+core_functions:
+- description: ATP-dependent recognition of base-base mismatches and small insertion/deletion loops in newly replicated double-stranded DNA, initiating mismatch repair
+  supported_by:
+  - reference_id: GO_REF:0000120
+  molecular_function:
+    id: GO:0030983
+    label: mismatched DNA binding
+  directly_involved_in:
+  - id: GO:0006298
+    label: mismatch repair
+- description: ATP binding and hydrolysis driving the conformational switch from a DNA-scanning state to a sliding-clamp state that recruits MutL and signals downstream strand excision/repair
+  supported_by:
+  - reference_id: GO_REF:0000002
+  molecular_function:
+    id: GO:0140664
+    label: ATP-dependent DNA damage sensor activity
+  directly_involved_in:
+  - id: GO:0006298
+    label: mismatch repair
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:31599106
+  title: Mismatch repair hierarchy of Pseudomonas putida revealed by mutagenic ssDNA recombineering of the pyrF gene
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#39;PubMed-verified (Aparicio et al. 2020, Environ Microbiol). KT2440 MMR genetics: MutS/MutL define the mismatch repair hierarchy controlling spontaneous mutation and recombineering efficiency.&#39;
+suggested_questions:
+- question: Does P. putida KT2440 MutS localize to the replisome/nucleoid and interact directly with the beta-clamp (DnaN) for strand discrimination, as suggested for MutH-lacking systems?
+suggested_experiments:
+- description: In vitro reconstitution of P. putida MutS mismatch-binding and ATPase activity to confirm substrate specificity and the ATP-driven sliding-clamp transition.
+- description: Determine how strand discrimination is achieved in the MutH-independent P. putida MMR system (e.g., role of MutL endonuclease activity and pre-existing strand discontinuities).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mscL - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mscL</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88E23" target="_blank" class="term-link">
+                        Q88E23
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mscL";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88E23" data-a="DESCRIPTION: mscL encodes the large-conductance mechanosensitiv..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>mscL encodes the large-conductance mechanosensitive channel that opens in response to membrane stretch during osmotic pressure changes.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E23" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The bacterial plasma-membrane annotation is correct for MscL.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt places MscL in the cell inner membrane, corresponding to plasma membrane in bacterial GO annotation, and this location is intrinsic to channel activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005886	plasma membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MscL is localized to the **cytoplasmic (inner) membrane**. In *P. putida* KT2440 specifically, the channel is described as an **“inner-membrane residing rescue valve”**.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006811" target="_blank" class="term-link">
+                                    GO:0006811
+                                </a>
+                            </span>
+                            <span class="term-label">monoatomic ion transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E23" data-a="GO:0006811" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Monoatomic ion transport is true but less informative than the transmembrane transport annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MscL is a membrane channel; GO:0034220 monoatomic ion transmembrane transport and GO:0008381 mechanosensitive monoatomic ion channel activity better capture the function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">opens in response to stretch forces</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0006811	monoatomic ion transport</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MscL is described as **size-selective rather than solute-specific**, consistent with an emergency pore rather than a dedicated metabolite transporter.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008381" target="_blank" class="term-link">
+                                    GO:0008381
+                                </a>
+                            </span>
+                            <span class="term-label">mechanosensitive monoatomic ion channel activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E23" data-a="GO:0008381" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mechanosensitive monoatomic ion channel activity is the available specific GO molecular-function annotation for MscL, but the monoatomic-ion wording underspecifies the broad, low-selectivity emergency-valve behavior known for MscL-family channels.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt describes a large-conductance channel that opens in response to membrane stretch and may regulate osmotic pressure changes. GO:0008381 is the existing HAMAP-supported term and should be accepted, while noting that a non-selective mechanosensitive channel term would better capture the broader permeability of MscL-family channels.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">opens in response to stretch forces</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0008381	mechanosensitive monoatomic ion channel activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MscL is a mechanosensitive pore that provides **non-specific, size-limited efflux** of cytoplasmic contents during acute downshock. It is **not a selective transporter for a particular substrate**, but rather a broad “safety valve” that releases compatible solutes and other cytoplasmic molecules when the channel opens.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MscL is **gated directly by the membrane** (force-from-lipids), and channel activity can be reconstituted with purified protein in lipid bilayers, supporting that the membrane environment is sufficient for gating.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E23" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic membrane annotation is true but redundant with plasma membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005886 is the more informative cellular component for this bacterial inner-membrane channel.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell inner membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0016020	membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034220" target="_blank" class="term-link">
+                                    GO:0034220
+                                </a>
+                            </span>
+                            <span class="term-label">monoatomic ion transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E23" data-a="GO:0034220" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Monoatomic ion transmembrane transport is an appropriate process annotation for MscL.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MscL is a mechanosensitive membrane channel and the transmembrane process term is more specific than generic monoatomic ion transport.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">pressure changes within the cell</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0034220	monoatomic ion transmembrane transport</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mscL/mscL-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MscL opens to release solutes, thereby rapidly lowering turgor and preventing catastrophic membrane rupture.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Large-conductance mechanosensitive inner-membrane channel that opens under membrane stretch to relieve osmotic pressure.</h3>
+                <span class="vote-buttons" data-g="Q88E23" data-a="FUNCTION: Large-conductance mechanosensitive inner-membrane ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008381" target="_blank" class="term-link">
+                            mechanosensitive monoatomic ion channel activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034220" target="_blank" class="term-link">
+                                monoatomic ion transmembrane transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/mscL/mscL-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">opens in response to stretch forces</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/mscL/mscL-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">pressure changes within the cell</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/mscL/mscL-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">MscL is a mechanosensitive pore that provides **non-specific, size-limited efflux** of cytoplasmic contents during acute downshock. It is **not a selective transporter for a particular substrate**, but rather a broad “safety valve” that releases compatible solutes and other cytoplasmic molecules when the channel opens.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TreeGrafter supplied a broad monoatomic ion transport parent annotation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined automated GO annotation using multiple IEA methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Automated InterPro/PANTHER/UniRule mapping supplies MscL channel activity, membrane location, and monoatomic ion transmembrane transport.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/mscL/mscL-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB reviewed entry for mscL</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies MscL as a homopentameric inner-membrane mechanosensitive channel.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/mscL/mscL-goa.tsv
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">QuickGO GOA annotations for mscL</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the annotations reviewed for mscL.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:interpro/panther/PTHR30266/PTHR30266-metadata.yaml
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PANTHER family metadata for mscL</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PANTHER places the protein in the MscL mechanosensitive channel family.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/mscL/mscL-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report on mscL (Pseudomonas putida KT2440)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MscL is a tension-gated, large-conductance &#34;emergency release valve&#34; that opens during acute hypoosmotic downshock to release cytoplasmic solutes and prevent membrane rupture/cell lysis.</div>
+                        
+                        <div class="finding-text">"MscL is classically described as a **last-ditch “emergency release valve”** that opens when osmotic conditions threaten membrane rupture, permitting rapid efflux of cytoplasmic solutes and thereby preventing cell lysis."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MscL is gated directly by membrane tension (force-from-lipids) and provides non-specific, size-limited efflux rather than acting as a substrate-selective transporter.</div>
+                        
+                        <div class="finding-text">"MscL is a mechanosensitive pore that provides **non-specific, size-limited efflux** of cytoplasmic contents during acute downshock. It is **not a selective transporter for a particular substrate**, but rather a broad “safety valve” that releases compatible solutes and other cytoplasmic molecules when the channel opens."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In P. putida KT2440 specifically, MscL is an inner-membrane rescue valve, and its inactivation is exploited in osmotic engineering for PHA recovery.</div>
+                        
+                        <div class="finding-text">"MscL is localized to the **cytoplasmic (inner) membrane**. In *P. putida* KT2440 specifically, the channel is described as an **“inner-membrane residing rescue valve”**."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The biologically relevant MscL oligomer is a homopentamer, consistent with the UniProt SUBUNIT annotation.</div>
+                        
+                        <div class="finding-text">"The biologically relevant oligomeric form is described as **pentameric** in vivo."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mechanosensitive channels are partially redundant; an mscL single mutant can be near-silent while combined loss of multiple channels confers strong downshock sensitivity.</div>
+                        
+                        <div class="finding-text">"an mscL single mutant can show minimal phenotype under some conditions, whereas combined loss of multiple mechanosensitive channels yields strong downshock sensitivity, consistent with an overlapping “safety valve” network."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What membrane-tension threshold gates KT2440 MscL compared with canonical E. coli MscL?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88E23" data-a="Q: What membrane-tension threshold gates KT2440 MscL ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Would GO benefit from a non-selective mechanosensitive channel activity term for MscL-family emergency-valve channels whose permeability extends beyond monoatomic ions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88E23" data-a="Q: Would GO benefit from a non-selective mechanosensi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Patch-clamp spheroplasts or reconstituted MscL proteoliposomes under defined membrane tension and compare conductance/gating thresholds.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: mechanosensitive channel electrophysiology</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88E23" data-a="EXPERIMENT: Patch-clamp spheroplasts or reconstituted MscL pro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mscL-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88E23" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">19 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-02T17:37:24.069948</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="mscL-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="mscL-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000011 The following figures illustrate the MscL structure, its gating mechanism, and its function as an emergency release valve. - **Figu</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-mscl-pp_4645-uniprot-q88e23-in-pseudomonas-putida-kt2440">Comprehensive Research Report: <strong>mscL (PP_4645; UniProt Q88E23)</strong> in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="1-target-verification-critical-identity-check">1) Target verification (critical identity check)</h3>
+<p>The target protein specified by UniProt <strong>Q88E23</strong> is annotated as a <strong>large-conductance mechanosensitive channel (MscL family)</strong> encoded by <strong>mscL</strong> with locus <strong>PP_4645</strong> in <em>Pseudomonas putida</em> KT2440. This identity is consistent with experimental <em>P. putida</em> KT2440 literature that describes <strong>MscL as an “inner-membrane residing rescue valve”</strong> important for coping with low-osmolarity (hypotonic) challenges and specifically manipulated via <strong>mscL inactivation</strong> in KT2440 strains. (pobletecastro2020engineeringtheosmotic pages 1-2)</p>
+<h3 id="2-key-concepts-definitions-and-current-understanding">2) Key concepts, definitions, and current understanding</h3>
+<h4 id="21-mechanosensitive-channels-and-force-from-lipids-gating">2.1 Mechanosensitive channels and “force-from-lipids” gating</h4>
+<p>Bacterial mechanosensitive channels are membrane proteins that sense increased <strong>lateral membrane tension</strong> (e.g., during sudden hypoosmotic shock) and open to relieve turgor pressure. MscL is classically described as a <strong>last-ditch “emergency release valve”</strong> that opens when osmotic conditions threaten membrane rupture, permitting rapid efflux of cytoplasmic solutes and thereby preventing cell lysis. (blount2020lifewithbacterial pages 10-12, blount2020lifewithbacterial pages 6-8, blount2020lifewithbacterial pages 4-6)</p>
+<p>Mechanistically, MscL is <strong>gated directly by the membrane</strong> (force-from-lipids), and channel activity can be reconstituted with purified protein in lipid bilayers, supporting that the membrane environment is sufficient for gating. (blount2020lifewithbacterial pages 4-6)</p>
+<h4 id="22-what-mscl-does-function-and-substrate-specificity">2.2 What MscL does (function and substrate specificity)</h4>
+<p><strong>Primary function (functional annotation):</strong> MscL is a mechanosensitive pore that provides <strong>non-specific, size-limited efflux</strong> of cytoplasmic contents during acute downshock. It is <strong>not a selective transporter for a particular substrate</strong>, but rather a broad “safety valve” that releases compatible solutes and other cytoplasmic molecules when the channel opens. MscL is described as <strong>size-selective rather than solute-specific</strong>, consistent with an emergency pore rather than a dedicated metabolite transporter. (blount2020lifewithbacterial pages 4-6)</p>
+<p><strong>Substrate/cargo:</strong> Because MscL forms one of the largest gated pores known, it can allow passage not only of small ions but also larger osmolytes and even small proteins in some settings; this broad permeability is part of its emergency-relief role. (blount2020lifewithbacterial pages 8-10)</p>
+<h4 id="23-cellular-localization">2.3 Cellular localization</h4>
+<p>MscL is localized to the <strong>cytoplasmic (inner) membrane</strong>. In <em>P. putida</em> KT2440 specifically, the channel is described as an <strong>“inner-membrane residing rescue valve”</strong>. (pobletecastro2020engineeringtheosmotic pages 1-2, blount2020lifewithbacterial pages 2-4)</p>
+<h4 id="24-structural-family-features-relevant-to-functional-inference">2.4 Structural family features relevant to functional inference</h4>
+<p>MscL channels are conserved across bacteria. General architectural features include a predominantly helical subunit with <strong>two transmembrane helices (TM1/TM2)</strong> plus cytoplasmic N- and C-terminal regions, with the <strong>pore lined primarily by TM1</strong>. The biologically relevant oligomeric form is described as <strong>pentameric</strong> in vivo. (blount2020lifewithbacterial pages 6-8, lane2023approachesforthe pages 1-2)</p>
+<h3 id="3-quantitative-functional-parameters-best-supported-values">3) Quantitative functional parameters (best-supported values)</h3>
+<p>Most quantitative single-channel parameters available in the retrieved corpus come from cross-species MscL literature (often <em>E. coli</em> and other homologs) and are used here as <strong>strong homology-based functional inference</strong> for <em>P. putida</em> KT2440 MscL.</p>
+<ul>
+<li><strong>Single-channel conductance:</strong> MscL is a very large-conductance channel, with a typical reported conductance of <strong>~3.6 nS</strong>. (blount2020lifewithbacterial pages 2-4, blount2020lifewithbacterial pages 8-10, blount2020lifewithbacterial pages 6-8)</li>
+<li><strong>Open pore size:</strong> The fully open pore is estimated at <strong>~25–30 Å diameter</strong>, consistent with the channel’s ability to pass relatively large solutes. (blount2020lifewithbacterial pages 8-10, blount2020lifewithbacterial pages 6-8)</li>
+<li><strong>Size cutoff:</strong> MscL is described as passing molecules up to <strong>~30 Å diameter</strong>, emphasizing broad, size-limited permeability. (blount2020lifewithbacterial pages 4-6)</li>
+</ul>
+<p><strong>Note on gating tension/pressure:</strong> Within the retrieved KT2440-specific literature, explicit numeric <strong>gating tension thresholds</strong> for <em>P. putida</em> MscL were not found. Instead, general studies emphasize tension dependence and provide structural/energetic descriptions. (blount2020lifewithbacterial pages 4-6, zhang2024mechanosensitivechannelmscl pages 11-13)</p>
+<h3 id="4-biological-role-of-mscl-in-p-putida-kt2440-processpathway-context">4) Biological role of mscL in <em>P. putida</em> KT2440 (process/pathway context)</h3>
+<h4 id="41-osmotic-downshock-survival-physiology">4.1 Osmotic downshock survival physiology</h4>
+<p>The canonical physiological role of MscL is survival of <strong>acute hypoosmotic shock</strong>: when external osmolarity rapidly decreases, water influx increases cytoplasmic turgor pressure and membrane tension. MscL opens to release solutes, thereby rapidly lowering turgor and preventing catastrophic membrane rupture. This role is presented as a core function of bacterial MscL channels and is the basis for describing MscL as an emergency valve. (blount2020lifewithbacterial pages 10-12, blount2020lifewithbacterial pages 6-8)</p>
+<p>In <em>P. putida</em> KT2440, applied work directly leverages this physiological role: engineering strategies that <strong>inactivate mscL</strong> sensitize cells to osmotic transitions, supporting that MscL normally contributes to robustness under low-osmolarity challenges. (pobletecastro2020engineeringtheosmotic pages 1-2)</p>
+<h4 id="42-relationship-to-other-mechanosensitive-channels">4.2 Relationship to other mechanosensitive channels</h4>
+<p>General bacterial physiology indicates partial redundancy among mechanosensitive channels. In classic genetics, an mscL single mutant can show minimal phenotype under some conditions, whereas combined loss of multiple mechanosensitive channels yields strong downshock sensitivity, consistent with an overlapping “safety valve” network. (blount2020lifewithbacterial pages 4-6)</p>
+<h3 id="5-recent-developments-prioritizing-20232024">5) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="51-2023-modulation-strategies-agonists-and-antimicrobialbiotech-relevance">5.1 2023: Modulation strategies, agonists, and antimicrobial/biotech relevance</h4>
+<p>A 2023 review highlights that the <strong>exact molecular mechanism</strong> by which MscL senses tension remains incompletely resolved, and therefore multiple experimental approaches are used to modulate channel gating.</p>
+<p>Key 2023 synthesis points include:<br />
+* <strong>Mutational modulation:</strong> substitutions at key residues (e.g., constriction-region variants; classic “gain-of-function” gating mutants) shift activation thresholds and aid mechanistic mapping. (lane2023approachesforthe pages 1-2)<br />
+* <strong>Chemical/engineering modulation:</strong> early work used cysteine-reactive reagents and engineered modifications to trigger gating; later work uses <strong>membrane property manipulation</strong> (lipid composition/physical parameters). (lane2023approachesforthe pages 1-2)<br />
+* <strong>Direct-binding agonists:</strong> more recent studies (summarized in 2023) describe structurally distinct <strong>agonists that bind directly</strong> to MscL near a <strong>transmembrane pocket</strong> implicated in mechanical gating, providing a path toward MscL-targeting antimicrobials/adjuvants. (lane2023approachesforthe pages 1-2)<br />
+* Additional modulation themes summarized include <strong>cyclodextrins</strong> (as “universal activators” via membrane tension changes), <strong>gadolinium ions</strong> (effects on lipid packing/lateral pressure), <strong>host-defense peptides</strong> (altering lipid domains and activation energies), and <strong>photoactivation approaches</strong>; these are positioned as both mechanistic probes and enabling technologies for controlled permeabilization. (lane2023approachesforthe pages 6-7)</p>
+<p>These 2023 developments are directly relevant to functional annotation because they clarify that MscL’s “substrate” is not a specific molecule but rather that gating and permeability can be tuned by both protein and membrane determinants. (lane2023approachesforthe pages 1-2, lane2023approachesforthe pages 6-7)</p>
+<h4 id="52-2024-high-resolution-view-of-gating-transitions-and-energeticarea-costs">5.2 2024: High-resolution view of gating transitions and energetic/area costs</h4>
+<p>A 2024 primary mechanistic study (Protein Science) provides quantitative insight into MscL gating transitions, emphasizing that gating may proceed through <strong>closed → expanded (without full opening) → low-conducting substates → fully open</strong>, and that the <strong>effective constriction point shifts</strong> during this pathway toward the cytoplasmic side from <strong>G26 → G22 → L19</strong>. (zhang2024mechanosensitivechannelmscl pages 1-2)</p>
+<p>Quantitative thermodynamic/elastic parameters were estimated:<br />
+* <strong>Closed → fully open:</strong> ΔE ≈ <strong>52 kT</strong>, ΔA ≈ <strong>20 nm²</strong>. (zhang2024mechanosensitivechannelmscl pages 11-13)<br />
+* <strong>Closed → low-conducting substate (S0.13):</strong> ΔE ≈ <strong>45.6 kT</strong>, ΔA ≈ <strong>14.8 nm²</strong>. (zhang2024mechanosensitivechannelmscl pages 11-13)</p>
+<p>The same 2024 work identifies constriction residues (e.g., <strong>G26, V23, G22, L19</strong>) and emphasizes that hydrophobic and lipidic interactions at constriction “hot spots” tune the gating energetics, consistent with lipid–protein coupling as a central principle. (zhang2024mechanosensitivechannelmscl pages 11-13, zhang2024mechanosensitivechannelmscl pages 13-14)</p>
+<h3 id="6-current-applications-and-real-world-implementations-with-p-putida-kt2440-emphasis">6) Current applications and real-world implementations (with <em>P. putida</em> KT2440 emphasis)</h3>
+<h4 id="61-industrial-biotechnology-osmotic-engineering-for-pha-downstream-processing">6.1 Industrial biotechnology: osmotic engineering for PHA downstream processing</h4>
+<p>A concrete KT2440 implementation uses <strong>mscL inactivation</strong> as part of an engineered osmotic-weakening strategy to accelerate cell disruption and recovery of intracellular bioproducts (polyhydroxyalkanoates, PHA).</p>
+<p>In <em>P. putida</em> KT2440, Poblete-Castro et al. (2020) engineered the osmotic state by <strong>inactivating MscL</strong> and overproducing outer membrane porins (OprF/OprE). Under PHA-producing conditions, single-porin strains showed <strong>no impairment</strong> in growth/biomass/PHA yield after 48 h, while tandem porin expression in the mscL mutant (KTΔmscL-oprFE) produced a modest biomass reduction of <strong>~10%</strong> alongside higher PHA accumulation (%wt). Following an osmotic upshift (1 h) and rapid transfer to hypotonic conditions, KTΔmscL-oprFE exhibited membrane damage and rapid loss of viability; <strong>&gt;95%</strong> of cells were disrupted within <strong>3 h</strong> (CFU, FACS, TEM). PHA recovery reached <strong>94.2%</strong> without significant change in monomer composition. (pobletecastro2020engineeringtheosmotic pages 1-2)</p>
+<p>This constitutes a real-world, process-oriented use of mscL functional knowledge: removing an emergency valve increases susceptibility to controlled osmotic lysis, improving downstream recovery economics. (pobletecastro2020engineeringtheosmotic pages 1-2)</p>
+<h4 id="62-broader-translational-framing-expert-review-perspective">6.2 Broader translational framing (expert review perspective)</h4>
+<p>Authoritative reviews also discuss MscL as a potential <strong>pharmacological target</strong> and as an engineered “nanovalve” concept, because channel modality can be altered and the pore is exceptionally large. This expert framing supports ongoing interest in MscL modulation both for antimicrobial discovery and for engineered delivery/permeabilization technologies. (blount2020lifewithbacterial pages 2-4)</p>
+<h3 id="7-expert-interpretation-and-analysis-authoritative-perspectives">7) Expert interpretation and analysis (authoritative perspectives)</h3>
+<p>Across expert reviews, MscL is positioned as a paradigmatic mechanosensitive channel because it (i) senses membrane tension directly, (ii) undergoes large conformational change, and (iii) provides a clear physiological function (osmotic emergency release). The expert consensus is that MscL’s key biological “pathway” context is <strong>osmoadaptation to acute downshock</strong>, operating at the membrane biophysics interface rather than in a canonical metabolite pathway. (blount2020lifewithbacterial pages 10-12, blount2020lifewithbacterial pages 6-8, blount2020lifewithbacterial pages 4-6)</p>
+<p>Recent mechanistic studies continue refining which residues and lipid interactions govern intermediate states and “hydrophobic constriction” behavior, reinforcing that functional annotation should include: (a) emergency-release physiology, (b) force-from-lipids gating, and (c) broad size-limited permeability. (zhang2024mechanosensitivechannelmscl pages 11-13, zhang2024mechanosensitivechannelmscl pages 13-14)</p>
+<h3 id="8-evidence-based-functional-annotation-for-p-putida-kt2440-mscl-uniprot-q88e23">8) Evidence-based functional annotation for <em>P. putida</em> KT2440 mscL (UniProt Q88E23)</h3>
+<p><strong>Molecular function:</strong> Mechanosensitive channel activity; tension-gated pore permitting rapid, non-specific efflux of cytoplasmic solutes during hypoosmotic stress. (blount2020lifewithbacterial pages 10-12, blount2020lifewithbacterial pages 4-6)</p>
+<p><strong>Biological process:</strong> Osmotic downshock response / protection from lysis; contributes to surviving low-osmolarity challenges. (pobletecastro2020engineeringtheosmotic pages 1-2, blount2020lifewithbacterial pages 6-8)</p>
+<p><strong>Cellular component:</strong> Inner (cytoplasmic) membrane. (pobletecastro2020engineeringtheosmotic pages 1-2, blount2020lifewithbacterial pages 2-4)</p>
+<p><strong>Quantitative characteristics (best-supported):</strong> Large conductance (~3.6 nS), very large pore (~25–30 Å diameter), broad size cutoff (~30 Å). (blount2020lifewithbacterial pages 8-10, blount2020lifewithbacterial pages 6-8)</p>
+<h3 id="9-visual-evidence-figures">9) Visual evidence (figures)</h3>
+<p>Key figures from an authoritative review illustrate: (i) MscL as an emergency release valve during osmotic downshock, (ii) pentameric architecture, and (iii) gating-related conformational changes linked to a large open pore. (blount2020lifewithbacterial media 93fdecdb, blount2020lifewithbacterial media 9449b2c3, blount2020lifewithbacterial media 3a0679a3)</p>
+<h3 id="10-summary-table-quantitative-and-kt2440-specific-phenotype-highlights">10) Summary table (quantitative and KT2440-specific phenotype highlights)</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key points (include numbers)</th>
+<th>Evidence type (review/primary/engineering)</th>
+<th>Source (author year journal)</th>
+<th>DOI/URL</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verified identity</td>
+<td>Target is <strong>mscL / PP_4645</strong> from <strong>Pseudomonas putida KT2440</strong>; annotated as a <strong>large-conductance mechanosensitive channel</strong> in the <strong>MscL family</strong>. Experimental P. putida literature explicitly describes MscL as the <strong>inner-membrane rescue valve</strong> used to withstand low-osmolarity stress, matching the UniProt description for Q88E23.</td>
+<td>Engineering + review-supported functional annotation</td>
+<td>Poblete-Castro et al. 2020 <em>Frontiers in Bioengineering and Biotechnology</em>; Blount &amp; Iscla 2020 <em>MMBR</em></td>
+<td>https://doi.org/10.3389/fbioe.2020.00161 ; https://doi.org/10.1128/mmbr.00055-19</td>
+<td>(pobletecastro2020engineeringtheosmotic pages 1-2, blount2020lifewithbacterial pages 10-12)</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>MscL is a <strong>cytoplasmic/inner membrane</strong> mechanosensitive channel; P. putida study calls it an <strong>inner-membrane residing rescue valve</strong>.</td>
+<td>Review + engineering</td>
+<td>Blount &amp; Iscla 2020 <em>MMBR</em>; Poblete-Castro et al. 2020 <em>Frontiers in Bioengineering and Biotechnology</em></td>
+<td>https://doi.org/10.1128/mmbr.00055-19 ; https://doi.org/10.3389/fbioe.2020.00161</td>
+<td>(blount2020lifewithbacterial pages 2-4, pobletecastro2020engineeringtheosmotic pages 1-2)</td>
+</tr>
+<tr>
+<td>Primary biological function</td>
+<td>Functions as an <strong>emergency release valve</strong> that opens in response to <strong>membrane tension</strong> during <strong>acute hypoosmotic/downshock</strong>, releasing accumulated cytoplasmic solutes to prevent lysis; MscL is generally the principal channel for surviving <strong>large osmotic downshocks</strong>.</td>
+<td>Review</td>
+<td>Blount &amp; Iscla 2020 <em>MMBR</em></td>
+<td>https://doi.org/10.1128/mmbr.00055-19</td>
+<td>(blount2020lifewithbacterial pages 10-12, blount2020lifewithbacterial pages 6-8, blount2020lifewithbacterial pages 4-6)</td>
+</tr>
+<tr>
+<td>Structural organization</td>
+<td>Conserved MscL architecture: <strong>pentameric</strong> channel, subunits with <strong>two transmembrane helices (TM1/TM2)</strong> plus N- and C-terminal cytoplasmic regions; pore is lined mainly by <strong>TM1</strong>.</td>
+<td>Review</td>
+<td>Blount &amp; Iscla 2020 <em>MMBR</em>; Lane &amp; Pliotas 2023 <em>Frontiers in Chemistry</em></td>
+<td>https://doi.org/10.1128/mmbr.00055-19 ; https://doi.org/10.3389/fchem.2023.1162412</td>
+<td>(blount2020lifewithbacterial pages 6-8, lane2023approachesforthe pages 1-2, blount2020lifewithbacterial media 93fdecdb)</td>
+</tr>
+<tr>
+<td>Open-pore diameter</td>
+<td>Estimated <strong>open pore diameter ~25–30 Å</strong>. This very large pore underlies broad efflux capacity.</td>
+<td>Review</td>
+<td>Blount &amp; Iscla 2020 <em>MMBR</em></td>
+<td>https://doi.org/10.1128/mmbr.00055-19</td>
+<td>(blount2020lifewithbacterial pages 8-10, blount2020lifewithbacterial pages 6-8, blount2020lifewithbacterial media 93fdecdb)</td>
+</tr>
+<tr>
+<td>Single-channel conductance</td>
+<td>Typical MscL single-channel conductance is <strong>~3.6 nS</strong> (contrasted with smaller MscS conductance).</td>
+<td>Review</td>
+<td>Blount &amp; Iscla 2020 <em>MMBR</em></td>
+<td>https://doi.org/10.1128/mmbr.00055-19</td>
+<td>(blount2020lifewithbacterial pages 2-4, blount2020lifewithbacterial pages 8-10, blount2020lifewithbacterial pages 6-8)</td>
+</tr>
+<tr>
+<td>Solute size cutoff / cargo release</td>
+<td>MscL is <strong>size-selective rather than solute-specific</strong> and can pass molecules <strong>up to ~30 Å diameter</strong>; reported to release osmolytes, metabolites, and even small proteins.</td>
+<td>Review</td>
+<td>Blount &amp; Iscla 2020 <em>MMBR</em></td>
+<td>https://doi.org/10.1128/mmbr.00055-19</td>
+<td>(blount2020lifewithbacterial pages 8-10, blount2020lifewithbacterial pages 4-6)</td>
+</tr>
+<tr>
+<td>Physiological process in P. putida KT2440</td>
+<td>In P. putida KT2440, MscL is used to cope with <strong>low-osmolarity challenge</strong>; inactivation sensitizes cells to osmotic manipulation when combined with porin engineering, supporting its role as an osmotic safety valve.</td>
+<td>Engineering</td>
+<td>Poblete-Castro et al. 2020 <em>Frontiers in Bioengineering and Biotechnology</em></td>
+<td>https://doi.org/10.3389/fbioe.2020.00161</td>
+<td>(pobletecastro2020engineeringtheosmotic pages 1-2)</td>
+</tr>
+<tr>
+<td>P. putida engineering phenotype</td>
+<td>In <strong>KTΔmscL-oprFE</strong>, tandem porin overexpression in the mscL mutant caused <strong>~10% biomass reduction</strong>, but after osmotic upshift then hypotonic transfer, <strong>&gt;95% cell disruption within 3 h</strong>; <strong>PHA recovery = 94.2%</strong> with no significant monomer-composition change.</td>
+<td>Engineering primary study</td>
+<td>Poblete-Castro et al. 2020 <em>Frontiers in Bioengineering and Biotechnology</em></td>
+<td>https://doi.org/10.3389/fbioe.2020.00161</td>
+<td>(pobletecastro2020engineeringtheosmotic pages 1-2)</td>
+</tr>
+<tr>
+<td>2023 modulation approaches</td>
+<td>2023 review summarizes modulation by <strong>mutations</strong>, <strong>cysteine-reactive post-translational modifications</strong>, <strong>membrane/lipid composition changes</strong>, and <strong>direct-binding agonists</strong> to a transmembrane pocket; also notes <strong>cyclodextrins</strong> as universal activators, <strong>gadolinium</strong> as an inhibitor affecting lipid packing, <strong>host-defense peptides</strong>, and <strong>photoactivation</strong> strategies.</td>
+<td>Review</td>
+<td>Lane &amp; Pliotas 2023 <em>Frontiers in Chemistry</em></td>
+<td>https://doi.org/10.3389/fchem.2023.1162412</td>
+<td>(lane2023approachesforthe pages 1-2, lane2023approachesforthe pages 6-7)</td>
+</tr>
+<tr>
+<td>2024 gating transition mechanism</td>
+<td>2024 work supports a gating pathway with constriction-point shift <strong>G26 → G22 → L19</strong> as channel expands from closed to low-conducting substates and then toward full opening; hydrophobic/lipid interactions at constriction “hot spots” regulate the transitions.</td>
+<td>Primary mechanistic study</td>
+<td>Zhang et al. 2024 <em>Protein Science</em></td>
+<td>https://doi.org/10.1002/pro.4965</td>
+<td>(zhang2024mechanosensitivechannelmscl pages 1-2, zhang2024mechanosensitivechannelmscl pages 11-13)</td>
+</tr>
+<tr>
+<td>2024 gating energetics and area changes</td>
+<td>Quantified energetic/area changes: <strong>closed → fully open ΔE ≈ 52 kT, ΔA ≈ 20 nm²</strong>; <strong>closed → low-conducting substate (S0.13) ΔE ≈ 45.6 kT, ΔA ≈ 14.8 nm²</strong>.</td>
+<td>Primary mechanistic study</td>
+<td>Zhang et al. 2024 <em>Protein Science</em></td>
+<td>https://doi.org/10.1002/pro.4965</td>
+<td>(zhang2024mechanosensitivechannelmscl pages 11-13)</td>
+</tr>
+<tr>
+<td>Constriction residues and mechanosensitivity determinants</td>
+<td>Constriction-region residues include <strong>G26, V23, G22, L19</strong>; mutations such as <strong>G26S, V23D, G22E</strong> are strong gain-of-function variants with reduced gating thresholds; TM1 residues <strong>V17/V21</strong> interact with TM2 residues <strong>I92/I96</strong> in a hydrophobic pocket influenced by lipid penetration.</td>
+<td>Primary mechanistic study</td>
+<td>Zhang et al. 2024 <em>Protein Science</em></td>
+<td>https://doi.org/10.1002/pro.4965</td>
+<td>(zhang2024mechanosensitivechannelmscl pages 11-13, zhang2024mechanosensitivechannelmscl pages 13-14)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table verifies the identity of Pseudomonas putida KT2440 MscL and summarizes core functional annotation, quantitative channel properties, engineering phenotypes, and recent 2023–2024 mechanistic/modulator findings with source-linked citations.</em></p>
+<h3 id="references-urls-and-publication-dates">References (URLs and publication dates)</h3>
+<ul>
+<li>Blount P, Iscla I. <strong>Life with Bacterial Mechanosensitive Channels, from Discovery to Physiology to Pharmacological Target.</strong> <em>Microbiology and Molecular Biology Reviews</em> (Published Feb 2020). https://doi.org/10.1128/mmbr.00055-19 (blount2020lifewithbacterial pages 2-4, blount2020lifewithbacterial pages 10-12, blount2020lifewithbacterial pages 8-10, blount2020lifewithbacterial pages 6-8, blount2020lifewithbacterial pages 4-6)</li>
+<li>Lane BJ, Pliotas C. <strong>Approaches for the modulation of mechanosensitive MscL channel pores.</strong> <em>Frontiers in Chemistry</em> (Published Mar 2023). https://doi.org/10.3389/fchem.2023.1162412 (lane2023approachesforthe pages 1-2, lane2023approachesforthe pages 6-7)</li>
+<li>Zhang M, Tang S, Wang X, Fang S, Li Y. <strong>Mechanosensitive channel MscL gating transitions coupling with constriction point shift.</strong> <em>Protein Science</em> (Published Mar 2024). https://doi.org/10.1002/pro.4965 (zhang2024mechanosensitivechannelmscl pages 11-13, zhang2024mechanosensitivechannelmscl pages 13-14, zhang2024mechanosensitivechannelmscl pages 1-2)</li>
+<li>Poblete-Castro I, Aravena-Carrasco C, Orellana-Saez M, et al. <strong>Engineering the Osmotic State of Pseudomonas putida KT2440 for Efficient Cell Disruption and Downstream Processing of Poly(3-Hydroxyalkanoates).</strong> <em>Frontiers in Bioengineering and Biotechnology</em> (Published Mar 2020). https://doi.org/10.3389/fbioe.2020.00161 (pobletecastro2020engineeringtheosmotic pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(pobletecastro2020engineeringtheosmotic pages 1-2): Ignacio Poblete-Castro, Carla Aravena-Carrasco, Matias Orellana-Saez, Nicolás Pacheco, Alex Cabrera, and José Manuel Borrero-de Acuña. Engineering the osmotic state of pseudomonas putida kt2440 for efficient cell disruption and downstream processing of poly(3-hydroxyalkanoates). Frontiers in Bioengineering and Biotechnology, Mar 2020. URL: https://doi.org/10.3389/fbioe.2020.00161, doi:10.3389/fbioe.2020.00161. This article has 27 citations.</p>
+</li>
+<li>
+<p>(blount2020lifewithbacterial pages 10-12): Paul Blount and Irene Iscla. Life with bacterial mechanosensitive channels, from discovery to physiology to pharmacological target. Microbiology and Molecular Biology Reviews, Feb 2020. URL: https://doi.org/10.1128/mmbr.00055-19, doi:10.1128/mmbr.00055-19. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blount2020lifewithbacterial pages 6-8): Paul Blount and Irene Iscla. Life with bacterial mechanosensitive channels, from discovery to physiology to pharmacological target. Microbiology and Molecular Biology Reviews, Feb 2020. URL: https://doi.org/10.1128/mmbr.00055-19, doi:10.1128/mmbr.00055-19. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blount2020lifewithbacterial pages 4-6): Paul Blount and Irene Iscla. Life with bacterial mechanosensitive channels, from discovery to physiology to pharmacological target. Microbiology and Molecular Biology Reviews, Feb 2020. URL: https://doi.org/10.1128/mmbr.00055-19, doi:10.1128/mmbr.00055-19. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blount2020lifewithbacterial pages 8-10): Paul Blount and Irene Iscla. Life with bacterial mechanosensitive channels, from discovery to physiology to pharmacological target. Microbiology and Molecular Biology Reviews, Feb 2020. URL: https://doi.org/10.1128/mmbr.00055-19, doi:10.1128/mmbr.00055-19. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blount2020lifewithbacterial pages 2-4): Paul Blount and Irene Iscla. Life with bacterial mechanosensitive channels, from discovery to physiology to pharmacological target. Microbiology and Molecular Biology Reviews, Feb 2020. URL: https://doi.org/10.1128/mmbr.00055-19, doi:10.1128/mmbr.00055-19. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lane2023approachesforthe pages 1-2): Benjamin J. Lane and Christos Pliotas. Approaches for the modulation of mechanosensitive mscl channel pores. Frontiers in Chemistry, Mar 2023. URL: https://doi.org/10.3389/fchem.2023.1162412, doi:10.3389/fchem.2023.1162412. This article has 12 citations.</p>
+</li>
+<li>
+<p>(zhang2024mechanosensitivechannelmscl pages 11-13): Mingfeng Zhang, Siyang Tang, Xiaomin Wang, Sanhua Fang, and Yuezhou Li. Mechanosensitive channel mscl gating transitions coupling with constriction point shift. Protein Science, Mar 2024. URL: https://doi.org/10.1002/pro.4965, doi:10.1002/pro.4965. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lane2023approachesforthe pages 6-7): Benjamin J. Lane and Christos Pliotas. Approaches for the modulation of mechanosensitive mscl channel pores. Frontiers in Chemistry, Mar 2023. URL: https://doi.org/10.3389/fchem.2023.1162412, doi:10.3389/fchem.2023.1162412. This article has 12 citations.</p>
+</li>
+<li>
+<p>(zhang2024mechanosensitivechannelmscl pages 1-2): Mingfeng Zhang, Siyang Tang, Xiaomin Wang, Sanhua Fang, and Yuezhou Li. Mechanosensitive channel mscl gating transitions coupling with constriction point shift. Protein Science, Mar 2024. URL: https://doi.org/10.1002/pro.4965, doi:10.1002/pro.4965. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2024mechanosensitivechannelmscl pages 13-14): Mingfeng Zhang, Siyang Tang, Xiaomin Wang, Sanhua Fang, and Yuezhou Li. Mechanosensitive channel mscl gating transitions coupling with constriction point shift. Protein Science, Mar 2024. URL: https://doi.org/10.1002/pro.4965, doi:10.1002/pro.4965. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blount2020lifewithbacterial media 93fdecdb): Paul Blount and Irene Iscla. Life with bacterial mechanosensitive channels, from discovery to physiology to pharmacological target. Microbiology and Molecular Biology Reviews, Feb 2020. URL: https://doi.org/10.1128/mmbr.00055-19, doi:10.1128/mmbr.00055-19. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blount2020lifewithbacterial media 9449b2c3): Paul Blount and Irene Iscla. Life with bacterial mechanosensitive channels, from discovery to physiology to pharmacological target. Microbiology and Molecular Biology Reviews, Feb 2020. URL: https://doi.org/10.1128/mmbr.00055-19, doi:10.1128/mmbr.00055-19. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blount2020lifewithbacterial media 3a0679a3): Paul Blount and Irene Iscla. Life with bacterial mechanosensitive channels, from discovery to physiology to pharmacological target. Microbiology and Molecular Biology Reviews, Feb 2020. URL: https://doi.org/10.1128/mmbr.00055-19, doi:10.1128/mmbr.00055-19. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="mscL-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000011 The following figures illustrate the MscL structure, its gating mechanism, and its function as an emergency release valve. - **Figu" src="mscL-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pobletecastro2020engineeringtheosmotic pages 1-2</li>
+<li>blount2020lifewithbacterial pages 4-6</li>
+<li>blount2020lifewithbacterial pages 8-10</li>
+<li>lane2023approachesforthe pages 1-2</li>
+<li>lane2023approachesforthe pages 6-7</li>
+<li>zhang2024mechanosensitivechannelmscl pages 1-2</li>
+<li>zhang2024mechanosensitivechannelmscl pages 11-13</li>
+<li>blount2020lifewithbacterial pages 2-4</li>
+<li>blount2020lifewithbacterial pages 10-12</li>
+<li>blount2020lifewithbacterial pages 6-8</li>
+<li>zhang2024mechanosensitivechannelmscl pages 13-14</li>
+<li>https://doi.org/10.3389/fbioe.2020.00161</li>
+<li>https://doi.org/10.1128/mmbr.00055-19</li>
+<li>https://doi.org/10.3389/fchem.2023.1162412</li>
+<li>https://doi.org/10.1002/pro.4965</li>
+<li>https://doi.org/10.3389/fbioe.2020.00161,</li>
+<li>https://doi.org/10.1128/mmbr.00055-19,</li>
+<li>https://doi.org/10.3389/fchem.2023.1162412,</li>
+<li>https://doi.org/10.1002/pro.4965,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88E23
+gene_symbol: mscL
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: mscL encodes the large-conductance mechanosensitive channel that opens in response to membrane stretch during
+  osmotic pressure changes.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: The bacterial plasma-membrane annotation is correct for MscL.
+    action: ACCEPT
+    reason: UniProt places MscL in the cell inner membrane, corresponding to plasma membrane in bacterial GO annotation, and
+      this location is intrinsic to channel activity.
+    supported_by:
+    - reference_id: file:PSEPK/mscL/mscL-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell inner membrane&#39;
+    - reference_id: file:PSEPK/mscL/mscL-goa.tsv
+      supporting_text: &#34;GO:0005886\tplasma membrane&#34;
+    - reference_id: file:PSEPK/mscL/mscL-deep-research-falcon.md
+      supporting_text: MscL is localized to the **cytoplasmic (inner) membrane**.
+        In *P. putida* KT2440 specifically, the channel is described as an **“inner-membrane
+        residing rescue valve”**.
+- term:
+    id: GO:0006811
+    label: monoatomic ion transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: Monoatomic ion transport is true but less informative than the transmembrane transport annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: MscL is a membrane channel; GO:0034220 monoatomic ion transmembrane transport and GO:0008381 mechanosensitive
+      monoatomic ion channel activity better capture the function.
+    supported_by:
+    - reference_id: file:PSEPK/mscL/mscL-uniprot.txt
+      supporting_text: opens in response to stretch forces
+    - reference_id: file:PSEPK/mscL/mscL-goa.tsv
+      supporting_text: &#34;GO:0006811\tmonoatomic ion transport&#34;
+    - reference_id: file:PSEPK/mscL/mscL-deep-research-falcon.md
+      supporting_text: MscL is described as **size-selective rather than solute-specific**,
+        consistent with an emergency pore rather than a dedicated metabolite transporter.
+- term:
+    id: GO:0008381
+    label: mechanosensitive monoatomic ion channel activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Mechanosensitive monoatomic ion channel activity is the available specific GO molecular-function annotation for
+      MscL, but the monoatomic-ion wording underspecifies the broad, low-selectivity emergency-valve behavior known for MscL-family
+      channels.
+    action: ACCEPT
+    reason: UniProt describes a large-conductance channel that opens in response to membrane stretch and may regulate osmotic
+      pressure changes. GO:0008381 is the existing HAMAP-supported term and should be accepted, while noting that a non-selective
+      mechanosensitive channel term would better capture the broader permeability of MscL-family channels.
+    supported_by:
+    - reference_id: file:PSEPK/mscL/mscL-uniprot.txt
+      supporting_text: opens in response to stretch forces
+    - reference_id: file:PSEPK/mscL/mscL-goa.tsv
+      supporting_text: &#34;GO:0008381\tmechanosensitive monoatomic ion channel activity&#34;
+    - reference_id: file:PSEPK/mscL/mscL-deep-research-falcon.md
+      supporting_text: MscL is a mechanosensitive pore that provides **non-specific,
+        size-limited efflux** of cytoplasmic contents during acute downshock. It is
+        **not a selective transporter for a particular substrate**, but rather a broad
+        “safety valve” that releases compatible solutes and other cytoplasmic molecules
+        when the channel opens.
+    - reference_id: file:PSEPK/mscL/mscL-deep-research-falcon.md
+      supporting_text: MscL is **gated directly by the membrane** (force-from-lipids),
+        and channel activity can be reconstituted with purified protein in lipid bilayers,
+        supporting that the membrane environment is sufficient for gating.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: The generic membrane annotation is true but redundant with plasma membrane.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0005886 is the more informative cellular component for this bacterial inner-membrane channel.
+    supported_by:
+    - reference_id: file:PSEPK/mscL/mscL-uniprot.txt
+      supporting_text: Cell inner membrane
+    - reference_id: file:PSEPK/mscL/mscL-goa.tsv
+      supporting_text: &#34;GO:0016020\tmembrane&#34;
+- term:
+    id: GO:0034220
+    label: monoatomic ion transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Monoatomic ion transmembrane transport is an appropriate process annotation for MscL.
+    action: ACCEPT
+    reason: MscL is a mechanosensitive membrane channel and the transmembrane process term is more specific than generic monoatomic
+      ion transport.
+    supported_by:
+    - reference_id: file:PSEPK/mscL/mscL-uniprot.txt
+      supporting_text: pressure changes within the cell
+    - reference_id: file:PSEPK/mscL/mscL-goa.tsv
+      supporting_text: &#34;GO:0034220\tmonoatomic ion transmembrane transport&#34;
+    - reference_id: file:PSEPK/mscL/mscL-deep-research-falcon.md
+      supporting_text: MscL opens to release solutes, thereby rapidly lowering turgor
+        and preventing catastrophic membrane rupture.
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings:
+  - statement: TreeGrafter supplied a broad monoatomic ion transport parent annotation.
+- id: GO_REF:0000120
+  title: Combined automated GO annotation using multiple IEA methods
+  findings:
+  - statement: Automated InterPro/PANTHER/UniRule mapping supplies MscL channel activity, membrane location, and monoatomic
+      ion transmembrane transport.
+- id: file:PSEPK/mscL/mscL-uniprot.txt
+  title: UniProtKB reviewed entry for mscL
+  findings:
+  - statement: UniProt identifies MscL as a homopentameric inner-membrane mechanosensitive channel.
+- id: file:PSEPK/mscL/mscL-goa.tsv
+  title: QuickGO GOA annotations for mscL
+  findings:
+  - statement: The fetched GOA table contains the annotations reviewed for mscL.
+- id: file:interpro/panther/PTHR30266/PTHR30266-metadata.yaml
+  title: PANTHER family metadata for mscL
+  findings:
+  - statement: PANTHER places the protein in the MscL mechanosensitive channel family.
+- id: file:PSEPK/mscL/mscL-deep-research-falcon.md
+  title: Falcon deep research report on mscL (Pseudomonas putida KT2440)
+  findings:
+  - statement: MscL is a tension-gated, large-conductance &#34;emergency release valve&#34;
+      that opens during acute hypoosmotic downshock to release cytoplasmic solutes
+      and prevent membrane rupture/cell lysis.
+    supporting_text: MscL is classically described as a **last-ditch “emergency release
+      valve”** that opens when osmotic conditions threaten membrane rupture, permitting
+      rapid efflux of cytoplasmic solutes and thereby preventing cell lysis.
+    reference_section_type: OTHER
+  - statement: MscL is gated directly by membrane tension (force-from-lipids) and
+      provides non-specific, size-limited efflux rather than acting as a substrate-selective
+      transporter.
+    supporting_text: MscL is a mechanosensitive pore that provides **non-specific,
+      size-limited efflux** of cytoplasmic contents during acute downshock. It is
+      **not a selective transporter for a particular substrate**, but rather a broad
+      “safety valve” that releases compatible solutes and other cytoplasmic molecules
+      when the channel opens.
+    reference_section_type: OTHER
+  - statement: In P. putida KT2440 specifically, MscL is an inner-membrane rescue
+      valve, and its inactivation is exploited in osmotic engineering for PHA recovery.
+    supporting_text: MscL is localized to the **cytoplasmic (inner) membrane**. In
+      *P. putida* KT2440 specifically, the channel is described as an **“inner-membrane
+      residing rescue valve”**.
+    reference_section_type: OTHER
+  - statement: The biologically relevant MscL oligomer is a homopentamer, consistent
+      with the UniProt SUBUNIT annotation.
+    supporting_text: The biologically relevant oligomeric form is described as **pentameric**
+      in vivo.
+    reference_section_type: OTHER
+  - statement: Mechanosensitive channels are partially redundant; an mscL single mutant
+      can be near-silent while combined loss of multiple channels confers strong downshock
+      sensitivity.
+    supporting_text: an mscL single mutant can show minimal phenotype under some conditions,
+      whereas combined loss of multiple mechanosensitive channels yields strong downshock
+      sensitivity, consistent with an overlapping “safety valve” network.
+    reference_section_type: OTHER
+core_functions:
+- description: Large-conductance mechanosensitive inner-membrane channel that opens under membrane stretch to relieve osmotic
+    pressure.
+  molecular_function:
+    id: GO:0008381
+    label: mechanosensitive monoatomic ion channel activity
+  directly_involved_in:
+  - id: GO:0034220
+    label: monoatomic ion transmembrane transport
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/mscL/mscL-uniprot.txt
+    supporting_text: opens in response to stretch forces
+  - reference_id: file:PSEPK/mscL/mscL-uniprot.txt
+    supporting_text: pressure changes within the cell
+  - reference_id: file:PSEPK/mscL/mscL-deep-research-falcon.md
+    supporting_text: MscL is a mechanosensitive pore that provides **non-specific,
+      size-limited efflux** of cytoplasmic contents during acute downshock. It is
+      **not a selective transporter for a particular substrate**, but rather a broad
+      “safety valve” that releases compatible solutes and other cytoplasmic molecules
+      when the channel opens.
+proposed_new_terms: []
+suggested_questions:
+- question: What membrane-tension threshold gates KT2440 MscL compared with canonical E. coli MscL?
+- question: Would GO benefit from a non-selective mechanosensitive channel activity term for MscL-family emergency-valve channels
+    whose permeability extends beyond monoatomic ions?
+suggested_experiments:
+- description: Patch-clamp spheroplasts or reconstituted MscL proteoliposomes under defined membrane tension and compare conductance/gating
+    thresholds.
+  experiment_type: mechanosensitive channel electrophysiology
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

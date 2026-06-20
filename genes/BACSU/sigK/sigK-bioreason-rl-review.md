@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: sigK (B. subtilis)
 
-Source: sigK-deep-research-bioreason-rl.md
+Source: sigK-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

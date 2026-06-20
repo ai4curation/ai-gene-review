@@ -1,8 +1,6 @@
 ---
 reference_id: DOI:10.1128/aem.02469-07
-title: "Gene Expression by the Sulfate-Reducing Bacterium
-            <i>Desulfovibrio vulgaris</i>
-            Hildenborough Grown on an Iron Electrode under Cathodic Protection Conditions"
+title: "Gene Expression by the Sulfate-Reducing Bacterium <i>Desulfovibrio vulgaris</i> Hildenborough Grown on an Iron Electrode under Cathodic Protection Conditions"
 authors:
 - Sean M. Caffrey
 - Hyung Soo Park
@@ -14,11 +12,10 @@ journal: Applied and Environmental Microbiology
 year: '2008'
 doi: 10.1128/aem.02469-07
 content_type: abstract_only
+full_text_attempted: true
 ---
 
-# Gene Expression by the Sulfate-Reducing Bacterium
-            <i>Desulfovibrio vulgaris</i>
-            Hildenborough Grown on an Iron Electrode under Cathodic Protection Conditions
+# Gene Expression by the Sulfate-Reducing Bacterium <i>Desulfovibrio vulgaris</i> Hildenborough Grown on an Iron Electrode under Cathodic Protection Conditions
 **Authors:** Sean M. Caffrey, Hyung Soo Park, Jenny Been, Paul Gordon, Christoph W. Sensen, Gerrit Voordouw
 **Journal:** Applied and Environmental Microbiology (2008)
 **DOI:** [10.1128/aem.02469-07](https://doi.org/10.1128/aem.02469-07)

@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tpiA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tpiA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DV4" target="_blank" class="term-link">
+                        Q88DV4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tpiA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DV4" data-a="DESCRIPTION: Triosephosphate isomerase (TIM/TPI; EC 5.3.1.1), a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Triosephosphate isomerase (TIM/TPI; EC 5.3.1.1), a cytosolic glycolytic/gluconeogenic enzyme that catalyzes the reversible, stereospecific, cofactor-independent interconversion of dihydroxyacetone phosphate (DHAP) and D-glyceraldehyde 3-phosphate (G3P) via an enediol(ate) intermediate. The enzyme is a catalytically near-perfect, diffusion-limited homodimer adopting the canonical (beta/alpha)8 TIM-barrel fold, with a conserved catalytic glutamate acting as the general base and a histidine as the electrophile. By equilibrating the triose-phosphate pool, TIM links the glycerone-phosphate and glyceraldehyde-3-phosphate branches of central carbon metabolism. In Pseudomonas putida KT2440, whose glucose catabolism is dominated by periplasmic oxidation and the Entner-Doudoroff pathway, triosephosphate isomerase nonetheless participates in an integrated ED/EMP/pentose-phosphate cycle, and is required for growth on both glycolytic (glucose) and gluconeogenic (succinate) carbon sources.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004807" target="_blank" class="term-link">
+                                    GO:0004807
+                                </a>
+                            </span>
+                            <span class="term-label">triose-phosphate isomerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV4" data-a="GO:0004807" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. TIM catalyzes the reversible isomerization of DHAP and D-glyceraldehyde 3-phosphate (RHEA:18585, EC:5.3.1.1).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by sequence/family evidence (TIM-barrel fold, conserved catalytic His95 electrophile and Glu167 proton acceptor) and consistent with UniProt/HAMAP-Rule MF_00147. This is the defining catalytic activity of the gene product.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/tpiA/tpiA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">TIM/TPI catalyzes the reversible, stereospecific isomerization of DHAP and D-glyceraldehyde 3-phosphate; conserved catalytic His95 electrophile and Glu167 proton acceptor.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26350459" target="_blank" class="term-link">
+                                        PMID:26350459
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deletion of tpiA (PP_4715) abolishes growth of KT2440 on both glucose and succinate, demonstrating an essential triose-phosphate isomerase role.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV4" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization, consistent with a soluble central-carbon-metabolism enzyme lacking signal/transmembrane features.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TIM is a canonical cytosolic enzyme; the more specific cytosol annotation (GO:0005829) is also present. Both are biologically appropriate; cytoplasm is retained as the parent term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV4" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization, the more specific (preferred) cellular component for this soluble enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Appropriate and more informative than the parent cytoplasm term; consistent with the soluble homodimeric nature of bacterial TIM.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006094" target="_blank" class="term-link">
+                                    GO:0006094
+                                </a>
+                            </span>
+                            <span class="term-label">gluconeogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV4" data-a="GO:0006094" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TIM provides the DHAP&lt;-&gt;G3P interconversion step required for gluconeogenesis; UniProt lists gluconeogenesis as the primary pathway (UPA00138).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process. Supported experimentally in KT2440 where a tpiA deletion abolishes growth on the gluconeogenic substrate succinate, demonstrating an essential role in gluconeogenic triose-phosphate flux.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV4" data-a="GO:0006096" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TIM catalyzes the triose-phosphate isomerization step of glycolysis (UPA00109, step 1/1 G3P from glycerone phosphate).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process. In KT2440 a tpiA deletion abolishes growth on glucose, confirming an essential role in triose-phosphate balancing within the organism&#39;s ED/EMP/PP carbon cycle, despite the atypical (ED-dominated) glucose catabolism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019563" target="_blank" class="term-link">
+                                    GO:0019563
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV4" data-a="GO:0019563" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycerol catabolism feeds into central metabolism via DHAP, which TIM converts to G3P; a plausible downstream role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This TreeGrafter/PANTHER inference reflects TIM acting on the DHAP produced during glycerol breakdown rather than a glycerol-specific function. The activity is the same generic DHAP&lt;-&gt;G3P isomerization already captured by the glycolysis/gluconeogenesis annotations; retain as a non-core specialization rather than a defining process.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046166" target="_blank" class="term-link">
+                                    GO:0046166
+                                </a>
+                            </span>
+                            <span class="term-label">glyceraldehyde-3-phosphate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DV4" data-a="GO:0046166" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TIM produces G3P from DHAP, the directionality emphasized by the gluconeogenesis/glycerol-utilization context.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A directional restatement (DHAP -&gt; G3P) of the same reversible isomerization captured by the triose-phosphate isomerase activity and glycolysis/gluconeogenesis annotations. Biologically correct but redundant with the core terms; retain as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Reversible stereospecific isomerization of dihydroxyacetone phosphate (DHAP) and D-glyceraldehyde 3-phosphate (G3P), equilibrating the triose-phosphate pool in central carbon metabolism</h3>
+                <span class="vote-buttons" data-g="Q88DV4" data-a="FUNCTION: Reversible stereospecific isomerization of dihydro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004807" target="_blank" class="term-link">
+                            triose-phosphate isomerase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                glycolytic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26350459" target="_blank" class="term-link">
+                                PMID:26350459
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Provision of the DHAP&lt;-&gt;G3P interconversion step required for gluconeogenesis and for triose-phosphate balancing during growth on both glycolytic and gluconeogenic substrates</h3>
+                <span class="vote-buttons" data-g="Q88DV4" data-a="FUNCTION: Provision of the DHAP&lt;-&gt;G3P interconversion step r..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004807" target="_blank" class="term-link">
+                            triose-phosphate isomerase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006094" target="_blank" class="term-link">
+                                gluconeogenesis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26350459" target="_blank" class="term-link">
+                                PMID:26350459
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26350459" target="_blank" class="term-link">
+                            PMID:26350459
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pseudomonas putida KT2440 Strain Metabolizes Glucose through a Cycle Formed by Enzymes of the Entner-Doudoroff, Embden-Meyerhof-Parnas, and Pentose Phosphate Pathways</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of tpiA (PP_4715, triose phosphate isomerase) abolishes growth of KT2440 on both glucose and succinate, demonstrating an essential role in triose-phosphate interconversion under glycolytic and gluconeogenic conditions. TpiA activity is present (equally active) in both glucose- and succinate-grown cells.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/tpiA/tpiA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report (falcon) for tpiA / Q88DV4</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TIM/TPI catalyzes the reversible, stereospecific, cofactor-independent isomerization of DHAP and D-glyceraldehyde 3-phosphate; the enzyme is a near-perfect diffusion-limited homodimer with the canonical (beta/alpha)8 TIM-barrel fold, conserved catalytic His95 electrophile and Glu167 proton acceptor.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In KT2440, deletion of tpiA (PP_4715) abolishes growth on both glucose and succinate, an unexpectedly strong requirement given the ED-dominated glucose catabolism, demonstrating that triose-phosphate interconversion is indispensable under both glycolytic and gluconeogenic conditions.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tpiA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DV4" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">20 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:51:20.928824</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="tpiA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="tpiA-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000014 Figure 2 shows the growth of wild-type Pseudomonas putida KT2440 and its mutant derivatives, including the ΔtpiA mutant, on M9 mini</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-tpia-uniprot-q88dv4-locus-pp_4715-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>tpiA</strong> (UniProt <strong>Q88DV4</strong>, locus <strong>PP_4715</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>The gene <strong>tpiA</strong> in <em>Pseudomonas putida</em> KT2440 (ordered locus name <strong>PP_4715</strong>) encodes <strong>triosephosphate isomerase</strong> (TIM/TPI; <strong>EC 5.3.1.1</strong>), a highly efficient cytosolic enzyme that <strong>reversibly interconverts dihydroxyacetone phosphate (DHAP) and glyceraldehyde-3-phosphate (G3P/D-GAP)</strong>, balancing the pool of triose phosphates in central carbon metabolism. In KT2440, genetic evidence shows that <strong>loss of tpiA prevents growth on both glucose and succinate</strong>, indicating a critical role under both glycolytic and gluconeogenic regimes, despite the organism’s atypical glucose catabolism dominated by Entner–Doudoroff (ED) reactions. (nikel2015pseudomonasputidakt2440 pages 6-7)</p>
+<h3 id="1-identity-verification-critical-disambiguation">1. Identity verification (critical disambiguation)</h3>
+<p><strong>Target confirmed:</strong> In a detailed KT2440 central carbon metabolism study, <strong>tpiA is explicitly annotated as PP_4715 encoding “triose phosphate isomerase” (TpiA)</strong> and is included among mutant derivatives evaluated, confirming that the KT2440 gene symbol <strong>tpiA</strong> corresponds to triosephosphate isomerase rather than an unrelated “tpiA” in other organisms. (nikel2015pseudomonasputidakt2440 pages 15-17)</p>
+<p>Visual evidence from the same work includes (i) a pathway schematic where <strong>TpiA catalyzes DHAP ↔ G3P</strong> and (ii) plate-growth results including the <strong>ΔtpiA</strong> strain. (nikel2015pseudomonasputidakt2440 media 6f85cc6f, nikel2015pseudomonasputidakt2440 media 0edc1cf4)</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h3>
+<h4 id="21-enzyme-reaction-and-substrate-specificity">2.1 Enzyme reaction and substrate specificity</h4>
+<p>Triosephosphate isomerase (TIM/TPI) catalyzes the reversible aldose–ketose isomerization:</p>
+<ul>
+<li><strong>DHAP ⇄ D-GAP (G3P)</strong></li>
+</ul>
+<p>TIM is described as <strong>stereospecific</strong> in converting DHAP to D-GAP and does <strong>not require a cofactor or metal ion</strong>. (wierenga2010triosephosphateisomerasea pages 1-3)</p>
+<p>Substrate binding strongly depends on recognition of the <strong>phosphate dianion</strong> in a specialized pocket formed by multiple active-site loops; this tight binding helps enforce productive catalysis and suppresses side reactions such as phosphate elimination. (wierenga2010triosephosphateisomerasea pages 6-8, wierenga2010triosephosphateisomerasea pages 1-3)</p>
+<h4 id="22-catalytic-mechanism-and-conserved-residues">2.2 Catalytic mechanism and conserved residues</h4>
+<p>TIM is a paradigmatic “near-perfect” enzyme. Mechanistically, TIM catalysis proceeds through an <strong>enediolate-type intermediate</strong>, enabled by a conserved active-site architecture and loop motions that close the active site to exclude bulk solvent. (wierenga2010triosephosphateisomerasea pages 3-5, wierenga2010triosephosphateisomerasea pages 1-3)</p>
+<p>Key catalytic residues in the canonical numbering scheme include:<br />
+- <strong>Asn11, Lys13, His95, and Glu167 (catalytic base)</strong> (wierenga2010triosephosphateisomerasea pages 3-5, wierenga2010triosephosphateisomerasea pages 1-3)</p>
+<p>A 2023 expert review on TPI in eukaryotes uses slightly different numbering (e.g., <strong>K14, H96, E166</strong>) but refers to the same conserved catalytic core. (myers2023newlydiscoveredroles pages 1-2)</p>
+<h4 id="23-enzyme-efficiency-and-kinetics-quantitative">2.3 Enzyme efficiency and kinetics (quantitative)</h4>
+<p>TIM is frequently cited as diffusion-limited or near diffusion-limited in catalytic efficiency. Reported values include:<br />
+- <strong>kcat/Km ≈ 1 × 10^9 M−1 s−1</strong> (diffusion-limited range) in the <strong>D-GAP → DHAP</strong> direction (wierenga2010triosephosphateisomerasea pages 3-5)<br />
+- <strong>kcat ~500 s−1</strong> for <strong>DHAP → D-GAP</strong> and <strong>~5,000 s−1</strong> for <strong>D-GAP → DHAP</strong> (wierenga2010triosephosphateisomerasea pages 3-5)<br />
+- <strong>Km ~1.2 mM</strong> for DHAP and <strong>~0.25 mM</strong> for D-GAP (with additional notes about the unhydrated species) (wierenga2010triosephosphateisomerasea pages 3-5)</p>
+<p>These parameters reflect an enzyme optimized to rapidly equilibrate intracellular DHAP and G3P pools. (wierenga2010triosephosphateisomerasea pages 3-5, wierenga2010triosephosphateisomerasea pages 19-20)</p>
+<h4 id="24-oligomeric-state">2.4 Oligomeric state</h4>
+<p>TIM is typically <strong>dimeric</strong>, and <strong>only the dimer is fully active</strong>; engineered monomeric variants show orders-of-magnitude lower catalytic performance (e.g., kcat ~1 s−1, Km ~5 mM), illustrating that dimerization contributes to active-site rigidity and solvent exclusion. (wierenga2010triosephosphateisomerasea pages 10-12)</p>
+<h4 id="25-subcellular-localization-bacterial-expectation">2.5 Subcellular localization (bacterial expectation)</h4>
+<p>TIM is generally a <strong>cytosolic enzyme</strong> in most organisms, consistent with its canonical role in central carbon metabolism; specialized compartmentalization is described mainly for specific eukaryotes (e.g., glycosomes), not typical bacteria. (wierenga2010triosephosphateisomerasea pages 3-5, kursula2003crystallographicstudieson pages 34-37)</p>
+<h3 id="3-pseudomonas-putida-kt2440-pathway-context-and-functional-role">3. <em>Pseudomonas putida</em> KT2440: pathway context and functional role</h3>
+<h4 id="31-central-carbon-metabolism-architecture-in-kt2440">3.1 Central carbon metabolism architecture in KT2440</h4>
+<p><em>P. putida</em> KT2440 is well known for glucose catabolism that is strongly routed through periplasmic oxidation and ED pathway reactions, and lacks a “standard” fully operational Embden–Meyerhof–Parnas (EMP) glycolysis due to low/absent canonical phosphofructokinase activity (as framed in the study’s pathway description). (nikel2015pseudomonasputidakt2440 pages 15-17)</p>
+<p>Nevertheless, the KT2440 network uses <strong>ED/EMP/PP reactions in an integrated cycle</strong> for glucose processing, and triose-phosphate balancing remains crucial. (nikel2015pseudomonasputidakt2440 pages 6-7, nikel2015pseudomonasputidakt2440 pages 15-17)</p>
+<p>Quantitative flux/yield context reported for KT2440 on glucose includes:<br />
+- <strong>Lag phase ~1.2 ± 0.5 h</strong> on fresh glucose<br />
+- Periplasmic oxidation yields: <strong>gluconate yG/S = 0.34 ± 0.02</strong> and <strong>2-ketogluconate yK/S = 0.11 ± 0.01</strong> (C-mol/C-mol)<br />
+- <strong>&gt;80%</strong> of glucose influx routed via periplasmic oxidation<br />
+- About <strong>25%</strong> of fructose-6-phosphate (F6P) formed through the PP pathway<br />
+- An <strong>~50% relative flux contribution</strong> of ED pathway to pyruvate formation</p>
+<p>These values highlight the metabolic background in which triose-phosphate interconversion is embedded. (nikel2015pseudomonasputidakt2440 pages 6-7)</p>
+<h4 id="32-genetic-evidence-for-essentialitycriticality-of-tpia-in-kt2440">3.2 Genetic evidence for essentiality/criticality of tpiA in KT2440</h4>
+<p>In KT2440, deleting/disrupting <strong>tpiA</strong> produced a striking phenotype: the authors report <strong>“lack of growth of a tpiA mutant in either glucose or succinate.”</strong> (nikel2015pseudomonasputidakt2440 pages 6-7)</p>
+<p>They also emphasize that this was “unexpected,” because ED metabolism produces G3P and pyruvate and thus, in principle, the TpiA reaction might be thought less critical for growth on glucose; the observed non-growth indicates that triose-phosphate interconversion is indispensable for KT2440 physiology under the tested conditions. (nikel2015pseudomonasputidakt2440 pages 6-7)</p>
+<p>Figure-based evidence shows the <strong>ΔtpiA</strong> mutant included among strains evaluated on glucose vs succinate minimal media plates. (nikel2015pseudomonasputidakt2440 media 6f85cc6f, nikel2015pseudomonasputidakt2440 media 0edc1cf4)</p>
+<h4 id="33-enzymology-in-kt2440-extracts-and-metabolite-context">3.3 Enzymology in KT2440 extracts and metabolite context</h4>
+<p>Enzyme assays in cell-free extracts indicate that <strong>Fbp, Fda, and TpiA (EMP-associated enzymes) were “equally active” in both glucose and succinate cultures</strong>, consistent with a role beyond “classical” glycolysis-only contexts. (nikel2015pseudomonasputidakt2440 pages 5-6)</p>
+<p>For quasi in vivo enzymatic assays, intracellular metabolite levels included <strong>G3P ~140 µM</strong>, providing a quantitative anchor for the triose-phosphate pool under the studied conditions. (nikel2015pseudomonasputidakt2440 pages 5-6)</p>
+<h3 id="4-recent-developments-prioritizing-20232024">4. Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="41-2024-nature-communications-engineered-kt2440-adaptation-to-d-xylose">4.1 2024 Nature Communications: engineered KT2440 adaptation to D-xylose</h4>
+<p>A 2024 <em>Nature Communications</em> study on synthetically primed adaptation of KT2440 to D-xylose explicitly remarks that <strong>operation of Fbp, Fba, and TpiA would be redundant to pentose phosphate pathway (PPP) activity</strong> in the engineered xylose-grown strain, reflecting modern interpretations of how central carbon flux can be rewired in <em>P. putida</em> and when EMP/gluconeogenic steps become unnecessary. (dvorak2024syntheticallyprimedadaptationof pages 4-5)</p>
+<p>This provides recent, high-authority evidence that TpiA’s functional necessity can be <strong>context-dependent</strong> in engineered metabolic states, even though it is strongly required for growth in the baseline KT2440 conditions tested in earlier work. (dvorak2024syntheticallyprimedadaptationof pages 4-5, nikel2015pseudomonasputidakt2440 pages 6-7)</p>
+<p>Publication details: March 2024; URL: https://doi.org/10.1038/s41467-024-46812-9 (dvorak2024syntheticallyprimedadaptationof pages 4-5)</p>
+<h4 id="42-2024-microbial-cell-factories-anoxic-electrogenic-cultivation-and-multi-omics">4.2 2024 Microbial Cell Factories: anoxic-electrogenic cultivation and multi-omics</h4>
+<p>A 2024 multi-omics study of electrogenic (bio-electrochemical) cultivation of KT2440 reports that <strong>tpiA (within “triose recycling” genes) was largely unchanged or slightly downregulated</strong> under anoxic-electrogenic fermentation conditions, suggesting that core triose-phosphate balancing may not be strongly transcriptionally induced in that specific non-growth/maintenance-like regime (at least at the qualitative level provided in the excerpt). (weimer2024systemsbiologyof pages 8-9)</p>
+<p>Publication details: September 2024; URL: https://doi.org/10.1186/s12934-024-02509-8 (weimer2024systemsbiologyof pages 8-9)</p>
+<h4 id="43-2023-expert-review-expanding-conceptual-landscape-of-tpi-moonlighting">4.3 2023 expert review: expanding conceptual landscape of TPI (moonlighting)</h4>
+<p>A 2023 review synthesizes evidence that TPI can have “moonlighting” functions (including nuclear roles) in eukaryotes and disease contexts. While this is not direct evidence for bacterial <em>P. putida</em> tpiA moonlighting, it is relevant as an expert caution: <strong>TPI proteins can participate in cellular processes beyond glycolysis in some systems</strong>, and catalytic loss may not fully explain phenotypes in all organisms. (myers2023newlydiscoveredroles pages 1-2, myers2023newlydiscoveredroles pages 2-4)</p>
+<p>Publication details: January 2023; URL: https://doi.org/10.1186/s10020-023-00612-x (myers2023newlydiscoveredroles pages 1-2)</p>
+<h3 id="5-current-applications-and-real-world-implementations">5. Current applications and real-world implementations</h3>
+<p>Because <strong>tpiA encodes a core central-carbon enzyme</strong>, it is primarily leveraged indirectly in applications that engineer <em>P. putida</em> central metabolism:</p>
+<ul>
+<li>
+<p><strong>Substrate scope expansion and metabolic rewiring:</strong> In engineered KT2440 strains adapted to new substrates (e.g., xylose), pathway designs and evolved flux states can make steps like TpiA (together with Fbp/Fba) <strong>redundant relative to PPP-driven carbon processing</strong>, informing design choices for strain engineering. (dvorak2024syntheticallyprimedadaptationof pages 4-5)</p>
+</li>
+<li>
+<p><strong>Bioelectrochemical and non-standard bioprocessing:</strong> In anoxic-electrogenic systems aimed at producing oxidized sugars such as 2-ketogluconate, KT2440 shows broad transcriptome remodeling while some central “triose recycling” genes including tpiA are not strongly induced, illustrating how industrially relevant cultivation modes may alter central-carbon gene utilization patterns. (weimer2024systemsbiologyof pages 8-9)</p>
+</li>
+</ul>
+<h3 id="6-expert-opinions-and-analysis-authoritative-synthesis">6. Expert opinions and analysis (authoritative synthesis)</h3>
+<ul>
+<li>
+<p><strong>TIM as an archetypal optimized enzyme:</strong> The detailed structural and mechanistic review characterizes TIM as a “highly evolved biocatalyst” with catalytic performance approaching diffusion limits, emphasizing loop closure, phosphate recognition, and catalytic-base chemistry as key design principles. (wierenga2010triosephosphateisomerasea pages 1-3, wierenga2010triosephosphateisomerasea pages 19-20)</p>
+</li>
+<li>
+<p><strong>KT2440 network-level interpretation:</strong> Nikel et al. interpret the <strong>unexpected non-growth of ΔtpiA</strong> as evidence that EMP-associated reactions, despite the unusual architecture of glucose catabolism in <em>P. putida</em>, are functionally necessary and active in vivo, helping define the integrated ED/EMP/PP cycling picture for KT2440. (nikel2015pseudomonasputidakt2440 pages 6-7, nikel2015pseudomonasputidakt2440 pages 5-6)</p>
+</li>
+</ul>
+<h3 id="7-evidence-map-compact">7. Evidence map (compact)</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key finding</th>
+<th>Evidence/quantitative details</th>
+<th>Primary source (with year)</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene identity in <em>P. putida</em> KT2440</td>
+<td><strong>tpiA</strong> maps to <strong>PP_4715</strong> and encodes triose phosphate isomerase (TpiA)</td>
+<td>Study explicitly annotates <strong>tpiA (PP4715, triose phosphate isomerase)</strong> among KT2440 mutants tested (nikel2015pseudomonasputidakt2440 pages 15-17)</td>
+<td>Nikel et al., <em>J. Biol. Chem.</em> (2015)</td>
+<td>https://doi.org/10.1074/jbc.M115.687749</td>
+</tr>
+<tr>
+<td>Primary biochemical function</td>
+<td>TIM/TPI catalyzes reversible isomerization of <strong>DHAP ⇄ D-GAP/G3P</strong></td>
+<td>Conserved glycolytic reaction; stereospecific conversion of DHAP to D-GAP; no cofactor or metal required (wierenga2010triosephosphateisomerasea pages 1-3)</td>
+<td>Wierenga et al., <em>Cell. Mol. Life Sci.</em> (2010)</td>
+<td>https://doi.org/10.1007/s00018-010-0473-9</td>
+</tr>
+<tr>
+<td>Catalytic mechanism / residues</td>
+<td>Catalysis uses conserved active-site residues, with glutamate as catalytic base</td>
+<td>Residues identified as <strong>Asn11, Lys13, His95, Glu167</strong>; proton-shuttling via enediolate intermediate; loop-6/loop-7 closure helps shield active site (wierenga2010triosephosphateisomerasea pages 3-5, wierenga2010triosephosphateisomerasea pages 1-3)</td>
+<td>Wierenga et al., <em>Cell. Mol. Life Sci.</em> (2010)</td>
+<td>https://doi.org/10.1007/s00018-010-0473-9</td>
+</tr>
+<tr>
+<td>Alternative residue numbering in eukaryotic review</td>
+<td>Same catalytic core appears in alternate numbering scheme</td>
+<td>Myers review lists active-site residues as <strong>K14, H96, E166</strong> in eukaryotic TPI context, consistent with highly conserved catalytic core (myers2023newlydiscoveredroles pages 1-2)</td>
+<td>Myers &amp; Palladino, <em>Molecular Medicine</em> (2023)</td>
+<td>https://doi.org/10.1186/s10020-023-00612-x</td>
+</tr>
+<tr>
+<td>Enzyme efficiency</td>
+<td>TIM is a near-diffusion-limited catalyst</td>
+<td>Reported <strong>kcat/Km ≈ 1 × 10^9 M^-1 s^-1</strong> (D-GAP→DHAP direction); <strong>kcat ~500 s^-1</strong> for DHAP→D-GAP and <strong>~5,000 s^-1</strong> for D-GAP→DHAP; <strong>Km ~1.2 mM (DHAP)</strong> and <strong>~0.25 mM (D-GAP)</strong> (wierenga2010triosephosphateisomerasea pages 3-5, wierenga2010triosephosphateisomerasea pages 1-3)</td>
+<td>Wierenga et al., <em>Cell. Mol. Life Sci.</em> (2010)</td>
+<td>https://doi.org/10.1007/s00018-010-0473-9</td>
+</tr>
+<tr>
+<td>Oligomeric state / structural requirement</td>
+<td>TIM is functionally dimeric, and dimerization supports full activity</td>
+<td>Review states <strong>only the TIM dimer is fully active</strong>; monomeric TIM variants show about <strong>kcat ≈ 1 s^-1</strong> and <strong>Km ≈ 5 mM</strong>, roughly <strong>1,000-fold lower kcat</strong> and <strong>10-fold higher Km</strong> than wild type (wierenga2010triosephosphateisomerasea pages 10-12)</td>
+<td>Wierenga et al., <em>Cell. Mol. Life Sci.</em> (2010)</td>
+<td>https://doi.org/10.1007/s00018-010-0473-9</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>TIM is generally a <strong>cytosolic</strong> glycolytic enzyme</td>
+<td>Review notes TIM is generally cytosolic in most organisms, with special compartmentalization exceptions outside typical bacteria (wierenga2010triosephosphateisomerasea pages 3-5, kursula2003crystallographicstudieson pages 34-37)</td>
+<td>Wierenga et al., <em>Cell. Mol. Life Sci.</em> (2010)</td>
+<td>https://doi.org/10.1007/s00018-010-0473-9</td>
+</tr>
+<tr>
+<td>Essentiality / conservation</td>
+<td>TPI is a highly conserved, essential glycolytic enzyme</td>
+<td>Myers review describes TPI as <strong>essential</strong> and <strong>highly conserved</strong>, required for DHAP catabolism and net ATP yield from anaerobic glucose metabolism (myers2023newlydiscoveredroles pages 1-2)</td>
+<td>Myers &amp; Palladino, <em>Molecular Medicine</em> (2023)</td>
+<td>https://doi.org/10.1186/s10020-023-00612-x</td>
+</tr>
+<tr>
+<td>KT2440 mutant phenotype</td>
+<td><strong>tpiA</strong> disruption causes severe growth defect in KT2440</td>
+<td>Authors report <strong>“lack of growth of a tpiA mutant in either glucose or succinate”</strong>, indicating an unexpectedly strong requirement under both glycolytic and gluconeogenic conditions tested (nikel2015pseudomonasputidakt2440 pages 6-7)</td>
+<td>Nikel et al., <em>J. Biol. Chem.</em> (2015)</td>
+<td>https://doi.org/10.1074/jbc.M115.687749</td>
+</tr>
+<tr>
+<td>Pathway context in KT2440</td>
+<td>TpiA participates in the partial EMP arm embedded within ED/PP-centered metabolism</td>
+<td>In KT2440, ED pathway is essential for glucose growth, PP contribution is described as negligible in that condition, yet <strong>partial EMP route is remarkably relevant</strong>; TpiA is called a key EMP step despite lack of canonical phosphofructokinase (nikel2015pseudomonasputidakt2440 pages 6-7, nikel2015pseudomonasputidakt2440 pages 15-17)</td>
+<td>Nikel et al., <em>J. Biol. Chem.</em> (2015)</td>
+<td>https://doi.org/10.1074/jbc.M115.687749</td>
+</tr>
+<tr>
+<td>Enzyme activity in KT2440 extracts</td>
+<td>TpiA activity is present under both glycolytic and gluconeogenic growth</td>
+<td><strong>Fbp, Fda, and TpiA were equally active in both glucose and succinate cultures</strong>; measured intracellular <strong>G3P concentration = 140 µM</strong> for quasi in vivo assays (nikel2015pseudomonasputidakt2440 pages 5-6)</td>
+<td>Nikel et al., <em>J. Biol. Chem.</em> (2015)</td>
+<td>https://doi.org/10.1074/jbc.M115.687749</td>
+</tr>
+<tr>
+<td>Glucose flux context in KT2440</td>
+<td>Upper central metabolism is dominated by ED/periplasmic oxidation, but triose-phosphate balancing remains important</td>
+<td>Reported values include lag phase <strong>1.2 ± 0.5 h</strong>, gluconate yield <strong>0.34 ± 0.02 C-mol/C-mol</strong>, 2-KG yield <strong>0.11 ± 0.01 C-mol/C-mol</strong>, <strong>&gt;80%</strong> of glucose influx via periplasmic oxidation, <strong>~25%</strong> of F6P formed through PP pathway, and <strong>~50%</strong> relative ED contribution to pyruvate formation (nikel2015pseudomonasputidakt2440 pages 6-7)</td>
+<td>Nikel et al., <em>J. Biol. Chem.</em> (2015)</td>
+<td>https://doi.org/10.1074/jbc.M115.687749</td>
+</tr>
+<tr>
+<td>Moonlighting caution</td>
+<td>Non-glycolytic “moonlighting” roles are described for eukaryotic TPI, not established here for <em>P. putida</em> tpiA</td>
+<td>2023 review highlights nuclear TPI roles in eukaryotes and stress/chemotherapy-linked nuclear localization; these findings should not be over-transferred to bacterial KT2440 annotation (myers2023newlydiscoveredroles pages 1-2, myers2023newlydiscoveredroles pages 2-4)</td>
+<td>Myers &amp; Palladino, <em>Molecular Medicine</em> (2023)</td>
+<td>https://doi.org/10.1186/s10020-023-00612-x</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles validated organism-specific facts for </em>Pseudomonas putida<em> KT2440 tpiA/PP_4715 together with core triosephosphate isomerase biochemistry. It is useful as a compact evidence map for function, pathway role, localization, and key quantitative properties.</em></p>
+<h3 id="8-functional-annotation-conclusion-for-q88dv4-tpiapp_4715">8. Functional annotation conclusion for Q88DV4 (tpiA/PP_4715)</h3>
+<p><strong>Recommended functional annotation (supported by evidence):</strong><br />
+- <strong>Protein:</strong> Triosephosphate isomerase (TIM/TPI)<br />
+- <strong>EC:</strong> 5.3.1.1<br />
+- <strong>Reaction:</strong> DHAP ⇄ G3P (D-GAP)<br />
+- <strong>Primary role in KT2440:</strong> Balances triose-phosphate pools in central carbon metabolism; required for growth on both glucose and succinate in the tested conditions.<br />
+- <strong>Localization:</strong> Cytosolic enzyme (bacterial expectation) supporting central metabolism.</p>
+<p>All major claims above are supported by the cited primary literature and reviews listed in the references.</p>
+<h3 id="references-urls-and-publication-dates">References (URLs and publication dates)</h3>
+<ol>
+<li>Nikel PI, Chavarría M, Fuhrer T, Sauer U, de Lorenzo V. <em>Pseudomonas putida</em> KT2440 metabolizes glucose through a cycle formed by ED, EMP, and PP enzymes. <strong>Journal of Biological Chemistry</strong>. <strong>Oct 2015</strong>. https://doi.org/10.1074/jbc.M115.687749 (nikel2015pseudomonasputidakt2440 pages 6-7)</li>
+<li>Wierenga RK, Kapetaniou EG, Venkatesan R. Triosephosphate isomerase: a highly evolved biocatalyst. <strong>Cellular and Molecular Life Sciences</strong>. <strong>Aug 2010</strong>. https://doi.org/10.1007/s00018-010-0473-9 (wierenga2010triosephosphateisomerasea pages 1-3)</li>
+<li>Myers TD, Palladino MJ. Newly discovered roles of triosephosphate isomerase including functions within the nucleus. <strong>Molecular Medicine</strong>. <strong>Jan 2023</strong>. https://doi.org/10.1186/s10020-023-00612-x (myers2023newlydiscoveredroles pages 1-2)</li>
+<li>Dvořák P, et al. Synthetically-primed adaptation of <em>Pseudomonas putida</em> to a non-native substrate D-xylose. <strong>Nature Communications</strong>. <strong>Mar 2024</strong>. https://doi.org/10.1038/s41467-024-46812-9 (dvorak2024syntheticallyprimedadaptationof pages 4-5)</li>
+<li>Weimer A, et al. Systems biology of electrogenic <em>Pseudomonas putida</em>: multi-omics insights and metabolic engineering for enhanced 2-ketogluconate production. <strong>Microbial Cell Factories</strong>. <strong>Sep 2024</strong>. https://doi.org/10.1186/s12934-024-02509-8 (weimer2024systemsbiologyof pages 8-9)</li>
+</ol>
+<p>References</p>
+<ol>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 6-7): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 15-17): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 media 6f85cc6f): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 media 0edc1cf4): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wierenga2010triosephosphateisomerasea pages 1-3): R. K. Wierenga, E. G. Kapetaniou, and R. Venkatesan. Triosephosphate isomerase: a highly evolved biocatalyst. Cellular and Molecular Life Sciences, 67:3961-3982, Aug 2010. URL: https://doi.org/10.1007/s00018-010-0473-9, doi:10.1007/s00018-010-0473-9. This article has 284 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wierenga2010triosephosphateisomerasea pages 6-8): R. K. Wierenga, E. G. Kapetaniou, and R. Venkatesan. Triosephosphate isomerase: a highly evolved biocatalyst. Cellular and Molecular Life Sciences, 67:3961-3982, Aug 2010. URL: https://doi.org/10.1007/s00018-010-0473-9, doi:10.1007/s00018-010-0473-9. This article has 284 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wierenga2010triosephosphateisomerasea pages 3-5): R. K. Wierenga, E. G. Kapetaniou, and R. Venkatesan. Triosephosphate isomerase: a highly evolved biocatalyst. Cellular and Molecular Life Sciences, 67:3961-3982, Aug 2010. URL: https://doi.org/10.1007/s00018-010-0473-9, doi:10.1007/s00018-010-0473-9. This article has 284 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(myers2023newlydiscoveredroles pages 1-2): Tracey D. Myers and Michael J. Palladino. Newly discovered roles of triosephosphate isomerase including functions within the nucleus. Molecular Medicine, Jan 2023. URL: https://doi.org/10.1186/s10020-023-00612-x, doi:10.1186/s10020-023-00612-x. This article has 51 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wierenga2010triosephosphateisomerasea pages 19-20): R. K. Wierenga, E. G. Kapetaniou, and R. Venkatesan. Triosephosphate isomerase: a highly evolved biocatalyst. Cellular and Molecular Life Sciences, 67:3961-3982, Aug 2010. URL: https://doi.org/10.1007/s00018-010-0473-9, doi:10.1007/s00018-010-0473-9. This article has 284 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wierenga2010triosephosphateisomerasea pages 10-12): R. K. Wierenga, E. G. Kapetaniou, and R. Venkatesan. Triosephosphate isomerase: a highly evolved biocatalyst. Cellular and Molecular Life Sciences, 67:3961-3982, Aug 2010. URL: https://doi.org/10.1007/s00018-010-0473-9, doi:10.1007/s00018-010-0473-9. This article has 284 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kursula2003crystallographicstudieson pages 34-37): I Kursula. Crystallographic studies on the structure-function relationships in triosephosphate isomerase. Unknown journal, 2003.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 5-6): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dvorak2024syntheticallyprimedadaptationof pages 4-5): Pavel Dvořák, Barbora Burýšková, Barbora Popelářová, Birgitta Elisabeth Ebert, Tibor Botka, Dalimil Bujdoš, Alberto Sánchez-Pascuala, Hannah Schöttler, Heiko Hayen, Víctor de Lorenzo, Lars M. Blank, and Martin Benešík. Synthetically-primed adaptation of pseudomonas putida to a non-native substrate d-xylose. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46812-9, doi:10.1038/s41467-024-46812-9. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weimer2024systemsbiologyof pages 8-9): Anna Weimer, Laura Pause, Fabian Ries, Michael Kohlstedt, Lorenz Adrian, Jens Krömer, Bin Lai, and Christoph Wittmann. Systems biology of electrogenic pseudomonas putida - multi-omics insights and metabolic engineering for enhanced 2-ketogluconate production. Microbial Cell Factories, Sep 2024. URL: https://doi.org/10.1186/s12934-024-02509-8, doi:10.1186/s12934-024-02509-8. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(myers2023newlydiscoveredroles pages 2-4): Tracey D. Myers and Michael J. Palladino. Newly discovered roles of triosephosphate isomerase including functions within the nucleus. Molecular Medicine, Jan 2023. URL: https://doi.org/10.1186/s10020-023-00612-x, doi:10.1186/s10020-023-00612-x. This article has 51 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="tpiA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000014 Figure 2 shows the growth of wild-type Pseudomonas putida KT2440 and its mutant derivatives, including the ΔtpiA mutant, on M9 mini" src="tpiA-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>wierenga2010triosephosphateisomerasea pages 1-3</li>
+<li>myers2023newlydiscoveredroles pages 1-2</li>
+<li>wierenga2010triosephosphateisomerasea pages 3-5</li>
+<li>wierenga2010triosephosphateisomerasea pages 10-12</li>
+<li>dvorak2024syntheticallyprimedadaptationof pages 4-5</li>
+<li>weimer2024systemsbiologyof pages 8-9</li>
+<li>wierenga2010triosephosphateisomerasea pages 6-8</li>
+<li>wierenga2010triosephosphateisomerasea pages 19-20</li>
+<li>kursula2003crystallographicstudieson pages 34-37</li>
+<li>myers2023newlydiscoveredroles pages 2-4</li>
+<li>https://doi.org/10.1038/s41467-024-46812-9</li>
+<li>https://doi.org/10.1186/s12934-024-02509-8</li>
+<li>https://doi.org/10.1186/s10020-023-00612-x</li>
+<li>https://doi.org/10.1074/jbc.M115.687749</li>
+<li>https://doi.org/10.1007/s00018-010-0473-9</li>
+<li>https://doi.org/10.1074/jbc.m115.687749,</li>
+<li>https://doi.org/10.1007/s00018-010-0473-9,</li>
+<li>https://doi.org/10.1186/s10020-023-00612-x,</li>
+<li>https://doi.org/10.1038/s41467-024-46812-9,</li>
+<li>https://doi.org/10.1186/s12934-024-02509-8,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DV4
+gene_symbol: tpiA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: Triosephosphate isomerase (TIM/TPI; EC 5.3.1.1), a cytosolic glycolytic/gluconeogenic enzyme that catalyzes the reversible, stereospecific, cofactor-independent interconversion of dihydroxyacetone phosphate (DHAP) and D-glyceraldehyde 3-phosphate (G3P) via an enediol(ate) intermediate. The enzyme is a catalytically near-perfect, diffusion-limited homodimer adopting the canonical (beta/alpha)8 TIM-barrel fold, with a conserved catalytic glutamate acting as the general base and a histidine as the electrophile. By equilibrating the triose-phosphate pool, TIM links the glycerone-phosphate and glyceraldehyde-3-phosphate branches of central carbon metabolism. In Pseudomonas putida KT2440, whose glucose catabolism is dominated by periplasmic oxidation and the Entner-Doudoroff pathway, triosephosphate isomerase nonetheless participates in an integrated ED/EMP/pentose-phosphate cycle, and is required for growth on both glycolytic (glucose) and gluconeogenic (succinate) carbon sources.
+existing_annotations:
+- term:
+    id: GO:0004807
+    label: triose-phosphate isomerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function. TIM catalyzes the reversible isomerization of DHAP and D-glyceraldehyde 3-phosphate (RHEA:18585, EC:5.3.1.1).
+    action: ACCEPT
+    reason: Strongly supported by sequence/family evidence (TIM-barrel fold, conserved catalytic His95 electrophile and Glu167 proton acceptor) and consistent with UniProt/HAMAP-Rule MF_00147. This is the defining catalytic activity of the gene product.
+    supported_by:
+    - reference_id: file:PSEPK/tpiA/tpiA-deep-research-falcon.md
+      supporting_text: TIM/TPI catalyzes the reversible, stereospecific isomerization of DHAP and D-glyceraldehyde 3-phosphate; conserved catalytic His95 electrophile and Glu167 proton acceptor.
+      full_text_unavailable: true
+    - reference_id: PMID:26350459
+      supporting_text: Deletion of tpiA (PP_4715) abolishes growth of KT2440 on both glucose and succinate, demonstrating an essential triose-phosphate isomerase role.
+      full_text_unavailable: true
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization, consistent with a soluble central-carbon-metabolism enzyme lacking signal/transmembrane features.
+    action: ACCEPT
+    reason: TIM is a canonical cytosolic enzyme; the more specific cytosol annotation (GO:0005829) is also present. Both are biologically appropriate; cytoplasm is retained as the parent term.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytosolic localization, the more specific (preferred) cellular component for this soluble enzyme.
+    action: ACCEPT
+    reason: Appropriate and more informative than the parent cytoplasm term; consistent with the soluble homodimeric nature of bacterial TIM.
+- term:
+    id: GO:0006094
+    label: gluconeogenesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: TIM provides the DHAP&lt;-&gt;G3P interconversion step required for gluconeogenesis; UniProt lists gluconeogenesis as the primary pathway (UPA00138).
+    action: ACCEPT
+    reason: Core biological process. Supported experimentally in KT2440 where a tpiA deletion abolishes growth on the gluconeogenic substrate succinate, demonstrating an essential role in gluconeogenic triose-phosphate flux.
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: TIM catalyzes the triose-phosphate isomerization step of glycolysis (UPA00109, step 1/1 G3P from glycerone phosphate).
+    action: ACCEPT
+    reason: Core biological process. In KT2440 a tpiA deletion abolishes growth on glucose, confirming an essential role in triose-phosphate balancing within the organism&#39;s ED/EMP/PP carbon cycle, despite the atypical (ED-dominated) glucose catabolism.
+- term:
+    id: GO:0019563
+    label: glycerol catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Glycerol catabolism feeds into central metabolism via DHAP, which TIM converts to G3P; a plausible downstream role.
+    action: KEEP_AS_NON_CORE
+    reason: This TreeGrafter/PANTHER inference reflects TIM acting on the DHAP produced during glycerol breakdown rather than a glycerol-specific function. The activity is the same generic DHAP&lt;-&gt;G3P isomerization already captured by the glycolysis/gluconeogenesis annotations; retain as a non-core specialization rather than a defining process.
+- term:
+    id: GO:0046166
+    label: glyceraldehyde-3-phosphate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: TIM produces G3P from DHAP, the directionality emphasized by the gluconeogenesis/glycerol-utilization context.
+    action: KEEP_AS_NON_CORE
+    reason: A directional restatement (DHAP -&gt; G3P) of the same reversible isomerization captured by the triose-phosphate isomerase activity and glycolysis/gluconeogenesis annotations. Biologically correct but redundant with the core terms; retain as non-core.
+core_functions:
+- description: Reversible stereospecific isomerization of dihydroxyacetone phosphate (DHAP) and D-glyceraldehyde 3-phosphate (G3P), equilibrating the triose-phosphate pool in central carbon metabolism
+  supported_by:
+  - reference_id: PMID:26350459
+  molecular_function:
+    id: GO:0004807
+    label: triose-phosphate isomerase activity
+  directly_involved_in:
+  - id: GO:0006096
+    label: glycolytic process
+- description: Provision of the DHAP&lt;-&gt;G3P interconversion step required for gluconeogenesis and for triose-phosphate balancing during growth on both glycolytic and gluconeogenic substrates
+  supported_by:
+  - reference_id: PMID:26350459
+  molecular_function:
+    id: GO:0004807
+    label: triose-phosphate isomerase activity
+  directly_involved_in:
+  - id: GO:0006094
+    label: gluconeogenesis
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:26350459
+  title: &#39;Pseudomonas putida KT2440 Strain Metabolizes Glucose through a Cycle Formed by Enzymes of the Entner-Doudoroff, Embden-Meyerhof-Parnas, and Pentose Phosphate Pathways&#39;
+  findings:
+  - statement: Deletion of tpiA (PP_4715, triose phosphate isomerase) abolishes growth of KT2440 on both glucose and succinate, demonstrating an essential role in triose-phosphate interconversion under glycolytic and gluconeogenic conditions. TpiA activity is present (equally active) in both glucose- and succinate-grown cells.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#39;PMID:26350459 verified via PubMed (Nikel et al., J Biol Chem 290:25920-32, 2015; DOI 10.1074/jbc.M115.687749). Note: the falcon deep-research file did not list a PMID; the DOI was resolved to the correct PMID via PubMed. Supports the essential glycolytic/gluconeogenic role of tpiA in KT2440.&#39;
+- id: file:PSEPK/tpiA/tpiA-deep-research-falcon.md
+  title: Deep research report (falcon) for tpiA / Q88DV4
+  findings:
+  - statement: TIM/TPI catalyzes the reversible, stereospecific, cofactor-independent isomerization of DHAP and D-glyceraldehyde 3-phosphate; the enzyme is a near-perfect diffusion-limited homodimer with the canonical (beta/alpha)8 TIM-barrel fold, conserved catalytic His95 electrophile and Glu167 proton acceptor.
+  - statement: In KT2440, deletion of tpiA (PP_4715) abolishes growth on both glucose and succinate, an unexpectedly strong requirement given the ED-dominated glucose catabolism, demonstrating that triose-phosphate interconversion is indispensable under both glycolytic and gluconeogenic conditions.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#39;AI-generated deep-research synthesis; primary claims independently anchored to UniProt HAMAP-Rule MF_00147 (catalytic residues, homodimer, cytoplasm) and to PMID:26350459 (KT2440 deletion phenotype).&#39;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aroC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aroC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88LU7" target="_blank" class="term-link">
+                        Q88LU7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aroC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88LU7" data-a="DESCRIPTION: aroC encodes chorismate synthase (CS; EC 4.2.3.5),..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>aroC encodes chorismate synthase (CS; EC 4.2.3.5), the enzyme that catalyzes the seventh and final step of the shikimate pathway. It converts 5-enolpyruvylshikimate-3-phosphate (EPSP) into chorismate via an anti-1,4 (trans) elimination of the C-3 phosphate and the C-6 proR hydrogen, introducing a second double bond into the ring system. The reaction requires reduced flavin mononucleotide (FMNH2) as an essential cofactor, even though the overall transformation involves no net change in redox state; like other bacterial monofunctional chorismate synthases, the enzyme relies on an external supply of reduced FMN rather than reducing FMN itself. Chorismate is the central branch-point metabolite of aromatic metabolism, serving as the common precursor for the aromatic amino acids phenylalanine, tyrosine, and tryptophan, as well as for folate (via para-aminobenzoate), ubiquinone/menaquinone, and other aromatic metabolites. The protein belongs to the chorismate synthase family, assembles as a homotetramer, and acts as a soluble cytosolic enzyme of central metabolism.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004107" target="_blank" class="term-link">
+                                    GO:0004107
+                                </a>
+                            </span>
+                            <span class="term-label">chorismate synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LU7" data-a="GO:0004107" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. AroC is a chorismate synthase (EC 4.2.3.5), as established by the HAMAP rule MF_00300, conserved family membership (IPR000453, PF01264, TIGR00033), and mapping to RHEA:21020. This directly represents the gene&#39;s primary catalytic activity.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LU7" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chorismate synthase catalyzes a soluble step of central aromatic metabolism and has no membrane-targeting features, consistent with a cytosolic localization. This is a reasonable IEA/TreeGrafter inference for a bacterial metabolic enzyme. Bacteria lack the GO cytosol/cytoplasm distinction relevant in eukaryotes, but the term is acceptable as-is; it is not a core functional annotation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009073" target="_blank" class="term-link">
+                                    GO:0009073
+                                </a>
+                            </span>
+                            <span class="term-label">aromatic amino acid family biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LU7" data-a="GO:0009073" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chorismate produced by AroC is the direct precursor of phenylalanine, tyrosine, and tryptophan, so AroC is correctly placed in aromatic amino acid biosynthesis. This is a valid biological-process annotation, though it is broader than the gene&#39;s most specific role (chorismate biosynthesis), and chorismate also feeds non-amino-acid pathways (folate, ubiquinone). Retained as a supporting/non-core process annotation. (Note: GOA label text &#34;aromatic amino acid biosynthetic process&#34; is the curated synonym; the canonical GO:0009073 label is &#34;aromatic amino acid family biosynthetic process&#34;.)
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                    GO:0009423
+                                </a>
+                            </span>
+                            <span class="term-label">chorismate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LU7" data-a="GO:0009423" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Most specific and accurate biological-process annotation: AroC catalyzes the terminal (step 7/7) reaction of chorismate biosynthesis (UniPathway UPA00053, UER00090). This is the core process for the gene.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010181" target="_blank" class="term-link">
+                                    GO:0010181
+                                </a>
+                            </span>
+                            <span class="term-label">FMN binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LU7" data-a="GO:0010181" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chorismate synthase requires and binds reduced FMN (FMNH2) as an essential cofactor for catalysis; the UniProt record annotates multiple FMN-binding residues (125-127, 237-238, 277, 292-296, 318). FMN binding is well supported and integral to the catalytic mechanism, so this is accepted as a genuine (though accessory-to-the-MF) molecular function annotation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the terminal step of the shikimate pathway, the FMNH2-dependent anti-1,4-elimination of phosphate from 5-enolpyruvylshikimate-3-phosphate (EPSP) to form chorismate, supplying the branch-point precursor for aromatic amino acid and other aromatic metabolite biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88LU7" data-a="FUNCTION: Catalyzes the terminal step of the shikimate pathw..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004107" target="_blank" class="term-link">
+                            chorismate synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                chorismate biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">AroC mapped to chorismate synthase (EC 4.2.3.5; RHEA:21020) by HAMAP rule MF_00300 and conserved family membership.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/aroC/aroC-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Chorismate synthase (AroC; EC 4.2.3.5) catalyzes the terminal step of the shikimate pathway, converting EPSP into chorismate with elimination of phosphate via a 1,4-trans elimination, and requires reduced FMN (FMNH2) for catalysis.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequencing of P. putida KT2440 identified the aroC gene (PP_1830) encoding chorismate synthase as part of the organism&#39;s metabolic gene complement.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aroC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LU7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **aroC** (Chorismate synthase) in *Pseudomonas putida* KT2440 (UniProt Q88LU7; PP_1830)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">30 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T20:49:16.310727</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="aroC-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-aroc-chorismate-synthase-in-pseudomonas-putida-kt2440-uniprot-q88lu7-pp_1830">Research Report: Functional Annotation of <strong>aroC</strong> (Chorismate synthase) in <em>Pseudomonas putida</em> KT2440 (UniProt Q88LU7; PP_1830)</h1>
+<h2 id="1-target-verification-geneprotein-identity">1. Target verification (gene/protein identity)</h2>
+<p>The research target is <strong>AroC (chorismate synthase; EC 4.2.3.5)</strong> encoded by <strong>aroC</strong> and mapped (per the provided UniProt record) to ordered locus <strong>PP_1830</strong> in <strong><em>Pseudomonas putida</em> strain KT2440</strong> (UniProt <strong>Q88LU7</strong>). The retrieved literature that mentions “aroC” in <em>Pseudomonas</em> metabolic engineering uses it consistently as a <strong>shikimate-pathway gene encoding chorismate synthase</strong> (e.g., included as a shikimate-pathway overexpression target in <em>P. putida</em> KT2440) and not as an unrelated gene, supporting correct symbol usage in this organism context (camposmagana2024combinatorialengineeringreveals pages 4-7).</p>
+<p><strong>Limitation:</strong> within the retrieved full texts, there is <strong>little direct primary characterization explicitly citing PP_1830/Q88LU7</strong>; therefore, organism-specific biochemical details for this exact protein are inferred from conserved AroC enzymology (family-level evidence) and <em>P. putida</em> KT2440 pathway-engineering studies.</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-chorismate-synthase-aroc-definition-and-core-biochemical-role">2.1 Chorismate synthase (AroC): definition and core biochemical role</h3>
+<p><strong>Chorismate synthase (AroC; EC 4.2.3.5)</strong> catalyzes the <strong>terminal step of the shikimate pathway</strong>, converting <strong>5-enolpyruvylshikimate-3-phosphate (EPSP)</strong> into <strong>chorismate</strong> with <strong>elimination of inorganic phosphate</strong> (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13). The enzymatic transformation is described as a <strong>1,4-trans elimination</strong> of the phosphate group from EPSP, which introduces a second double bond into the six-membered ring system to yield chorismate (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13).</p>
+<p>Because chorismate is the <strong>key branch-point metabolite</strong> at the end of the shikimate pathway, AroC function is tightly tied to biosynthesis of <strong>aromatic amino acids</strong> and other chorismate-derived products (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13).</p>
+<h3 id="22-substrate-specificity-and-reaction-stoichiometry">2.2 Substrate specificity and reaction stoichiometry</h3>
+<p>The canonical substrate is <strong>EPSP</strong>, and the product is <strong>chorismate + phosphate</strong> (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13). Structural/biochemical work in other taxa (e.g., fungal chorismate synthase) explicitly models/binds <strong>EPSP</strong> together with <strong>FMNH2</strong> at the active site and uses EPSP in enzyme assays, reinforcing EPSP as the functional substrate in chorismate synthases across organisms (rodriguesvendramini2019promisingnewantifungal pages 2-5).</p>
+<h3 id="23-cofactor-requirements-and-mechanistic-features">2.3 Cofactor requirements and mechanistic features</h3>
+<p>Although the overall EPSP→chorismate conversion is an elimination with <strong>no net redox change</strong>, chorismate synthase requires <strong>reduced flavin mononucleotide (FMNH2)</strong> for catalysis (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13). A 2024 authoritative review summarizes that <strong>monofunctional</strong> chorismate synthases (e.g., from <em>E. coli</em> and higher plants) are unable to reduce FMN themselves and therefore depend on <strong>externally supplied reduced FMN</strong>, whereas some organisms (e.g., fungi/protozoa) have <strong>bifunctional</strong> enzymes capable of reducing FMN using <strong>NADPH</strong>, changing how FMNH2 is supplied (shende2024theshikimatepathway pages 11-13).</p>
+<h3 id="24-quaternary-structure-and-enzyme-family-context">2.4 Quaternary structure and enzyme family context</h3>
+<p>Chorismate synthase is often <strong>tetrameric</strong>. For example, a mycobacterial chorismate synthase structure was solved with bound <strong>FMN</strong> and described as a <strong>tetramer (dimer of dimers)</strong> (nunes2020mycobacteriumtuberculosisshikimate pages 20-23). A fungal chorismate synthase was modeled as a <strong>homotetramer</strong> for docking/MD stability and ligand binding (rodriguesvendramini2019promisingnewantifungal pages 2-5). This supports a common structural theme that is relevant for conserved function.</p>
+<h2 id="3-biological-processes-pathways-and-cellular-location-functional-annotation">3. Biological processes, pathways, and cellular location (functional annotation)</h2>
+<h3 id="31-pathway-context-shikimate-pathway-and-chorismate-branch-point">3.1 Pathway context: shikimate pathway and chorismate branch point</h3>
+<p>The shikimate pathway comprises seven steps that convert central carbon precursors (classically PEP and E4P) into <strong>chorismate</strong>, which then branches into multiple essential biosynthetic routes (nunes2020mycobacteriumtuberculosisshikimate pages 3-7). The product chorismate is a central node feeding the biosynthesis of <strong>phenylalanine, tyrosine, and tryptophan</strong>, and also contributes to other pathways, such as <strong>PABA/folate-related metabolism</strong> and quinone-related metabolites in microbes (guida2024aminoacidbiosynthesis pages 1-2, nunes2020mycobacteriumtuberculosisshikimate pages 3-7).</p>
+<p>In <em>P. putida</em> KT2440 specifically, multiple engineering studies rely on increasing shikimate/chorismate supply to produce aromatic chemicals, demonstrating that chorismate availability (and therefore AroC activity upstream) is a key determinant of metabolic output in this chassis (yu2016metabolicengineeringof pages 1-3, dias2023fromdegraderto pages 8-11, camposmagana2024combinatorialengineeringreveals pages 7-11).</p>
+<h3 id="32-likely-subcellular-localization">3.2 Likely subcellular localization</h3>
+<p>No direct experimental localization for <strong>AroC (PP_1830/Q88LU7)</strong> was retrieved from the available texts. However, given that chorismate synthase catalyzes a soluble step of central metabolism and the retrieved mechanistic/structural literature treats it as a soluble enzyme (with defined quaternary structure and bound flavin), the most consistent working annotation is that AroC functions as a <strong>cytosolic enzyme</strong> in bacteria.</p>
+<p><strong>Evidence limitation:</strong> because no explicit localization measurement for this <em>P. putida</em> enzyme was retrieved, the cytosolic localization should be treated as a <strong>reasonable inference</strong> rather than directly demonstrated in KT2440 within the cited sources.</p>
+<h2 id="4-recent-developments-and-latest-research-prioritizing-20232024">4. Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="41-2024-state-of-the-art-synthesis-of-shikimate-pathway-enzymology">4.1 2024 state-of-the-art synthesis of shikimate-pathway enzymology</h3>
+<p>A 2024 <strong>Natural Product Reports</strong> review (covering 1997–2023) provides an up-to-date synthesis of shikimate pathway enzymology and highlights that chorismate synthase has been interrogated using kinetic isotope and structural biology methods, reiterating (i) the EPSP→chorismate phosphate-elimination chemistry and (ii) the essential requirement for <strong>FMNH2</strong> (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13). This is an authoritative, high-citation review source suitable for current “textbook-level” mechanistic statements.</p>
+<h3 id="42-2024-p-putida-combinatorial-tuning-of-shikimate-genes-aroc-included">4.2 2024 <em>P. putida</em> combinatorial tuning of shikimate genes (aroC included)</h3>
+<p>A 2024 bioRxiv preprint used a <strong>design-of-experiments (Plackett–Burman) + linear modeling</strong> approach to tune expression of nine factors in <em>P. putida</em> shikimate and pABA biosynthesis, explicitly including <strong>aroC</strong> among the genes amplified from KT2440 and tested at two expression levels (camposmagana2024combinatorialengineeringreveals pages 4-7). The authors report <strong>pABA titers ranging from ~2 mg/L to ~232 mg/L</strong> across their engineering cycle, with a reported best yield of <strong>0.024 mol/mol glucose</strong> (camposmagana2024combinatorialengineeringreveals pages 7-11). Critically for aroC functional annotation in a metabolic-engineering context, they report that <strong>high aroC expression can be unfavorable</strong> and conclude that <strong>mild aroC overexpression</strong> is preferable—consistent with aroC not necessarily being the dominant bottleneck compared with other steps like aroB (camposmagana2024combinatorialengineeringreveals pages 7-11).</p>
+<h3 id="43-2023-p-putida-repurposing-to-produce-gallic-acid-from-glycerol">4.3 2023 <em>P. putida</em> repurposing to produce gallic acid from glycerol</h3>
+<p>A 2023 study engineered <em>P. putida</em> KT2440 to produce <strong>gallic acid</strong> from glycerol and reported <strong>346.7 ± 0.004 mg/L</strong> final concentration after 72 h and an observed yield of <strong>0.12 g gallic acid per g glycerol</strong> (dias2023fromdegraderto pages 8-11). While the work did not directly manipulate aroC, it demonstrates the importance of driving flux through the shikimate/chorismate node and highlights NADPH-related considerations for high-yield routes (dias2023fromdegraderto pages 8-11).</p>
+<h2 id="5-current-applications-and-real-world-implementations">5. Current applications and real-world implementations</h2>
+<h3 id="51-industrial-biotechnology-routing-chorismate-to-commodity-and-specialty-aromatics">5.1 Industrial biotechnology: routing chorismate to commodity and specialty aromatics</h3>
+<p><em>Pseudomonas putida</em> KT2440 is used as a robust host for producing aromatic chemicals via chorismate-derived routes. A prominent example is production of <strong>para-hydroxybenzoic acid (PHBA)</strong> by expressing <strong>E. coli ubiC (chorismate lyase)</strong> to convert chorismate into PHBA, combined with a feedback-resistant <strong>DAHP synthase (aroG D146N)</strong> and deletion of competing chorismate-consuming/degrading pathways. This strategy achieved <strong>1.73 g/L PHBA</strong> with a <strong>carbon yield of 18.1% (C-mol/C-mol)</strong> in fed-batch fermentation (yu2016metabolicengineeringof pages 1-3). These data show that maintaining sufficient chorismate supply (which depends upstream on AroC) is central to industrial aromatic production in KT2440.</p>
+<h3 id="52-synthetic-biology-tuning-view-of-aroc">5.2 Synthetic biology “tuning” view of aroC</h3>
+<p>The 2024 DoE study implies that, at least for pABA production in KT2440, <strong>aroC expression requires balance</strong>: overexpression beyond a mild level may reduce performance (camposmagana2024combinatorialengineeringreveals pages 7-11). This kind of result is useful for functional annotation because it indicates aroC is embedded in a network where enzyme overabundance can create cofactor demands (e.g., reduced FMN supply), imbalances, or metabolic burden, even if the enzyme is essential for producing chorismate.</p>
+<h2 id="6-expert-opinions-and-analysis-from-authoritative-sources">6. Expert opinions and analysis from authoritative sources</h2>
+<h3 id="61-why-chorismateshikimate-metabolism-is-a-key-microbial-vulnerability">6.1 Why chorismate/shikimate metabolism is a key microbial vulnerability</h3>
+<p>A 2024 TB-focused review reiterates the <strong>selective-targeting rationale</strong> for shikimate pathway enzymes: the pathway is <strong>absent in humans</strong> and essential in certain pathogens such as <em>Mycobacterium tuberculosis</em>, and chorismate is a metabolic node for aromatic amino acids and other essential metabolites (guida2024aminoacidbiosynthesis pages 1-2). This expert framing supports the broad interpretation that enzymes upstream of chorismate (including AroC) underpin essential biosynthetic capacity in many microbes.</p>
+<p>A 2024 Applied and Environmental Microbiology paper further validates the idea of targeting <strong>chorismate-utilizing</strong> enzymes (anthranilate synthase and aminodeoxychorismate synthase) as antibiotic targets, emphasizing desirable target features such as essentiality and lack of human homologs, and proposing that disrupting conserved protein–protein interactions could provide robust antibacterial strategies (funke2024validationofaminodeoxychorismate pages 1-2). While not about AroC directly, it illustrates the ongoing 2024 research emphasis on the <strong>chorismate node</strong> as an antimicrobial intervention point.</p>
+<h2 id="7-relevant-statistics-and-quantitative-data-from-recent-studies">7. Relevant statistics and quantitative data from recent studies</h2>
+<h3 id="71-metabolic-engineering-performance-metrics-in-p-putida-kt2440">7.1 Metabolic engineering performance metrics in <em>P. putida</em> KT2440</h3>
+<ul>
+<li><strong>PHBA production (chorismate-derived):</strong> 1.73 g/L titer; 18.1% C-mol/C-mol yield in non-optimized fed-batch (2016; still a widely cited benchmark for KT2440) (yu2016metabolicengineeringof pages 1-3).</li>
+<li><strong>pABA production:</strong> ~2–232 mg/L titers reported in 2024 DoE study; best yield 0.024 mol/mol glucose; high aroC overexpression reported as unfavorable with recommendation for mild tuning (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals pages 4-7).</li>
+<li><strong>Gallic acid production:</strong> 346.7 ± 0.004 mg/L; observed yield 0.12 g/g glycerol (2023) (dias2023fromdegraderto pages 8-11).</li>
+</ul>
+<h3 id="72-infectious-disease-amr-burden-statistics-referenced-in-2024-literature">7.2 Infectious disease / AMR burden statistics referenced in 2024 literature</h3>
+<ul>
+<li>A 2024 TB drug-discovery review reports <strong>10.6 million TB diagnoses</strong> and <strong>1.30 million deaths</strong> in 2022, and ~<strong>410,000 MDR/RR-TB cases</strong> in 2022, providing the clinical motivation for pursuing new antibacterial targets including pathways like shikimate metabolism (guida2024aminoacidbiosynthesis pages 1-2).</li>
+<li>A 2024 MRSA-focused shikimate-kinase inhibitor paper cites <strong>1.27 million deaths</strong> in 2019 attributed to antimicrobial resistance (AMR) (riossoto2024inhibitionofshikimate pages 1-2).</li>
+</ul>
+<h2 id="8-functional-annotation-summary-for-uniprot-q88lu7-aroc-pp_1830">8. Functional annotation summary for UniProt Q88LU7 (aroC; PP_1830)</h2>
+<p><strong>Primary molecular function:</strong> Chorismate synthase (AroC) catalyzes <strong>EPSP → chorismate + phosphate</strong> via <strong>1,4-trans elimination</strong>; requires <strong>reduced FMN (FMNH2)</strong> for catalysis (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13).</p>
+<p><strong>Biological process context:</strong> terminal step of the <strong>shikimate pathway</strong> supplying <strong>chorismate</strong>, which serves as the precursor branch point for aromatic amino acids and other essential aromatic metabolites (guida2024aminoacidbiosynthesis pages 1-2, nunes2020mycobacteriumtuberculosisshikimate pages 3-7).</p>
+<p><strong>Cellular location (best-supported annotation from available evidence):</strong> likely <strong>cytosolic</strong>, but direct localization evidence for PP_1830/Q88LU7 in KT2440 was not retrieved in the available texts.</p>
+<p><strong>Application relevance:</strong> In <em>P. putida</em> KT2440, engineering of chorismate supply is central to bioproduction of aromatic products such as PHBA, pABA, and gallic acid; studies indicate that <strong>balanced</strong> expression of shikimate enzymes (including aroC) can matter for yield and titer (yu2016metabolicengineeringof pages 1-3, camposmagana2024combinatorialengineeringreveals pages 7-11, dias2023fromdegraderto pages 8-11).</p>
+<hr />
+<h2 id="summary-table">Summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene/protein identity</td>
+<td><strong>aroC</strong>; UniProt <strong>Q88LU7</strong>; ordered locus <strong>PP_1830</strong>; organism <strong>Pseudomonas putida</strong> strain <strong>KT2440</strong>; annotated as a chorismate synthase family protein in the user-supplied UniProt record. Direct organism-specific primary literature on PP_1830 itself appears limited, so some functional details below are inferred from conserved chorismate synthase biochemistry and family-level evidence plus <em>P. putida</em> pathway-engineering studies (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13, camposmagana2024combinatorialengineeringreveals pages 4-7).</td>
+</tr>
+<tr>
+<td>Enzyme name / EC</td>
+<td><strong>Chorismate synthase</strong>; <strong>EC 4.2.3.5</strong>; terminal enzyme of the shikimate pathway in bacteria (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13).</td>
+</tr>
+<tr>
+<td>Reaction catalyzed</td>
+<td><strong>5-enolpyruvylshikimate-3-phosphate (EPSP) → chorismate + phosphate</strong>; mechanistically described as a <strong>1,4-trans elimination</strong> of phosphate from EPSP, creating the second double bond in the ring system of chorismate (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13, rodriguesvendramini2019promisingnewantifungal pages 2-5).</td>
+</tr>
+<tr>
+<td>Required cofactor(s)</td>
+<td>Requires <strong>reduced FMN (FMNH2)</strong> for activity even though the overall reaction is not net redox. In many bacterial/plant <strong>monofunctional</strong> enzymes, FMN is reduced externally (often by a separate flavin reductase or reduced flavin supply), whereas <strong>bifunctional</strong> enzymes in some fungi/protozoa can reduce FMN themselves with <strong>NADPH</strong> (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13).</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>Catalyzes the <strong>terminal step from EPSP to chorismate</strong> in the shikimate pathway. <strong>Chorismate</strong> is the major branch-point precursor for <strong>phenylalanine, tyrosine, tryptophan</strong>, and additional metabolites such as <strong>PABA/folate</strong>, <strong>ubiquinone/menaquinone-related products</strong>, and other aromatic metabolites (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13, guida2024aminoacidbiosynthesis pages 1-2, nunes2020mycobacteriumtuberculosisshikimate pages 3-7).</td>
+</tr>
+<tr>
+<td>Quaternary structure notes</td>
+<td>Chorismate synthase is commonly reported as a <strong>tetramer</strong>; structural work on non-<em>P. putida</em> orthologs describes a homotetramer or tetrameric assembly important for ligand binding/stability (rodriguesvendramini2019promisingnewantifungal pages 2-5, nunes2020mycobacteriumtuberculosisshikimate pages 20-23).</td>
+</tr>
+<tr>
+<td>Likely localization</td>
+<td>No direct localization evidence for <strong>PP_1830/Q88LU7</strong> was retrieved here. Given its role in central aromatic biosynthesis and lack of membrane-targeting evidence in the gathered sources, the enzyme is most reasonably treated as a <strong>cytosolic bacterial metabolic enzyme</strong>, but this point should be considered an inference rather than a directly sourced <em>P. putida</em> measurement.</td>
+</tr>
+<tr>
+<td><em>P. putida</em> application: PHBA production</td>
+<td>In <em>P. putida</em> KT2440, shikimate/chorismate flux was engineered toward <strong>para-hydroxybenzoic acid (PHBA)</strong> by expressing <strong>E. coli ubiC</strong> and feedback-resistant <strong>aroG D146N</strong>, with deletions of <strong>pobA, pheA, trpE</strong>, and <strong>hexR</strong>. Best reported performance: <strong>1.73 g/L PHBA</strong> and <strong>18.1% C-mol/C-mol</strong> carbon yield in non-optimized fed-batch fermentation (yu2016metabolicengineeringof pages 5-6, yu2016metabolicengineeringof pages 1-3).</td>
+</tr>
+<tr>
+<td><em>P. putida</em> application: pABA production / aroC tuning</td>
+<td>A 2024 combinatorial-expression study in <em>P. putida</em> found <strong>pABA titers spanning ~2–232 mg/L</strong>. <strong>High aroC overexpression</strong> was reported to have an unfavorable or only mildly beneficial effect; the authors concluded <strong>mild rather than maximal aroC expression</strong> was preferable, while <strong>aroB</strong> emerged as a stronger bottleneck (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals pages 4-7).</td>
+</tr>
+<tr>
+<td><em>P. putida</em> application: gallic acid production</td>
+<td>Engineering of shikimate-pathway flux in <em>P. putida</em> KT2440 for <strong>gallic acid</strong> production from glycerol achieved <strong>346.7 ± 0.004 mg/L</strong> gallic acid and an observed yield of <strong>0.12 g/g glycerol</strong>; this study did not specifically manipulate aroC, but it demonstrates practical importance of chorismate-pathway flux control in this host (dias2023fromdegraderto pages 8-11).</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified identity, core enzymology, pathway context, and recent Pseudomonas putida engineering relevance of aroC/chorismate synthase. It is useful as a compact evidence-backed reference for the final research report.</em></p>
+<h2 id="urls-and-publication-dates-for-key-cited-sources">URLs and publication dates for key cited sources</h2>
+<ul>
+<li>Shende VV, Bauman KD, Moore BS. <strong>“The shikimate pathway: gateway to metabolic diversity.”</strong> <em>Natural Product Reports</em> (Jan <strong>2024</strong>). https://doi.org/10.1039/d3np00037k (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 11-13)</li>
+<li>Campos-Magaña MA et al. <strong>“Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in Pseudomonas putida.”</strong> <em>bioRxiv</em> (Jun <strong>2024</strong>). https://doi.org/10.1101/2024.06.17.599342 (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals pages 4-7)</li>
+<li>Dias FMS et al. <strong>“From degrader to producer: reversing the gallic acid metabolism of Pseudomonas putida KT2440.”</strong> <em>International Microbiology</em> (Nov <strong>2023</strong>). https://doi.org/10.1007/s10123-022-00282-5 (dias2023fromdegraderto pages 8-11)</li>
+<li>Funke FJ, Schlee S, Sterner R. <strong>“Validation of aminodeoxychorismate synthase and anthranilate synthase as novel targets…”</strong> <em>Applied and Environmental Microbiology</em> (May <strong>2024</strong>). https://doi.org/10.1128/aem.00572-24 (funke2024validationofaminodeoxychorismate pages 1-2)</li>
+<li>Guida M et al. <strong>“Amino Acid Biosynthesis Inhibitors in Tuberculosis Drug Discovery.”</strong> <em>Pharmaceutics</em> (May <strong>2024</strong>). https://doi.org/10.3390/pharmaceutics16060725 (guida2024aminoacidbiosynthesis pages 1-2, guida2024aminoacidbiosynthesis pages 2-4)</li>
+<li>Rios-Soto L et al. <strong>“Inhibition of Shikimate Kinase from MRSA by Benzimidazole Derivatives…”</strong> <em>International Journal of Molecular Sciences</em> (May <strong>2024</strong>). https://doi.org/10.3390/ijms25105077 (riossoto2024inhibitionofshikimate pages 1-2)</li>
+<li>Yu S et al. <strong>“Metabolic Engineering of Pseudomonas putida KT2440 for the Production of para-Hydroxy Benzoic Acid.”</strong> <em>Frontiers in Bioengineering and Biotechnology</em> (Nov <strong>2016</strong>). https://doi.org/10.3389/fbioe.2016.00090 (yu2016metabolicengineeringof pages 1-3, yu2016metabolicengineeringof pages 5-6)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(camposmagana2024combinatorialengineeringreveals pages 4-7): Marco A Campos-Magaña, Sara Moreno-Paz, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.17.599342, doi:10.1101/2024.06.17.599342. This article has 0 citations.</p>
+</li>
+<li>
+<p>(shende2024theshikimatepathway pages 10-11): Vikram V. Shende, Katherine D. Bauman, and Bradley S. Moore. The shikimate pathway: gateway to metabolic diversity. Natural product reports, 41:604-648, Jan 2024. URL: https://doi.org/10.1039/d3np00037k, doi:10.1039/d3np00037k. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shende2024theshikimatepathway pages 11-13): Vikram V. Shende, Katherine D. Bauman, and Bradley S. Moore. The shikimate pathway: gateway to metabolic diversity. Natural product reports, 41:604-648, Jan 2024. URL: https://doi.org/10.1039/d3np00037k, doi:10.1039/d3np00037k. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rodriguesvendramini2019promisingnewantifungal pages 2-5): Franciele Abigail Vilugron Rodrigues-Vendramini, Cidnei Marschalk, Marina Toplak, Peter Macheroux, Patricia de Souza Bonfim-Mendonça, Terezinha Inez Estivalet Svidzinski, Flavio Augusto Vicente Seixas, and Erika Seki Kioshima. Promising new antifungal treatment targeting chorismate synthase from <i>paracoccidioides brasiliensis</i>. Antimicrobial Agents and Chemotherapy, Jan 2019. URL: https://doi.org/10.1128/aac.01097-18, doi:10.1128/aac.01097-18. This article has 30 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nunes2020mycobacteriumtuberculosisshikimate pages 20-23): José E. S. Nunes, Mario A. Duque, Talita F. de Freitas, Luiza Galina, Luis F. S. M. Timmers, Cristiano V. Bizarro, Pablo Machado, Luiz A. Basso, and Rodrigo G. Ducati. Mycobacterium tuberculosis shikimate pathway enzymes as targets for the rational design of anti-tuberculosis drugs. Molecules, 25:1259, Mar 2020. URL: https://doi.org/10.3390/molecules25061259, doi:10.3390/molecules25061259. This article has 74 citations.</p>
+</li>
+<li>
+<p>(nunes2020mycobacteriumtuberculosisshikimate pages 3-7): José E. S. Nunes, Mario A. Duque, Talita F. de Freitas, Luiza Galina, Luis F. S. M. Timmers, Cristiano V. Bizarro, Pablo Machado, Luiz A. Basso, and Rodrigo G. Ducati. Mycobacterium tuberculosis shikimate pathway enzymes as targets for the rational design of anti-tuberculosis drugs. Molecules, 25:1259, Mar 2020. URL: https://doi.org/10.3390/molecules25061259, doi:10.3390/molecules25061259. This article has 74 citations.</p>
+</li>
+<li>
+<p>(guida2024aminoacidbiosynthesis pages 1-2): Michela Guida, Chiara Tammaro, Miriana Quaranta, Benedetta Salvucci, Mariangela Biava, Giovanna Poce, and Sara Consalvi. Amino acid biosynthesis inhibitors in tuberculosis drug discovery. Pharmaceutics, 16:725, May 2024. URL: https://doi.org/10.3390/pharmaceutics16060725, doi:10.3390/pharmaceutics16060725. This article has 3 citations.</p>
+</li>
+<li>
+<p>(yu2016metabolicengineeringof pages 1-3): Shiqin Yu, Manuel R. Plan, Gal Winter, and Jens O. Krömer. Metabolic engineering of pseudomonas putida kt2440 for the production of para-hydroxy benzoic acid. Frontiers in Bioengineering and Biotechnology, Nov 2016. URL: https://doi.org/10.3389/fbioe.2016.00090, doi:10.3389/fbioe.2016.00090. This article has 76 citations.</p>
+</li>
+<li>
+<p>(dias2023fromdegraderto pages 8-11): Felipe M. S. Dias, Raoní K. Pantoja, José Gregório C. Gomez, and Luiziana F. Silva. From degrader to producer: reversing the gallic acid metabolism of pseudomonas putida kt2440. International Microbiology, 26:243-255, Nov 2023. URL: https://doi.org/10.1007/s10123-022-00282-5, doi:10.1007/s10123-022-00282-5. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(camposmagana2024combinatorialengineeringreveals pages 7-11): Marco A Campos-Magaña, Sara Moreno-Paz, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.17.599342, doi:10.1101/2024.06.17.599342. This article has 0 citations.</p>
+</li>
+<li>
+<p>(funke2024validationofaminodeoxychorismate pages 1-2): Franziska Jasmin Funke, Sandra Schlee, and Reinhard Sterner. Validation of aminodeoxychorismate synthase and anthranilate synthase as novel targets for bispecific antibiotics inhibiting conserved protein-protein interactions. Applied and Environmental Microbiology, May 2024. URL: https://doi.org/10.1128/aem.00572-24, doi:10.1128/aem.00572-24. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(riossoto2024inhibitionofshikimate pages 1-2): Lluvia Rios-Soto, Alicia Hernández-Campos, David Tovar-Escobar, Rafael Castillo, Erick Sierra-Campos, Mónica Valdez-Solana, Alfredo Téllez-Valencia, and Claudia Avitia-Domínguez. Inhibition of shikimate kinase from methicillin-resistant staphylococcus aureus by benzimidazole derivatives. kinetic, computational, toxicological, and biological activity studies. International Journal of Molecular Sciences, 25:5077, May 2024. URL: https://doi.org/10.3390/ijms25105077, doi:10.3390/ijms25105077. This article has 8 citations.</p>
+</li>
+<li>
+<p>(yu2016metabolicengineeringof pages 5-6): Shiqin Yu, Manuel R. Plan, Gal Winter, and Jens O. Krömer. Metabolic engineering of pseudomonas putida kt2440 for the production of para-hydroxy benzoic acid. Frontiers in Bioengineering and Biotechnology, Nov 2016. URL: https://doi.org/10.3389/fbioe.2016.00090, doi:10.3389/fbioe.2016.00090. This article has 76 citations.</p>
+</li>
+<li>
+<p>(guida2024aminoacidbiosynthesis pages 2-4): Michela Guida, Chiara Tammaro, Miriana Quaranta, Benedetta Salvucci, Mariangela Biava, Giovanna Poce, and Sara Consalvi. Amino acid biosynthesis inhibitors in tuberculosis drug discovery. Pharmaceutics, 16:725, May 2024. URL: https://doi.org/10.3390/pharmaceutics16060725, doi:10.3390/pharmaceutics16060725. This article has 3 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="aroC-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>camposmagana2024combinatorialengineeringreveals pages 4-7</li>
+<li>rodriguesvendramini2019promisingnewantifungal pages 2-5</li>
+<li>shende2024theshikimatepathway pages 11-13</li>
+<li>nunes2020mycobacteriumtuberculosisshikimate pages 20-23</li>
+<li>nunes2020mycobacteriumtuberculosisshikimate pages 3-7</li>
+<li>camposmagana2024combinatorialengineeringreveals pages 7-11</li>
+<li>dias2023fromdegraderto pages 8-11</li>
+<li>yu2016metabolicengineeringof pages 1-3</li>
+<li>guida2024aminoacidbiosynthesis pages 1-2</li>
+<li>funke2024validationofaminodeoxychorismate pages 1-2</li>
+<li>riossoto2024inhibitionofshikimate pages 1-2</li>
+<li>shende2024theshikimatepathway pages 10-11</li>
+<li>yu2016metabolicengineeringof pages 5-6</li>
+<li>guida2024aminoacidbiosynthesis pages 2-4</li>
+<li>https://doi.org/10.1039/d3np00037k</li>
+<li>https://doi.org/10.1101/2024.06.17.599342</li>
+<li>https://doi.org/10.1007/s10123-022-00282-5</li>
+<li>https://doi.org/10.1128/aem.00572-24</li>
+<li>https://doi.org/10.3390/pharmaceutics16060725</li>
+<li>https://doi.org/10.3390/ijms25105077</li>
+<li>https://doi.org/10.3389/fbioe.2016.00090</li>
+<li>https://doi.org/10.1101/2024.06.17.599342,</li>
+<li>https://doi.org/10.1039/d3np00037k,</li>
+<li>https://doi.org/10.1128/aac.01097-18,</li>
+<li>https://doi.org/10.3390/molecules25061259,</li>
+<li>https://doi.org/10.3390/pharmaceutics16060725,</li>
+<li>https://doi.org/10.3389/fbioe.2016.00090,</li>
+<li>https://doi.org/10.1007/s10123-022-00282-5,</li>
+<li>https://doi.org/10.1128/aem.00572-24,</li>
+<li>https://doi.org/10.3390/ijms25105077,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88LU7
+gene_symbol: aroC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  aroC encodes chorismate synthase (CS; EC 4.2.3.5), the enzyme that catalyzes
+  the seventh and final step of the shikimate pathway. It converts
+  5-enolpyruvylshikimate-3-phosphate (EPSP) into chorismate via an anti-1,4
+  (trans) elimination of the C-3 phosphate and the C-6 proR hydrogen, introducing
+  a second double bond into the ring system. The reaction requires reduced flavin
+  mononucleotide (FMNH2) as an essential cofactor, even though the overall
+  transformation involves no net change in redox state; like other bacterial
+  monofunctional chorismate synthases, the enzyme relies on an external supply of
+  reduced FMN rather than reducing FMN itself. Chorismate is the central
+  branch-point metabolite of aromatic metabolism, serving as the common precursor
+  for the aromatic amino acids phenylalanine, tyrosine, and tryptophan, as well as
+  for folate (via para-aminobenzoate), ubiquinone/menaquinone, and other aromatic
+  metabolites. The protein belongs to the chorismate synthase family, assembles as
+  a homotetramer, and acts as a soluble cytosolic enzyme of central metabolism.
+existing_annotations:
+- term:
+    id: GO:0004107
+    label: chorismate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. AroC is a chorismate synthase (EC 4.2.3.5), as
+      established by the HAMAP rule MF_00300, conserved family membership
+      (IPR000453, PF01264, TIGR00033), and mapping to RHEA:21020. This directly
+      represents the gene&#39;s primary catalytic activity.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Chorismate synthase catalyzes a soluble step of central aromatic
+      metabolism and has no membrane-targeting features, consistent with a
+      cytosolic localization. This is a reasonable IEA/TreeGrafter inference for a
+      bacterial metabolic enzyme. Bacteria lack the GO cytosol/cytoplasm
+      distinction relevant in eukaryotes, but the term is acceptable as-is; it is
+      not a core functional annotation.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0009073
+    label: aromatic amino acid family biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Chorismate produced by AroC is the direct precursor of phenylalanine,
+      tyrosine, and tryptophan, so AroC is correctly placed in aromatic amino acid
+      biosynthesis. This is a valid biological-process annotation, though it is
+      broader than the gene&#39;s most specific role (chorismate biosynthesis), and
+      chorismate also feeds non-amino-acid pathways (folate, ubiquinone). Retained
+      as a supporting/non-core process annotation. (Note: GOA label text
+      &#34;aromatic amino acid biosynthetic process&#34; is the curated synonym; the
+      canonical GO:0009073 label is &#34;aromatic amino acid family biosynthetic
+      process&#34;.)
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0009423
+    label: chorismate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Most specific and accurate biological-process annotation: AroC catalyzes the
+      terminal (step 7/7) reaction of chorismate biosynthesis (UniPathway
+      UPA00053, UER00090). This is the core process for the gene.
+    action: ACCEPT
+- term:
+    id: GO:0010181
+    label: FMN binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Chorismate synthase requires and binds reduced FMN (FMNH2) as an essential
+      cofactor for catalysis; the UniProt record annotates multiple FMN-binding
+      residues (125-127, 237-238, 277, 292-296, 318). FMN binding is well
+      supported and integral to the catalytic mechanism, so this is accepted as a
+      genuine (though accessory-to-the-MF) molecular function annotation.
+    action: ACCEPT
+core_functions:
+- description: &gt;-
+    Catalyzes the terminal step of the shikimate pathway, the FMNH2-dependent
+    anti-1,4-elimination of phosphate from 5-enolpyruvylshikimate-3-phosphate
+    (EPSP) to form chorismate, supplying the branch-point precursor for aromatic
+    amino acid and other aromatic metabolite biosynthesis.
+  molecular_function:
+    id: GO:0004107
+    label: chorismate synthase activity
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: &gt;-
+      AroC mapped to chorismate synthase (EC 4.2.3.5; RHEA:21020) by HAMAP rule
+      MF_00300 and conserved family membership.
+  - reference_id: file:PSEPK/aroC/aroC-deep-research-falcon.md
+    supporting_text: &gt;-
+      Chorismate synthase (AroC; EC 4.2.3.5) catalyzes the terminal step of the
+      shikimate pathway, converting EPSP into chorismate with elimination of
+      phosphate via a 1,4-trans elimination, and requires reduced FMN (FMNH2) for
+      catalysis.
+  directly_involved_in:
+  - id: GO:0009423
+    label: chorismate biosynthetic process
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: &gt;-
+    Complete genome sequence and comparative analysis of the metabolically
+    versatile Pseudomonas putida KT2440.
+  findings:
+  - statement: &gt;-
+      Genome sequencing of P. putida KT2440 identified the aroC gene (PP_1830)
+      encoding chorismate synthase as part of the organism&#39;s metabolic gene
+      complement.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified genome paper for P. putida KT2440; source of the
+      PP_1830/aroC gene assignment. Does not provide direct biochemical
+      characterization of the AroC protein.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

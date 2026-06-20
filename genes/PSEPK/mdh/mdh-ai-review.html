@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mdh - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mdh</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88Q44" target="_blank" class="term-link">
+                        Q88Q44
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mdh";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88Q44" data-a="DESCRIPTION: NAD-dependent malate dehydrogenase (EC 1.1.1.37) o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NAD-dependent malate dehydrogenase (EC 1.1.1.37) of the LDH/MDH superfamily. It is a soluble, cytoplasmic enzyme that catalyzes the reversible NAD(+)-linked oxidation of (S)-malate to oxaloacetate, generating NADH. The enzyme sits at the malate/oxaloacetate node of central carbon metabolism, providing the oxaloacetate-regenerating step of the tricarboxylic acid (TCA) cycle and contributing reducing equivalents to respiratory metabolism. In Pseudomonas putida KT2440, enzyme assays of cell-free extracts show strong specificity for NAD(+) over NADP(+) (~98% NAD+), consistent with a canonical TCA-cycle malate dehydrogenase. The protein adopts the two-domain LDH/MDH fold with an N-terminal NAD(P)-binding Rossmann domain and a C-terminal substrate-binding domain, with a conserved His proton-acceptor active site and Arg residues that recognize the substrate carboxylates.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q44" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level molecular function term; correct but uninformative for an enzyme with a defined activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The gene product is an enzyme so catalytic activity is true, but this is a very general parent of the specific malate dehydrogenase activity (GO:0030060) and carries no specific information. Retained as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004459" target="_blank" class="term-link">
+                                    GO:0004459
+                                </a>
+                            </span>
+                            <span class="term-label">L-lactate dehydrogenase (NAD+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q44" data-a="GO:0004459" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter over-propagation from the LDH/MDH superfamily; this protein is a malate dehydrogenase, not a lactate dehydrogenase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA (TreeGrafter/PANTHER) annotation reflects an electronic mis-assignment within the shared LDH/MDH superfamily node. UniProt and InterPro (Malate_DH_type3, IPR011275) classify Q88Q44 as a malate dehydrogenase (EC 1.1.1.37, GO:0030060), and experimental assays in KT2440 measured malate dehydrogenase, not L-lactate dehydrogenase, activity. L-lactate dehydrogenase activity is not supported and is contradicted by the malate-specific function; this is an over-propagated electronic inference appropriate to remove.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006089" target="_blank" class="term-link">
+                                    GO:0006089
+                                </a>
+                            </span>
+                            <span class="term-label">lactate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q44" data-a="GO:0006089" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter over-propagation paired with the erroneous L-lactate dehydrogenase activity call; the gene functions in the TCA cycle, not lactate metabolism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This process annotation derives from the same incorrect LDH-superfamily grafting as GO:0004459. The enzyme acts on malate/oxaloacetate in the TCA cycle, not on lactate. Over-propagated electronic inference, appropriate to remove. The correct process is tricarboxylic acid cycle (GO:0006099), captured by UniProt keyword but missing from GOA.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q44" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct high-level oxidoreductase parent; uninformative relative to the specific malate dehydrogenase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> True but general parent of GO:0030060. Retained as non-core background.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016616" target="_blank" class="term-link">
+                                    GO:0016616
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q44" data-a="GO:0016616" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct intermediate-level parent describing NAD(P)-linked CH-OH oxidoreductases; more specific malate dehydrogenase activity is preferred as core.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurately describes the enzyme class (NAD-linked CH-OH oxidoreductase) but is a parent of the specific GO:0030060 L-malate dehydrogenase (NAD+) activity. Retained as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030060" target="_blank" class="term-link">
+                                    GO:0030060
+                                </a>
+                            </span>
+                            <span class="term-label">L-malate dehydrogenase (NAD+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q44" data-a="GO:0030060" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function, matching EC 1.1.1.37 and the UniProt catalytic activity (RHEA:21432, (S)-malate + NAD+ = oxaloacetate + NADH + H+).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core, well-supported molecular function. The UniProt RHEA/EC mapping and InterPro Malate_DH_type3 domain agree, and KT2440 cell-free extract assays demonstrated strong NAD+-specific malate dehydrogenase activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030060" target="_blank" class="term-link">
+                                    GO:0030060
+                                </a>
+                            </span>
+                            <span class="term-label">L-malate dehydrogenase (NAD+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q44" data-a="GO:0030060" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer of the core malate dehydrogenase activity from a characterized ortholog (UniProtKB:P61889); consistent with all other evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sequence-similarity transfer of the core function from an experimentally characterized MDH ortholog. Concordant with the EC mapping, InterPro family, conserved active-site/binding residues, and KT2440 enzyme assay data. Represents the core function of the gene.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NAD-dependent L-malate dehydrogenase catalyzing the reversible oxidation of (S)-malate to oxaloacetate with reduction of NAD+ to NADH, the oxaloacetate-regenerating step of the TCA cycle.</h3>
+                <span class="vote-buttons" data-g="Q88Q44" data-a="FUNCTION: NAD-dependent L-malate dehydrogenase catalyzing th..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030060" target="_blank" class="term-link">
+                            L-malate dehydrogenase (NAD+) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/mdh/mdh-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">P. putida KT2440 Mdh (PP_0654) catalyzes L-malate + NAD+ = oxaloacetate + NADH + H+ and shows ~98% NAD+ vs ~2% NADP+ cofactor preference in cell-free extract assays.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/mdh/mdh-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on P. putida KT2440 mdh (PP_0654), synthesizing Nikel et al. 2015 (J Biol Chem; NAD+ cofactor specificity), de Lorenzo et al. 2024 (Essays Biochem; MDH catalytic mechanism), and 2023-2024 P. putida systems/engineering studies</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida KT2440 Mdh (PP_0654) is a canonical NAD-dependent malate dehydrogenase acting at the malate/oxaloacetate node of the TCA cycle; cell-free extract assays show ~98% NAD+ vs ~2% NADP+ cofactor preference.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is mdh (PP_0654) the sole NAD-dependent malate dehydrogenase in P. putida KT2440, or do malate:quinone oxidoreductase (Mqo) isozymes and malic enzymes provide redundant routes through the malate node?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88Q44" data-a="Q: Is mdh (PP_0654) the sole NAD-dependent malate deh..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify recombinant PP_0654 and determine steady-state kinetic constants (Km, kcat) for L-malate, oxaloacetate, NAD+ and NADH to confirm the canonical ordered Bi-Bi mechanism and quantify directional preference under physiological conditions.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88Q44" data-a="EXPERIMENT: Purify recombinant PP_0654 and determine steady-st..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a clean mdh (PP_0654) deletion and assess growth on TCA-cycle and gluconeogenic carbon sources, with 13C-metabolic flux analysis to test rerouting of malate via malic enzyme and the glyoxylate shunt.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88Q44" data-a="EXPERIMENT: Construct a clean mdh (PP_0654) deletion and asses..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mdh-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88Q44" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">25 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:27:06.227258</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="mdh-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="mdh-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000007 The cofactor specificity of malate dehydrogenase (Mdh, PP0654) in *Pseudomonas putida* KT2440 is detailed in Table 3. Under saturat</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-pseudomonas-putida-kt2440-mdh-uniprot-q88q44-locus-pp_0654-probable-malate-dehydrogenase-ec-11137">Research Report: Functional Annotation of <em>Pseudomonas putida</em> KT2440 <strong>mdh</strong> (UniProt Q88Q44; locus <strong>PP_0654</strong>) — probable malate dehydrogenase (EC 1.1.1.37)</h2>
+<h3 id="0-executive-summary">0) Executive summary</h3>
+<p>The UniProt target <strong>Q88Q44</strong> corresponds to <em>Pseudomonas putida</em> KT2440 <strong>Mdh</strong> encoded by <strong>mdh / PP_0654</strong>, a soluble, NAD-dependent malate dehydrogenase positioned at the <strong>malate ⇌ oxaloacetate</strong> node of central carbon metabolism. Experimental evidence in KT2440 cell-free extracts demonstrates <strong>strong NAD+ preference</strong> (~98% NAD+ vs ~2% NADP+ under multiple assay regimes). Recent 2023–2024 multi-omics studies in <em>P. putida</em> metabolic engineering and adaptation track <strong>Mdh (PP_0654)</strong> abundance/flux and show that removing or down-modulating this node can re-route malate away from oxaloacetate, engage the glyoxylate shunt, and reshape redox/cofactor demands—strategies leveraged for <strong>bioproduction</strong> and <strong>non-native substrate utilization</strong>. (nikel2015pseudomonasputidakt2440 pages 21-25, eng2023ensembleanditerative pages 11-13, dvorak2023genomicandmetabolic pages 41-45, dvorak2023genomicandmetabolic pages 20-22)</p>
+<hr />
+<h3 id="1-target-verification-mandatory-identity-checks">1) Target verification (mandatory identity checks)</h3>
+<p><strong>Gene symbol ambiguity resolution.</strong> “mdh” can denote different malate dehydrogenase types (cytosolic/mitochondrial in eukaryotes; NAD- vs quinone-dependent oxidoreductases; D-malate dehydrogenases). For this request, multiple independent <em>P. putida</em> KT2440/EM42 studies explicitly refer to <strong>malate dehydrogenase Mdh (PP_0654)</strong> in central metabolism, matching the UniProt identity and avoiding cross-organism symbol confusion. (dvorak2023genomicandmetabolic pages 41-45, eng2023ensembleanditerative pages 11-13)</p>
+<p><strong>Consistency with UniProt annotation.</strong> Experimental cofactor specificity for <strong>Mdh (PP_0654)</strong> in KT2440 supports classification as a <strong>canonical NAD-dependent malate dehydrogenase (EC 1.1.1.37)</strong>, consistent with UniProt’s “probable malate dehydrogenase” assignment. (nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 media 2fe70d77)</p>
+<hr />
+<h3 id="2-key-concepts-and-current-understanding">2) Key concepts and current understanding</h3>
+<h4 id="21-core-definition-and-reaction">2.1 Core definition and reaction</h4>
+<p>Malate dehydrogenase (MDH; EC 1.1.1.37) catalyzes the reversible reaction:</p>
+<p><strong>L-malate + NAD+ ⇌ oxaloacetate + NADH + H+</strong>. (lorenzo2024catalyticmechanismand pages 1-2)</p>
+<p>This enzyme is ubiquitous and central to metabolism; it is commonly positioned to supply <strong>oxaloacetate</strong> (OAA) to the TCA cycle and to generate <strong>NADH</strong> that feeds respiratory energy metabolism. (lorenzo2024catalyticmechanismand pages 1-2)</p>
+<h4 id="22-mechanism-and-substratecosubstrate-specificity-authoritative-2024-synthesis">2.2 Mechanism and substrate/cosubstrate specificity (authoritative 2024 synthesis)</h4>
+<p>A recent mechanistic review (Essays in Biochemistry, 2024) summarizes MDH as following an <strong>ordered Bi–Bi (compulsory order)</strong> kinetic mechanism (NAD+ binds before malate; products released oxaloacetate then NADH) and highlights active-site loop closure as a key determinant of specificity and catalysis. (lorenzo2024catalyticmechanismand pages 5-7, lorenzo2024catalyticmechanismand pages 7-8)</p>
+<p>The review also details conserved catalytic features: a <strong>His–Asp catalytic dyad</strong> and multiple <strong>Arg residues</strong> that recognize substrate carboxylates, and reports a large discrimination against non-cognate substrates (e.g., oxaloacetate reduced far faster than pyruvate). (lorenzo2024catalyticmechanismand pages 2-5, lorenzo2024catalyticmechanismand pages 1-2)</p>
+<p>Thermodynamically, the equilibrium can strongly favor <strong>L-malate/NAD+</strong> under physiological conditions (example values in the review: Keq′ ≈ 2.9×10−5 at 38°C, pH 7; ΔG ≈ +27 kJ/mol), reinforcing that cellular directionality is often set by network context (substrate/product levels and coupling), not just intrinsic enzyme preference. (lorenzo2024catalyticmechanismand pages 1-2)</p>
+<hr />
+<h3 id="3-biochemical-function-of-p-putida-mdh-pp_0654-cofactors-and-specificity">3) Biochemical function of <em>P. putida</em> Mdh (PP_0654): cofactors and specificity</h3>
+<h4 id="31-cofactor-preference-measured-in-p-putida-kt2440">3.1 Cofactor preference measured in <em>P. putida</em> KT2440</h4>
+<p>In <em>P. putida</em> KT2440, Mdh was assayed in cell-free extracts from exponential-phase cultures grown on glucose minimal medium. Under saturating conditions, <strong>Mdh (PP_0654)</strong> showed <strong>98.4 ± 0.7%</strong> relative specificity for <strong>NAD+</strong> vs <strong>1.6 ± 0.7%</strong> for <strong>NADP+</strong>; under quasi in vivo/non-saturating conditions, <strong>97.5 ± 8.4% NAD+</strong> vs <strong>2.5 ± 1.2% NADP+</strong>. (nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 media 2fe70d77)</p>
+<p>These data strongly support that the physiological cofactor for PP_0654 is <strong>NAD(H)</strong> rather than NADP(H), consistent with canonical TCA-cycle-linked MDH activity. (nikel2015pseudomonasputidakt2440 pages 21-25)</p>
+<h4 id="32-kinetic-expectations-general-mdh-literature-not-pp_0654-specific">3.2 Kinetic expectations (general MDH literature; not PP_0654-specific)</h4>
+<p>While direct kinetic constants (Km, kcat) for <em>P. putida</em> PP_0654 were not found in the retrieved pages, the 2024 review compiles representative MDH kinetics across organisms and emphasizes typical patterns: <strong>KM(OAA) is commonly lower than KM(L-malate)</strong>, and <strong>KM(NADH) is lower than KM(NAD+)</strong>, consistent with cellular metabolite availability and the common practice of studying OAA reduction in vitro. (lorenzo2024catalyticmechanismand pages 5-7)</p>
+<hr />
+<h3 id="4-biological-role-and-pathway-context-in-pseudomonas-putida">4) Biological role and pathway context in <em>Pseudomonas putida</em></h3>
+<h4 id="41-placement-in-central-metabolism-tca-cycle-malateoaa-node">4.1 Placement in central metabolism (TCA cycle; malate/OAA node)</h4>
+<p>Recent <em>P. putida</em> studies explicitly annotate <strong>Mdh (PP_0654)</strong> as part of the <strong>TCA cycle</strong> and track its abundance as a central node enzyme during adaptation to non-native carbon sources. (dvorak2023genomicandmetabolic pages 41-45)</p>
+<p>In a 13C-metabolic flux analysis (MFA) of engineered <em>P. putida</em> grown on D-xylose, malate dehydrogenase is identified among high-flux <strong>central dehydrogenase reactions</strong>, alongside Zwf/Gnd and pyruvate dehydrogenase, with discussion of flux through the malate/OAA node in relation to the glyoxylate shunt and redox demands. (dvorak2023genomicandmetabolic pages 20-22)</p>
+<h4 id="42-coupling-to-glyoxylate-shunt-and-redox-balancing-20232024-systems-evidence">4.2 Coupling to glyoxylate shunt and redox balancing (2023–2024 systems evidence)</h4>
+<p>During xylose metabolism adaptation in <em>P. putida</em>, MFA and proteomics indicate engagement of the <strong>glyoxylate shunt</strong> (AceA/GlcB) and suggest interplay between <strong>redox balance</strong> and shunt activity; different evolved lineages show different patterns of TCA vs glyoxylate usage, with Mdh abundance changing modestly in one lineage and increasing in another where it is argued to support TCA-cycle functioning. (dvorak2023genomicandmetabolic pages 20-22, dvorak2023genomicandmetabolic pages 41-45)</p>
+<p>In the 2024 Nature Communications xylose study, the authors explicitly state that <strong>upregulation of … malate dehydrogenase Mdh</strong> (with other TCA enzymes) “supported functioning of the TCA cycle,” consistent with an adaptive shift toward oxidative metabolism when the glyoxylate shunt is downregulated (e.g., AceA down in the gnd− lineage). (dvorak2024syntheticallyprimedadaptationof pages 11-12)</p>
+<h4 id="43-cellular-localization">4.3 Cellular localization</h4>
+<p>No direct localization experiment for PP_0654 was found in the retrieved sources. However, the KT2440 evidence comes from <strong>cell-free extract enzyme assays</strong> and central metabolism mapping, supporting the inference that PP_0654 encodes a <strong>soluble cytosolic (cytoplasmic) enzyme</strong>, typical for bacterial NAD-dependent MDH participating in the TCA cycle. This should be treated as an inference rather than experimentally proven localization within the cited texts. (nikel2015pseudomonasputidakt2440 pages 5-6, lorenzo2024catalyticmechanismand pages 1-2)</p>
+<hr />
+<h3 id="5-recent-developments-20232024-prioritized-systems-biology-and-metabolic-engineering-involving-pp_0654">5) Recent developments (2023–2024 prioritized): systems biology and metabolic engineering involving PP_0654</h3>
+<h4 id="51-2024-engineered-evolved-p-putida-for-d-xylose-utilization-real-world-implementation">5.1 2024: engineered + evolved <em>P. putida</em> for D-xylose utilization (real-world implementation)</h4>
+<p>A 2024 <em>Nature Communications</em> study used metabolic engineering plus adaptive laboratory evolution to enable and improve <em>P. putida</em> growth on the lignocellulosic sugar D-xylose, with multi-level analysis (including proteomics). In this context, Mdh is part of the tracked central metabolism and is discussed as supporting TCA cycle operation in one evolved lineage. (dvorak2024syntheticallyprimedadaptationof pages 10-11, dvorak2024syntheticallyprimedadaptationof pages 11-12)</p>
+<p>Quantitative phenotype data relevant to central rewiring (though not uniquely attributable to mdh alone) show dramatic lag-phase improvements depending on regulatory-genotype context: an engineered strain PD855 exhibited lag phase <strong>4.94 ± 0.39 h</strong>, whereas a comparable strain with functional hexR showed lag phase <strong>20.80 ± 0.31 h</strong>. This provides a concrete example of how central carbon regulation reshapes the growth phenotype in the metabolic network in which Mdh operates. (dvorak2024syntheticallyprimedadaptationof pages 11-12)</p>
+<h4 id="52-2023-growth-coupled-bioproduction-indigoidine-from-para-coumarate-exploits-the-malateoaa-node">5.2 2023: growth-coupled bioproduction (indigoidine from para-coumarate) exploits the malate/OAA node</h4>
+<p>A 2023 systems engineering preprint analyzed growth-coupling designs for producing the blue pigment <strong>indigoidine</strong> from lignin-related carbon (p-coumarate) in <em>P. putida</em> KT2440. In Design 1 strains, proteomics explicitly reported <strong>zero protein counts</strong> for <strong>Mdh/PP_0654</strong>, consistent with engineered deletions affecting the malate→oxaloacetate step. (eng2023ensembleanditerative pages 11-13)</p>
+<p>Quantitative multi-omics in these strains indicate compensatory rerouting at adjacent nodes: for example, a fumarate→malate isozyme (PP_0897) was <strong>25–30% higher</strong> than WT while Mqo3 was reduced to <strong>9–26%</strong> of WT; malic enzyme MaeB (malate→pyruvate) was reported at <strong>~2-fold higher</strong> protein abundance, consistent with diverting malate away from oxaloacetate production; the glyoxylate shunt enzymes AceA and GlcB were strongly upregulated (reported as multiple-fold changes). (eng2023ensembleanditerative pages 11-13)</p>
+<p>Metabolomics further support bottlenecks or rerouting around the fumarate/malate/OAA region (e.g., <strong>fumarate 2.7-fold higher</strong> in one strain vs WT) with downstream shifts in TCA-linked metabolites and nitrogen assimilation precursors (e.g., AKG and glutamate changes) relevant to indigoidine biosynthesis. (eng2023ensembleanditerative pages 13-16)</p>
+<hr />
+<h3 id="6-statistics-and-data-highlights-recent-studies">6) Statistics and data highlights (recent studies)</h3>
+<h4 id="61-quantitative-cofactor-specificity-direct-biochemical-assay">6.1 Quantitative cofactor specificity (direct biochemical assay)</h4>
+<p>The strongest quantitative functional data directly tied to PP_0654 in this evidence set are the NAD-vs-NADP specificity measurements in KT2440 extracts (Table 3 in Nikel et al., 2015). (nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 media 2fe70d77)</p>
+<h4 id="62-quantitative-proteomicsmetabolomics-when-mdh-is-absent">6.2 Quantitative proteomics/metabolomics when Mdh is absent</h4>
+<p>In the indigoidine engineering context, quantitative proteomics showed Mdh/PP_0654 undetectable (zero counts) and reported numeric relative changes in neighboring nodes (percent-of-WT and ~2-fold values) and glyoxylate shunt upregulation; metabolomics reported a <strong>2.7-fold</strong> fumarate increase and multiple fold-changes in central metabolites (e.g., AKG, glutamate, glutamine). (eng2023ensembleanditerative pages 11-13, eng2023ensembleanditerative pages 13-16)</p>
+<h4 id="63-expert-synthesis-kinetics-and-thermodynamics">6.3 Expert synthesis: kinetics and thermodynamics</h4>
+<p>The 2024 MDH review provides representative kinetic constants across MDH isoforms (e.g., OAA KM in the tens of µM and L-malate KM in the hundreds-to-thousands of µM in some cited examples) and highlights that equilibrium/thermodynamics can oppose OAA formation at physiological conditions, reinforcing that MDH flux in vivo is often driven by pathway coupling. (lorenzo2024catalyticmechanismand pages 5-7, lorenzo2024catalyticmechanismand pages 1-2)</p>
+<hr />
+<h3 id="7-interpretation-and-expert-analysis-evidence-based">7) Interpretation and expert analysis (evidence-based)</h3>
+<ol>
+<li><strong>Functional assignment confidence is high</strong>: PP_0654 is repeatedly annotated as Mdh in <em>P. putida</em> KT2440-derived strains, and biochemical assay data show dominant NAD dependence consistent with EC 1.1.1.37 activity. (nikel2015pseudomonasputidakt2440 pages 21-25, dvorak2023genomicandmetabolic pages 41-45)</li>
+<li><strong>Physiological role is context-dependent</strong>: While MDH is formally reversible, modern enzymology emphasizes that cellular directionality is set by metabolite ratios and coupling; the strong thermodynamic bias toward malate under some conditions implies that producing OAA may require pulling flux (e.g., downstream consumption or anaplerotic demands). (lorenzo2024catalyticmechanismand pages 1-2)</li>
+<li><strong>Engineering leverage point</strong>: 2023–2024 studies illustrate that <em>P. putida</em> engineers can exploit the malate/OAA node by lowering Mdh abundance/activity (e.g., eliminating detectable Mdh/PP_0654) to reroute malate carbon (via MaeB) and engage the glyoxylate shunt, consistent with growth-coupled production strategies. (eng2023ensembleanditerative pages 11-13)</li>
+</ol>
+<hr />
+<h3 id="8-evidence-summary-table">8) Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Claim/Field</th>
+<th>Evidence summary</th>
+<th>Organism/strain context</th>
+<th>Year</th>
+<th>Source (DOI/URL)</th>
+<th>Citation id(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene/protein identifiers</td>
+<td>Target identity is consistent across sources as <strong>Mdh</strong>, locus <strong>PP_0654</strong>, in <em>Pseudomonas putida</em> KT2440/EM42-derived strains; recent proteomics papers explicitly annotate <strong>Mdh (PP_0654)</strong>, matching UniProt <strong>Q88Q44</strong> and the annotation “probable malate dehydrogenase.”</td>
+<td><em>P. putida</em> KT2440 and derivatives (including EM42-derived xylose-engineered strains)</td>
+<td>2015, 2023, 2024</td>
+<td>Nikel et al., JBC, 2015, https://doi.org/10.1074/jbc.m115.687749; Dvořák et al., bioRxiv, 2023, https://doi.org/10.1101/2023.05.19.541448; Dvořák et al., Nat Commun, 2024, https://doi.org/10.1038/s41467-024-46812-9</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 21-25, dvorak2023genomicandmetabolic pages 41-45, dvorak2024syntheticallyprimedadaptationof pages 10-11)</td>
+</tr>
+<tr>
+<td>Reaction/EC</td>
+<td>By family annotation and authoritative MDH review, the enzyme catalyzes the reversible reaction <strong>L-malate + NAD+ ⇌ oxaloacetate + NADH + H+</strong> (<strong>EC 1.1.1.37</strong>). The 2024 review describes canonical MDH chemistry as NAD+-dependent, ordered Bi-Bi, with strong specificity for L-malate/oxaloacetate.</td>
+<td>General MDH definition applied to bacterial Mdh; consistent with <em>P. putida</em> PP_0654 annotation</td>
+<td>2024</td>
+<td>de Lorenzo et al., Essays Biochem, 2024, https://doi.org/10.1042/EBC20230086</td>
+<td>(lorenzo2024catalyticmechanismand pages 5-7, lorenzo2024catalyticmechanismand pages 2-5, lorenzo2024catalyticmechanismand pages 1-2, lorenzo2024catalyticmechanismand pages 7-8)</td>
+</tr>
+<tr>
+<td>Cofactor specificity (quantitative)</td>
+<td>In <em>P. putida</em> KT2440 cell-free extracts, <strong>Mdh (PP_0654)</strong> is strongly <strong>NAD+-specific</strong>. Under saturating conditions: <strong>98.4 ± 0.7% NAD+</strong> vs <strong>1.6 ± 0.7% NADP+</strong>. Under quasi in vivo/non-saturating conditions: <strong>97.5 ± 8.4% NAD+</strong> vs <strong>2.5 ± 1.2% NADP+</strong>.</td>
+<td><em>P. putida</em> KT2440, exponential phase, M9 + 20 mM glucose, enzyme assays from cell-free extracts</td>
+<td>2015</td>
+<td>Nikel et al., JBC, 2015, Table 3, https://doi.org/10.1074/jbc.m115.687749</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 pages 7-8, nikel2015pseudomonasputidakt2440 media 2fe70d77)</td>
+</tr>
+<tr>
+<td>Pathway roles</td>
+<td>Evidence places Mdh at the <strong>malate/oxaloacetate node of central carbon metabolism</strong>, principally the <strong>TCA cycle</strong>, with links to <strong>glyoxylate shunt engagement</strong> and <strong>redox balancing</strong>. 13C-MFA during xylose growth identified high dehydrogenase flux including MDH and an active glyoxylate shunt; proteomics in evolved xylose strains showed Mdh abundance changes consistent with altered TCA use. In indigoidine-engineering strains, deletion/loss of <strong>Mdh/PP_0654</strong> rerouted malate away from oxaloacetate toward pyruvate while glyoxylate shunt proteins increased.</td>
+<td><em>P. putida</em> EM42-derived xylose strains (PD310, PD584, PD584 L3, PD689 tt L1); KT2440-derived indigoidine strains</td>
+<td>2023, 2024</td>
+<td>Dvořák et al., bioRxiv, 2023, https://doi.org/10.1101/2023.05.19.541448; Dvořák et al., Nat Commun, 2024, https://doi.org/10.1038/s41467-024-46812-9; Eng et al., bioRxiv, 2023, https://doi.org/10.1101/2023.03.16.532821</td>
+<td>(eng2023ensembleanditerative pages 11-13, dvorak2023genomicandmetabolic pages 41-45, dvorak2023genomicandmetabolic pages 22-26, dvorak2023genomicandmetabolic pages 20-22, dvorak2024syntheticallyprimedadaptationof pages 10-11)</td>
+</tr>
+<tr>
+<td>Systems/engineering contexts</td>
+<td><strong>Xylose adaptation:</strong> MDH was tracked by <strong>13C-metabolic flux analysis</strong> and <strong>proteomics</strong> as part of rewiring central metabolism for growth on non-native D-xylose; Mdh abundance decreased slightly in one evolved lineage and increased in another, indicating alternative adaptation routes. <strong>Indigoidine production:</strong> <strong>proteomics</strong> showed <strong>Mdh/PP_0654 had zero protein counts</strong> in engineered deletion backgrounds, supporting deliberate rerouting of the malate→oxaloacetate step to improve product coupling.</td>
+<td>Xylose-adapted EM42 derivatives; para-coumarate/indigoidine KT2440 engineering backgrounds</td>
+<td>2023, 2024</td>
+<td>Dvořák et al., bioRxiv, 2023, https://doi.org/10.1101/2023.05.19.541448; Dvořák et al., Nat Commun, 2024, https://doi.org/10.1038/s41467-024-46812-9; Eng et al., bioRxiv, 2023, https://doi.org/10.1101/2023.03.16.532821</td>
+<td>(eng2023ensembleanditerative pages 11-13, dvorak2023genomicandmetabolic pages 41-45, dvorak2023genomicandmetabolic pages 22-26, dvorak2023genomicandmetabolic pages 20-22, dvorak2024syntheticallyprimedadaptationof pages 10-11)</td>
+</tr>
+<tr>
+<td>Localization inference</td>
+<td>No direct localization experiment for PP_0654 was retrieved here. For bacterial central carbon MDH, the evidence supports a <strong>cytosolic/cytoplasmic enzyme</strong> acting in soluble metabolism rather than a membrane or periplasmic oxidoreductase. This is an <strong>inference</strong> from canonical MDH function, assay context using cell-free extracts, and pathway placement; localization should therefore be treated as probable rather than directly demonstrated in the cited <em>P. putida</em> papers.</td>
+<td><em>P. putida</em> KT2440/derivatives; inference from bacterial central metabolism</td>
+<td>2015, 2024</td>
+<td>Nikel et al., JBC, 2015, https://doi.org/10.1074/jbc.m115.687749; de Lorenzo et al., Essays Biochem, 2024, https://doi.org/10.1042/EBC20230086</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 21-25, lorenzo2024catalyticmechanismand pages 1-2, lorenzo2024catalyticmechanismand pages 7-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest evidence supporting the functional annotation of Pseudomonas putida KT2440 Mdh (PP_0654; UniProt Q88Q44). It integrates foundational biochemical evidence with 2023-2024 systems studies showing how the enzyme participates in central metabolism and metabolic engineering contexts.</em></p>
+<hr />
+<h3 id="9-key-sources-with-urls-and-publication-dates">9) Key sources (with URLs and publication dates)</h3>
+<ul>
+<li>Nikel PI et al. <em>J Biol Chem.</em> <strong>2015-10</strong>. “<em>Pseudomonas putida</em> KT2440 Strain Metabolizes Glucose…” https://doi.org/10.1074/jbc.m115.687749 (nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 media 2fe70d77)</li>
+<li>Eng TT et al. <em>bioRxiv</em> <strong>2023-03</strong>. “Ensemble and Iterative Engineering…” https://doi.org/10.1101/2023.03.16.532821 (eng2023ensembleanditerative pages 11-13, eng2023ensembleanditerative pages 13-16)</li>
+<li>Dvořák P et al. <em>bioRxiv</em> <strong>2023-05</strong>. “Genomic and metabolic plasticity…” https://doi.org/10.1101/2023.05.19.541448 (dvorak2023genomicandmetabolic pages 41-45, dvorak2023genomicandmetabolic pages 20-22)</li>
+<li>Dvořák P et al. <em>Nature Communications</em> <strong>2024-03</strong>. “Synthetically-primed adaptation…” https://doi.org/10.1038/s41467-024-46812-9 (dvorak2024syntheticallyprimedadaptationof pages 11-12)</li>
+<li>de Lorenzo L et al. <em>Essays in Biochemistry</em> <strong>2024-10</strong>. “Catalytic mechanism and kinetics of malate dehydrogenase” https://doi.org/10.1042/ebc20230086 (lorenzo2024catalyticmechanismand pages 1-2, lorenzo2024catalyticmechanismand pages 5-7)</li>
+</ul>
+<hr />
+<h3 id="10-limitations-of-this-evidence-set">10) Limitations of this evidence set</h3>
+<ul>
+<li><strong>Direct enzymatic kinetics (Km/kcat) for <em>P. putida</em> PP_0654</strong> were not located in the retrieved texts; claims about kinetics beyond cofactor preference are therefore supported by general MDH literature rather than PP_0654-specific enzymology. (lorenzo2024catalyticmechanismand pages 5-7, nikel2015pseudomonasputidakt2440 pages 21-25)</li>
+<li><strong>Subcellular localization</strong> for PP_0654 was not experimentally demonstrated in the retrieved papers; localization is inferred from soluble assays and canonical bacterial MDH roles. (nikel2015pseudomonasputidakt2440 pages 5-6)</li>
+<li><strong>Essentiality</strong> of mdh/PP_0654 in KT2440 was not directly extracted here; thus, no essentiality claim is made.</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 21-25): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(eng2023ensembleanditerative pages 11-13): Thomas T Eng, Deepanwita Banerjee, Javier Menasalvas, Yan Chen, Jennifer Gin, Hemant Choudhary, Edward Baidoo, Jian Hua Chen, Axel Ekman, Ramu Kakumanu, Yuzhong Liu Diercks, Alex Codik, Carolyn Larabell, John Gladden, Blake A Simmons, Jay D Keasling, Christopher J Petzold, and Aindrila Mukhopadhyay. Ensemble and iterative engineering for maximized bioconversion to the blue pigment, indigoidine from non-canonical sustainable carbon sources. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.16.532821, doi:10.1101/2023.03.16.532821. This article has 1 citations.</p>
+</li>
+<li>
+<p>(dvorak2023genomicandmetabolic pages 41-45): Pavel Dvořák, Barbora Burýšková, Barbora Popelářová, Birgitta Ebert, Tibor Botka, Dalimil Bujdoš, Alberto Sánchez-Pascuala, Hannah Schöttler, Heiko Hayen, Víctor de Lorenzo, Lars M. Blank, and Martin Benešík. Genomic and metabolic plasticity drive alternative scenarios for adapting pseudomonas putida to non-native substrate d-xylose. bioRxiv, May 2023. URL: https://doi.org/10.1101/2023.05.19.541448, doi:10.1101/2023.05.19.541448. This article has 0 citations.</p>
+</li>
+<li>
+<p>(dvorak2023genomicandmetabolic pages 20-22): Pavel Dvořák, Barbora Burýšková, Barbora Popelářová, Birgitta Ebert, Tibor Botka, Dalimil Bujdoš, Alberto Sánchez-Pascuala, Hannah Schöttler, Heiko Hayen, Víctor de Lorenzo, Lars M. Blank, and Martin Benešík. Genomic and metabolic plasticity drive alternative scenarios for adapting pseudomonas putida to non-native substrate d-xylose. bioRxiv, May 2023. URL: https://doi.org/10.1101/2023.05.19.541448, doi:10.1101/2023.05.19.541448. This article has 0 citations.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 media 2fe70d77): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lorenzo2024catalyticmechanismand pages 1-2): Laura de Lorenzo, Tyler M.M. Stack, Kristin M. Fox, and Katherine M. Walstrom. Catalytic mechanism and kinetics of malate dehydrogenase. Essays in Biochemistry, 68:73-82, Oct 2024. URL: https://doi.org/10.1042/ebc20230086, doi:10.1042/ebc20230086. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lorenzo2024catalyticmechanismand pages 5-7): Laura de Lorenzo, Tyler M.M. Stack, Kristin M. Fox, and Katherine M. Walstrom. Catalytic mechanism and kinetics of malate dehydrogenase. Essays in Biochemistry, 68:73-82, Oct 2024. URL: https://doi.org/10.1042/ebc20230086, doi:10.1042/ebc20230086. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lorenzo2024catalyticmechanismand pages 7-8): Laura de Lorenzo, Tyler M.M. Stack, Kristin M. Fox, and Katherine M. Walstrom. Catalytic mechanism and kinetics of malate dehydrogenase. Essays in Biochemistry, 68:73-82, Oct 2024. URL: https://doi.org/10.1042/ebc20230086, doi:10.1042/ebc20230086. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lorenzo2024catalyticmechanismand pages 2-5): Laura de Lorenzo, Tyler M.M. Stack, Kristin M. Fox, and Katherine M. Walstrom. Catalytic mechanism and kinetics of malate dehydrogenase. Essays in Biochemistry, 68:73-82, Oct 2024. URL: https://doi.org/10.1042/ebc20230086, doi:10.1042/ebc20230086. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dvorak2024syntheticallyprimedadaptationof pages 11-12): Pavel Dvořák, Barbora Burýšková, Barbora Popelářová, Birgitta Elisabeth Ebert, Tibor Botka, Dalimil Bujdoš, Alberto Sánchez-Pascuala, Hannah Schöttler, Heiko Hayen, Víctor de Lorenzo, Lars M. Blank, and Martin Benešík. Synthetically-primed adaptation of pseudomonas putida to a non-native substrate d-xylose. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46812-9, doi:10.1038/s41467-024-46812-9. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 5-6): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dvorak2024syntheticallyprimedadaptationof pages 10-11): Pavel Dvořák, Barbora Burýšková, Barbora Popelářová, Birgitta Elisabeth Ebert, Tibor Botka, Dalimil Bujdoš, Alberto Sánchez-Pascuala, Hannah Schöttler, Heiko Hayen, Víctor de Lorenzo, Lars M. Blank, and Martin Benešík. Synthetically-primed adaptation of pseudomonas putida to a non-native substrate d-xylose. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46812-9, doi:10.1038/s41467-024-46812-9. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(eng2023ensembleanditerative pages 13-16): Thomas T Eng, Deepanwita Banerjee, Javier Menasalvas, Yan Chen, Jennifer Gin, Hemant Choudhary, Edward Baidoo, Jian Hua Chen, Axel Ekman, Ramu Kakumanu, Yuzhong Liu Diercks, Alex Codik, Carolyn Larabell, John Gladden, Blake A Simmons, Jay D Keasling, Christopher J Petzold, and Aindrila Mukhopadhyay. Ensemble and iterative engineering for maximized bioconversion to the blue pigment, indigoidine from non-canonical sustainable carbon sources. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.16.532821, doi:10.1101/2023.03.16.532821. This article has 1 citations.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 7-8): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dvorak2023genomicandmetabolic pages 22-26): Pavel Dvořák, Barbora Burýšková, Barbora Popelářová, Birgitta Ebert, Tibor Botka, Dalimil Bujdoš, Alberto Sánchez-Pascuala, Hannah Schöttler, Heiko Hayen, Víctor de Lorenzo, Lars M. Blank, and Martin Benešík. Genomic and metabolic plasticity drive alternative scenarios for adapting pseudomonas putida to non-native substrate d-xylose. bioRxiv, May 2023. URL: https://doi.org/10.1101/2023.05.19.541448, doi:10.1101/2023.05.19.541448. This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="mdh-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000007 The cofactor specificity of malate dehydrogenase (Mdh, PP0654) in *Pseudomonas putida* KT2440 is detailed in Table 3. Under saturat" src="mdh-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lorenzo2024catalyticmechanismand pages 1-2</li>
+<li>lorenzo2024catalyticmechanismand pages 5-7</li>
+<li>dvorak2023genomicandmetabolic pages 41-45</li>
+<li>dvorak2023genomicandmetabolic pages 20-22</li>
+<li>dvorak2024syntheticallyprimedadaptationof pages 11-12</li>
+<li>eng2023ensembleanditerative pages 11-13</li>
+<li>eng2023ensembleanditerative pages 13-16</li>
+<li>lorenzo2024catalyticmechanismand pages 7-8</li>
+<li>lorenzo2024catalyticmechanismand pages 2-5</li>
+<li>dvorak2024syntheticallyprimedadaptationof pages 10-11</li>
+<li>dvorak2023genomicandmetabolic pages 22-26</li>
+<li>https://doi.org/10.1074/jbc.m115.687749;</li>
+<li>https://doi.org/10.1101/2023.05.19.541448;</li>
+<li>https://doi.org/10.1038/s41467-024-46812-9</li>
+<li>https://doi.org/10.1042/EBC20230086</li>
+<li>https://doi.org/10.1074/jbc.m115.687749</li>
+<li>https://doi.org/10.1038/s41467-024-46812-9;</li>
+<li>https://doi.org/10.1101/2023.03.16.532821</li>
+<li>https://doi.org/10.1101/2023.05.19.541448</li>
+<li>https://doi.org/10.1042/ebc20230086</li>
+<li>https://doi.org/10.1074/jbc.m115.687749,</li>
+<li>https://doi.org/10.1101/2023.03.16.532821,</li>
+<li>https://doi.org/10.1101/2023.05.19.541448,</li>
+<li>https://doi.org/10.1042/ebc20230086,</li>
+<li>https://doi.org/10.1038/s41467-024-46812-9,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88Q44
+gene_symbol: mdh
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: NAD-dependent malate dehydrogenase (EC 1.1.1.37) of the LDH/MDH superfamily. It is a soluble, cytoplasmic enzyme that catalyzes the reversible NAD(+)-linked oxidation of (S)-malate to oxaloacetate, generating NADH. The enzyme sits at the malate/oxaloacetate node of central carbon metabolism, providing the oxaloacetate-regenerating step of the tricarboxylic acid (TCA) cycle and contributing reducing equivalents to respiratory metabolism. In Pseudomonas putida KT2440, enzyme assays of cell-free extracts show strong specificity for NAD(+) over NADP(+) (~98% NAD+), consistent with a canonical TCA-cycle malate dehydrogenase. The protein adopts the two-domain LDH/MDH fold with an N-terminal NAD(P)-binding Rossmann domain and a C-terminal substrate-binding domain, with a conserved His proton-acceptor active site and Arg residues that recognize the substrate carboxylates.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/mdh/mdh-deep-research-falcon.md
+  title: Deep research report on P. putida KT2440 mdh (PP_0654), synthesizing Nikel et al. 2015 (J Biol Chem; NAD+ cofactor specificity), de Lorenzo et al. 2024 (Essays Biochem; MDH catalytic mechanism), and 2023-2024 P. putida systems/engineering studies
+  findings:
+  - statement: P. putida KT2440 Mdh (PP_0654) is a canonical NAD-dependent malate dehydrogenase acting at the malate/oxaloacetate node of the TCA cycle; cell-free extract assays show ~98% NAD+ vs ~2% NADP+ cofactor preference.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: LLM-generated deep research summarizing primary literature (Nikel et al. 2015 JBC, de Lorenzo et al. 2024 Essays Biochem). Underlying primary PMIDs not independently verified here (PubMed lookup unavailable); conclusions are consistent with UniProt and InterPro family assignment.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: KT2440 genome reference (Nelson et al. 2002, Environ Microbiol) establishing the locus/gene assignment.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Root-level molecular function term; correct but uninformative for an enzyme with a defined activity.
+    action: KEEP_AS_NON_CORE
+    reason: The gene product is an enzyme so catalytic activity is true, but this is a very general parent of the specific malate dehydrogenase activity (GO:0030060) and carries no specific information. Retained as non-core.
+- term:
+    id: GO:0004459
+    label: L-lactate dehydrogenase (NAD+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: TreeGrafter over-propagation from the LDH/MDH superfamily; this protein is a malate dehydrogenase, not a lactate dehydrogenase.
+    action: REMOVE
+    reason: This IEA (TreeGrafter/PANTHER) annotation reflects an electronic mis-assignment within the shared LDH/MDH superfamily node. UniProt and InterPro (Malate_DH_type3, IPR011275) classify Q88Q44 as a malate dehydrogenase (EC 1.1.1.37, GO:0030060), and experimental assays in KT2440 measured malate dehydrogenase, not L-lactate dehydrogenase, activity. L-lactate dehydrogenase activity is not supported and is contradicted by the malate-specific function; this is an over-propagated electronic inference appropriate to remove.
+- term:
+    id: GO:0006089
+    label: lactate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: TreeGrafter over-propagation paired with the erroneous L-lactate dehydrogenase activity call; the gene functions in the TCA cycle, not lactate metabolism.
+    action: REMOVE
+    reason: This process annotation derives from the same incorrect LDH-superfamily grafting as GO:0004459. The enzyme acts on malate/oxaloacetate in the TCA cycle, not on lactate. Over-propagated electronic inference, appropriate to remove. The correct process is tricarboxylic acid cycle (GO:0006099), captured by UniProt keyword but missing from GOA.
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct high-level oxidoreductase parent; uninformative relative to the specific malate dehydrogenase activity.
+    action: KEEP_AS_NON_CORE
+    reason: True but general parent of GO:0030060. Retained as non-core background.
+- term:
+    id: GO:0016616
+    label: oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct intermediate-level parent describing NAD(P)-linked CH-OH oxidoreductases; more specific malate dehydrogenase activity is preferred as core.
+    action: KEEP_AS_NON_CORE
+    reason: Accurately describes the enzyme class (NAD-linked CH-OH oxidoreductase) but is a parent of the specific GO:0030060 L-malate dehydrogenase (NAD+) activity. Retained as non-core.
+- term:
+    id: GO:0030060
+    label: L-malate dehydrogenase (NAD+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct core molecular function, matching EC 1.1.1.37 and the UniProt catalytic activity (RHEA:21432, (S)-malate + NAD+ = oxaloacetate + NADH + H+).
+    action: ACCEPT
+    reason: This is the core, well-supported molecular function. The UniProt RHEA/EC mapping and InterPro Malate_DH_type3 domain agree, and KT2440 cell-free extract assays demonstrated strong NAD+-specific malate dehydrogenase activity.
+- term:
+    id: GO:0030060
+    label: L-malate dehydrogenase (NAD+) activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: ISS transfer of the core malate dehydrogenase activity from a characterized ortholog (UniProtKB:P61889); consistent with all other evidence.
+    action: ACCEPT
+    reason: Sequence-similarity transfer of the core function from an experimentally characterized MDH ortholog. Concordant with the EC mapping, InterPro family, conserved active-site/binding residues, and KT2440 enzyme assay data. Represents the core function of the gene.
+core_functions:
+- description: NAD-dependent L-malate dehydrogenase catalyzing the reversible oxidation of (S)-malate to oxaloacetate with reduction of NAD+ to NADH, the oxaloacetate-regenerating step of the TCA cycle.
+  molecular_function:
+    id: GO:0030060
+    label: L-malate dehydrogenase (NAD+) activity
+  supported_by:
+  - reference_id: file:PSEPK/mdh/mdh-deep-research-falcon.md
+    supporting_text: P. putida KT2440 Mdh (PP_0654) catalyzes L-malate + NAD+ = oxaloacetate + NADH + H+ and shows ~98% NAD+ vs ~2% NADP+ cofactor preference in cell-free extract assays.
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+suggested_questions:
+- question: Is mdh (PP_0654) the sole NAD-dependent malate dehydrogenase in P. putida KT2440, or do malate:quinone oxidoreductase (Mqo) isozymes and malic enzymes provide redundant routes through the malate node?
+suggested_experiments:
+- description: Purify recombinant PP_0654 and determine steady-state kinetic constants (Km, kcat) for L-malate, oxaloacetate, NAD+ and NADH to confirm the canonical ordered Bi-Bi mechanism and quantify directional preference under physiological conditions.
+- description: Construct a clean mdh (PP_0654) deletion and assess growth on TCA-cycle and gluconeogenic carbon sources, with 13C-metabolic flux analysis to test rerouting of malate via malic enzyme and the glyoxylate shunt.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

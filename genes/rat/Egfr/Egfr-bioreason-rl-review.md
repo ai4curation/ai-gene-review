@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Egfr (rat)
 
-Source: Egfr-deep-research-bioreason-rl.md
+Source: Egfr-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

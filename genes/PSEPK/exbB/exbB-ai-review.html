@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>exbB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>exbB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88C77" target="_blank" class="term-link">
+                        Q88C77
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "exbB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88C77" data-a="DESCRIPTION: ExbB is an integral inner (cytoplasmic) membrane, ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ExbB is an integral inner (cytoplasmic) membrane, multi-pass protein that forms part of the TonB-ExbB-ExbD energy-transducing complex in Gram-negative bacteria. Together with ExbD, ExbB assembles into a membrane-embedded oligomeric motor (an ExbB pentamer enclosing an ExbD dimer is the consensus architecture) that harnesses the proton motive force of the inner membrane to energize TonB. Energized TonB physically contacts the TonB box of TonB-dependent outer-membrane transporters (TBDTs), driving conformational changes that open these gated beta-barrel receptors for active import of scarce, receptor-bound substrates such as ferric-siderophore complexes, heme, and vitamin B12 into the periplasm. ExbB itself is not a substrate-specific transporter; rather it is the proton-conducting, energy-coupling stator subunit that powers many different TBDTs, and it stabilizes TonB and protects ExbD from proteolysis. The protein belongs to the ExbB/TolQ family and shares a MotA/TolQ/ExbB proton-channel architecture with the flagellar stator MotA. In Pseudomonas putida KT2440 it is encoded at PP_5306 in the exbB-exbD-tonB (PP_5306-PP_5308) operon, where the system is required for iron-dependent growth and TonB-dependent nutrient acquisition.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C77" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ExbB is an integral inner (cytoplasmic/plasma) membrane multi-pass protein, consistent with UniProt subcellular location and the conserved biology of the ExbB/TolQ family. This is a correct, core localization for the gene product.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C77" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but generic; this is a less informative parent of the more specific plasma (inner) membrane localization that is also annotated. Retained as a true but non-core, redundant statement.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017038" target="_blank" class="term-link">
+                                    GO:0017038
+                                </a>
+                            </span>
+                            <span class="term-label">protein import</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C77" data-a="GO:0017038" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TreeGrafter-propagated term mischaracterizes the core function of ExbB. The defining role of ExbB is to couple the proton motive force to energize TonB, powering TonB-dependent outer-membrane transport of small nutrients (ferric-siderophores, heme, vitamin B12), not the import of proteins. The TonB system can in some organisms energize uptake of certain proteinaceous substrates (e.g., group B colicins and some toxins), so the term is not strictly false, but as applied here it is an over-annotation that does not represent the gene&#39;s principal biological role and conflates a niche activity with the main function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The &#39;protein import&#39; definition (targeting/directed movement of proteins into a cell or organelle) does not capture ExbB&#39;s PMF-coupled energization of small-nutrient uptake; this is an electronic over-propagation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C77" data-a="GO:0022857" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ExbB does not itself transport the receptor-bound substrates (iron siderophores, heme, B12); those are imported by the outer-membrane TBDTs. ExbB is the proton-conducting, energy-coupling stator subunit of the ExbB-ExbD-TonB motor. A generic &#39;transmembrane transporter activity&#39; is misleading; the specific, mechanistically accurate molecular function is proton transmembrane transporter activity (the MotA/TolQ/ExbB proton channel conducts protons across the inner membrane to convert PMF into mechanical work on TonB).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ExbB is a PMF-coupled energizer/proton channel, not a substrate-specific transmembrane transporter; the InterPro-derived generic term should be replaced with the proton-channel molecular function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015078" target="_blank" class="term-link">
+                                    proton transmembrane transporter activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C77" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broadly true but uninformatively generic. The directly catalyzed process for ExbB is proton transmembrane transport across the inner membrane, which generates the energy used to drive TonB-dependent outer-membrane uptake. Replacing the generic term with proton transmembrane transport better reflects the mechanism while remaining well supported by the conserved family biology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The generic transmembrane transport term should be specialized to the proton movement that ExbB actually mediates.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902600" target="_blank" class="term-link">
+                                    proton transmembrane transport
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Proton-conducting stator subunit of the ExbB-ExbD-TonB motor that couples the inner-membrane proton motive force to energization of TonB</h3>
+                <span class="vote-buttons" data-g="Q88C77" data-a="FUNCTION: Proton-conducting stator subunit of the ExbB-ExbD-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015078" target="_blank" class="term-link">
+                            proton transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902600" target="_blank" class="term-link">
+                                proton transmembrane transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37219427" target="_blank" class="term-link">
+                                PMID:37219427
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Energizes TonB-dependent active uptake of receptor-bound nutrients (ferric-siderophores, heme, vitamin B12) across the outer membrane, supporting iron acquisition and nutrient scavenging</h3>
+                <span class="vote-buttons" data-g="Q88C77" data-a="FUNCTION: Energizes TonB-dependent active uptake of receptor..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031992" target="_blank" class="term-link">
+                            energy transducer activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                transmembrane transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20352420" target="_blank" class="term-link">
+                                PMID:20352420
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11514511" target="_blank" class="term-link">
+                                PMID:11514511
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37219427" target="_blank" class="term-link">
+                            PMID:37219427
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Energization of Outer Membrane Transport by the ExbB ExbD Molecular Motor</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ExbB and ExbD are inner-membrane proteins that use the proton motive force to energize TonB, which contacts TonB-dependent outer-membrane transporters; ExbB forms a pentameric motor surrounding an ExbD dimer (ExbB5:ExbD2).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20352420" target="_blank" class="term-link">
+                            PMID:20352420
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Iron uptake and metabolism in pseudomonads</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In pseudomonads, TonB together with ExbB and ExbD transmits proton motive force energy from the inner membrane to outer-membrane receptors for ferric-siderophore and heme uptake.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11514511" target="_blank" class="term-link">
+                            PMID:11514511
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Involvement of the TonB system in tolerance to solvents and drugs in Pseudomonas putida DOT-T1E</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The exbB-exbD-tonB genes are closely linked and likely cotranscribed; the TonB-ExbB-ExbD inner-membrane complex is required for iron uptake, and an exbD insertion mutant fails to grow under iron limitation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequence of P. putida KT2440 in which the exbB locus (PP_5306, UniProt Q88C77) was annotated.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(exbB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88C77" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: Functional annotation of **exbB** (UniProt **Q88C77**; locus **PP_5306**) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">38 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T17:02:17.022175</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="exbB-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-exbb-uniprot-q88c77-locus-pp_5306-in-pseudomonas-putida-kt2440">Research report: Functional annotation of <strong>exbB</strong> (UniProt <strong>Q88C77</strong>; locus <strong>PP_5306</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The <em>Pseudomonas putida</em> KT2440 protein ExbB (PP_5306; UniProt Q88C77) is an inner (cytoplasmic) membrane component of the TonB energy-transduction system. ExbB forms an oligomeric motor with ExbD that couples the proton motive force (pmf) of the inner membrane to mechanical work on TonB, thereby powering active transport through TonB-dependent outer-membrane transporters (TBDTs) for scarce nutrients—classically ferric siderophore complexes and heme/other metal complexes—and contributing to stress tolerance phenotypes in pseudomonads. In KT2440, deletion of <strong>exbB–exbD–tonB (PP_5306–PP_5308)</strong> causes strong iron-dependent growth defects and also impacts bioelectrochemical mediator utilization and product yields in an engineered electrogenic process, consistent with a central role in envelope-spanning uptake pathways. (weimer2024systemsmetabolicengineering pages 87-93, weimer2024systemsmetabolicengineering pages 93-97)</p>
+<h2 id="target-verification-critical-identity-checks">Target verification (critical identity checks)</h2>
+<p><strong>Gene symbol and description match:</strong> Independent experimental work in <em>P. putida</em> KT2440 explicitly identifies an in-frame deletion spanning <strong>exbB, exbD and tonB</strong> at <strong>PP_5306–PP_5308</strong>, confirming that PP_5306 corresponds to <strong>exbB</strong> in this organism and operon context. (weimer2024systemsmetabolicengineering pages 87-93)</p>
+<p><strong>Family/domain consistency:</strong> Mechanistic reviews of ExbB/ExbD/TonB describe ExbB as a multi-pass inner-membrane motor protein homologous to TolQ/MotA-like proton-coupled systems, consistent with UniProt’s ExbB/TolQ family and MotA/ExbB proton-channel-like domain annotations. (braun2023energizationofouter pages 11-13, braun2024substrateuptakeby pages 11-12)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="the-tonbexbbexbd-system">The TonB–ExbB–ExbD system</h3>
+<p><strong>Definition:</strong> The Ton system is an energy-transducing machine in Gram-negative bacteria that powers transport across the <strong>outer membrane</strong> through TBDTs. TBDTs are β-barrel outer-membrane proteins with plug domains; TonB binding to a conserved <strong>TonB box</strong> induces conformational changes that open the transporter for substrate passage into the periplasm. (braun2024substrateuptakeby pages 1-2)</p>
+<p><strong>Role of ExbB:</strong> ExbB is an inner-membrane protein that oligomerizes and associates with ExbD to form the pmf-driven motor that energizes TonB. The ExbB–ExbD complex is widely described as the component that transmits pmf energy from the cytoplasmic membrane to TonB. (braun2023energizationofouter pages 1-3, braun2024substrateuptakeby pages 1-2)</p>
+<h3 id="what-exbb-is-not">What ExbB is <em>not</em></h3>
+<p>ExbB is not a substrate-specific transporter that binds iron/siderophores directly; rather, it is an <strong>energy-coupling motor</strong> required for the activity of many different TBDTs (each of which provides substrate specificity). (braun2024substrateuptakeby pages 1-2, cornelis2010ironuptakeand pages 1-3)</p>
+<h2 id="2-molecular-function-and-mechanism-with-quantitativestructural-details">2) Molecular function and mechanism (with quantitative/structural details)</h2>
+<h3 id="cellular-localization-and-topology">Cellular localization and topology</h3>
+<p><strong>Localization:</strong> ExbB is a <strong>cytoplasmic (inner) membrane</strong> protein that assembles into membrane-embedded oligomers. (braun2023energizationofouter pages 1-3, braun2023energizationofouter pages 11-13)</p>
+<p><strong>Topology:</strong> A 2024 mechanistic study summarizes ExbB as having an N-terminus in the periplasm and <strong>three transmembrane segments</strong>; ExbD is N-anchored in the cytoplasmic membrane and extends into the periplasm. (braun2024substrateuptakeby pages 11-12)</p>
+<h3 id="complex-architecture-and-stoichiometry">Complex architecture and stoichiometry</h3>
+<p>A recurring architecture supported by structural studies is <strong>ExbB pentamer enclosing an ExbD dimer</strong> (ExbB5:ExbD2). (braun2023energizationofouter pages 1-3, braun2024substrateuptakeby pages 1-2)</p>
+<p>Some biochemical preparations show additional assemblies (e.g., ExbB6·ExbD1 and ExbB5·ExbD1 species), indicating stoichiometry can vary by conditions and preparation, but 5:2 is emphasized as a consensus in several structural contexts. (braun2023energizationofouter pages 4-6, braun2023energizationofouter pages 11-13)</p>
+<h3 id="pmf-coupling-and-mechanochemical-transduction">pmf coupling and mechanochemical transduction</h3>
+<p><strong>Proton-coupled mechanism:</strong> ExbB/ExbD are described as generating energy for TonB-dependent transport by <strong>transfer of protons from the periplasm to the cytoplasm</strong>, implying direct coupling to the inner-membrane pmf. (braun2023energizationofouter pages 4-6)</p>
+<p><strong>Key conserved residue:</strong> A conserved <strong>Asp (D25) in ExbD’s transmembrane helix</strong> is repeatedly implicated in proton-linked energization steps and pmf-dependent ExbD–TonB interactions. (braun2023energizationofouter pages 4-6, braun2023energizationofouter pages 13-15)</p>
+<p><strong>Quantitative mechanistic proposal:</strong> One model proposes pmf-driven cycling around ExbD D25 with discrete <strong>~36° rotation steps</strong> (10 cycles to return to starting orientation), providing a concrete hypothesis for how pmf might be converted into mechanical work on TonB. (braun2023energizationofouter pages 13-15)</p>
+<h3 id="substrates-enabled-by-exbb-system-level-substrate-of-exbb">Substrates enabled by ExbB (system-level “substrate” of ExbB)</h3>
+<p>Because ExbB energizes TonB, it supports TBDT-mediated uptake of multiple substrate classes. Reviews explicitly list <strong>Fe3+-siderophores</strong> and <strong>vitamin B12</strong> among TonB-dependent substrates. (braun2023energizationofouter pages 3-4, braun2024substrateuptakeby pages 1-2)</p>
+<p>For pseudomonads specifically, iron uptake reviews describe TonB together with ExbB/ExbD transmitting pmf energy to gated outer-membrane receptors for <strong>ferric siderophore</strong> and <strong>heme</strong> uptake. (cornelis2010ironuptakeand pages 1-3)</p>
+<h2 id="3-genetic-context-and-pathways-in-pseudomonas-putida-kt2440">3) Genetic context and pathways in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="operon-context">Operon context</h3>
+<p>In KT2440, experimental deletion work identifies the canonical cluster as <strong>PP_5306–PP_5308 = exbB–exbD–tonB</strong>, demonstrating the expected Ton operon organization at the locus of Q88C77. (weimer2024systemsmetabolicengineering pages 87-93)</p>
+<h3 id="pathway-placement">Pathway placement</h3>
+<p>ExbB functions in the envelope-spanning <strong>TonB-dependent transport pathway</strong>, coupling inner-membrane pmf to outer-membrane TBDTs that import scarce nutrients into the periplasm; periplasmic binding proteins and inner-membrane transporters then import into the cytoplasm, where iron is released (by reduction or enzymatic processing) and siderophores may be recycled. (cornelis2010ironuptakeand pages 1-3)</p>
+<h2 id="4-phenotypes-from-mutation-disruption-kt2440-specific-and-comparative">4) Phenotypes from mutation / disruption (KT2440-specific and comparative)</h2>
+<h3 id="kt2440-exbbd-tonb-pp_5306pp_5308-phenotypes-2024">KT2440: ΔexbBD ΔtonB (PP_5306–PP_5308) phenotypes (2024)</h3>
+<p>A KT2440 <strong>ΔexbBΔexbDΔtonB</strong> mutant showed a pronounced <strong>iron-dependent aerobic growth defect</strong> in minimal medium: at baseline FeCl3 (5.5 µM), the mutant growth rate was reported as ~<strong>7-fold lower</strong> than wild type; <strong>20 µM FeCl3</strong> restored growth to ~<strong>80%</strong> of wild type, while 40 µM FeCl3 was inhibitory to both strains. (weimer2024systemsmetabolicengineering pages 87-93)</p>
+<p>In anaerobic bioelectrochemical assays, the same mutant exhibited <strong>lower ferricyanide reduction rate</strong> (<strong>0.026 ± 0.001 mM/h</strong>) versus wild type (<strong>0.056 ± 0.009 mM/h</strong>), suggesting TonB-dependent pathways contribute to mediator exchange/handling beyond purely passive routes. (weimer2024systemsmetabolicengineering pages 87-93)</p>
+<p>Process-level impacts were large: with ferricyanide mediator, the mutant had <strong>lower peak current</strong> (<strong>1.0 ± 0.14 mA</strong> vs WT <strong>2.42 ± 0.43 mA</strong>), longer time to full glucose conversion (~<strong>240 h</strong> vs ~<strong>186 h</strong>), and a major product shift from 2-ketogluconate (WT <strong>0.93 ± 0.03 mol/mol</strong>) to gluconate (mutant <strong>0.77 ± 0.08 mol/mol</strong>), consistent with broad physiological consequences of disrupting TonB energization. (weimer2024systemsmetabolicengineering pages 93-97)</p>
+<h3 id="comparative-pseudomonas-evidence-exbd-disruption-in-dot-t1e-2001">Comparative <em>Pseudomonas</em> evidence: exbD disruption in DOT-T1E (2001)</h3>
+<p>In <em>P. putida</em> DOT-T1E (closely related to KT2440), an insertion in <strong>exbD</strong> in the <strong>exbB–exbD–tonB</strong> cluster disrupted the operon transcript (loss of exbD–tonB RT-PCR product) and caused inability to grow under iron limitation with chelator (<strong>8 mM EDDHA</strong>), consistent with a role in TonB-dependent iron uptake. (godoy2001involvementofthe pages 4-5)</p>
+<p>This exbD mutant also displayed increased sensitivity to solvents and antibiotics and showed much higher accumulation of radiolabeled 4-hydroxybenzoate (<strong>~200 nmol per U cell turbidity per min</strong>) compared with control (<strong>~15 nmol per U per min</strong>), interpreted as impaired extrusion/efflux-linked tolerance not fully explained by iron limitation alone. (godoy2001involvementofthe pages 4-5, godoy2001involvementofthe pages 6-7)</p>
+<h3 id="high-throughput-ecological-genetics-2023">High-throughput ecological genetics (2023)</h3>
+<p>RB-TnSeq fitness profiling across bacterial species exposed to fungal exometabolites reports that <strong>iron-uptake genes</strong> can be required for <em>P. putida</em> fitness under those conditions, using thresholds of <strong>log2 fitness &lt; −1</strong> and <strong>t-score &lt; −4</strong> to define significant negative fitness effects. (villalobosescobedo2023genomewidefitnessprofiling pages 10-11)</p>
+<h2 id="5-recent-developments-and-latest-research-prioritizing-20232024">5) Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="mechanistic-refinement-of-the-exbbexbd-motor-20232024">Mechanistic refinement of the ExbB–ExbD motor (2023–2024)</h3>
+<p>Recent authoritative syntheses emphasize high-resolution structural models in which ExbB forms a membrane-embedded oligomer with a central pore that houses ExbD, transmitting pmf energy to TonB and thereby to TBDTs. (braun2023energizationofouter pages 11-13, braun2024substrateuptakeby pages 1-2)</p>
+<p>The 2023 review highlights converging structural evidence for ExbB5:ExbD2 and frames ExbB–ExbD as a <strong>molecular motor</strong> analogous to MotA/MotB stators, with testable residue-level predictions involving ExbD D25 and pmf-dependent TonB interactions. (braun2023energizationofouter pages 11-13, braun2023energizationofouter pages 4-6)</p>
+<p>A 2024 review further consolidates the “TonB box” interaction concept and reiterates the ExbB5 pore enclosing an ExbD dimer as the energy-transmitting complex enabling substrate uptake through plugged TBDTs. (braun2024substrateuptakeby pages 1-2)</p>
+<h3 id="new-in-vivo-interrogation-of-motor-cycling-2024-preprint">New <em>in vivo</em> interrogation of motor cycling (2024 preprint)</h3>
+<p>A 2024 bioRxiv study reports detailed topology/complex assembly concepts (e.g., ExbB as a 3-TM membrane protein with large cytoplasmic regions, and models featuring ExbB tetramers scaffolding TonB2/ExbD2), and proposes pmf-dependent structural transitions of ExbD that configure TonB during an energization cycle. These claims are informative but should be treated as preprint-stage evidence. (postle2024invivotests pages 1-5, postle2024invivotests pages 45-51)</p>
+<h2 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h2>
+<h3 id="trojan-horse-antibiotics-and-selective-delivery-20242025">Trojan-horse antibiotics and selective delivery (2024–2025)</h3>
+<p>A 2024 review describes practical exploitation of siderophore uptake pathways—powered by the ExbBD–TonB motor—to deliver antibiotics into Gram-negative bacteria (the “Trojan-horse” strategy), and explicitly notes that transport energy is provided by the pmf transduced through the ExbBD–TonB complex. (graff2024siderophoresastools pages 1-2, graff2024siderophoresastools pages 2-4)</p>
+<p>A 2025 Nature Reviews Microbiology article frames the TonB–ExbB–ExbD complex as a <strong>molecular motor</strong> transmitting pmf energy to TBDTs and emphasizes translational applications of siderophore pathways including <strong>antibiotic vectorization</strong>, diagnostic sensors, and imaging-agent delivery that depend on transporter specificity. (schalk2025bacterialsiderophoresdiversity pages 42-46)</p>
+<h2 id="7-expert-synthesis-proposed-functional-annotation-for-q88c77-pp_5306">7) Expert synthesis: proposed functional annotation for Q88C77 (PP_5306)</h2>
+<p><strong>Recommended primary function statement:</strong> ExbB (PP_5306; Q88C77) is an <strong>inner-membrane energy-transducing subunit</strong> of the TonB system that, together with ExbD, couples the <strong>proton motive force</strong> to energize TonB and thereby drive active uptake through TonB-dependent outer-membrane transporters. (braun2024substrateuptakeby pages 1-2, braun2023energizationofouter pages 1-3)</p>
+<p><strong>Biological processes:</strong> TonB-dependent nutrient acquisition under limitation (especially <strong>iron acquisition via siderophores/heme</strong> in pseudomonads) and broader envelope physiology/stress tolerance phenotypes secondary to impaired TonB energization. (cornelis2010ironuptakeand pages 1-3, weimer2024systemsmetabolicengineering pages 87-93)</p>
+<p><strong>Cellular component:</strong> Cytoplasmic/inner membrane (multi-pass membrane protein), functioning as part of ExbB–ExbD oligomeric motor complex that interacts with TonB. (braun2024substrateuptakeby pages 11-12, braun2023energizationofouter pages 1-3)</p>
+<p><strong>Key mutant phenotypes to record for KT2440:</strong> Severe iron-dependent growth defects in ΔexbBD ΔtonB, partially rescued by added iron, plus altered mediator reduction and bioelectrochemical process performance. (weimer2024systemsmetabolicengineering pages 87-93, weimer2024systemsmetabolicengineering pages 93-97)</p>
+<h2 id="evidence-table-of-key-sources-urls-and-dates">Evidence table of key sources (URLs and dates)</h2>
+<table>
+<thead>
+<tr>
+<th>Source (authors, year)</th>
+<th>Publication type</th>
+<th>Organism/strain</th>
+<th>What was studied (exbB/exbD/tonB, operon)</th>
+<th>Key findings (function/localization/phenotypes)</th>
+<th>Key quantitative data/statistics</th>
+<th>URL/DOI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Braun, Ratliff, Celia &amp; Buchanan, 2023</td>
+<td>Peer-reviewed mechanistic review</td>
+<td>Primarily <em>E. coli</em> / Gram-negative bacteria</td>
+<td>ExbB-ExbD-TonB motor; adjacency of exbB and exbD; conserved TonB energization of TBDTs</td>
+<td>ExbB and ExbD are inner-membrane proteins that use proton motive force to energize TonB, which contacts TonB boxes in outer-membrane TonB-dependent transporters for uptake of siderophores, vitamin B12, and other scarce nutrients; ExbB forms a pentameric motor surrounding an ExbD dimer; exb mutants have leaky/partial phenotypes and can be partly complemented by TolQ/TolR (braun2023energizationofouter pages 3-4, braun2023energizationofouter pages 4-6, braun2023energizationofouter pages 1-3, braun2023energizationofouter pages 6-8)</td>
+<td>ExbB:ExbD stoichiometry reported as 5:2; exbB mutants retain ~20% cobalamin transport vs WT, while tonB or exbB tolQ double mutants fall to &lt;5% (braun2023energizationofouter pages 4-6)</td>
+<td>https://doi.org/10.1128/jb.00035-23</td>
+</tr>
+<tr>
+<td>Braun, 2024</td>
+<td>Peer-reviewed review</td>
+<td>Gram-negative bacteria</td>
+<td>TonB-dependent transporters and ExbB-ExbD energy-transducing complex</td>
+<td>TonB is energized by ExbB-ExbD to open plugged outer-membrane TBDTs; ExbB-ExbD supports uptake of Fe3+-siderophores, other metal ions, vitamin B12, glycans, and some proteins/toxins; model supports ExbB pentamer enclosing ExbD dimer (braun2024substrateuptakeby pages 1-2)</td>
+<td>ExbB complex described as five ExbB subunits around an ExbD dimer (braun2024substrateuptakeby pages 1-2)</td>
+<td>https://doi.org/10.1111/mmi.15332</td>
+</tr>
+<tr>
+<td>Weimer, 2024</td>
+<td>Experimental primary study / thesis-style report</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>In-frame deletion of exbB-exbD-tonB (PP_5306-PP_5308); role in mediator uptake/electrogenic metabolism</td>
+<td>Directly relevant to Q88C77 context: exbB is PP_5306 in the PP_5306-PP_5308 cluster. ΔexbBD ΔtonB impairs aerobic growth under baseline iron, lowers anaerobic ferricyanide reduction, reduces current generation, prolongs glucose conversion, and shifts product spectrum from 2-ketogluconate to gluconate, supporting a role in TonB-dependent uptake/handling of iron-linked or metal-mediator substrates (weimer2024systemsmetabolicengineering pages 87-93, weimer2024systemsmetabolicengineering pages 97-101, weimer2024systemsmetabolicengineering pages 93-97)</td>
+<td>Deletion size difference 2123 bp; mutant aerobic growth rate ~7-fold lower than WT at 5.5 µM FeCl3; 20 µM FeCl3 restores growth to ~80% of WT; anaerobic ferricyanide reduction 0.026 ± 0.001 mM/h vs WT 0.056 ± 0.009 mM/h; ferricyanide max current 1.0 ± 0.14 mA vs WT 2.42 ± 0.43 mA; 2-ketogluconate yield 0.17 ± 0.01 vs WT 0.93 ± 0.03 mol/mol glucose; glucose conversion prolonged to ~240 h vs ~186 h WT (weimer2024systemsmetabolicengineering pages 87-93, weimer2024systemsmetabolicengineering pages 97-101, weimer2024systemsmetabolicengineering pages 93-97)</td>
+<td>No DOI/URL available in retrieved context</td>
+</tr>
+<tr>
+<td>Ainsaar et al., 2019</td>
+<td>Peer-reviewed primary study</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>TonBm-PocAB system; genomic context of TonB homologs in KT2440</td>
+<td>Provides key locus context: <em>P. putida</em> has two TonB homologues, PP_4994 and PP_5308; PP_5308 (tonB) is in an operon with exbB and exbD, supporting assignment of Q88C77/PP_5306 as the cognate ExbB in the canonical exbBD-tonB operon. Study mainly analyzed the orthologous TonBm-PocAB system, showing TonB-like envelope motors can affect membrane integrity and flagellar positioning in <em>P. putida</em> (from retrieved abstract/snippet in paper search results)</td>
+<td>Qualitative snippet only in retrieved context; no direct numeric exbB data available in cited evidence set</td>
+<td>https://doi.org/10.1128/jb.00303-19</td>
+</tr>
+<tr>
+<td>Godoy, Ramos-González &amp; Ramos, 2001</td>
+<td>Peer-reviewed primary study</td>
+<td><em>Pseudomonas putida</em> DOT-T1E (closely related to KT2440)</td>
+<td>exbBD-tonB cluster organization and mutant phenotypes from exbD insertion</td>
+<td>exbB, exbD, and tonB are closely linked and likely cotranscribed; the TonB-ExbB-ExbD complex is an inner-membrane energy transduction system required for iron uptake and additionally influences solvent/drug tolerance, likely via effects on efflux. Mutating exbD caused sensitivity to 4HBA, toluene, and multiple antibiotics and impaired growth in iron-limited medium; because DOT-T1E proteins are highly similar to KT2440 homologs, this is strong comparative evidence for PP_5306 function (godoy2001involvementofthe pages 6-7, godoy2001involvementofthe pages 1-2, godoy2001involvementofthe pages 4-5)</td>
+<td>exbB-exbD separated by 3 bp; exbD and tonB overlap; mutant failed to grow in low iron with 8 mM EDDHA; [14C]4HBA accumulation ~200 nmol/U cell turbidity/min in mutant vs ~15 in control; high-affinity transport can generate up to 1,000-fold concentration gradients (godoy2001involvementofthe pages 6-7, godoy2001involvementofthe pages 4-5)</td>
+<td>https://doi.org/10.1128/jb.183.18.5285-5292.2001</td>
+</tr>
+<tr>
+<td>Cornelis, 2010</td>
+<td>Peer-reviewed review</td>
+<td>Pseudomonads including <em>P. putida</em> KT2440</td>
+<td>Iron uptake and metabolism; TonB-ExbB-ExbD support of siderophore/heme uptake</td>
+<td>In pseudomonads, TonB together with ExbB and ExbD transmits pmf-derived energy from the inner membrane to outer-membrane receptors for ferric-siderophore and heme uptake. This review supports the inferred primary function of PP_5306/Q88C77 as an inner-membrane energy-coupling subunit for TonB-dependent iron acquisition rather than as a substrate-specific transporter itself (cornelis2010ironuptakeand pages 1-3)</td>
+<td>Review notes gated OM receptors are 22-stranded β-barrels (cornelis2010ironuptakeand pages 1-3)</td>
+<td>https://doi.org/10.1007/s00253-010-2550-2</td>
+</tr>
+<tr>
+<td>Villalobos-Escobedo et al., 2023</td>
+<td>Peer-reviewed primary study (RB-TnSeq)</td>
+<td><em>P. putida</em> KT2440 and other plant-associated bacteria</td>
+<td>Genome-wide fitness under <em>Trichoderma atroviride</em> exometabolites; iron uptake functions</td>
+<td>In the mixed-species analysis, TonB/ExbB/ExbD-dependent siderophore transport was especially important in the nitrogen-fixing bacteria tested, while <em>P. putida</em> showed dependence on membrane lipid modification pathways overall; additional inspection indicated iron-uptake genes were required for <em>P. putida</em> fitness in fungal exudates, consistent with ecological importance of TonB-linked iron acquisition even if exbB was not the dominant hit in the summary text (villalobosescobedo2023genomewidefitnessprofiling pages 3-6, villalobosescobedo2023genomewidefitnessprofiling pages 1-2, villalobosescobedo2023genomewidefitnessprofiling pages 10-11)</td>
+<td>Significant fitness thresholds were log2 fitness &lt; -1 with t-score &lt; -4 for negative hits; 41 <em>P. putida</em> genes had negative fitness under the stated filter in spent medium experiments (villalobosescobedo2023genomewidefitnessprofiling pages 3-6, villalobosescobedo2023genomewidefitnessprofiling pages 10-11)</td>
+<td>https://doi.org/10.1371/journal.pgen.1010909</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main mechanistic and organism-specific sources relevant to annotation of </em>Pseudomonas putida<em> KT2440 exbB (PP_5306; UniProt Q88C77). It highlights evidence for operon context, inner-membrane localization, pmf-coupled TonB energization, and experimentally observed phenotypes when the exbBD-tonB system is disrupted.</em></p>
+<h2 id="limitations-of-available-evidence">Limitations of available evidence</h2>
+<p>Direct, single-gene <strong>exbB-only</strong> knockout phenotypes in KT2440 were not present in the retrieved full-text set; KT2440 phenotypes cited here derive from a <strong>cluster deletion (exbB–exbD–tonB)</strong>. Mechanistic, residue-level and stoichiometric details are primarily derived from <em>E. coli</em> and other model systems and are inferred to be conserved in <em>Pseudomonas</em> based on strong homology and shared operon architecture. (braun2023energizationofouter pages 11-13, weimer2024systemsmetabolicengineering pages 87-93)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(weimer2024systemsmetabolicengineering pages 87-93): ALA Weimer. Systems metabolic engineering of electrogenic anaerobic pseudomonas putida for enhanced 2-ketogluconate production. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(weimer2024systemsmetabolicengineering pages 93-97): ALA Weimer. Systems metabolic engineering of electrogenic anaerobic pseudomonas putida for enhanced 2-ketogluconate production. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(braun2023energizationofouter pages 11-13): Volkmar Braun, Anna C. Ratliff, Herve Celia, and Susan K. Buchanan. Energization of outer membrane transport by the exbb exbd molecular motor. Journal of Bacteriology, Jun 2023. URL: https://doi.org/10.1128/jb.00035-23, doi:10.1128/jb.00035-23. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(braun2024substrateuptakeby pages 11-12): Volkmar Braun. Substrate uptake by tonb‐dependent outer membrane transporters. Molecular Microbiology, 122:929-947, Dec 2024. URL: https://doi.org/10.1111/mmi.15332, doi:10.1111/mmi.15332. This article has 20 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(braun2024substrateuptakeby pages 1-2): Volkmar Braun. Substrate uptake by tonb‐dependent outer membrane transporters. Molecular Microbiology, 122:929-947, Dec 2024. URL: https://doi.org/10.1111/mmi.15332, doi:10.1111/mmi.15332. This article has 20 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(braun2023energizationofouter pages 1-3): Volkmar Braun, Anna C. Ratliff, Herve Celia, and Susan K. Buchanan. Energization of outer membrane transport by the exbb exbd molecular motor. Journal of Bacteriology, Jun 2023. URL: https://doi.org/10.1128/jb.00035-23, doi:10.1128/jb.00035-23. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cornelis2010ironuptakeand pages 1-3): Pierre Cornelis. Iron uptake and metabolism in pseudomonads. Applied Microbiology and Biotechnology, 86:1637-1645, Mar 2010. URL: https://doi.org/10.1007/s00253-010-2550-2, doi:10.1007/s00253-010-2550-2. This article has 549 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(braun2023energizationofouter pages 4-6): Volkmar Braun, Anna C. Ratliff, Herve Celia, and Susan K. Buchanan. Energization of outer membrane transport by the exbb exbd molecular motor. Journal of Bacteriology, Jun 2023. URL: https://doi.org/10.1128/jb.00035-23, doi:10.1128/jb.00035-23. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(braun2023energizationofouter pages 13-15): Volkmar Braun, Anna C. Ratliff, Herve Celia, and Susan K. Buchanan. Energization of outer membrane transport by the exbb exbd molecular motor. Journal of Bacteriology, Jun 2023. URL: https://doi.org/10.1128/jb.00035-23, doi:10.1128/jb.00035-23. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(braun2023energizationofouter pages 3-4): Volkmar Braun, Anna C. Ratliff, Herve Celia, and Susan K. Buchanan. Energization of outer membrane transport by the exbb exbd molecular motor. Journal of Bacteriology, Jun 2023. URL: https://doi.org/10.1128/jb.00035-23, doi:10.1128/jb.00035-23. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(godoy2001involvementofthe pages 4-5): Patricia Godoy, Marı́a Isabel Ramos-González, and Juan L. Ramos. Involvement of the tonb system in tolerance to solvents and drugs in pseudomonas putida dot-t1e. Journal of Bacteriology, 183:5285-5292, Sep 2001. URL: https://doi.org/10.1128/jb.183.18.5285-5292.2001, doi:10.1128/jb.183.18.5285-5292.2001. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(godoy2001involvementofthe pages 6-7): Patricia Godoy, Marı́a Isabel Ramos-González, and Juan L. Ramos. Involvement of the tonb system in tolerance to solvents and drugs in pseudomonas putida dot-t1e. Journal of Bacteriology, 183:5285-5292, Sep 2001. URL: https://doi.org/10.1128/jb.183.18.5285-5292.2001, doi:10.1128/jb.183.18.5285-5292.2001. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(villalobosescobedo2023genomewidefitnessprofiling pages 10-11): José Manuel Villalobos-Escobedo, Maria Belen Mercado-Esquivias, Catharine Adams, W. Berkeley Kauffman, Rex R. Malmstrom, Adam M. Deutschbauer, and N. Louise Glass. Genome-wide fitness profiling reveals molecular mechanisms that bacteria use to interact with trichoderma atroviride exometabolites. PLOS Genetics, 19:e1010909, Aug 2023. URL: https://doi.org/10.1371/journal.pgen.1010909, doi:10.1371/journal.pgen.1010909. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(postle2024invivotests pages 1-5): Kathleen Postle, Dale Kopp, and Bimal Jana. In vivo tests of the e. coli tonb system working model—interaction of exbb with unknown proteins, identification of tonb-exbd transmembrane heterodimers and pmf-dependent exbd structures. bioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.10.602958, doi:10.1101/2024.07.10.602958. This article has 0 citations.</p>
+</li>
+<li>
+<p>(postle2024invivotests pages 45-51): Kathleen Postle, Dale Kopp, and Bimal Jana. In vivo tests of the e. coli tonb system working model—interaction of exbb with unknown proteins, identification of tonb-exbd transmembrane heterodimers and pmf-dependent exbd structures. bioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.10.602958, doi:10.1101/2024.07.10.602958. This article has 0 citations.</p>
+</li>
+<li>
+<p>(graff2024siderophoresastools pages 1-2): Á. Tamás Gräff and Sarah M. Barry. Siderophores as tools and treatments. npj Antimicrobials and Resistance, Dec 2024. URL: https://doi.org/10.1038/s44259-024-00053-4, doi:10.1038/s44259-024-00053-4. This article has 29 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(graff2024siderophoresastools pages 2-4): Á. Tamás Gräff and Sarah M. Barry. Siderophores as tools and treatments. npj Antimicrobials and Resistance, Dec 2024. URL: https://doi.org/10.1038/s44259-024-00053-4, doi:10.1038/s44259-024-00053-4. This article has 29 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schalk2025bacterialsiderophoresdiversity pages 42-46): Isabelle J. Schalk. Bacterial siderophores: diversity, uptake pathways and applications. Nature reviews. Microbiology, 23:24-40, Sep 2025. URL: https://doi.org/10.1038/s41579-024-01090-6, doi:10.1038/s41579-024-01090-6. This article has 215 citations.</p>
+</li>
+<li>
+<p>(braun2023energizationofouter pages 6-8): Volkmar Braun, Anna C. Ratliff, Herve Celia, and Susan K. Buchanan. Energization of outer membrane transport by the exbb exbd molecular motor. Journal of Bacteriology, Jun 2023. URL: https://doi.org/10.1128/jb.00035-23, doi:10.1128/jb.00035-23. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weimer2024systemsmetabolicengineering pages 97-101): ALA Weimer. Systems metabolic engineering of electrogenic anaerobic pseudomonas putida for enhanced 2-ketogluconate production. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(godoy2001involvementofthe pages 1-2): Patricia Godoy, Marı́a Isabel Ramos-González, and Juan L. Ramos. Involvement of the tonb system in tolerance to solvents and drugs in pseudomonas putida dot-t1e. Journal of Bacteriology, 183:5285-5292, Sep 2001. URL: https://doi.org/10.1128/jb.183.18.5285-5292.2001, doi:10.1128/jb.183.18.5285-5292.2001. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(villalobosescobedo2023genomewidefitnessprofiling pages 3-6): José Manuel Villalobos-Escobedo, Maria Belen Mercado-Esquivias, Catharine Adams, W. Berkeley Kauffman, Rex R. Malmstrom, Adam M. Deutschbauer, and N. Louise Glass. Genome-wide fitness profiling reveals molecular mechanisms that bacteria use to interact with trichoderma atroviride exometabolites. PLOS Genetics, 19:e1010909, Aug 2023. URL: https://doi.org/10.1371/journal.pgen.1010909, doi:10.1371/journal.pgen.1010909. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(villalobosescobedo2023genomewidefitnessprofiling pages 1-2): José Manuel Villalobos-Escobedo, Maria Belen Mercado-Esquivias, Catharine Adams, W. Berkeley Kauffman, Rex R. Malmstrom, Adam M. Deutschbauer, and N. Louise Glass. Genome-wide fitness profiling reveals molecular mechanisms that bacteria use to interact with trichoderma atroviride exometabolites. PLOS Genetics, 19:e1010909, Aug 2023. URL: https://doi.org/10.1371/journal.pgen.1010909, doi:10.1371/journal.pgen.1010909. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="exbB-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>weimer2024systemsmetabolicengineering pages 87-93</li>
+<li>braun2024substrateuptakeby pages 1-2</li>
+<li>braun2024substrateuptakeby pages 11-12</li>
+<li>braun2023energizationofouter pages 4-6</li>
+<li>braun2023energizationofouter pages 13-15</li>
+<li>cornelis2010ironuptakeand pages 1-3</li>
+<li>weimer2024systemsmetabolicengineering pages 93-97</li>
+<li>godoy2001involvementofthe pages 4-5</li>
+<li>villalobosescobedo2023genomewidefitnessprofiling pages 10-11</li>
+<li>schalk2025bacterialsiderophoresdiversity pages 42-46</li>
+<li>braun2023energizationofouter pages 11-13</li>
+<li>braun2023energizationofouter pages 1-3</li>
+<li>braun2023energizationofouter pages 3-4</li>
+<li>godoy2001involvementofthe pages 6-7</li>
+<li>postle2024invivotests pages 1-5</li>
+<li>postle2024invivotests pages 45-51</li>
+<li>graff2024siderophoresastools pages 1-2</li>
+<li>graff2024siderophoresastools pages 2-4</li>
+<li>braun2023energizationofouter pages 6-8</li>
+<li>weimer2024systemsmetabolicengineering pages 97-101</li>
+<li>godoy2001involvementofthe pages 1-2</li>
+<li>villalobosescobedo2023genomewidefitnessprofiling pages 3-6</li>
+<li>villalobosescobedo2023genomewidefitnessprofiling pages 1-2</li>
+<li>14C</li>
+<li>https://doi.org/10.1128/jb.00035-23</li>
+<li>https://doi.org/10.1111/mmi.15332</li>
+<li>https://doi.org/10.1128/jb.00303-19</li>
+<li>https://doi.org/10.1128/jb.183.18.5285-5292.2001</li>
+<li>https://doi.org/10.1007/s00253-010-2550-2</li>
+<li>https://doi.org/10.1371/journal.pgen.1010909</li>
+<li>https://doi.org/10.1128/jb.00035-23,</li>
+<li>https://doi.org/10.1111/mmi.15332,</li>
+<li>https://doi.org/10.1007/s00253-010-2550-2,</li>
+<li>https://doi.org/10.1128/jb.183.18.5285-5292.2001,</li>
+<li>https://doi.org/10.1371/journal.pgen.1010909,</li>
+<li>https://doi.org/10.1101/2024.07.10.602958,</li>
+<li>https://doi.org/10.1038/s44259-024-00053-4,</li>
+<li>https://doi.org/10.1038/s41579-024-01090-6,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88C77
+gene_symbol: exbB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: ExbB is an integral inner (cytoplasmic) membrane, multi-pass protein that forms part of the TonB-ExbB-ExbD energy-transducing complex in Gram-negative bacteria. Together with ExbD, ExbB assembles into a membrane-embedded oligomeric motor (an ExbB pentamer enclosing an ExbD dimer is the consensus architecture) that harnesses the proton motive force of the inner membrane to energize TonB. Energized TonB physically contacts the TonB box of TonB-dependent outer-membrane transporters (TBDTs), driving conformational changes that open these gated beta-barrel receptors for active import of scarce, receptor-bound substrates such as ferric-siderophore complexes, heme, and vitamin B12 into the periplasm. ExbB itself is not a substrate-specific transporter; rather it is the proton-conducting, energy-coupling stator subunit that powers many different TBDTs, and it stabilizes TonB and protects ExbD from proteolysis. The protein belongs to the ExbB/TolQ family and shares a MotA/TolQ/ExbB proton-channel architecture with the flagellar stator MotA. In Pseudomonas putida KT2440 it is encoded at PP_5306 in the exbB-exbD-tonB (PP_5306-PP_5308) operon, where the system is required for iron-dependent growth and TonB-dependent nutrient acquisition.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: ExbB is an integral inner (cytoplasmic/plasma) membrane multi-pass protein, consistent with UniProt subcellular location and the conserved biology of the ExbB/TolQ family. This is a correct, core localization for the gene product.
+    action: ACCEPT
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct but generic; this is a less informative parent of the more specific plasma (inner) membrane localization that is also annotated. Retained as a true but non-core, redundant statement.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0017038
+    label: protein import
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: This TreeGrafter-propagated term mischaracterizes the core function of ExbB. The defining role of ExbB is to couple the proton motive force to energize TonB, powering TonB-dependent outer-membrane transport of small nutrients (ferric-siderophores, heme, vitamin B12), not the import of proteins. The TonB system can in some organisms energize uptake of certain proteinaceous substrates (e.g., group B colicins and some toxins), so the term is not strictly false, but as applied here it is an over-annotation that does not represent the gene&#39;s principal biological role and conflates a niche activity with the main function.
+    reason: The &#39;protein import&#39; definition (targeting/directed movement of proteins into a cell or organelle) does not capture ExbB&#39;s PMF-coupled energization of small-nutrient uptake; this is an electronic over-propagation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: ExbB does not itself transport the receptor-bound substrates (iron siderophores, heme, B12); those are imported by the outer-membrane TBDTs. ExbB is the proton-conducting, energy-coupling stator subunit of the ExbB-ExbD-TonB motor. A generic &#39;transmembrane transporter activity&#39; is misleading; the specific, mechanistically accurate molecular function is proton transmembrane transporter activity (the MotA/TolQ/ExbB proton channel conducts protons across the inner membrane to convert PMF into mechanical work on TonB).
+    reason: ExbB is a PMF-coupled energizer/proton channel, not a substrate-specific transmembrane transporter; the InterPro-derived generic term should be replaced with the proton-channel molecular function.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0015078
+      label: proton transmembrane transporter activity
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Broadly true but uninformatively generic. The directly catalyzed process for ExbB is proton transmembrane transport across the inner membrane, which generates the energy used to drive TonB-dependent outer-membrane uptake. Replacing the generic term with proton transmembrane transport better reflects the mechanism while remaining well supported by the conserved family biology.
+    reason: The generic transmembrane transport term should be specialized to the proton movement that ExbB actually mediates.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:1902600
+      label: proton transmembrane transport
+core_functions:
+- description: Proton-conducting stator subunit of the ExbB-ExbD-TonB motor that couples the inner-membrane proton motive force to energization of TonB
+  supported_by:
+  - reference_id: PMID:37219427
+  molecular_function:
+    id: GO:0015078
+    label: proton transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:1902600
+    label: proton transmembrane transport
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+- description: Energizes TonB-dependent active uptake of receptor-bound nutrients (ferric-siderophores, heme, vitamin B12) across the outer membrane, supporting iron acquisition and nutrient scavenging
+  supported_by:
+  - reference_id: PMID:20352420
+  - reference_id: PMID:11514511
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  directly_involved_in:
+  - id: GO:0055085
+    label: transmembrane transport
+  molecular_function:
+    id: GO:0031992
+    label: energy transducer activity
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:37219427
+  title: Energization of Outer Membrane Transport by the ExbB ExbD Molecular Motor
+  findings:
+  - statement: ExbB and ExbD are inner-membrane proteins that use the proton motive force to energize TonB, which contacts TonB-dependent outer-membrane transporters; ExbB forms a pentameric motor surrounding an ExbD dimer (ExbB5:ExbD2).
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified by title search to PMID 37219427 (Braun, Ratliff, Celia, Buchanan; J Bacteriol 2023; doi 10.1128/jb.00035-23). Authoritative mechanistic review establishing ExbB as the PMF-coupled inner-membrane motor subunit; mechanistic details derived from E. coli but conserved across the family. The falcon deep-research file gave the wrong PMID (37145020, an unrelated 2023 paper); the identifier was corrected to 37219427 here.
+- id: PMID:20352420
+  title: Iron uptake and metabolism in pseudomonads
+  findings:
+  - statement: In pseudomonads, TonB together with ExbB and ExbD transmits proton motive force energy from the inner membrane to outer-membrane receptors for ferric-siderophore and heme uptake.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified by title search to PMID 20352420 (Cornelis; Appl Microbiol Biotechnol 2010; doi 10.1007/s00253-010-2550-2). Directly supports the iron-acquisition role of the TonB-ExbB-ExbD system in pseudomonads including P. putida. The falcon deep-research file gave the wrong PMID (20157116); corrected to 20352420 here.
+- id: PMID:11514511
+  title: Involvement of the TonB system in tolerance to solvents and drugs in Pseudomonas putida DOT-T1E
+  findings:
+  - statement: The exbB-exbD-tonB genes are closely linked and likely cotranscribed; the TonB-ExbB-ExbD inner-membrane complex is required for iron uptake, and an exbD insertion mutant fails to grow under iron limitation.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified by title search to PMID 11514511 (Godoy, Ramos-Gonzalez, Ramos; J Bacteriol 2001; doi 10.1128/JB.183.18.5285-5292.2001). Closely related P. putida strain DOT-T1E; strong comparative evidence for the operon organization and function of the cognate PP_5306 ExbB. The falcon deep-research file gave the wrong PMID (11514508); corrected to 11514511 here.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings:
+  - statement: Genome sequence of P. putida KT2440 in which the exbB locus (PP_5306, UniProt Q88C77) was annotated.
+    reference_section_type: METHODS
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified genome-sequence reference for KT2440 (source of the PP_5306 locus assignment); background/provenance rather than functional evidence.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

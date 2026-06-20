@@ -133,6 +133,20 @@ fetch-descriptions organism gene:
 fetch-descriptions-bulk organism *args="":
     uv run ai-gene-review fetch-descriptions-bulk {{organism}} --output-dir . {{args}}
 
+# Fetch PANTHER PAINT (PTN node-level) annotations for a family.
+# Resolves the family's PTN tree nodes and slices the node-level IBD.gaf
+# (IBD/IRD/IKR, plus any IBA-on-node) into interpro/panther/<FAMILY>/<FAMILY>-paint.tsv.
+# Requires the family's <FAMILY>-entries.csv (fetch a member gene first).
+# Example: just fetch-panther-paint PTHR10177
+# Example: just fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
+fetch-panther-paint family *args="":
+    uv run ai-gene-review fetch-panther-paint {{family}} --output-dir . {{args}}
+
+# Bulk-generate PANTHER PAINT slices for every cached family (single leaf-GAF pass).
+# Families whose members resolve to no node-level annotations are skipped.
+fetch-panther-paint-all *args="":
+    uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
+
 # Report review status of gene description files
 # Example: just descriptions-status yeast
 # Example: just descriptions-status yeast --all
@@ -228,22 +242,81 @@ gene-hypothesis-list organism gene *args="":
 #   just gene-hypothesis-research openscientist human TP53 --annotation-term-id GO:0003677 --dry-run
 #   just gene-hypothesis-research falcon human TP53 --focus-type core-function --hypothesis "TP53 directly binds DNA"
 gene-hypothesis-research provider organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} {{provider}} {{args}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    provider="{{provider}}"
+    args=( {{args}} )
+    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
+        if [[ " ${args[*]} " == *" -- "* ]]; then
+            args+=(--param max_iterations=3)
+        else
+            args+=(-- --param max_iterations=3)
+        fi
+    fi
+    uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} "$provider" "${args[@]}"
 
 # Run focused deep research for every core_functions[*] record in one gene
 # Existing provider outputs are skipped unless --overwrite is supplied.
 # Examples:
 #   just gene-hypothesis-research-all-core openscientist human SCO1 --dry-run
-#   just gene-hypothesis-research-all-core openscientist human SCO1 -- --param max_iterations=1 --param use_hypotheses=true
+#   just gene-hypothesis-research-all-core openscientist human SCO1 -- --param use_hypotheses=true
 gene-hypothesis-research-all-core provider organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py run-all-core {{organism}} {{gene}} {{provider}} {{args}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    provider="{{provider}}"
+    args=( {{args}} )
+    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
+        if [[ " ${args[*]} " == *" -- "* ]]; then
+            args+=(--param max_iterations=3)
+        else
+            args+=(-- --param max_iterations=3)
+        fi
+    fi
+    uv run python scripts/gene_hypothesis_deep_research.py run-all-core {{organism}} {{gene}} "$provider" "${args[@]}"
 
 # Run one synthesis query over all core_functions[*] records in one gene
 # Examples:
 #   just gene-hypothesis-research-combined-core openscientist human SCO1 --dry-run
-#   just gene-hypothesis-research-combined-core openscientist human SCO1 -- --param max_iterations=1 --param use_hypotheses=true
+#   just gene-hypothesis-research-combined-core openscientist human SCO1 -- --param use_hypotheses=true
 gene-hypothesis-research-combined-core provider organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} {{provider}} {{args}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    provider="{{provider}}"
+    args=( {{args}} )
+    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
+        if [[ " ${args[*]} " == *" -- "* ]]; then
+            args+=(--param max_iterations=3)
+        else
+            args+=(-- --param max_iterations=3)
+        fi
+    fi
+    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} "$provider" "${args[@]}"
+
+# ============== ASSAY_TO_FUNCTION readout-mining pipeline ==============
+
+# Mine review prose and the publications corpus for assay/readout usage, then
+# QC + flag re-review candidates. Always inspect reports/*matched_string_counts*
+# for substring false positives before trusting a class total.
+assay-mine *args="":
+    uv run python projects/ASSAY_TO_FUNCTION/mine_readouts.py {{args}}
+    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py {{args}}
+
+assay-flag *args="":
+    uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py {{args}}
+
+# Consolidate the 60-class catalog + mined matches into summary TSV/MD + figure.
+assay-consolidate *args="":
+    uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py {{args}}
+
+# Stage (human-gated) OpenScientist hypothesis prompts from flagged_candidates.tsv.
+# This writes committed prompt.md files and prints submit commands but NEVER
+# submits a (paid) job. Reserve submission for cases where a cited literature
+# adjudication actually changes the curation decision.
+# Examples:
+#   just assay-stage-hypotheses --discriminator indirect_ligand --max 5
+#   just assay-stage-hypotheses --gene STAT3 --go-id GO:0030335
+assay-stage-hypotheses *args="":
+    uv run python projects/ASSAY_TO_FUNCTION/stage_hypotheses.py {{args}}
 
 # Term deep research (open-ended biological concepts)
 # Examples:
@@ -269,6 +342,29 @@ term-deep-research-cyberian concept *args="":
 
 term-deep-research-codex concept *args="":
     uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian --extra-args --param agent_type=codex {{args}}
+
+# Module deep research (targets module YAMLs and writes beside the YAML by default)
+# Examples:
+#   just module-deep-research-perplexity peroxisome-lifecycle
+#   just module-deep-research-openai modules/gluconeogenesis.yaml
+#   just module-deep-research-perplexity-lite peroxisome-lifecycle --dry-run
+module-deep-research-openai module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" openai {{args}}
+
+module-deep-research-perplexity module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" perplexity {{args}}
+
+module-deep-research-perplexity-lite module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" perplexity-lite {{args}}
+
+module-deep-research-falcon module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" falcon {{args}}
+
+module-deep-research-cyberian module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" cyberian {{args}}
+
+module-deep-research-codex module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" codex {{args}}
 
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
@@ -375,11 +471,33 @@ validate-references-all:
         {{ref_validator}} validate data "$f" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
     done
 
+# Warm the reference cache (publications/) so validate-all stops re-fetching.
+# Fetches every referenced PMID/DOI (with full text) into the cache; commit the result.
+[group('QC')]
+warm-references:
+    uv run python scripts/warm_reference_cache.py
+
 validate-files files:
     uv run ai-gene-review validate {{files}}
 
 validate-deep-research:
     uv run python scripts/validate_deep_research.py
+
+# Validate module YAML files against the ModuleReview schema
+validate-modules:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    files=$(find modules -type f \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | sort)
+    if [ -z "$files" ]; then
+        echo "No module YAML files found"
+        exit 0
+    fi
+    rc=0
+    while IFS= read -r f; do
+        echo "Validating $f"
+        uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f" || rc=1
+    done <<< "$files"
+    exit "$rc"
 
 # Full validation of a single gene file (schema + terms + references + best practices)
 [group('QC')]
@@ -387,14 +505,7 @@ validate organism gene:
     #!/usr/bin/env bash
     set -e
     file="genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
-    echo "Schema validation..."
-    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$file"
-    echo "Term validation..."
-    {{term_validator}} validate-data "$file" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
-    echo "Reference validation..."
-    {{ref_validator}} validate data "$file" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
-    echo "Best practices validation..."
-    uv run ai-gene-review validate --verbose "$file"
+    uv run ai-gene-review validate --verbose --terms "$file"
     echo ""
     echo "Checking PMID references in markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"
@@ -493,10 +604,48 @@ validate-tag tag:
     uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
     echo "Wrote validation report to ${report_path}"
 
-# Validate all gene review files (schema + terms + best practices)
-# Uses batch mode for schema and term validation (single process, fast).
-# Reference validation is per-file and slow (~10s each); use
-# validate-references-all or single-file `just validate` for that.
+# Validate ONLY the given changed gene-review files (full strict per-gene stack:
+# schema + terms + references + best practices, plus PMID-markdown checks).
+# Term/label-mismatch warnings are advisory; enum/not-found errors block.
+# Deleted files and non gene-review paths are skipped. Used by CI to validate
+# only the genes a PR touched instead of the whole corpus.
+# Example: just validate-changed genes/human/TP53/TP53-ai-review.yaml genes/worm/lrx-1/lrx-1-ai-review.yaml
+[group('QC')]
+validate-changed *files:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    existing=()
+    for f in {{files}}; do
+        if [[ "$f" == genes/*/*/*-ai-review.yaml && -f "$f" ]]; then
+            existing+=("$f")
+        elif [[ ! -f "$f" ]]; then
+            echo "Skipping deleted/missing file: $f"
+        else
+            echo "Skipping non gene-review file: $f"
+        fi
+    done
+    if [ ${#existing[@]} -eq 0 ]; then
+        echo "No existing changed gene-review files to validate."
+        exit 0
+    fi
+    echo "Validating ${#existing[@]} changed gene-review file(s) (strict)..."
+    rc=0
+    uv run ai-gene-review validate --verbose --terms "${existing[@]}" || rc=1
+    # PMID references in markdown, once per affected gene directory.
+    # Process substitution (not a pipe) so rc updates stay in this shell.
+    while read -r dir; do
+        echo "Checking PMID references in $dir ..."
+        uv run python src/ai_gene_review/tools/validate_pmid_references.py "$dir" || rc=1
+    done < <(printf '%s\n' "${existing[@]}" | xargs -n1 dirname | sort -u)
+    if [ $rc -ne 0 ]; then
+        echo "✗ Validation failed for one or more changed files (see above)"
+        exit $rc
+    fi
+    echo "✓ All changed files passed validation."
+
+# Validate all gene review files (schema + references + best practices).
+# Uses batch mode for schema and advisory term validation, then the CLI for
+# per-file reference and best-practices checks.
 [group('QC')]
 validate-all:
     #!/usr/bin/env bash
@@ -504,14 +653,27 @@ validate-all:
     echo "Schema validation (batch)..."
     uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
-    echo "Term validation (batch)..."
-    # Term validation reports label mismatches and branch errors; treat as advisory
-    # for now (pre-existing issues on main). Use just validate-terms for strict checks.
-    uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} || echo "⚠ Term validation reported issues (non-blocking)"
+    echo "Term validation (batch, errors block; label-mismatch warnings advisory)..."
+    # Enum-membership / not-found errors (❌ ERROR) are fatal; ontology label-mismatch
+    # warnings (⚠️ WARN) are advisory because GOA/release label lag is expected and
+    # bidirectional. Use just validate-terms for a fully strict (warnings-too) check.
+    term_out="$(uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)" || true
+    printf '%s\n' "$term_out"
+    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback"; then
+        echo "✗ Term validation found errors (see above)"
+        exit_code=1
+    else
+        echo "✓ Term validation: no errors (label warnings, if any, are advisory)"
+    fi
+    echo ""
+    echo "Reference validation (batch; errors block, advisory warnings allowed)..."
+    # One linkml-reference-validator process over all files (schema parsed once),
+    # rather than one process per file. Requires linkml-reference-validator >= 0.2.1.
+    {{ref_validator}} validate data genes/*/*/*-ai-review.yaml --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}} || exit_code=1
     echo ""
     echo "Best practices validation..."
     mkdir -p reports
-    uv run ai-gene-review validate --verbose --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
+    uv run ai-gene-review validate --verbose --no-schema --no-references --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
     echo ""
     echo "Checking PMID references in all pathway markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || exit_code=1
@@ -831,6 +993,14 @@ render-projects:
 # Render a specific project markdown to HTML
 render-project project:
     uv run ai-gene-review render-projects projects/{{project}}.md
+
+# Render module YAML files to HTML with an inline tree browser
+render-modules:
+    uv run ai-gene-review render-modules --all
+
+# Render a specific module YAML to HTML
+render-module module:
+    uv run ai-gene-review render-modules {{module}}
 
 # Render a single rule review YAML as HTML (automatically runs analysis first if needed)
 # DEPENDENCIES:

@@ -1,3 +1,10 @@
+---
+title: "C. elegans Lysosome-to-Nucleus Lipid Signaling (OEA Pathway)"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN]
+species: [worm]
+---
+
 # C. elegans Lysosome-to-Nucleus Lipid Signaling (OEA Pathway)
 
 ## Overview

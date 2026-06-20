@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>grpE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>grpE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DU1" target="_blank" class="term-link">
+                        Q88DU1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "grpE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DU1" data-a="DESCRIPTION: GrpE is the bacterial nucleotide exchange factor (..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GrpE is the bacterial nucleotide exchange factor (NEF) for the Hsp70 chaperone DnaK, functioning as the third component of the conserved DnaK/DnaJ/GrpE (KJE) chaperone system. It is a homodimeric, &#34;cruciform&#34;-shaped protein with a long N-terminal coiled-coil and a globular C-terminal head domain that docks onto the nucleotide-binding domain (NBD) of DnaK. In the chaperone cycle, unfolded substrate proteins are first bound by DnaJ (Hsp40), which delivers them to DnaK and stimulates ATP hydrolysis to produce the ADP-bound, high substrate-affinity state of DnaK. GrpE then binds the DnaK NBD and induces conformational opening of the nucleotide-binding cleft (notably rotation of NBD subdomain IIB), accelerating ADP release; subsequent ATP rebinding resets DnaK to its low-affinity state and triggers substrate release, completing the cycle. Through this activity GrpE enables the iterative ATP-driven cycles required for de novo protein folding, refolding of stress-denatured proteins, and prevention of protein aggregation. The thermolabile coiled-coil of GrpE has been proposed to act as a thermosensor that modulates NEF activity with temperature. GrpE acts in the cytoplasm/cytosol and is part of the heat-shock and general stress response; in P. putida KT2440 it is induced under heat and chemical (e.g. phenol/solvent) stress.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                                    GO:0000774
+                                </a>
+                            </span>
+                            <span class="term-label">adenyl-nucleotide exchange factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DU1" data-a="GO:0000774" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining molecular function of GrpE - it is the nucleotide exchange factor for DnaK (Hsp70), promoting ADP release so that ATP can rebind. The annotation is from InterPro (IPR000740, the GrpE family signature) plus PANTHER and is fully consistent with the UniProt FUNCTION statement and the entire GrpE literature.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core, defining molecular function of GrpE. Universally conserved across the GrpE family and well supported by the InterPro/HAMAP family signature and mechanistic structural studies of bacterial DnaK-GrpE complexes.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DU1" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GrpE acts in the cytoplasm as a cofactor of the cytosolic DnaK chaperone. The UniProt SUBCELLULAR LOCATION (HAMAP MF_01151) annotates Cytoplasm, and KT2440 proteomics detected GrpE among cytoplasmic stress-induced proteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct subcellular localization for a bacterial DnaK cofactor. Consistent with HAMAP rule and with the cytosolic localization of its DnaK/DnaJ partners.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DU1" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter (phylogenetic) annotation to cytosol, the more specific child of cytoplasm. Consistent with GrpE function as a soluble cofactor of cytosolic DnaK.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and slightly more specific localization than the cytoplasm annotation. Both are biologically appropriate for GrpE; retaining the more specific cytosol term is reasonable.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DU1" data-a="GO:0006457" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GrpE is an integral component of the DnaK/DnaJ/GrpE chaperone machine, which assists de novo protein folding and refolding of stress-denatured proteins. Several rounds of GrpE-driven nucleotide exchange are required for efficient folding. InterPro-based annotation is well supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurately captures the biological process in which GrpE participates. GrpE is not itself a foldase but is essential to the folding cycle of the KJE system.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DU1" data-a="GO:0042803" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GrpE functions as a homodimer; dimerization (via the coiled-coil) is essential for its NEF activity and for engaging DnaK in the asymmetric 1:2 DnaK:GrpE complex. UniProt SUBUNIT annotates Homodimer. Well supported by InterPro and structural studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GrpE is obligately dimeric and dimerization is required for function. Correct molecular function annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                                    GO:0051087
+                                </a>
+                            </span>
+                            <span class="term-label">protein-folding chaperone binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DU1" data-a="GO:0051087" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GrpE binds directly to the Hsp70 chaperone DnaK (a protein-folding chaperone), docking onto its nucleotide-binding domain. This binding is the basis of its NEF activity. InterPro-based annotation is appropriate and more informative than generic protein binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GrpE&#39;s physical interaction with the DnaK chaperone is central to its function. The term correctly describes this binding to a folding chaperone rather than an uninformative generic protein binding term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Nucleotide exchange factor for the Hsp70 chaperone DnaK; binds the DnaK nucleotide-binding domain and accelerates ADP release, enabling ATP rebinding and substrate release to drive the chaperone cycle.</h3>
+                <span class="vote-buttons" data-g="Q88DU1" data-a="FUNCTION: Nucleotide exchange factor for the Hsp70 chaperone..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                            adenyl-nucleotide exchange factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                protein folding
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">GrpE annotated with adenyl-nucleotide exchange factor activity (GO:0000774) from InterPro IPR000740; UniProt FUNCTION states &#34;It is the nucleotide exchange factor for DnaK ... GrpE releases ADP from DnaK; ATP binding to DnaK triggers the release of the substrate protein.&#34;</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as an obligate homodimer that binds the DnaK chaperone, forming part of the DnaK/DnaJ/GrpE machine that promotes folding and refolding of proteins and prevents aggregation of stress-denatured proteins during the heat-shock and general stress response.</h3>
+                <span class="vote-buttons" data-g="Q88DU1" data-a="FUNCTION: Acts as an obligate homodimer that binds the DnaK ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                            protein-folding chaperone binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                protein folding
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                        <div class="finding-text">GrpE annotated with protein homodimerization activity (GO:0042803) and protein-folding chaperone binding (GO:0051087) from InterPro IPR000740, and involved_in protein folding (GO:0006457).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/grpE/grpE-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">GrpE is the dimeric DnaK/Hsp70 cofactor of the conserved bacterial DnaK/DnaJ/GrpE chaperone system; in P. putida KT2440, GrpE was among the general-stress proteins upregulated after phenol exposure, consistent with an intracellular proteostasis role under heat and chemical stress.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/grpE/grpE-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report for grpE (Q88DU1 / PP_4728) in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesis of GrpE structure/function (dimeric NEF for DnaK), and KT2440-specific evidence that GrpE is upregulated among general-stress proteins under phenol stress; Pseudomonas grpE-dnaK-dnaJ chaperone gene cluster context.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38110031" target="_blank" class="term-link">
+                            PMID:38110031
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">New insights into the structure and function of the complex between the Escherichia coli Hsp70, DnaK, and its nucleotide-exchange factor, GrpE</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GrpE is the dimeric nucleotide exchange factor for DnaK; binding to the DnaK nucleotide-binding domain opens the nucleotide-binding cleft (movement of subdomain IIB), accelerating ADP release. Its coiled-coil is thermolabile.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38253530" target="_blank" class="term-link">
+                            PMID:38253530
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of the M. tuberculosis DnaK-GrpE complex reveals how key DnaK roles are controlled</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cryo-EM reveals an asymmetric 1:2 DnaK:GrpE complex; the GrpE dimer &#34;ratchets&#34; to remodel both the nucleotide-binding and substrate-binding domains of DnaK, coupling ADP release to substrate release.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16109938" target="_blank" class="term-link">
+                            PMID:16109938
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The heat shock genes dnaK, dnaJ, and grpE are involved in regulation of putisolvin biosynthesis in Pseudomonas putida PCL1445</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In P. putida PCL1445, grpE, dnaK, and dnaJ are genomically linked (dnaK downstream of grpE, upstream of dnaJ), supporting a conserved Pseudomonas KJE chaperone gene cluster.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the proposed thermosensor behavior of the GrpE coiled-coil operate at physiologically relevant temperatures for P. putida, given its mesophilic environmental lifestyle?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DU1" data-a="Q: Does the proposed thermosensor behavior of the Grp..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine the operon structure and promoter(s) of the grpE-dnaK-dnaJ locus (PP_4728 region) in P. putida KT2440 (e.g. by RNA-seq/transcription start site mapping and co-transcription assays) to confirm the inferred Pseudomonas chaperone gene cluster organization.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DU1" data-a="EXPERIMENT: Determine the operon structure and promoter(s) of ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test whether a grpE conditional/depletion mutant in KT2440 impairs growth and protein refolding under heat and solvent (phenol) stress, to directly link the NEF function to stress-tolerance phenotypes in this organism.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DU1" data-a="EXPERIMENT: Test whether a grpE conditional/depletion mutant i..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(grpE-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DU1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: **grpE (UniProt Q88DU1; locus PP_4728)** in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">29 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T17:33:11.738238</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="grpE-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="grpE-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000016 The cryo-EM structure of the Mycobacterium tuberculosis (Mtb) DnaK–GrpE complex is primarily depicted in Figure 1 and Figure 7 of t</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-grpe-uniprot-q88du1-locus-pp_4728-in-pseudomonas-putida-kt2440">Research report: <strong>grpE (UniProt Q88DU1; locus PP_4728)</strong> in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-target-verification-critical-disambiguation">0. Target verification (critical disambiguation)</h2>
+<p>The UniProt-provided target <strong>Q88DU1</strong> from <em>Pseudomonas putida</em> strain <strong>KT2440</strong> is annotated as <strong>Protein GrpE</strong>, an <strong>Hsp70 (DnaK) cofactor / nucleotide exchange factor (NEF)</strong> and member of the conserved <strong>GrpE family</strong>. The retrieved scientific literature consistently uses “GrpE” to denote the bacterial DnaK NEF (a dimeric co-chaperone with coiled-coil and head domains), matching the UniProt description and the listed GrpE-family domains (GrpE, GrpE_CC, GrpE_head). No conflicting “grpE” gene identity (unrelated function) was found in the retrieved corpus. (rossi2024newinsightsinto pages 1-2, xiao2024structureofthe pages 1-2)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1. Key concepts and definitions (current understanding)</h2>
+<h3 id="11-what-grpe-is">1.1 What GrpE is</h3>
+<p><strong>GrpE</strong> is the canonical <strong>bacterial nucleotide exchange factor (NEF)</strong> for <strong>DnaK (Hsp70)</strong>. In the bacterial DnaK chaperone cycle, <strong>DnaJ (Hsp40)</strong> stimulates DnaK ATP hydrolysis to an <strong>ADP-bound, high-substrate-affinity</strong> state; <strong>GrpE then promotes ADP release</strong> so ATP can rebind, shifting DnaK to an <strong>ATP-bound, low-substrate-affinity</strong> conformation that favors <strong>client/substrate release</strong> and chaperone recycling. (craig2021leveragingpseudomonasstress pages 6-7, rossi2024newinsightsinto pages 1-2, xiao2024structureofthe pages 1-2)</p>
+<h3 id="12-structural-architecture-and-domain-logic">1.2 Structural architecture and domain logic</h3>
+<p>Recent structural synthesis describes GrpE as a <strong>dimeric “cruciform/crucifix” protein</strong> comprising a <strong>long coiled-coil</strong> plus a globular <strong>C-terminal head domain</strong> (with β-bundles and α-helices), with <strong>dimerization essential for function</strong>. This architecture maps naturally to the UniProt-listed GrpE family domains for Q88DU1 (coiled-coil and head). (rossi2024newinsightsinto pages 1-2)</p>
+<h3 id="13-thermosensor-behavior-conceptual-definition">1.3 Thermosensor behavior (conceptual definition)</h3>
+<p>GrpE is widely discussed as a <strong>thermosensor-like co-chaperone</strong>: in <em>E. coli</em> models, GrpE’s coiled-coil is thermolabile (melting around <strong>~48°C</strong>) and elevated temperature can weaken NEF function, biasing DnaK toward the ADP/high-affinity state. (rossi2024newinsightsinto pages 1-2)</p>
+<h2 id="2-molecular-function-and-mechanism-what-reaction-is-catalyzed">2. Molecular function and mechanism (what reaction is catalyzed?)</h2>
+<p>GrpE is not an enzyme that catalyzes a substrate-to-product chemical transformation; instead its <strong>primary molecular function</strong> is <strong>allosteric regulation</strong> of DnaK’s nucleotide state.</p>
+<h3 id="21-mechanism-of-nucleotide-exchange-adp-release">2.1 Mechanism of nucleotide exchange (ADP release)</h3>
+<p>Two 2024 studies provide updated mechanistic detail on how GrpE accelerates nucleotide exchange:</p>
+<ul>
+<li><strong>Opening the DnaK nucleotide-binding cleft (NBD):</strong> GrpE binds DnaK’s nucleotide-binding domain and induces conformational changes (notably involving <strong>NBD subdomain IIB movement/rotation</strong>) that open the nucleotide-binding cleft and increase the <strong>ADP off-rate</strong>. This explains GrpE’s NEF activity in structural terms. (rossi2024newinsightsinto pages 1-2)</li>
+<li><strong>Quantified conformational control in a full-length complex:</strong> Cryo-EM analysis of a bacterial DnaK–GrpE complex shows that GrpE binding “ratchets” and drives coordinated motions in DnaK domains; these motions separate nucleotide-contacting residues and promote ADP release, while also influencing substrate-binding-domain conformations. (xiao2024structureofthe pages 7-8)</li>
+</ul>
+<h3 id="22-coupling-nucleotide-exchange-to-substrate-release">2.2 Coupling nucleotide exchange to substrate release</h3>
+<p>A major refinement from 2024 cryo-EM work is that GrpE’s role is not limited to ADP release: the <strong>GrpE dimer engages DnaK in an asymmetric 1:2 complex</strong> and its motions are proposed to <strong>concomitantly couple ADP release (NBD) with client release (SBD)</strong>. The same work reports functional dependence on the GrpE N-terminus for efficient substrate release. (xiao2024structureofthe pages 1-2, xiao2024structureofthe pages 8-9)</p>
+<h2 id="3-cellular-localization-and-biological-processes-in-p-putida-kt2440">3. Cellular localization and biological processes in <em>P. putida</em> KT2440</h2>
+<h3 id="31-expected-localization">3.1 Expected localization</h3>
+<p>The key functional interaction partners (DnaK/DnaJ) are cytosolic chaperones, and GrpE is a canonical DnaK cofactor; thus, GrpE is best annotated as an <strong>intracellular/cytosolic protein</strong>.</p>
+<p>Direct KT2440 proteomics under phenol stress identified many <strong>cytoplasmic or periplasmic</strong> proteins, and GrpE was among the induced stress proteins detected in that dataset, consistent with an intracellular role in proteostasis. (santos2004insightsintopseudomonas pages 1-2)</p>
+<h3 id="32-biological-processes-proteostasis-heat-shock-and-chemical-stress">3.2 Biological processes: proteostasis, heat-shock, and chemical stress</h3>
+<p><strong>Heat-shock response network context in <em>Pseudomonas</em>:</strong> In <em>P. putida</em>, the heat-shock response is described as similar to <em>E. coli</em>, and the chaperone systems <strong>DnaK/DnaJ/GrpE</strong> and <strong>GroEL/GroES</strong> participate in regulating the heat-shock sigma factor <strong>σ32/RpoH</strong> by binding/inactivating it in non-stress conditions (a central feedback logic in bacterial heat-shock control). This places GrpE in a core <strong>stress-response and proteostasis pathway</strong>, even though GrpE itself is not a transcription factor. (ito2014geneticandphenotypic pages 2-3)</p>
+<p><strong>Chemical/solvent stress in KT2440:</strong> Quantitative proteomics of phenol-induced stress in <em>P. putida</em> KT2440 reported that, after <strong>1 hour</strong> of sudden phenol exposure (e.g., <strong>600 mg/L</strong> sublethal phenol), <strong>68 proteins increased</strong> and <strong>13 decreased</strong>, and GrpE was explicitly among the upregulated “general stress” proteins. This provides direct KT2440 evidence that GrpE participates in the <strong>early solvent/toxicant stress response</strong> through proteostasis maintenance. (santos2004insightsintopseudomonas pages 1-2)</p>
+<h2 id="4-genomicoperon-context-and-regulation-evidence-and-limitations">4. Genomic/operon context and regulation (evidence and limitations)</h2>
+<h3 id="41-operongenomic-neighborhood-best-available-evidence">4.1 Operon/genomic neighborhood (best available evidence)</h3>
+<p>Within a closely related <em>P. putida</em> strain (PCL1445), <strong>grpE</strong>, <strong>dnaK</strong>, and <strong>dnaJ</strong> are genomically linked such that <strong>dnaK lies downstream of grpE and upstream of dnaJ</strong>. This supports a conserved <em>Pseudomonas</em> genomic organization for the KJE chaperone system (GrpE–DnaK–DnaJ) and is consistent with the expectation that KT2440 PP_4728 (grpE) is part of a heat-shock chaperone locus. (dubern2005theheatshock pages 1-2)</p>
+<p><strong>Limitation:</strong> In the retrieved corpus, no paper explicitly mapped <strong>KT2440 PP_4728</strong>’s operon boundaries/promoters (e.g., transcription start sites, co-transcription assays). Therefore, KT2440-specific operon structure is inferred from conservation and strain-level evidence rather than directly shown here.</p>
+<h3 id="42-regulatory-integration-and-downstream-phenotypes-indirect-effects">4.2 Regulatory integration and downstream phenotypes (indirect effects)</h3>
+<p>In <em>P. putida</em> PCL1445, mutations in the heat-shock genes <strong>dnaK/dnaJ/grpE</strong> affected transcriptional output of a secondary-metabolite pathway (putisolvin biosynthesis), supporting that proteostasis modules can have broad regulatory consequences through stress physiology and folding-dependent control, but these are most parsimoniously interpreted as <strong>indirect</strong> outcomes of chaperone-network perturbation rather than a dedicated, pathway-specific role for GrpE. (dubern2005theheatshock pages 1-2)</p>
+<h2 id="5-recent-developments-prioritizing-20232024">5. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="51-2024-cryo-em-structure-of-a-full-dnakgrpe-complex-functional-coupling">5.1 2024: cryo-EM structure of a full DnaK–GrpE complex (functional coupling)</h3>
+<p>A 2024 cryo-EM study reported an <strong>asymmetric 1:2 DnaK:GrpE</strong> complex and described multi-body motions (“ratcheting”) of the GrpE dimer that modulate both DnaK’s nucleotide-binding and substrate-binding domains; the study also reports that GrpE’s N-terminus is critical for substrate release in functional assays and that the DnaK–GrpE interface is essential for folding activity in vitro and in vivo. (xiao2024structureofthe pages 1-2, xiao2024structureofthe pages 8-9)</p>
+<p>Figure evidence from this study (structure and stoichiometry; domain motions) is shown in the retrieved image panels. (xiao2024structureofthe media aae0080b, xiao2024structureofthe media 6cad8a4d)</p>
+<h3 id="52-2024-improved-structural-model-for-how-grpe-opens-the-nbd-cleft">5.2 2024: improved structural model for how GrpE opens the NBD cleft</h3>
+<p>A 2024 Journal of Biological Chemistry paper synthesizes newer structural/functional insights for the <em>E. coli</em> DnaK–GrpE complex, emphasizing a larger GrpE-associated movement of NBD subdomain IIB and a more open nucleotide-binding cleft consistent with GrpE-induced increases in ADP off-rate; it also reiterates GrpE’s <strong>dimeric cruciform architecture</strong> and its <strong>thermolability (~48°C melting)</strong> as part of its physiological behavior. (rossi2024newinsightsinto pages 1-2)</p>
+<h2 id="6-current-applications-and-real-world-implementations">6. Current applications and real-world implementations</h2>
+<p>Although GrpE itself is not typically engineered as a standalone “product enzyme,” its function is central to <strong>stress robustness and protein folding capacity</strong>, which are key constraints in microbial biotechnology.</p>
+<p>A review focusing on <em>Pseudomonas</em> stress responses highlights the DnaK/DnaJ/GrpE system as a core chaperone module preventing aggregation and aiding refolding under stress, and frames such stress physiology as something that can be <strong>leveraged for industrial applications</strong> (e.g., improving strain robustness in harsh process conditions). (craig2021leveragingpseudomonasstress pages 6-7)</p>
+<p>In KT2440 specifically, induction of GrpE under phenol stress provides a concrete example of how the KJE system is engaged during toxicant exposure relevant to bioprocessing and biodegradation contexts. (santos2004insightsintopseudomonas pages 1-2)</p>
+<h2 id="7-expert-interpretation-and-annotation-ready-conclusions">7. Expert interpretation and annotation-ready conclusions</h2>
+<h3 id="71-primary-function-what-to-annotate">7.1 Primary function (what to annotate)</h3>
+<p>For UniProt Q88DU1 / PP_4728 in <em>P. putida</em> KT2440, the best-supported primary annotation is:</p>
+<ul>
+<li><strong>Molecular function:</strong> DnaK <strong>nucleotide exchange factor</strong> (promotes ADP release / ATP rebinding cycle progression). (rossi2024newinsightsinto pages 1-2, xiao2024structureofthe pages 1-2)</li>
+<li><strong>Biological process:</strong> <strong>Protein folding and proteostasis</strong>, particularly in <strong>stress/heat-shock response</strong> and chemical stress recovery. (ito2014geneticandphenotypic pages 2-3, santos2004insightsintopseudomonas pages 1-2)</li>
+<li><strong>Cellular component:</strong> <strong>Cytosol/intracellular</strong>, consistent with DnaK system function; KT2440 proteomics context is consistent with intracellular stress-induced chaperone deployment. (santos2004insightsintopseudomonas pages 1-2)</li>
+</ul>
+<h3 id="72-kt2440-specific-evidence-strength">7.2 KT2440-specific evidence strength</h3>
+<p><em>Direct KT2440 evidence</em> in this corpus is strongest for <strong>stress-responsive expression at the protein level</strong> (phenol stress proteomics) and supports the assignment of GrpE to <strong>solvent/toxicant stress proteostasis</strong>. (santos2004insightsintopseudomonas pages 1-2)</p>
+<p><em>Regulatory/operon context</em> for KT2440 PP_4728 is not directly documented in the retrieved KT2440 papers; the best available evidence is a closely related <em>P. putida</em> strain showing <strong>grpE–dnaK–dnaJ</strong> linkage. (dubern2005theheatshock pages 1-2)</p>
+<h2 id="8-key-statistics-and-data-points-recent-studies-emphasized-where-possible">8. Key statistics and data points (recent studies emphasized where possible)</h2>
+<ul>
+<li><strong>KT2440 phenol stress proteomics:</strong> After 1 h exposure to phenol (sublethal 600 mg/L described), <strong>68 proteins increased</strong> and <strong>13 decreased</strong>, and <strong>GrpE</strong> is among the upregulated general-stress proteins detected by 2-DE/MALDI-TOF MS. (santos2004insightsintopseudomonas pages 1-2)</li>
+<li><strong>2024 structural stoichiometry:</strong> SEC-MALS and cryo-EM support an <strong>asymmetric 1:2 DnaK:GrpE</strong> complex (a DnaK bound to a GrpE dimer). (xiao2024structureofthe pages 7-8, xiao2024structureofthe media aae0080b)</li>
+</ul>
+<h2 id="evidence-summary-table">Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Claim/Topic</th>
+<th>Key findings (1-2 sentences)</th>
+<th>Organism/strain</th>
+<th>Evidence type</th>
+<th>Publication (year, journal)</th>
+<th>URL</th>
+<th>Notes for annotation (localization/pathway)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity verification for Q88DU1 / PP_4728</td>
+<td>The requested protein is annotated as GrpE, the bacterial Hsp70 cofactor/nucleotide-exchange factor of the DnaK system. Available literature on GrpE in Pseudomonas and broader bacteria matches this family-level role, so functional annotation should center on the DnaK/DnaJ/GrpE chaperone cycle rather than any unrelated “grpE” usage in other taxa. (craig2021leveragingpseudomonasstress pages 6-7, dubern2005theheatshock pages 1-2, ito2014geneticandphenotypic pages 2-3, rossi2024newinsightsinto pages 1-2)</td>
+<td><em>Pseudomonas putida</em> KT2440 / related <em>Pseudomonas</em> strains / bacteria broadly</td>
+<td>Comparative annotation plus literature synthesis</td>
+<td>Craig et al. 2021, <em>Frontiers in Microbiology</em>; Dubern et al. 2005, <em>Journal of Bacteriology</em>; Ito et al. 2014, <em>MicrobiologyOpen</em>; Rossi et al. 2024, <em>Journal of Biological Chemistry</em></td>
+<td>https://doi.org/10.3389/fmicb.2021.660134; https://doi.org/10.1128/jb.187.17.5967-5976.2005; https://doi.org/10.1002/mbo3.217; https://doi.org/10.1016/j.jbc.2023.105574</td>
+<td>Annotate as a <strong>cytosolic co-chaperone</strong> in the <strong>DnaK/DnaJ/GrpE proteostasis and heat-shock pathway</strong>; not an enzyme or transporter.</td>
+</tr>
+<tr>
+<td>Primary molecular function of GrpE</td>
+<td>GrpE is the nucleotide-exchange factor (NEF) for DnaK/Hsp70: after DnaJ-stimulated ATP hydrolysis converts DnaK to the ADP-bound high-affinity substrate state, GrpE promotes ADP release so ATP can rebind, reopening DnaK and enabling substrate release. This is the core conserved function most relevant to Q88DU1 annotation. (craig2021leveragingpseudomonasstress pages 6-7, ito2014geneticandphenotypic pages 2-3, rossi2024newinsightsinto pages 1-2, xiao2024structureofthe pages 1-2)</td>
+<td>Bacteria broadly; conserved relevance to <em>P. putida</em> KT2440</td>
+<td>Review plus structural/mechanistic primary studies</td>
+<td>Craig et al. 2021, <em>Frontiers in Microbiology</em>; Ito et al. 2014, <em>MicrobiologyOpen</em>; Rossi et al. 2024, <em>Journal of Biological Chemistry</em>; Xiao et al. 2024, <em>Nature Communications</em></td>
+<td>https://doi.org/10.3389/fmicb.2021.660134; https://doi.org/10.1002/mbo3.217; https://doi.org/10.1016/j.jbc.2023.105574; https://doi.org/10.1038/s41467-024-44933-9</td>
+<td>GO-style annotation: <strong>nucleotide exchange factor activity</strong>, <strong>protein folding</strong>, <strong>response to heat/protein damage</strong>; acts on <strong>DnaK-bound polypeptides</strong>, not on a small-molecule substrate.</td>
+</tr>
+<tr>
+<td>Cellular role in proteostasis / heat-shock biology</td>
+<td>The DnaK/DnaJ/GrpE system is a major bacterial chaperone module involved in folding nascent and stress-damaged proteins and in recovery from protein aggregation. In <em>Pseudomonas</em>, this system is part of the heat-shock response network and contributes to survival under thermal and chemical stress. (craig2021leveragingpseudomonasstress pages 6-7, ito2014geneticandphenotypic pages 2-3)</td>
+<td><em>Pseudomonas</em> spp.; <em>P. putida</em> KT2442-related heat-shock studies</td>
+<td>Review and genetics/physiology</td>
+<td>Craig et al. 2021, <em>Frontiers in Microbiology</em>; Ito et al. 2014, <em>MicrobiologyOpen</em></td>
+<td>https://doi.org/10.3389/fmicb.2021.660134; https://doi.org/10.1002/mbo3.217</td>
+<td>Annotate to <strong>protein quality control/proteostasis</strong>, <strong>heat-shock response</strong>, and cooperation with <strong>ClpB</strong> in disaggregation pathways.</td>
+</tr>
+<tr>
+<td>KT2440-specific stress responsiveness of GrpE</td>
+<td>Quantitative proteomics in <em>P. putida</em> KT2440 showed GrpE among proteins upregulated after 1 h phenol exposure at sublethal concentrations; the study identified 68 induced proteins and 13 decreased proteins, placing GrpE in the early solvent/general stress response. (santos2004insightsintopseudomonas pages 1-2)</td>
+<td><em>P. putida</em> KT2440</td>
+<td>2-DE proteomics + MALDI-TOF MS</td>
+<td>Santos et al. 2004, <em>PROTEOMICS</em></td>
+<td>https://doi.org/10.1002/pmic.200300793</td>
+<td>Direct KT2440 evidence supports annotation to <strong>phenol/solvent stress response</strong> and likely <strong>cytosolic stress-induced chaperone activity</strong>.</td>
+</tr>
+<tr>
+<td>Localization inference for KT2440 GrpE</td>
+<td>The KT2440 phenol-stress proteome largely identified cytoplasmic and periplasmic proteins, while GrpE is a canonical DnaK cofactor functioning on cytosolic DnaK/Hsp70. Combined family knowledge strongly supports a <strong>cytosolic intracellular localization</strong> for PP_4728. (santos2004insightsintopseudomonas pages 1-2, rossi2024newinsightsinto pages 1-2)</td>
+<td><em>P. putida</em> KT2440; bacteria broadly</td>
+<td>Proteomics context plus conserved mechanism</td>
+<td>Santos et al. 2004, <em>PROTEOMICS</em>; Rossi et al. 2024, <em>Journal of Biological Chemistry</em></td>
+<td>https://doi.org/10.1002/pmic.200300793; https://doi.org/10.1016/j.jbc.2023.105574</td>
+<td>Recommended annotation: <strong>cellular component = cytosol</strong>; no evidence here for secretion, membrane insertion, or periplasmic residence.</td>
+</tr>
+<tr>
+<td>Pseudomonas regulatory/operon context</td>
+<td>In <em>P. putida</em> PCL1445, <strong>grpE-dnaK-dnaJ</strong> are genomically linked, with dnaK located downstream of grpE and upstream of dnaJ, supporting a conserved heat-shock chaperone gene cluster in <em>Pseudomonas</em>. Although this is not KT2440-specific proof for PP_4728 operon structure, it is strong genus-level context for annotation. (dubern2005theheatshock pages 1-2)</td>
+<td><em>P. putida</em> PCL1445</td>
+<td>Strain-specific genetics/regulatory analysis</td>
+<td>Dubern et al. 2005, <em>Journal of Bacteriology</em></td>
+<td>https://doi.org/10.1128/jb.187.17.5967-5976.2005</td>
+<td>Useful for annotation notes: likely part of a <strong>tricistronic/clustered heat-shock locus</strong> with <strong>dnaK</strong> and <strong>dnaJ</strong> in <em>Pseudomonas</em>.</td>
+</tr>
+<tr>
+<td>Broader <em>Pseudomonas putida</em> regulatory relevance</td>
+<td>In PCL1445, dnaK/dnaJ/grpE positively influenced putisolvin biosynthesis, but low-temperature induction required dnaK and dnaJ more clearly than grpE, indicating that GrpE can have regulatory consequences through chaperone-network effects rather than acting as a dedicated transcription factor. (dubern2005theheatshock pages 1-2, craig2021leveragingpseudomonasstress pages 6-7)</td>
+<td><em>P. putida</em> PCL1445 / <em>Pseudomonas</em> spp.</td>
+<td>Mutant phenotype and review synthesis</td>
+<td>Dubern et al. 2005, <em>Journal of Bacteriology</em>; Craig et al. 2021, <em>Frontiers in Microbiology</em></td>
+<td>https://doi.org/10.1128/jb.187.17.5967-5976.2005; https://doi.org/10.3389/fmicb.2021.660134</td>
+<td>Annotation should prioritize <strong>chaperone/cofactor role</strong>; downstream effects on metabolite production are likely indirect consequences of proteostasis control.</td>
+</tr>
+<tr>
+<td>Heat-shock sigma-factor control context</td>
+<td>The <em>P. putida</em> heat-shock response is described as similar to <em>E. coli</em>, where DnaK/DnaJ/GrpE and GroEL/GroES contribute to regulation of the σ32/RpoH heat-shock system by binding/inactivating σ32 and helping tune heat-shock gene expression. This supports placing GrpE in a central heat-shock regulatory feedback loop. (ito2014geneticandphenotypic pages 2-3)</td>
+<td><em>P. putida</em> KT2442-related work; bacterial model extrapolation to KT2440</td>
+<td>Physiology/genetic context</td>
+<td>Ito et al. 2014, <em>MicrobiologyOpen</em></td>
+<td>https://doi.org/10.1002/mbo3.217</td>
+<td>Notes for annotation: <strong>heat-shock response</strong>, <strong>RpoH/σ32-linked proteostasis network</strong>; mechanism is indirect through the DnaK machine.</td>
+</tr>
+<tr>
+<td>2024 structural advance: architecture of DnaK–GrpE</td>
+<td>New 2024 work describes GrpE as a dimeric “cruciform” protein with a long coiled-coil and globular C-terminal head; dimerization is essential for function. This architecture aligns with the expected GrpE domains in Q88DU1 family annotations (GrpE, GrpE_CC, GrpE_head). (rossi2024newinsightsinto pages 1-2)</td>
+<td>Bacterial GrpE (primarily <em>E. coli</em> model)</td>
+<td>Structural/mechanistic primary study</td>
+<td>Rossi et al. 2024, <em>Journal of Biological Chemistry</em></td>
+<td>https://doi.org/10.1016/j.jbc.2023.105574</td>
+<td>Supports domain-based annotation: <strong>GrpE family NEF with coiled-coil thermosensor and head domain contacting DnaK NBD</strong>.</td>
+</tr>
+<tr>
+<td>2024 structural advance: stoichiometry and conformational control</td>
+<td>Cryo-EM of the <em>M. tuberculosis</em> DnaK–GrpE complex revealed an asymmetric <strong>1:2 DnaK:GrpE</strong> complex and showed that the GrpE dimer “ratchets” to remodel both the nucleotide-binding domain and substrate-binding domain of DnaK. SEC-MALS supported an apparent mass of ~114 kDa consistent with this stoichiometry. (xiao2024structureofthe pages 7-8, xiao2024structureofthe media aae0080b)</td>
+<td><em>Mycobacterium tuberculosis</em></td>
+<td>Cryo-EM + SEC-MALS</td>
+<td>Xiao et al. 2024, <em>Nature Communications</em></td>
+<td>https://doi.org/10.1038/s41467-024-44933-9</td>
+<td>For annotation, GrpE should be viewed as a <strong>dimeric allosteric cofactor</strong> acting in a <strong>DnaK–GrpE complex</strong>, not as a standalone catalyst.</td>
+</tr>
+<tr>
+<td>2024 structural advance: mechanism of nucleotide exchange</td>
+<td>2024 structural studies quantified GrpE-induced opening motions in DnaK NBD subdomains, including rotations in subdomains IB/IIB that separate nucleotide-contacting residues and lower ADP affinity. This provides current mechanistic support for annotating GrpE specifically as a <strong>DnaK ADP-release factor</strong>. (xiao2024structureofthe pages 7-8, rossi2024newinsightsinto pages 1-2)</td>
+<td>Bacterial models (<em>M. tuberculosis</em>, <em>E. coli</em>)</td>
+<td>Cryo-EM / structural modeling</td>
+<td>Xiao et al. 2024, <em>Nature Communications</em>; Rossi et al. 2024, <em>Journal of Biological Chemistry</em></td>
+<td>https://doi.org/10.1038/s41467-024-44933-9; https://doi.org/10.1016/j.jbc.2023.105574</td>
+<td>Notes for annotation: molecular role is <strong>promotion of ADP dissociation from DnaK</strong> to reset the Hsp70 cycle.</td>
+</tr>
+<tr>
+<td>2024 structural advance: coupling nucleotide and substrate release</td>
+<td>The 2024 <em>M. tuberculosis</em> structure and accompanying functional analyses indicate that GrpE does more than exchange nucleotide: its N-terminal region and dimer motions help couple ADP release in the NBD to substrate release in the SBD. This refines annotation from a simple NEF to an <strong>allosteric co-chaperone coordinating DnaK reset and client release</strong>. (xiao2024structureofthe pages 1-2, xiao2024structureofthe pages 8-9, xiao2024structureofthe media aae0080b)</td>
+<td><em>Mycobacterium tuberculosis</em></td>
+<td>Cryo-EM + fluorescence polarization + in vivo/in vitro functional assays</td>
+<td>Xiao et al. 2024, <em>Nature Communications</em></td>
+<td>https://doi.org/10.1038/s41467-024-44933-9</td>
+<td>Pathway note: GrpE acts in the <strong>final/reset phase of the DnaK cycle</strong>, promoting <strong>substrate dissociation and chaperone recycling</strong>.</td>
+</tr>
+<tr>
+<td>Thermosensor behavior of GrpE family</td>
+<td>Recent structural synthesis emphasizes that GrpE’s coiled-coil is thermolabile (reported melting around ~48 °C in <em>E. coli</em> models), giving GrpE thermosensor behavior: elevated temperature weakens NEF activity and can bias DnaK toward an ADP-bound high-substrate-affinity state. (maqtedar2026thenucleotideexchange pages 1-5, rossi2024newinsightsinto pages 1-2)</td>
+<td>Bacterial GrpE family</td>
+<td>Structural/biophysical analysis</td>
+<td>Rossi et al. 2024, <em>Journal of Biological Chemistry</em>; supporting mechanistic synthesis in Maqtedar et al. 2026 preprint</td>
+<td>https://doi.org/10.1016/j.jbc.2023.105574; https://doi.org/10.1101/2025.10.21.683677</td>
+<td>Useful note for annotation: GrpE is part of <strong>temperature-responsive proteostasis control</strong> rather than a constitutively static exchange factor.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles organism-specific and family-level evidence relevant to functional annotation of GrpE (UniProt Q88DU1; PP_4728) in </em>Pseudomonas putida<em> KT2440. It highlights direct KT2440 proteomics evidence, </em>Pseudomonas<em> regulatory context, and recent 2024 structural findings that clarify GrpE’s role in the DnaK/DnaJ/GrpE chaperone cycle.</em></p>
+<h2 id="figure-evidence-structural-context">Figure evidence (structural context)</h2>
+<p>Cropped figure panels from Xiao et al. 2024 illustrate the 1:2 DnaK–GrpE cryo-EM architecture and associated conformational motions that mechanistically underpin GrpE’s NEF function and coupling to substrate release. (xiao2024structureofthe media aae0080b, xiao2024structureofthe media 6cad8a4d)</p>
+<h2 id="references-urls-and-publication-dates">References (URLs and publication dates)</h2>
+<ul>
+<li>Santos PM, Benndorf D, Sá-Correia I. <strong>Insights into <em>Pseudomonas putida</em> KT2440 response to phenol-induced stress by quantitative proteomics.</strong> <em>PROTEOMICS</em> (Sep 2004). https://doi.org/10.1002/pmic.200300793 (santos2004insightsintopseudomonas pages 1-2)</li>
+<li>Ito F, et al. <strong>Genetic and phenotypic characterization of the heat shock response in <em>Pseudomonas putida</em>.</strong> <em>MicrobiologyOpen</em> (Oct 2014). https://doi.org/10.1002/mbo3.217 (ito2014geneticandphenotypic pages 2-3)</li>
+<li>Craig K, Johnson BR, Grunden A. <strong>Leveraging <em>Pseudomonas</em> Stress Response Mechanisms for Industrial Applications.</strong> <em>Frontiers in Microbiology</em> (May 2021). https://doi.org/10.3389/fmicb.2021.660134 (craig2021leveragingpseudomonasstress pages 6-7)</li>
+<li>Dubern J-F, et al. <strong>The Heat Shock Genes dnaK, dnaJ, and grpE Are Involved in Regulation of Putisolvin Biosynthesis in <em>Pseudomonas putida</em> PCL1445.</strong> <em>Journal of Bacteriology</em> (Sep 2005). https://doi.org/10.1128/jb.187.17.5967-5976.2005 (dubern2005theheatshock pages 1-2)</li>
+<li>Rossi M-A, et al. <strong>New insights into the structure and function of the complex between the <em>Escherichia coli</em> Hsp70, DnaK, and its nucleotide-exchange factor, GrpE.</strong> <em>Journal of Biological Chemistry</em> (Jan 2024). https://doi.org/10.1016/j.jbc.2023.105574 (rossi2024newinsightsinto pages 1-2)</li>
+<li>Xiao X, et al. <strong>Structure of the <em>M. tuberculosis</em> DnaK−GrpE complex reveals how key DnaK roles are controlled.</strong> <em>Nature Communications</em> (Jan 2024). https://doi.org/10.1038/s41467-024-44933-9 (xiao2024structureofthe pages 7-8, xiao2024structureofthe pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(rossi2024newinsightsinto pages 1-2): Maria-Agustina Rossi, Alexandra K. Pozhidaeva, Eugenia M. Clerico, Constantine Petridis, and Lila M. Gierasch. New insights into the structure and function of the complex between the escherichia coli hsp70, dnak, and its nucleotide-exchange factor, grpe. Journal of Biological Chemistry, 300:105574, Jan 2024. URL: https://doi.org/10.1016/j.jbc.2023.105574, doi:10.1016/j.jbc.2023.105574. This article has 8 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2024structureofthe pages 1-2): Xiansha Xiao, Allison Fay, Pablo Santos Molina, Amanda Kovach, Michael S. Glickman, and Huilin Li. Structure of the m. tuberculosis dnak−grpe complex reveals how key dnak roles are controlled. Nature Communications, Jan 2024. URL: https://doi.org/10.1038/s41467-024-44933-9, doi:10.1038/s41467-024-44933-9. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(craig2021leveragingpseudomonasstress pages 6-7): Kelly Craig, Brant R. Johnson, and Amy Grunden. Leveraging pseudomonas stress response mechanisms for industrial applications. Frontiers in Microbiology, May 2021. URL: https://doi.org/10.3389/fmicb.2021.660134, doi:10.3389/fmicb.2021.660134. This article has 67 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2024structureofthe pages 7-8): Xiansha Xiao, Allison Fay, Pablo Santos Molina, Amanda Kovach, Michael S. Glickman, and Huilin Li. Structure of the m. tuberculosis dnak−grpe complex reveals how key dnak roles are controlled. Nature Communications, Jan 2024. URL: https://doi.org/10.1038/s41467-024-44933-9, doi:10.1038/s41467-024-44933-9. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2024structureofthe pages 8-9): Xiansha Xiao, Allison Fay, Pablo Santos Molina, Amanda Kovach, Michael S. Glickman, and Huilin Li. Structure of the m. tuberculosis dnak−grpe complex reveals how key dnak roles are controlled. Nature Communications, Jan 2024. URL: https://doi.org/10.1038/s41467-024-44933-9, doi:10.1038/s41467-024-44933-9. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santos2004insightsintopseudomonas pages 1-2): Pedro M. Santos, Dirk Benndorf, and Isabel Sá‐Correia. Insights into pseudomonas putida kt2440 response to phenol‐induced stress by quantitative proteomics. PROTEOMICS, 4:2640-2652, Sep 2004. URL: https://doi.org/10.1002/pmic.200300793, doi:10.1002/pmic.200300793. This article has 282 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ito2014geneticandphenotypic pages 2-3): Fumihiro Ito, Takayuki Tamiya, Iwao Ohtsu, Makoto Fujimura, and Fumiyasu Fukumori. Genetic and phenotypic characterization of the heat shock response in pseudomonas putida. MicrobiologyOpen, 3:922-936, Oct 2014. URL: https://doi.org/10.1002/mbo3.217, doi:10.1002/mbo3.217. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dubern2005theheatshock pages 1-2): Jean-Frédéric Dubern, Ellen L. Lagendijk, Ben J. J. Lugtenberg, and Guido V. Bloemberg. The heat shock genes dnak, dnaj, and grpe are involved in regulation of putisolvin biosynthesis in pseudomonas putida pcl1445. Journal of Bacteriology, 187:5967-5976, Sep 2005. URL: https://doi.org/10.1128/jb.187.17.5967-5976.2005, doi:10.1128/jb.187.17.5967-5976.2005. This article has 102 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2024structureofthe media aae0080b): Xiansha Xiao, Allison Fay, Pablo Santos Molina, Amanda Kovach, Michael S. Glickman, and Huilin Li. Structure of the m. tuberculosis dnak−grpe complex reveals how key dnak roles are controlled. Nature Communications, Jan 2024. URL: https://doi.org/10.1038/s41467-024-44933-9, doi:10.1038/s41467-024-44933-9. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2024structureofthe media 6cad8a4d): Xiansha Xiao, Allison Fay, Pablo Santos Molina, Amanda Kovach, Michael S. Glickman, and Huilin Li. Structure of the m. tuberculosis dnak−grpe complex reveals how key dnak roles are controlled. Nature Communications, Jan 2024. URL: https://doi.org/10.1038/s41467-024-44933-9, doi:10.1038/s41467-024-44933-9. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maqtedar2026thenucleotideexchange pages 1-5): Akshitha Maqtedar, Maria-Agustina Rossi, Eugenia M. Clerico, Robert V. Williams, and Lila M. Gierasch. The nucleotide exchange factor, grpe, modulates substrate affinity by interaction of its n-terminal tails with the dnak substrate-binding domain. BioRxiv, Oct 2026. URL: https://doi.org/10.1101/2025.10.21.683677, doi:10.1101/2025.10.21.683677. This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="grpE-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000016 The cryo-EM structure of the Mycobacterium tuberculosis (Mtb) DnaK–GrpE complex is primarily depicted in Figure 1 and Figure 7 of t" src="grpE-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>rossi2024newinsightsinto pages 1-2</li>
+<li>xiao2024structureofthe pages 7-8</li>
+<li>santos2004insightsintopseudomonas pages 1-2</li>
+<li>ito2014geneticandphenotypic pages 2-3</li>
+<li>dubern2005theheatshock pages 1-2</li>
+<li>craig2021leveragingpseudomonasstress pages 6-7</li>
+<li>xiao2024structureofthe pages 1-2</li>
+<li>xiao2024structureofthe pages 8-9</li>
+<li>maqtedar2026thenucleotideexchange pages 1-5</li>
+<li>https://doi.org/10.3389/fmicb.2021.660134;</li>
+<li>https://doi.org/10.1128/jb.187.17.5967-5976.2005;</li>
+<li>https://doi.org/10.1002/mbo3.217;</li>
+<li>https://doi.org/10.1016/j.jbc.2023.105574</li>
+<li>https://doi.org/10.1016/j.jbc.2023.105574;</li>
+<li>https://doi.org/10.1038/s41467-024-44933-9</li>
+<li>https://doi.org/10.1002/mbo3.217</li>
+<li>https://doi.org/10.1002/pmic.200300793</li>
+<li>https://doi.org/10.1002/pmic.200300793;</li>
+<li>https://doi.org/10.1128/jb.187.17.5967-5976.2005</li>
+<li>https://doi.org/10.3389/fmicb.2021.660134</li>
+<li>https://doi.org/10.1038/s41467-024-44933-9;</li>
+<li>https://doi.org/10.1101/2025.10.21.683677</li>
+<li>https://doi.org/10.1016/j.jbc.2023.105574,</li>
+<li>https://doi.org/10.1038/s41467-024-44933-9,</li>
+<li>https://doi.org/10.3389/fmicb.2021.660134,</li>
+<li>https://doi.org/10.1002/pmic.200300793,</li>
+<li>https://doi.org/10.1002/mbo3.217,</li>
+<li>https://doi.org/10.1128/jb.187.17.5967-5976.2005,</li>
+<li>https://doi.org/10.1101/2025.10.21.683677,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DU1
+gene_symbol: grpE
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: GrpE is the bacterial nucleotide exchange factor (NEF) for the Hsp70 chaperone DnaK, functioning as the third component of the conserved DnaK/DnaJ/GrpE (KJE) chaperone system. It is a homodimeric, &#34;cruciform&#34;-shaped protein with a long N-terminal coiled-coil and a globular C-terminal head domain that docks onto the nucleotide-binding domain (NBD) of DnaK. In the chaperone cycle, unfolded substrate proteins are first bound by DnaJ (Hsp40), which delivers them to DnaK and stimulates ATP hydrolysis to produce the ADP-bound, high substrate-affinity state of DnaK. GrpE then binds the DnaK NBD and induces conformational opening of the nucleotide-binding cleft (notably rotation of NBD subdomain IIB), accelerating ADP release; subsequent ATP rebinding resets DnaK to its low-affinity state and triggers substrate release, completing the cycle. Through this activity GrpE enables the iterative ATP-driven cycles required for de novo protein folding, refolding of stress-denatured proteins, and prevention of protein aggregation. The thermolabile coiled-coil of GrpE has been proposed to act as a thermosensor that modulates NEF activity with temperature. GrpE acts in the cytoplasm/cytosol and is part of the heat-shock and general stress response; in P. putida KT2440 it is induced under heat and chemical (e.g. phenol/solvent) stress.
+existing_annotations:
+- term:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining molecular function of GrpE - it is the nucleotide exchange factor for DnaK (Hsp70), promoting ADP release so that ATP can rebind. The annotation is from InterPro (IPR000740, the GrpE family signature) plus PANTHER and is fully consistent with the UniProt FUNCTION statement and the entire GrpE literature.
+    action: ACCEPT
+    reason: Core, defining molecular function of GrpE. Universally conserved across the GrpE family and well supported by the InterPro/HAMAP family signature and mechanistic structural studies of bacterial DnaK-GrpE complexes.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: GrpE acts in the cytoplasm as a cofactor of the cytosolic DnaK chaperone. The UniProt SUBCELLULAR LOCATION (HAMAP MF_01151) annotates Cytoplasm, and KT2440 proteomics detected GrpE among cytoplasmic stress-induced proteins.
+    action: ACCEPT
+    reason: Correct subcellular localization for a bacterial DnaK cofactor. Consistent with HAMAP rule and with the cytosolic localization of its DnaK/DnaJ partners.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: TreeGrafter (phylogenetic) annotation to cytosol, the more specific child of cytoplasm. Consistent with GrpE function as a soluble cofactor of cytosolic DnaK.
+    action: ACCEPT
+    reason: Correct and slightly more specific localization than the cytoplasm annotation. Both are biologically appropriate for GrpE; retaining the more specific cytosol term is reasonable.
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: GrpE is an integral component of the DnaK/DnaJ/GrpE chaperone machine, which assists de novo protein folding and refolding of stress-denatured proteins. Several rounds of GrpE-driven nucleotide exchange are required for efficient folding. InterPro-based annotation is well supported.
+    action: ACCEPT
+    reason: Accurately captures the biological process in which GrpE participates. GrpE is not itself a foldase but is essential to the folding cycle of the KJE system.
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: GrpE functions as a homodimer; dimerization (via the coiled-coil) is essential for its NEF activity and for engaging DnaK in the asymmetric 1:2 DnaK:GrpE complex. UniProt SUBUNIT annotates Homodimer. Well supported by InterPro and structural studies.
+    action: ACCEPT
+    reason: GrpE is obligately dimeric and dimerization is required for function. Correct molecular function annotation.
+- term:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: GrpE binds directly to the Hsp70 chaperone DnaK (a protein-folding chaperone), docking onto its nucleotide-binding domain. This binding is the basis of its NEF activity. InterPro-based annotation is appropriate and more informative than generic protein binding.
+    action: ACCEPT
+    reason: GrpE&#39;s physical interaction with the DnaK chaperone is central to its function. The term correctly describes this binding to a folding chaperone rather than an uninformative generic protein binding term.
+core_functions:
+- description: Nucleotide exchange factor for the Hsp70 chaperone DnaK; binds the DnaK nucleotide-binding domain and accelerates ADP release, enabling ATP rebinding and substrate release to drive the chaperone cycle.
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: GrpE annotated with adenyl-nucleotide exchange factor activity (GO:0000774) from InterPro IPR000740; UniProt FUNCTION states &#34;It is the nucleotide exchange factor for DnaK ... GrpE releases ADP from DnaK; ATP binding to DnaK triggers the release of the substrate protein.&#34;
+  molecular_function:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  directly_involved_in:
+  - id: GO:0006457
+    label: protein folding
+- description: Acts as an obligate homodimer that binds the DnaK chaperone, forming part of the DnaK/DnaJ/GrpE machine that promotes folding and refolding of proteins and prevents aggregation of stress-denatured proteins during the heat-shock and general stress response.
+  supported_by:
+  - reference_id: GO_REF:0000002
+    supporting_text: GrpE annotated with protein homodimerization activity (GO:0042803) and protein-folding chaperone binding (GO:0051087) from InterPro IPR000740, and involved_in protein folding (GO:0006457).
+  - reference_id: file:PSEPK/grpE/grpE-deep-research-falcon.md
+    supporting_text: GrpE is the dimeric DnaK/Hsp70 cofactor of the conserved bacterial DnaK/DnaJ/GrpE chaperone system; in P. putida KT2440, GrpE was among the general-stress proteins upregulated after phenol exposure, consistent with an intracellular proteostasis role under heat and chemical stress.
+  molecular_function:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  directly_involved_in:
+  - id: GO:0006457
+    label: protein folding
+references:
+- id: file:PSEPK/grpE/grpE-deep-research-falcon.md
+  title: Deep research report for grpE (Q88DU1 / PP_4728) in Pseudomonas putida KT2440
+  findings:
+  - statement: Synthesis of GrpE structure/function (dimeric NEF for DnaK), and KT2440-specific evidence that GrpE is upregulated among general-stress proteins under phenol stress; Pseudomonas grpE-dnaK-dnaJ chaperone gene cluster context.
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:38110031
+  title: New insights into the structure and function of the complex between the Escherichia coli Hsp70, DnaK, and its nucleotide-exchange factor, GrpE
+  findings:
+  - statement: GrpE is the dimeric nucleotide exchange factor for DnaK; binding to the DnaK nucleotide-binding domain opens the nucleotide-binding cleft (movement of subdomain IIB), accelerating ADP release. Its coiled-coil is thermolabile.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified (J Biol Chem 2024, doi:10.1016/j.jbc.2023.105574, PMID:38110031). Provides the current structural/mechanistic basis for GrpE NEF activity used in this review. Describes the conserved E. coli DnaK-GrpE mechanism applicable to the P. putida ortholog.
+- id: PMID:38253530
+  title: Structure of the M. tuberculosis DnaK-GrpE complex reveals how key DnaK roles are controlled
+  findings:
+  - statement: Cryo-EM reveals an asymmetric 1:2 DnaK:GrpE complex; the GrpE dimer &#34;ratchets&#34; to remodel both the nucleotide-binding and substrate-binding domains of DnaK, coupling ADP release to substrate release.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified (Nat Commun 2024, doi:10.1038/s41467-024-44933-9, PMID:38253530). Supports the dimeric/allosteric NEF mechanism; bacterial DnaK-GrpE system relevant to the conserved P. putida ortholog.
+- id: PMID:16109938
+  title: The heat shock genes dnaK, dnaJ, and grpE are involved in regulation of putisolvin biosynthesis in Pseudomonas putida PCL1445
+  findings:
+  - statement: In P. putida PCL1445, grpE, dnaK, and dnaJ are genomically linked (dnaK downstream of grpE, upstream of dnaJ), supporting a conserved Pseudomonas KJE chaperone gene cluster.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PubMed-verified (J Bacteriol 2005, doi:10.1128/JB.187.17.5967-5976.2005, PMID:16109938). Provides Pseudomonas-genus genomic/operon context for grpE; downstream effects on putisolvin biosynthesis are most parsimoniously indirect consequences of chaperone-network perturbation.
+suggested_questions:
+- question: Does the proposed thermosensor behavior of the GrpE coiled-coil operate at physiologically relevant temperatures for P. putida, given its mesophilic environmental lifestyle?
+suggested_experiments:
+- description: Determine the operon structure and promoter(s) of the grpE-dnaK-dnaJ locus (PP_4728 region) in P. putida KT2440 (e.g. by RNA-seq/transcription start site mapping and co-transcription assays) to confirm the inferred Pseudomonas chaperone gene cluster organization.
+- description: Test whether a grpE conditional/depletion mutant in KT2440 impairs growth and protein refolding under heat and solvent (phenol) stress, to directly link the NEF function to stress-tolerance phenotypes in this organism.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

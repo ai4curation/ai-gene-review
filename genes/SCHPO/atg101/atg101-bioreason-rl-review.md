@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: atg101 (S. pombe)
 
-Source: atg101-deep-research-bioreason-rl.md
+Source: atg101-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

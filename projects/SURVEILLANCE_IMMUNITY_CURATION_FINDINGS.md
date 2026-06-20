@@ -1,3 +1,10 @@
+---
+title: "GO Annotation Curation Review: C. elegans Surveillance Immunity Genes"
+maturity: COMPLETE
+tags: [BIOLOGY_DOMAIN]
+species: [worm]
+---
+
 # GO Annotation Curation Review: C. elegans Surveillance Immunity Genes
 ## Executive Summary of Findings
 

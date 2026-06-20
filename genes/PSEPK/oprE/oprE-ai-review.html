@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>oprE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>oprE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88R99" target="_blank" class="term-link">
+                        Q88R99
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "oprE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88R99" data-a="DESCRIPTION: OprE (PP_0234) is an outer membrane porin of Pseud..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>OprE (PP_0234) is an outer membrane porin of Pseudomonas putida KT2440 belonging to the OprD/Occ (Opr) family of substrate-selective porins (TC 1.B.25; Pfam OprD, PF03573). Like other members of this family, it forms a beta-barrel channel embedded in the Gram-negative outer membrane that allows the selective diffusion of small hydrophilic solutes across the outer membrane permeability barrier. The mature protein (residues 22-444, following cleavage of an N-terminal signal peptide) localizes to the outer membrane and is also recovered in outer membrane vesicles. In Pseudomonas, OprE-family porins are typically substrate-selective, semi-specialized nutrient-uptake channels whose expression responds to environmental conditions; the OprE ortholog is classically described as anaerobically induced, and in P. putida OprE abundance varies with nutrient (glucose) availability. The precise substrate specificity of P. putida KT2440 OprE has not been established by direct transport assays; substrate predictions (e.g. basic amino acids) derive from the P. aeruginosa OprD-family framework and remain hypotheses for this ortholog.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015288" target="_blank" class="term-link">
+                                    GO:0015288
+                                </a>
+                            </span>
+                            <span class="term-label">porin activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R99" data-a="GO:0015288" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correctly captures the core molecular function of OprE as an outer membrane porin (beta-barrel channel allowing diffusion of solutes across the outer membrane). This is well supported by family/domain membership (OprD/Opr family, Pfam OprD) and by experimental treatment of OprE as an outer membrane porin in KT2440.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Porin activity is the defining function of the OprD/Occ-family proteins and is consistent with the InterPro/PANTHER-based inference and with literature describing OprE as an outer membrane integral porin in P. putida KT2440.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R99" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OprE is a membrane protein, but the available evidence supports the more specific localization to the bacterial outer membrane rather than the generic membrane term. OprE is described as an outer membrane integral porin in KT2440 and is recovered in outer membrane vesicles.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The generic membrane term (GO:0016020) is correct but uninformatively broad for a Gram-negative outer membrane porin. The OprD/Occ family is an outer membrane beta-barrel family, and OprE is experimentally and proteomically associated with the outer membrane, justifying refinement to the outer membrane term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019867" target="_blank" class="term-link">
+                                    outer membrane
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R99" data-a="GO:0055085" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Consistent with the porin function. As a porin, OprE mediates the diffusion of solutes across the outer membrane, so participation in transmembrane transport is appropriate. This term was logically inferred from the porin activity annotation (GO:0015288).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Transmembrane transport is the biological process directly entailed by porin (channel) activity and is well supported as the process counterpart to the molecular function annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Outer membrane porin (beta-barrel channel) of the OprD/Occ family that mediates selective diffusion of small hydrophilic solutes across the Gram-negative outer membrane, contributing to transmembrane transport at the cell envelope.</h3>
+                <span class="vote-buttons" data-g="Q88R99" data-a="FUNCTION: Outer membrane porin (beta-barrel channel) of the ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015288" target="_blank" class="term-link">
+                            porin activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                transmembrane transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019867" target="_blank" class="term-link">
+                                outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32211393" target="_blank" class="term-link">
+                                PMID:32211393
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The second channel taken into analysis was the outer membrane integral porin OprE (PP_0234), which is normally produced under anoxygenic conditions in other Pseudomonas strains</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32211393" target="_blank" class="term-link">
+                            PMID:32211393
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Engineering the Osmotic State of Pseudomonas putida KT2440 for Efficient Cell Disruption and Downstream Processing of Poly(3-Hydroxyalkanoates)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OprE (PP_0234) of P. putida KT2440 is an outer membrane integral porin; it was cloned and overexpressed (alone and with OprF) to modulate outer membrane permeability for cell disruption.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16352820" target="_blank" class="term-link">
+                            PMID:16352820
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Role of the novel OprD family of porins in nutrient uptake in Pseudomonas aeruginosa</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Defines the OprD-family of outer membrane porins as substrate-selective nutrient-uptake channels in Pseudomonas; provides family-level functional context for OprE (substrate predictions are P. aeruginosa-oriented).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(oprE-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88R99" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">26 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:37:51.610931</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="oprE-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-opre-pp_0234-uniprot-q88r99-in-pseudomonas-putida-kt2440">Research report: Functional annotation of <strong>oprE</strong> (PP_0234; UniProt Q88R99) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-target-verification-critical">0) Target verification (critical)</h3>
+<p>The requested gene/protein identity is supported by primary literature in the correct organism/strain: Poblete-Castro et al. engineered <em>P. putida</em> KT2440 using <strong>OprE (PP_0234)</strong> and explicitly describe it as an <strong>outer membrane integral porin</strong>, confirming that <strong>oprE ↔ PP_0234</strong> in KT2440 matches the UniProt accession context provided by the user (Q88R99) (pobletecastro2020engineeringtheosmotic pages 2-4).</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-outer-membrane-porins-in-gram-negative-bacteria">1.1 Outer membrane porins in Gram-negative bacteria</h4>
+<p>Outer membrane porins are <strong>water-filled channels</strong> in the Gram-negative outer membrane that enable diffusion of small, typically hydrophilic molecules across the outer membrane permeability barrier (pobletecastro2020engineeringtheosmotic pages 1-2). In <em>Pseudomonas</em>, many porins are <strong>substrate-selective</strong> rather than broad “general diffusion” pores.</p>
+<h4 id="12-the-oprd-family-substrate-selective-porins-family-level-context">1.2 The OprD-family / substrate-selective porins (family-level context)</h4>
+<p>A well-cited framework for <em>Pseudomonas aeruginosa</em> describes the <strong>OprD family</strong> as <strong>outer membrane porins</strong> functioning as <strong>semi-specialized nutrient uptake channels</strong>, often <strong>positively regulated (induced) by their substrates</strong>; subfamilies preferentially transport amino acids/related molecules or various carboxylic acids (tamber2006roleofthe pages 9-9). </p>
+<p><strong>Important scope note:</strong> the OprD-family substrate assignments and specific uptake phenotypes are best-established in <em>P. aeruginosa</em>. For <em>P. putida</em> KT2440 <strong>OprE/PP_0234</strong>, direct KT2440 transport assays were not located in the retrieved full texts, so substrate specificity below is flagged as “inferred” where applicable.</p>
+<h3 id="2-geneprotein-function-for-kt2440-opre-what-is-known-vs-inferred">2) Gene/protein function for KT2440 OprE (what is known vs inferred)</h3>
+<h4 id="21-what-is-experimentally-supported-in-kt2440">2.1 What is experimentally supported in KT2440</h4>
+<p><strong>Localization and protein class.</strong> In KT2440, OprE (PP_0234) is experimentally treated as an <strong>outer membrane porin</strong> and manipulated as such in strain engineering, consistent with a role as a membrane channel protein (pobletecastro2020engineeringtheosmotic pages 2-4).</p>
+<p><strong>Presence in outer membrane vesicles (OMVs).</strong> Proteomic characterization of KT2440 OMVs identified OprE among OMV-associated outer membrane proteins, supporting that OprE is part of the outer membrane protein repertoire that can be packaged into OMVs (choi2014proteomiccharacterizationof pages 1-2).</p>
+<p><strong>Regulation by nutrient status (“hunger response”).</strong> In KT2440, OprE abundance in outer membrane protein preparations was reported to be <strong>lower under glucose-limiting conditions</strong>, described as “hunger-repressed.” Specifically, an ~50 kDa OprE band was distinct at 0.4% or 0.8% glucose but barely detectable at 0.2% glucose (with protein identity supported by mass spectrometry) (putrins2011thecolrssystem pages 8-10).</p>
+<h4 id="22-what-is-inferred-from-homologs-family-literature">2.2 What is inferred from homologs / family literature</h4>
+<p><strong>Likely functional category.</strong> Based on OprD-family porin literature, OprE is discussed as part of a group of substrate-selective porins that contribute to nutrient uptake (tamber2006roleofthe pages 9-9).</p>
+<p><strong>Putative substrates (not validated for KT2440 PP_0234 in retrieved texts).</strong> Within the OprD-family nutrient-uptake framework, OprE has been described/predicted (in <em>P. aeruginosa</em>-focused work) to take up <strong>arginine or proline</strong> (tamber2006roleofthe pages 9-9). A thesis figure excerpted in our evidence set also lists compounds tested as substrates for an OprE ortholog context and includes growth testing of an oprE mutant on proline (but this evidence is <em>P. aeruginosa</em>-oriented and therefore should not be interpreted as KT2440 PP_0234 substrate proof) (tamber2010physiologicalcontributionof pages 83-87).</p>
+<h3 id="3-biological-processes-pathways-and-cellular-localization">3) Biological processes, pathways, and cellular localization</h3>
+<h4 id="31-localization">3.1 Localization</h4>
+<p>KT2440 OprE is an <strong>outer membrane integral porin</strong> (pobletecastro2020engineeringtheosmotic pages 2-4) and is detectable among proteins associated with <strong>outer membrane vesicles</strong> (choi2014proteomiccharacterizationof pages 1-2). These findings support a function at the <strong>cell-envelope interface</strong> (outer membrane) rather than cytosolic metabolism.</p>
+<h4 id="32-regulatoryphysiological-context">3.2 Regulatory/physiological context</h4>
+<p>Two non-exclusive regulatory contexts emerge from KT2440 and broader <em>Pseudomonas</em> annotations:</p>
+<ul>
+<li><strong>Nutrient status:</strong> OprE is reduced under glucose-limitation/hunger response conditions (putrins2011thecolrssystem pages 8-10).</li>
+<li><strong>Oxygen status (contextual annotation):</strong> In the KT2440 engineering study, OprE is described as normally produced under anoxygenic/anaerobic conditions in other <em>Pseudomonas</em> strains (used as background rationale), consistent with a porin whose physiological expression may depend on environmental conditions (pobletecastro2020engineeringtheosmotic pages 1-2, pobletecastro2020engineeringtheosmotic pages 2-4).</li>
+</ul>
+<h3 id="4-current-applications-and-real-world-implementations">4) Current applications and real-world implementations</h3>
+<h4 id="41-engineered-cell-disruption-for-pha-downstream-processing-kt2440">4.1 Engineered cell disruption for PHA downstream processing (KT2440)</h4>
+<p>A clear real-world biotechnology use case exists where KT2440 OprE is leveraged as a cell-envelope engineering part to facilitate <strong>rapid, high-yield recovery of intracellular polyhydroxyalkanoates (PHA)</strong>.</p>
+<p>In Poblete-Castro et al. (Frontiers in Bioengineering and Biotechnology; published March 2020; https://doi.org/10.3389/fbioe.2020.00161), KT2440 was engineered by:<br />
+* deleting <strong>mscL</strong> (an inner-membrane mechanosensitive “rescue valve”), and<br />
+* overproducing outer membrane porins <strong>OprF and OprE (PP_0234)</strong> from an inducible plasmid system,<br />
+then applying a hypertonic-to-hypotonic transition to trigger disruption (pobletecastro2020engineeringtheosmotic pages 2-4, pobletecastro2020engineeringtheosmotic pages 5-6).</p>
+<p>This porin-based envelope engineering strategy is subsequently treated as an example platform for improving PHA recovery and reducing downstream processing burden in a 2023 PHA engineering review (Microbial Biotechnology; July 2023; https://doi.org/10.1111/1751-7915.14109) (acuna2023rationalengineeringof pages 15-17) and is also referenced in a 2024 review on bacterial programmed autolysis (Microbial Cell Factories; October 2024; https://doi.org/10.1186/s12934-024-02566-z) (acuna2023rationalengineeringof pages 15-17).</p>
+<h3 id="5-quantitative-results-and-statistics-from-recentprimary-studies">5) Quantitative results and statistics from recent/primary studies</h3>
+<p>The strongest KT2440 quantitative evidence for OprE comes from the 2020 KT2440 engineering study (Poblete-Castro et al.):</p>
+<ul>
+<li><strong>No growth/production penalty for single-porin overexpression:</strong> strains overexpressing OprE (or OprF) individually showed <strong>no impairment in growth rate, final biomass, or PHA yield after 48 h</strong> (pobletecastro2020engineeringtheosmotic pages 1-2).</li>
+<li><strong>Modest biomass impact for dual-porin overexpression:</strong> tandem OprF/OprE expression in the mscL-deletion background produced <strong>~10% reduction in biomass synthesis</strong> (pobletecastro2020engineeringtheosmotic pages 1-2, pobletecastro2020engineeringtheosmotic pages 6-9).</li>
+<li><strong>Membrane property changes:</strong> porin-bearing strains showed <strong>&gt;3-fold increased surface hydrophobicity</strong> relative to parental controls (pobletecastro2020engineeringtheosmotic pages 4-5). Induction of the autolytic system in KT-oprFE produced <strong>21% membrane disturbance</strong> (pobletecastro2020engineeringtheosmotic pages 4-5).</li>
+<li><strong>Cell disruption efficiency:</strong> the combined strategy achieved <strong>&gt;95% cell lysis within 3 h</strong> (pobletecastro2020engineeringtheosmotic pages 1-2, pobletecastro2020engineeringtheosmotic pages 2-4). Another reported value for the dual system is <strong>96.3% cell disruption and death</strong> (pobletecastro2020engineeringtheosmotic pages 4-5, pobletecastro2020engineeringtheosmotic pages 5-6).</li>
+<li><strong>PHA recovery:</strong> reported recovery values include <strong>94.2%</strong> of biosynthesized polymer (pobletecastro2020engineeringtheosmotic pages 1-2, pobletecastro2020engineeringtheosmotic pages 2-4, pobletecastro2020engineeringtheosmotic pages 9-10) and <strong>93.3%</strong> in another excerpted section describing improved extraction outcomes (pobletecastro2020engineeringtheosmotic pages 5-6). </li>
+<li><strong>Operational parameters (useful for implementation):</strong> porin expression induced with <strong>1 mM IPTG at 30 h for 18 h</strong>; hypertonic challenge included <strong>10 g/L NaCl</strong>, followed by hypotonic shock (pobletecastro2020engineeringtheosmotic pages 9-10, pobletecastro2020engineeringtheosmotic pages 5-6).</li>
+</ul>
+<p>Separately, Putrinš et al. (BMC Microbiology; July 2011; https://doi.org/10.1186/1471-2180-11-170) provide a semi-quantitative outer membrane proteomics observation: an OprE-associated ~50 kDa band is readily seen at <strong>0.4–0.8% glucose</strong> but is <strong>barely detectable at 0.2% glucose</strong> (putrins2011thecolrssystem pages 8-10).</p>
+<h3 id="6-expert-opinions-and-analysis-authoritative-synthesis">6) Expert opinions and analysis (authoritative synthesis)</h3>
+<p><strong>Porins as tunable permeability “control points.”</strong> The family-level OprD-porin literature emphasizes that substrate-selective porins can be induced by environmental substrates and that limiting outer-membrane channels can prevent entry of toxic compounds—framing porin expression as a trade-off between nutrient acquisition and permeability risk (tamber2006roleofthe pages 9-9). </p>
+<p><strong>Bioprocessing perspective (2023–2024).</strong> Recent reviews treat engineered autolysis/cell disruption as a key lever for improving microbial production economics by simplifying downstream processing. The 2023 Microbial Biotechnology review explicitly discusses porin overproduction (OprF/OprE) combined with mechanosensitive channel deletion (mscL) as an osmotic-imbalance approach for product recovery (acuna2023rationalengineeringof pages 15-17). The 2024 programmed autolysis review likewise highlights porin/outer-membrane manipulation among strategies to trigger controlled lysis, and cites the KT2440 porin-based system as an example implementation pathway (acuna2023rationalengineeringof pages 15-17).</p>
+<h3 id="7-evidence-summary-table">7) Evidence summary table</h3>
+<p>The following table consolidates direct KT2440 evidence vs cross-species inference, with key metrics and source URLs/dates.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Finding for <strong>P. putida KT2440 oprE / OprE</strong></th>
+<th>Evidence type</th>
+<th>Key quantitative details</th>
+<th>Source (year; DOI/URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity verification</td>
+<td><strong>oprE = PP_0234</strong> in <strong>Pseudomonas putida KT2440</strong>; described as an <strong>outer membrane integral porin</strong>. This matches the requested UniProt-linked gene/protein identity.</td>
+<td>Direct experimental study in the correct organism</td>
+<td>Constructs included <strong>KT-oprE</strong>, <strong>KT-oprFE</strong>, <strong>KTΔmscL-oprFE</strong> with cloned <strong>oprE (PP_0234)</strong> (pobletecastro2020engineeringtheosmotic pages 2-4)</td>
+<td>Poblete-Castro et al., 2020; https://doi.org/10.3389/fbioe.2020.00161</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>OprE is localized to the <strong>outer membrane</strong>; it is also detected among proteins in <strong>outer membrane vesicles (OMVs)</strong> from KT2440.</td>
+<td>Direct for OM/OMV association</td>
+<td>OMV proteomics identified OprE among major OMV protein components; no OprE-specific abundance values in excerpt (choi2014proteomiccharacterizationof pages 1-2)</td>
+<td>Choi et al., 2014; https://doi.org/10.1021/pr500411d</td>
+</tr>
+<tr>
+<td>Functional class</td>
+<td>OprE is treated as a <strong>porin</strong>; broader Pseudomonas literature places OprE within the <strong>OprD-family / substrate-selective outer membrane porins</strong>.</td>
+<td>Mixed: direct porin annotation in KT2440; family assignment inferred from homologous Pseudomonas literature</td>
+<td>No KT2440 transport assay reported in retrieved evidence (tamber2006roleofthe pages 9-9, pobletecastro2020engineeringtheosmotic pages 2-4)</td>
+<td>Tamber et al., 2006; https://doi.org/10.1128/JB.188.1.45-54.2006; Poblete-Castro et al., 2020; https://doi.org/10.3389/fbioe.2020.00161</td>
+</tr>
+<tr>
+<td>Regulation: anaerobiosis</td>
+<td>OprE is reported as normally produced under <strong>anoxygenic/anaerobic conditions</strong> in other Pseudomonas strains; this is used as contextual functional annotation for KT2440 OprE.</td>
+<td>Indirect/background inference, not a KT2440-specific induction experiment in retrieved evidence</td>
+<td>No fold induction for KT2440 in retrieved evidence (pobletecastro2020engineeringtheosmotic pages 1-2, pobletecastro2020engineeringtheosmotic pages 2-4)</td>
+<td>Poblete-Castro et al., 2020; https://doi.org/10.3389/fbioe.2020.00161</td>
+</tr>
+<tr>
+<td>Regulation: nutrient status</td>
+<td>In KT2440, OprE is <strong>hunger-repressed</strong>: OprE abundance decreases under glucose limitation relative to richer glucose conditions.</td>
+<td>Direct experimental proteomics in KT2440</td>
+<td>~<strong>50 kDa</strong> OprE band in OM fractions was distinct at <strong>0.4% or 0.8% glucose</strong> and barely detectable at <strong>0.2% glucose</strong>; no fold-change provided (putrins2011thecolrssystem pages 8-10)</td>
+<td>Putrinš et al., 2011; https://doi.org/10.1186/1471-2180-11-170</td>
+</tr>
+<tr>
+<td>Inferred substrate specificity</td>
+<td>Specific substrate for <strong>P. putida PP_0234</strong> is <strong>not directly demonstrated</strong> in retrieved KT2440 studies. From <strong>P. aeruginosa</strong> OprD-family literature, OprE is <strong>predicted</strong> to transport <strong>arginine or proline</strong>; additional tested compounds in ortholog work include sodium pantothenate, uracil, pyroglutamate, and p-aminobenzoic acid.</td>
+<td><strong>Inference from another species</strong>; should not be treated as proven for KT2440 PP_0234</td>
+<td>Growth/substrate testing was reported for the <strong>P. aeruginosa</strong> ortholog context, not directly for KT2440 PP_0234 (tamber2010physiologicalcontributionof pages 83-87, tamber2006roleofthe pages 9-9)</td>
+<td>Tamber et al., 2006; https://doi.org/10.1128/JB.188.1.45-54.2006; Tamber, 2010 thesis; https://doi.org/10.14288/1.0093018</td>
+</tr>
+<tr>
+<td>Role in engineered cell-envelope permeability</td>
+<td>Overexpressed OprE, especially with OprF, was used to increase outer membrane permeability/hydrophobicity in KT2440 for downstream bioprocessing.</td>
+<td>Direct experimental engineering study</td>
+<td>Porin-bearing strains showed <strong>&gt;3-fold</strong> increased membrane hydrophobicity; KT-oprFE showed <strong>21% membrane disturbance</strong>; permeability changes supported by NPN uptake (pobletecastro2020engineeringtheosmotic pages 4-5)</td>
+<td>Poblete-Castro et al., 2020; https://doi.org/10.3389/fbioe.2020.00161</td>
+</tr>
+<tr>
+<td>Growth and biomass effects of oprE engineering</td>
+<td><strong>Single porin overexpression</strong> (including OprE alone) did <strong>not impair growth rate, final biomass, or PHA yield</strong> under PHA-producing conditions; dual OprF/OprE expression had a modest biomass cost.</td>
+<td>Direct experimental evidence in KT2440</td>
+<td>After <strong>48 h</strong>, individual porin overexpression caused no impairment; dual OprF/OprE in <strong>KTΔmscL-oprFE</strong> caused about <strong>10% biomass reduction</strong> but higher PHA content as % CDM (pobletecastro2020engineeringtheosmotic pages 1-2)</td>
+<td>Poblete-Castro et al., 2020; https://doi.org/10.3389/fbioe.2020.00161</td>
+</tr>
+<tr>
+<td>Autolysis/cell disruption performance</td>
+<td>Combining <strong>mscL deletion</strong> with <strong>OprF/OprE overexpression</strong> enabled efficient osmotic-shock-driven cell disruption for intracellular product recovery.</td>
+<td>Direct experimental evidence in KT2440</td>
+<td>Hypertonic step followed by hypotonic shock gave <strong>&gt;95%</strong> disruption within <strong>3 h</strong>; reported values include <strong>96.3% cell disruption/death</strong> and viability losses of <strong>20%, 80%, 96%</strong> after <strong>1, 2, 3 h</strong> respectively (pobletecastro2020engineeringtheosmotic pages 1-2, pobletecastro2020engineeringtheosmotic pages 2-4, pobletecastro2020engineeringtheosmotic pages 5-6, pobletecastro2020engineeringtheosmotic pages 4-5)</td>
+<td>Poblete-Castro et al., 2020; https://doi.org/10.3389/fbioe.2020.00161</td>
+</tr>
+<tr>
+<td>Process conditions used in the key engineering study</td>
+<td>OprE/OprF overexpression was induced during PHA production on decanoate; disruption relied on controlled osmotic transitions.</td>
+<td>Direct experimental protocol</td>
+<td>Growth on <strong>20 mM decanoate</strong>; porin expression induced with <strong>1 mM IPTG at 30 h</strong> for <strong>18 h</strong>; hypertonic step included <strong>10 g/L NaCl</strong>, then transfer to distilled water for hypotonic shock (pobletecastro2020engineeringtheosmotic pages 2-4, pobletecastro2020engineeringtheosmotic pages 9-10, pobletecastro2020engineeringtheosmotic pages 5-6)</td>
+<td>Poblete-Castro et al., 2020; https://doi.org/10.3389/fbioe.2020.00161</td>
+</tr>
+<tr>
+<td>Product recovery relevance</td>
+<td>OprE participates in a real-world biotechnology implementation for <strong>PHA recovery</strong> from KT2440 by reducing downstream disruption burden.</td>
+<td>Direct applied bioprocess evidence</td>
+<td>Reported PHA recovery values were <strong>94.2%</strong>, <strong>~94%</strong>, or <strong>93.3%</strong> depending on excerpted section; monomer composition reportedly unchanged (pobletecastro2020engineeringtheosmotic pages 1-2, pobletecastro2020engineeringtheosmotic pages 9-10, pobletecastro2020engineeringtheosmotic pages 5-6)</td>
+<td>Poblete-Castro et al., 2020; https://doi.org/10.3389/fbioe.2020.00161</td>
+</tr>
+<tr>
+<td>2023–2024 perspective</td>
+<td>Recent reviews cite the OprF/OprE + <strong>mscL</strong> strategy as an example of <strong>engineered autolysis / improved PHA recovery</strong> in Pseudomonas.</td>
+<td>Review-level synthesis</td>
+<td>2023 review confirms concurrent OprF/OprE overproduction with <strong>mscL</strong> deletion as an osmotic-imbalance strategy; 2024 autolysis review discusses this KT2440 system as a programmable cell disruption example (acuna2023rationalengineeringof pages 15-17, pobletecastro2020engineeringtheosmotic pages 1-2)</td>
+<td>Acuña &amp; Poblete-Castro, 2023; https://doi.org/10.1111/1751-7915.14109; Dong et al., 2024; https://doi.org/10.1186/s12934-024-02566-z</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes verified evidence for Pseudomonas putida KT2440 OprE/oprE (PP_0234; UniProt Q88R99), separating direct KT2440 findings from cross-species inference. It highlights localization, regulation, inferred substrate specificity, and the strongest quantitative data from the 2020 engineered cell-disruption study.</em></p>
+<h3 id="8-key-limitations-and-recommended-next-steps">8) Key limitations and recommended next steps</h3>
+<ul>
+<li><strong>Substrate specificity gap for KT2440 PP_0234.</strong> Although OprE is treated as a porin and placed into the substrate-selective OprD-family framework, the retrieved KT2440-focused papers did not include direct transport assays (e.g., uptake kinetics, reconstitution electrophysiology, mutant growth complementation on candidate substrates) for PP_0234. Thus, <strong>arginine/proline transport should be considered a hypothesis</strong> based on homolog context rather than confirmed KT2440 biology (tamber2006roleofthe pages 9-9, tamber2010physiologicalcontributionof pages 83-87).</li>
+<li><strong>Recommended experiments (to make KT2440-specific functional claims):</strong> (i) ΔoprE mutant growth on candidate substrates (arginine, proline, related metabolites) in minimal medium; (ii) radiolabeled uptake or LC-MS uptake assays; (iii) outer-membrane channel electrophysiology using purified OprE; (iv) transcriptomics/proteomics under anaerobic vs aerobic and carbon-limited vs carbon-rich conditions.</li>
+</ul>
+<h3 id="references-urls-and-publication-dates-where-available">References (URLs and publication dates where available)</h3>
+<ul>
+<li>Poblete-Castro I. et al. <strong>Engineering the Osmotic State of <em>Pseudomonas putida</em> KT2440 for Efficient Cell Disruption and Downstream Processing of Poly(3-Hydroxyalkanoates)</strong>. <em>Frontiers in Bioengineering and Biotechnology</em> (March 2020). https://doi.org/10.3389/fbioe.2020.00161 (pobletecastro2020engineeringtheosmotic pages 1-2, pobletecastro2020engineeringtheosmotic pages 2-4, pobletecastro2020engineeringtheosmotic pages 4-5, pobletecastro2020engineeringtheosmotic pages 9-10, pobletecastro2020engineeringtheosmotic pages 5-6)</li>
+<li>Acuña J.M.B.-de; Poblete-Castro I. <strong>Rational engineering of natural polyhydroxyalkanoates producing microorganisms for improved synthesis and recovery</strong>. <em>Microbial Biotechnology</em> (July 2023). https://doi.org/10.1111/1751-7915.14109 (acuna2023rationalengineeringof pages 15-17)</li>
+<li>Dong C. et al. <strong>Engineering of bacteria towards programmed autolysis: why, how, and when?</strong> <em>Microbial Cell Factories</em> (October 2024). https://doi.org/10.1186/s12934-024-02566-z (acuna2023rationalengineeringof pages 15-17)</li>
+<li>Choi C.-W. et al. <strong>Proteomic characterization of the outer membrane vesicle of <em>Pseudomonas putida</em> KT2440</strong>. <em>Journal of Proteome Research</em> (September 2014). https://doi.org/10.1021/pr500411d (choi2014proteomiccharacterizationof pages 1-2)</li>
+<li>Putrinš M. et al. <strong>The ColRS system is essential for the hunger response of glucose-growing <em>Pseudomonas putida</em></strong>. <em>BMC Microbiology</em> (July 2011). https://doi.org/10.1186/1471-2180-11-170 (putrins2011thecolrssystem pages 8-10)</li>
+<li>Tamber S. et al. <strong>Role of the novel OprD family of porins in nutrient uptake in <em>Pseudomonas aeruginosa</em></strong>. <em>Journal of Bacteriology</em> (January 2006). https://doi.org/10.1128/jb.188.1.45-54.2006 (family-level context; substrate predictions for OprE) (tamber2006roleofthe pages 9-9)</li>
+<li>Tamber S. <strong>Physiological contribution of the <em>Pseudomonas aeruginosa</em> OprD family of porins</strong> (January 2010; thesis/dissertation). https://doi.org/10.14288/1.0093018 (cross-species substrate testing context; not KT2440-specific) (tamber2010physiologicalcontributionof pages 83-87)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(pobletecastro2020engineeringtheosmotic pages 2-4): Ignacio Poblete-Castro, Carla Aravena-Carrasco, Matias Orellana-Saez, Nicolás Pacheco, Alex Cabrera, and José Manuel Borrero-de Acuña. Engineering the osmotic state of pseudomonas putida kt2440 for efficient cell disruption and downstream processing of poly(3-hydroxyalkanoates). Frontiers in Bioengineering and Biotechnology, Mar 2020. URL: https://doi.org/10.3389/fbioe.2020.00161, doi:10.3389/fbioe.2020.00161. This article has 28 citations.</p>
+</li>
+<li>
+<p>(pobletecastro2020engineeringtheosmotic pages 1-2): Ignacio Poblete-Castro, Carla Aravena-Carrasco, Matias Orellana-Saez, Nicolás Pacheco, Alex Cabrera, and José Manuel Borrero-de Acuña. Engineering the osmotic state of pseudomonas putida kt2440 for efficient cell disruption and downstream processing of poly(3-hydroxyalkanoates). Frontiers in Bioengineering and Biotechnology, Mar 2020. URL: https://doi.org/10.3389/fbioe.2020.00161, doi:10.3389/fbioe.2020.00161. This article has 28 citations.</p>
+</li>
+<li>
+<p>(tamber2006roleofthe pages 9-9): Sandeep Tamber, Martina M. Ochs, and Robert E. W. Hancock. Role of the novel oprd family of porins in nutrient uptake in pseudomonas aeruginosa. Journal of Bacteriology, 188:45-54, Jan 2006. URL: https://doi.org/10.1128/jb.188.1.45-54.2006, doi:10.1128/jb.188.1.45-54.2006. This article has 224 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(choi2014proteomiccharacterizationof pages 1-2): Chi-Won Choi, Edmond Changkyun Park, Sung Ho Yun, Sang-Yeop Lee, Yeol Gyun Lee, Yeonhee Hong, Kyeong Ryang Park, Sang-Hyun Kim, Gun-Hwa Kim, and Seung Il Kim. Proteomic characterization of the outer membrane vesicle of pseudomonas putida kt2440. Journal of proteome research, 13 10:4298-309, Sep 2014. URL: https://doi.org/10.1021/pr500411d, doi:10.1021/pr500411d. This article has 97 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(putrins2011thecolrssystem pages 8-10): Marta Putrinš, Andres Ainelo, Heili Ilves, and Rita Hõrak. The colrs system is essential for the hunger response of glucose-growing pseudomonas putida. BMC Microbiology, 11:170-170, Jul 2011. URL: https://doi.org/10.1186/1471-2180-11-170, doi:10.1186/1471-2180-11-170. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tamber2010physiologicalcontributionof pages 83-87): Sandeep Tamber. Physiological contribution of the pseudomonas aeruginosa oprd family of porins. ArXiv, Jan 2010. URL: https://doi.org/10.14288/1.0093018, doi:10.14288/1.0093018. This article has 0 citations.</p>
+</li>
+<li>
+<p>(pobletecastro2020engineeringtheosmotic pages 5-6): Ignacio Poblete-Castro, Carla Aravena-Carrasco, Matias Orellana-Saez, Nicolás Pacheco, Alex Cabrera, and José Manuel Borrero-de Acuña. Engineering the osmotic state of pseudomonas putida kt2440 for efficient cell disruption and downstream processing of poly(3-hydroxyalkanoates). Frontiers in Bioengineering and Biotechnology, Mar 2020. URL: https://doi.org/10.3389/fbioe.2020.00161, doi:10.3389/fbioe.2020.00161. This article has 28 citations.</p>
+</li>
+<li>
+<p>(acuna2023rationalengineeringof pages 15-17): José Manuel Borrero‐de Acuña and Ignacio Poblete‐Castro. Rational engineering of natural polyhydroxyalkanoates producing microorganisms for improved synthesis and recovery. Microbial Biotechnology, 16:262-285, Jul 2023. URL: https://doi.org/10.1111/1751-7915.14109, doi:10.1111/1751-7915.14109. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pobletecastro2020engineeringtheosmotic pages 6-9): Ignacio Poblete-Castro, Carla Aravena-Carrasco, Matias Orellana-Saez, Nicolás Pacheco, Alex Cabrera, and José Manuel Borrero-de Acuña. Engineering the osmotic state of pseudomonas putida kt2440 for efficient cell disruption and downstream processing of poly(3-hydroxyalkanoates). Frontiers in Bioengineering and Biotechnology, Mar 2020. URL: https://doi.org/10.3389/fbioe.2020.00161, doi:10.3389/fbioe.2020.00161. This article has 28 citations.</p>
+</li>
+<li>
+<p>(pobletecastro2020engineeringtheosmotic pages 4-5): Ignacio Poblete-Castro, Carla Aravena-Carrasco, Matias Orellana-Saez, Nicolás Pacheco, Alex Cabrera, and José Manuel Borrero-de Acuña. Engineering the osmotic state of pseudomonas putida kt2440 for efficient cell disruption and downstream processing of poly(3-hydroxyalkanoates). Frontiers in Bioengineering and Biotechnology, Mar 2020. URL: https://doi.org/10.3389/fbioe.2020.00161, doi:10.3389/fbioe.2020.00161. This article has 28 citations.</p>
+</li>
+<li>
+<p>(pobletecastro2020engineeringtheosmotic pages 9-10): Ignacio Poblete-Castro, Carla Aravena-Carrasco, Matias Orellana-Saez, Nicolás Pacheco, Alex Cabrera, and José Manuel Borrero-de Acuña. Engineering the osmotic state of pseudomonas putida kt2440 for efficient cell disruption and downstream processing of poly(3-hydroxyalkanoates). Frontiers in Bioengineering and Biotechnology, Mar 2020. URL: https://doi.org/10.3389/fbioe.2020.00161, doi:10.3389/fbioe.2020.00161. This article has 28 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="oprE-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pobletecastro2020engineeringtheosmotic pages 2-4</li>
+<li>pobletecastro2020engineeringtheosmotic pages 1-2</li>
+<li>tamber2006roleofthe pages 9-9</li>
+<li>choi2014proteomiccharacterizationof pages 1-2</li>
+<li>putrins2011thecolrssystem pages 8-10</li>
+<li>tamber2010physiologicalcontributionof pages 83-87</li>
+<li>acuna2023rationalengineeringof pages 15-17</li>
+<li>pobletecastro2020engineeringtheosmotic pages 4-5</li>
+<li>pobletecastro2020engineeringtheosmotic pages 5-6</li>
+<li>pobletecastro2020engineeringtheosmotic pages 6-9</li>
+<li>pobletecastro2020engineeringtheosmotic pages 9-10</li>
+<li>https://doi.org/10.3389/fbioe.2020.00161</li>
+<li>https://doi.org/10.1111/1751-7915.14109</li>
+<li>https://doi.org/10.1186/s12934-024-02566-z</li>
+<li>https://doi.org/10.1186/1471-2180-11-170</li>
+<li>https://doi.org/10.1021/pr500411d</li>
+<li>https://doi.org/10.1128/JB.188.1.45-54.2006;</li>
+<li>https://doi.org/10.14288/1.0093018</li>
+<li>https://doi.org/10.1111/1751-7915.14109;</li>
+<li>https://doi.org/10.1128/jb.188.1.45-54.2006</li>
+<li>https://doi.org/10.3389/fbioe.2020.00161,</li>
+<li>https://doi.org/10.1128/jb.188.1.45-54.2006,</li>
+<li>https://doi.org/10.1021/pr500411d,</li>
+<li>https://doi.org/10.1186/1471-2180-11-170,</li>
+<li>https://doi.org/10.14288/1.0093018,</li>
+<li>https://doi.org/10.1111/1751-7915.14109,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88R99
+gene_symbol: oprE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  OprE (PP_0234) is an outer membrane porin of Pseudomonas putida KT2440
+  belonging to the OprD/Occ (Opr) family of substrate-selective porins (TC
+  1.B.25; Pfam OprD, PF03573). Like other members of this family, it forms a
+  beta-barrel channel embedded in the Gram-negative outer membrane that allows
+  the selective diffusion of small hydrophilic solutes across the outer membrane
+  permeability barrier. The mature protein (residues 22-444, following cleavage
+  of an N-terminal signal peptide) localizes to the outer membrane and is also
+  recovered in outer membrane vesicles. In Pseudomonas, OprE-family porins are
+  typically substrate-selective, semi-specialized nutrient-uptake channels whose
+  expression responds to environmental conditions; the OprE ortholog is
+  classically described as anaerobically induced, and in P. putida OprE
+  abundance varies with nutrient (glucose) availability. The precise substrate
+  specificity of P. putida KT2440 OprE has not been established by direct
+  transport assays; substrate predictions (e.g. basic amino acids) derive from
+  the P. aeruginosa OprD-family framework and remain hypotheses for this
+  ortholog.
+existing_annotations:
+- term:
+    id: GO:0015288
+    label: porin activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correctly captures the core molecular function of OprE as an outer
+      membrane porin (beta-barrel channel allowing diffusion of solutes across
+      the outer membrane). This is well supported by family/domain membership
+      (OprD/Opr family, Pfam OprD) and by experimental treatment of OprE as an
+      outer membrane porin in KT2440.
+    action: ACCEPT
+    reason: &gt;-
+      Porin activity is the defining function of the OprD/Occ-family proteins
+      and is consistent with the InterPro/PANTHER-based inference and with
+      literature describing OprE as an outer membrane integral porin in P.
+      putida KT2440.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      OprE is a membrane protein, but the available evidence supports the more
+      specific localization to the bacterial outer membrane rather than the
+      generic membrane term. OprE is described as an outer membrane integral
+      porin in KT2440 and is recovered in outer membrane vesicles.
+    action: MODIFY
+    reason: &gt;-
+      The generic membrane term (GO:0016020) is correct but uninformatively
+      broad for a Gram-negative outer membrane porin. The OprD/Occ family is an
+      outer membrane beta-barrel family, and OprE is experimentally and
+      proteomically associated with the outer membrane, justifying refinement to
+      the outer membrane term.
+    proposed_replacement_terms:
+    - id: GO:0019867
+      label: outer membrane
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Consistent with the porin function. As a porin, OprE mediates the
+      diffusion of solutes across the outer membrane, so participation in
+      transmembrane transport is appropriate. This term was logically inferred
+      from the porin activity annotation (GO:0015288).
+    action: ACCEPT
+    reason: &gt;-
+      Transmembrane transport is the biological process directly entailed by
+      porin (channel) activity and is well supported as the process counterpart
+      to the molecular function annotation.
+core_functions:
+- description: &gt;-
+    Outer membrane porin (beta-barrel channel) of the OprD/Occ family that
+    mediates selective diffusion of small hydrophilic solutes across the
+    Gram-negative outer membrane, contributing to transmembrane transport at the
+    cell envelope.
+  supported_by:
+  - reference_id: PMID:32211393
+    supporting_text: &gt;-
+      The second channel taken into analysis was the outer membrane integral
+      porin OprE (PP_0234), which is normally produced under anoxygenic
+      conditions in other Pseudomonas strains
+  molecular_function:
+    id: GO:0015288
+    label: porin activity
+  directly_involved_in:
+  - id: GO:0055085
+    label: transmembrane transport
+  locations:
+  - id: GO:0019867
+    label: outer membrane
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:32211393
+  title: Engineering the Osmotic State of Pseudomonas putida KT2440 for Efficient Cell Disruption and Downstream Processing of Poly(3-Hydroxyalkanoates)
+  findings:
+  - statement: &gt;-
+      OprE (PP_0234) of P. putida KT2440 is an outer membrane integral porin; it
+      was cloned and overexpressed (alone and with OprF) to modulate outer
+      membrane permeability for cell disruption.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID:32211393 confirmed against PubMed (Poblete-Castro et al., Front
+      Bioeng Biotechnol 2020; doi 10.3389/fbioe.2020.00161); establishes OprE as
+      a KT2440 outer membrane porin. Corrected via DOI lookup from the
+      previously incorrect PMID:32195237, which is an unrelated PHA
+      immobilized-enzyme-scaffold review (Wong et al.).
+- id: PMID:16352820
+  title: Role of the novel OprD family of porins in nutrient uptake in Pseudomonas aeruginosa
+  findings:
+  - statement: &gt;-
+      Defines the OprD-family of outer membrane porins as substrate-selective
+      nutrient-uptake channels in Pseudomonas; provides family-level functional
+      context for OprE (substrate predictions are P. aeruginosa-oriented).
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Tamber et al. OprD-family porins; PubMed-verified (consistent with the VERIFIED use of this PMID in oprD).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
