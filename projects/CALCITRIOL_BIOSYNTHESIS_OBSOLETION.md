@@ -1,6 +1,6 @@
 ---
 title: "Calcitriol Biosynthesis from Calciol — Obsoletion & Replacement"
-maturity: SEED
+maturity: SCOPING
 tags: [OBSOLETION]
 species:
   - human
