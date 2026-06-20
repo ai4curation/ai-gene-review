@@ -107,10 +107,10 @@ Branch/Class/Group/Type/Subtype taxonomy that overlaps GO inconsistently.
 
 So far the project has:
 
-- **Reviewed 320+ human genes** across 9 batches, walking the PN branches
-  (chaperones, translation/ribosome-QC, ER proteostasis, the UPS Cullin-RING
-  ligases, and the autophagy-lysosome receptors). See the
-  [batch table](#review-progress).
+- **Reviewed 320+ human genes** across the PN branches (chaperones,
+  translation/ribosome-QC, ER proteostasis, the UPS Cullin-RING ligases, and the
+  autophagy-lysosome receptors) — eight completed batches, with a ninth ~50-gene
+  batch in progress. See the [batch table](#review-progress).
 - **Built a complete curated PN→GO mapping** for the 2026-04-17 release: every
   source code now resolves to `mapped`, `context_only`, or (most often)
   `no_mapping`. See [mapping status](#current-mapping-completion-status).
@@ -173,7 +173,8 @@ in [Using PN inside AIGR](#using-pn-inside-aigr-triage-qa).
 
 **Citation QA caught by review** — e.g. `PMID:23264731` (a microtubule study)
 mis-cited on both `SERP1` (removed; wrong gene) and `SRPRB` (left UNDECIDED);
-`SIAH1`'s `zinc ion binding` citation flagged `WRONG_IDENTIFIER`.
+`SIAH1`'s `zinc ion binding` citation (`PMID:11863358`) flagged
+`WRONG_IDENTIFIER`.
 
 ## Background
 
