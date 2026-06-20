@@ -65,7 +65,10 @@ clearly labeled as review-level or database-level support.
 Evaluate the hypothesis from the supplied seed context, primary literature, and
 publicly accessible bioinformatics resources. Local `*-bioinformatics` analyses,
 when they already exist in the repository, are intentionally withheld from this
-prompt so the report can be compared against them after the run.
+prompt so the report can be compared against them after the run. Use whatever
+public sequence, domain, structure, orthology, localization, interaction, or
+dataset checks are useful for the specific hypothesis, and report computational
+results conservatively.
 
 ## Required Output
 
