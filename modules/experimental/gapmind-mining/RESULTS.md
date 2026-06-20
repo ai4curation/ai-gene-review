@@ -89,6 +89,14 @@ ordered `connections` were drawn, and one incorrect ModelSEED EC auto-mapping
 It validates (`-C ModuleReview`) and projects cleanly through `module_notation`.
 This demonstrates the full mine → curate → publish loop end to end.
 
+A second curated module, **`modules/tryptophan_biosynthesis.yaml`**, has since been
+produced the same way. It additionally exercises module features histidine did not:
+a curated **variant set** (two-component TrpE+TrpD₁ vs. single-protein TrpED
+anthranilate synthase, from GapMind's OR-rule), the αβ **tryptophan synthase
+channeling complex**, and bifunctional-fusion notes (TrpD, TrpC, PriA). True
+reaction ECs that GapMind records only as `ignore_other` (4.1.3.27, 4.1.2.8,
+4.2.1.20) were reinstated during curation.
+
 ## Recommended next steps (if we proceed past the spike)
 
 1. Promote the converter into `src/ai_gene_review/` with pytest coverage and a `just`
