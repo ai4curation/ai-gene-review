@@ -85,7 +85,10 @@ def main() -> None:
     if args.go:
         loss_recs = [r for r in loss_recs if r.go_id == args.go]
     if not loss_recs:
-        sys.exit(f"❌ No IRD/IKR loss for {args.go or '(any GO)'} on {args.loss_node}.")
+        sys.exit(
+            f"❌ No loss (NOT / IRD / IKR) for {args.go or '(any GO)'} "
+            f"on {args.loss_node}."
+        )
     loss = loss_recs[0]
     ancestral_nodes = parse_ptn_nodes("|".join(loss.seeds))
     gain = _resolve_gain_record(ibd_index, ancestral_nodes, loss.go_id)
