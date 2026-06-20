@@ -66,6 +66,46 @@ G6PC1 is 169 TPM in liver, 5.6 in kidney cortex, 2.8 in intestine — so the ord
 which tissues drop out as the bar rises recapitulates their known quantitative
 contribution to gluconeogenesis (liver dominant, kidney secondary, intestine minor).
 
+## Same engine, one scale down: intra-liver zonation
+
+The bulk-tissue result says liver does gluconeogenesis. But the liver is not
+homogeneous: hepatocytes are organised along the porto-central lobule axis, and
+gluconeogenesis is known to be **periportal**. Reusing the *identical* circuit
+engine with a different oracle — the reconstructed nine-layer zonation profiles of
+Halpern et al. 2017 (Nature, PMID:28166538, Supplementary Table S3) — resolves
+satisfiability *within* the liver, per lobule layer.
+
+The porto-central orientation is **inferred from the data**, not assumed: landmark
+genes (pericentral Glul/Cyp2e1/Oat; periportal Ass1/Asl/Aldob) place the periportal
+pole at Layer 9. The gluconeogenic genes themselves are not used to orient, so the
+result is a genuine derivation, not a circular re-statement.
+
+```
+Periportal pole inferred at Layer 9 (opposite end = pericentral)
+Gate atoms (required by all routes): ['PC', 'G6PC1', 'SLC37A4']
+
+validation:  periportal pole (L9) satisfiable = True
+             pericentral pole (L1) satisfiable = False  -> blocked at G6PC1
+
+threshold sweep (rel = profile/peak):   L1=pericentral .. L9=periportal
+  rel>=0.3   .########   layers 2-9
+  rel>=0.5   .########   layers 2-9
+  rel>=0.7   ...######   layers 4-9
+  rel>=0.9   ......###   layers 7-9   (periportal third only)
+```
+
+**The same gate atom, G6PC1, operates at two scales.** Between organs it separates
+liver/kidney/intestine from muscle/brain; *within* the liver it separates periportal
+from pericentral hepatocytes. As the relative-expression bar is raised the satisfiable
+zone contracts monotonically toward the periportal pole and the pericentral pole is
+always excluded — the graded, periportal-restricted picture of hepatic gluconeogenesis,
+recovered from logic + measured zonation alone.
+
+(Data note: Halpern Table S3 is mouse; the human module symbols are mapped to mouse
+orthologs — `G6PC1`→`G6pc`, `PCK1`→`Pck1`, `PC`→`Pcx`, etc. The large raw download
+is re-fetched on demand via Europe PMC; only the 15-gene derived matrix
+`cache/halpern_zonation.tsv` is committed.)
+
 ## Honest scope / epistemics
 
 - **Expression is used asymmetrically:** absence excludes a route (no enzyme → no
@@ -96,12 +136,17 @@ uv run python gtex_oracle.py                          # refresh cache from GTEx 
 uv run python module_logic.py ../../gluconeogenesis_human.yaml   # routes + gate
 uv run python resolve_context.py                      # per-tissue resolution + validation
 uv run python resolve_context.py --threshold 5        # graded gate
+
+uv run --with openpyxl python zonation_oracle.py      # fetch/cache Halpern zonation
+uv run python resolve_zonation.py                     # per-lobule-layer resolution + sweep
 ```
 
 ## Next steps
 
-1. Single-cell / spatial oracle → derive hepatic gluconeogenesis **zonation**
-   (full route satisfiable only in periportal hepatocytes).
+1. ~~Single-cell / spatial oracle → derive hepatic gluconeogenesis **zonation**.~~
+   **Done** (`resolve_zonation.py`): periportal restriction recovered from Halpern 2017.
+   Next: a human spatial/scRNA oracle (e.g. the 2025 human-liver spatial atlas) to
+   confirm the same zonation directly in human rather than via mouse orthologs.
 2. Add the substrate-entry OR-branches (lactate / alanine / glycerol) as their own
    variant set so the engine also resolves *which precursor* a tissue can use.
 3. Promote `module_logic.py` into `src/ai_gene_review/` with pytest coverage; it is
