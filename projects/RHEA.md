@@ -164,7 +164,7 @@ Filling the gaps is a curation deliverable, not just an audit. The curated
 RHEA→GO mappings — reactions absent from `rhea2go` but with (or needing) a GO MF
 term — are recorded in [`rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml), the same
 **SSSOM YAML** format used by the [ANTIMICROBIAL_RESISTANCE](ANTIMICROBIAL_RESISTANCE.md)
-`aro2go` mapping set. **122 mappings** so far, each backed by a review of a reviewed
+`aro2go` mapping set. **132 mappings** so far, each backed by a review of a reviewed
 (Swiss-Prot) enzyme that carries the reaction
 ([RHEA-MAPPING-REVIEWS.md](RHEA/RHEA-MAPPING-REVIEWS.md)). The predicate encodes
 the specificity finding:
@@ -179,7 +179,7 @@ the specificity finding:
   names the narrower GO term to request (PHYKPL→`lyase activity`; B3GALNT2→
   `acetylgalactosaminyltransferase activity`; SULT6B1→`aryl sulfotransferase
   activity`; DPEP2→`dipeptidase activity`).
-- **`sssom:NoTermFound`** (7 rows) — **new GO term suggestions**: reactions where
+- **`sssom:NoTermFound`** (17 rows) — **new GO term suggestions**: reactions where
   QuickGO returns no specific MF term at all (hppE fosfomycin epoxidase; a
   trimethylaminoethylphosphonate dioxygenase; cellobionic-acid phosphorylase;
   1,4-β-mannosyl-GlcNAc phosphorylase) — GO new-term-request candidates.
@@ -275,8 +275,8 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
   (reverse gap), [`RHEA/rhea_ec_specificity.py`](RHEA/rhea_ec_specificity.py)
   (EC-masking, specificity, gaps), [`RHEA/rhea_gap_finder.py`](RHEA/rhea_gap_finder.py)
   (gap case selection)
-- **Curated mappings**: [`RHEA/rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml) — 122
-  SSSOM rows (111 exactMatch ready-to-add, 4 broadMatch, 7 new-term suggestions),
+- **Curated mappings**: [`RHEA/rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml) — 132
+  SSSOM rows (111 exactMatch ready-to-add, 4 broadMatch, 17 new-term suggestions),
   each backed by a reviewed enzyme in
   [`RHEA/RHEA-MAPPING-REVIEWS.md`](RHEA/RHEA-MAPPING-REVIEWS.md);
   `just validate-rhea-mappings`

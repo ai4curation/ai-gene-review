@@ -107,3 +107,15 @@ the rest is strictly a **new-GO-term** effort (the 7 seeded `sssom:NoTermFound`
 rows are the start), not more mapping. This holds the line on the litmus test:
 we do not add a mapping unless a Swiss-Prot entry would gain a *correct*,
 non-redundant annotation.
+
+### Turning the litmus result into new-term proposals
+
+The reactions the litmus hunt surfaced are precisely the **new-term backlog**: a
+reviewed enzyme carries the reaction, Swiss-Prot lacks a correct term, and GO has
+only a *sibling* term for a different variant. Batch 6 promotes 10 of these to
+verified `sssom:NoTermFound` proposals (definition-checked against the sibling),
+e.g. **ferredoxin-dependent protochlorophyllide reductase** (EC 1.3.7.7, ~327
+reviewed entries; GO has only the NADPH POR GO:0016630), **alcohol dehydrogenase
+(quinone)** (EC 1.1.5.5), **2-methylcitrate dehydratase (trans-forming)** (vs the
+cis GO:0047547), and **UDP-N-acetylglucosamine 2-epimerase (hydrolysing)** (human
+GNE; vs the non-hydrolysing GO:0008761). The proposal set is now 17.

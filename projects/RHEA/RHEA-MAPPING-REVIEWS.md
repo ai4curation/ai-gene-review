@@ -178,3 +178,21 @@ just validate-rhea-mappings   # SSSOM structural + GO term/label validation
 | RHEA:27682 | GO:0004550 nucleoside diphosphate kinase activity | Nucleoside diphosphate kinase C (Q13232) | Homo sapiens | PE1, PMID:11277919 | 1 |
 | RHEA:59352 | GO:0047979 hexose oxidase activity | Hexose oxidase (P93762) | Chondrus crispus | PE1, PMID:9111074 | 1 |
 | RHEA:68796 | GO:0004575 sucrose alpha-glucosidase activity | Sucrase-isomaltase, intestinal (P14410) | Homo sapiens | PE1, PMID:20356844 | 1 |
+
+## Batch 6: new GO term proposals (variant reactions)
+
+Reviewed enzymes whose reaction has a Swiss-Prot gap and **no correct GO term** -- GO has a sibling
+term for a different cofactor / stereochemistry / substrate, verified by comparing definitions.
+
+| RHEA | Proposed new term | EC | Reviewed enzyme | Impact (reviewed) | Sibling |
+|------|-------------------|----|-----------------|------------------:|---------|
+| RHEA:28202 | ferredoxin-dependent protochlorophyllide reductase activity | 1.3.7.7 | Light-independent protochlorophyllide reductase subunit B (P26163) | 327 | GO:0016630 |
+| RHEA:26442 | alcohol dehydrogenase (quinone) activity | 1.1.5.5 | Alcohol dehydrogenase (Q47945) | 7 | GO:0004022 |
+| RHEA:27417 | nicotinate dehydrogenase (cytochrome) activity | 1.17.2.1 | Nicotinate dehydrogenase subunit B (Q88FX8) | 2 | GO:0050138 |
+| RHEA:26522 | 2-methylcitrate dehydratase (2-methyl-trans-aconitate forming) activity | 4.2.1.117 | 2-methylcitrate dehydratase (Q8EJW3) | 1 | GO:0047547 |
+| RHEA:29595 | sulfoacetaldehyde dehydrogenase (acylating) activity | 1.2.1.81 | Sulfoacetaldehyde dehydrogenase (Q0K845) | 2 | GO:0102984 |
+| RHEA:27306 | D-proline dehydrogenase activity | 1.5.99.13 | D-proline dehydrogenase (A1RVM8) | 1 | GO:0004657 |
+| RHEA:26494 | tryptophan 7-halogenase activity | 1.14.19.9 | Tryptophan 7-halogenase PrnA (P95480) | 3 | GO:0140907 |
+| RHEA:18721 | ent-13-epi-manoyl oxide synthase activity | 4.2.3.186 | Ent-13-epi-manoyl oxide synthase KSL2, chloroplastic (H6VLG5) | 1 | GO:0062206 |
+| RHEA:30683 | UDP-N-acetylglucosamine 2-epimerase (hydrolysing) activity | 3.2.1.183 | Bifunctional UDP-N-acetylglucosamine 2-epimerase/N-acetylmannosamine kinase (Q9Y223) | 1 | GO:0008761 |
+| RHEA:31343 | glucosyl-3-phosphoglycerate phosphatase activity | 3.1.3.85 | Glucosyl-3-phosphoglycerate/mannosyl-3-phosphoglycerate phosphatase (C0QRP9) | 1 | GO:0050531 |
