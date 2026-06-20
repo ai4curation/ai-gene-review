@@ -24,3 +24,7 @@ Curation decisions:
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: PN autophagy context was used to interpret CDK5 mainly through substrate-specific phosphorylation of SH3GLB1/endophilin B1; Drosophila Cdk5-Acinus basal-autophagy evidence was treated as orthology context rather than direct human CDK5 evidence. Generic protein-binding rows were considered less informative than kinase, complex, substrate-specific, and neuronal process terms.
+
+## 2026-06-20 second-pass audit
+
+The second-pass audit added manual `reference_review` metadata for CDK5/p35 activation, CDK5/p25 structural context, induced-autophagy phosphorylation of SH3GLB1/endophilin B1, NR2B/GluN2B phosphorylation, and the p35-specific microtubule-binding caveat. No annotation action changes were needed: CDK5 remains curated as the catalytic serine/threonine kinase in CDK5R1/CDK5R2-activated complexes, with autophagy and receptor/synaptic effects treated as substrate-specific kinase outputs rather than broad direct binding functions.

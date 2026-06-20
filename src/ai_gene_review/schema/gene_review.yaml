@@ -280,6 +280,17 @@ slots:
     range: Experiment
     multivalued: true
     recommended: true
+  knowledge_gaps:
+    range: KnowledgeGap
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Curated, literature-grounded statements of what is NOT known — applicable at
+      the level of the whole gene, a single existing annotation, a core function, a
+      whole module, or a single module step/node. The inverse of core_functions:
+      everywhere else the schema records what IS known; here it records, with the
+      same evidentiary discipline, what is not. See the Function Knowledge Gaps
+      project (projects/FUNCTION_KNOWLEDGE_GAPS.md).
   status:
     range: GeneReviewStatusEnum
     description: Overall status of the gene review
@@ -308,6 +319,7 @@ classes:
      - proposed_new_terms
      - suggested_questions
      - suggested_experiments
+     - knowledge_gaps
     slot_usage:
       description:
         recommended: true
@@ -722,6 +734,7 @@ classes:
       - title
       - description
       - references
+      - knowledge_gaps
     attributes:
       status:
         range: string
@@ -740,6 +753,8 @@ classes:
     description: >-
       A node in a module. Nodes can be recursively decomposed using parts and
       variant_sets, and may also carry leaf annotons and connections.
+    slots:
+      - knowledge_gaps
     attributes:
       id:
         range: string
@@ -1017,6 +1032,7 @@ classes:
       - proposed_replacement_terms
       - additional_reference_ids
       - supported_by
+      - knowledge_gaps
     rules:
       - preconditions:
           slot_conditions:
@@ -1031,6 +1047,8 @@ classes:
     description: A core function is a GO-CAM-like annotation of the core evolved functions of a gene.
       This is a synthesis of the reviewed core annotations, brought together into a unified GO-CAM-like
       representation.
+    slots:
+      - knowledge_gaps
     attributes:
       description:
         range: string
@@ -1158,6 +1176,77 @@ classes:
       supported_by:
         range: SupportingTextInReference
         multivalued: true
+
+  KnowledgeGap:
+    description: >-
+      A curated, literature-grounded statement of what is NOT known about a gene
+      product, core function, module, or step — its molecular activity, mechanism,
+      partner(s), localization, or biological role. A knowledge gap is a reviewer
+      judgment reached by reading the primary literature, NOT a pattern in the
+      annotations: a heavily annotated gene can hide a gaping mechanistic hole, and
+      a sparsely annotated one can be perfectly understood and merely under-curated.
+      Each gap is a small, defensible scholarly object with the same evidentiary
+      discipline used for positive claims. See projects/FUNCTION_KNOWLEDGE_GAPS.md
+      for the methodology and worked exemplars.
+    attributes:
+      gap_statement:
+        range: string
+        required: true
+        description: >-
+          The specific unknown, stated precisely. Not "role unclear" but e.g.
+          "the direct substrate / the catalytic activity / the essential partner is
+          undetermined".
+      boundary:
+        range: string
+        recommended: true
+        description: >-
+          What IS firmly established, so the gap is sharply delimited. The edge of
+          current knowledge against which the gap is defined.
+      gap_kind:
+        range: KnowledgeGapKindEnum
+        multivalued: true
+        recommended: true
+        description: >-
+          The kind(s) of ignorance — biology, curation, and/or ontology — which
+          determines who can resolve it. Multiple values denote a blend (e.g. a
+          biology gap with an ontology shadow).
+      dark_aspect:
+        range: KnowledgeGapAspectEnum
+        description: >-
+          Which GO aspect (or pattern) is dark for this gap. Most "dark" genes are
+          not uniformly dark.
+      status:
+        range: KnowledgeGapStatusEnum
+        description: Lifecycle status of the gap, tracking progress toward resolution.
+      significance:
+        range: string
+        description: Why closing this gap matters.
+      resolution:
+        range: string
+        description: >-
+          What would resolve the gap — the experiment, ontology term, or curation
+          action. For ONTOLOGY gaps, pair with proposed_terms (or the gene's
+          top-level proposed_new_terms).
+      provenance:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        recommended: true
+        description: >-
+          Evidence that the unknown is REAL and not merely uncurated — ideally the
+          field's own admissions of ignorance ("remains to be determined", "the
+          precise role is unknown"). The supporting_text is a verbatim substring of
+          the cited reference and is checked by the reference validator exactly like
+          supported_by. When the only available source is a DOI-only paper or a local
+          analysis, anchor provenance to that reference_id (e.g. a file: path).
+      proposed_terms:
+        range: ProposedOntologyTerm
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          For ONTOLOGY gaps, the new ontology term(s) that would let the knowledge be
+          expressed (e.g. "structural constituent of complex X"). May elaborate the
+          gene's top-level proposed_new_terms.
 
   Experiment:
     description: A suggested experiment to answer a question about the gene
@@ -2649,6 +2738,62 @@ enums:
         description: The finding has been refuted or superseded by later, stronger evidence and should NOT be curated from; record the overturning reference(s) in superseded_by
       UNVERIFIED:
         description: The finding has not yet been manually assessed (default)
+
+  KnowledgeGapKindEnum:
+    description: >-
+      The kind of ignorance a knowledge gap represents, which determines who can
+      resolve it. A single gap may carry several values when it is a blend.
+    permissible_values:
+      BIOLOGY:
+        description: >-
+          Nobody knows; resolvable only by new experiments. This is the unknome and
+          the primary target of the Function Knowledge Gaps project.
+      CURATION:
+        description: >-
+          The knowledge exists in the literature but is not yet annotated, or is
+          annotated too generically. Resolvable by curation.
+      ONTOLOGY:
+        description: >-
+          The knowledge exists but no GO/ontology term can express it (e.g.
+          "structural subunit of complex X", or a novel activity). Resolvable by
+          ontology development; usually paired with proposed_new_terms.
+
+  KnowledgeGapAspectEnum:
+    description: >-
+      Which GO aspect (or pattern) is dark for a knowledge gap. Most "dark" genes
+      are not uniformly dark.
+    permissible_values:
+      MF_DARK:
+        description: >-
+          Process/location known, molecular mechanism unknown. The most common and
+          most insidious case — rich BP/CC make the gene look known. The
+          "protein binding" smell lives here.
+      BP_DARK:
+        description: An activity is known but not what it is for (common in microbial/plant metabolism).
+      CC_DARK:
+        description: Function known, but where/when unknown.
+      WHOLLY_DARK:
+        description: Only root terms / IEA / "protein binding" survive review (the deep unknome).
+      RESIDUAL_SUBGAP:
+        description: >-
+          The core function is textbook-solid, but one sharp, load-bearing
+          mechanistic hole remains (e.g. an unidentified GEF/GAP, a
+          catalysis-independent scaffolding mechanism, an unidentified recruit).
+          Easy to miss because the gene looks finished.
+
+  KnowledgeGapStatusEnum:
+    description: Lifecycle status of a knowledge gap, tracking progress toward resolution.
+    permissible_values:
+      OPEN:
+        description: Unresolved and not under active, evidence-producing investigation.
+      NARROWING:
+        description: Under active investigation with emerging but still incomplete evidence.
+      CLOSING:
+        description: >-
+          Function-defining evidence exists (e.g. recent preprints) but has not yet
+          propagated to peer-reviewed, GO-curated form.
+      RESOLVED:
+        description: The gap has been closed; retained for provenance/history.
 
   PublicationTypeEnum:
     description: >-
