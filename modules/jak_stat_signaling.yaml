@@ -776,6 +776,130 @@ module:
                         id: GO:0046426
                         label: negative regulation of receptor signaling pathway via JAK-STAT
                   role_description: Restrains nuclear STAT activity, adding a nuclear layer of negative control.
+    - order: 8
+      role: branch-point interfaces and cross-talk (sidecar pathways)
+      optional: true
+      node:
+        id: jak_stat_branch_interfaces
+        label: Branch-point interfaces to parallel pathways
+        module_type: REGULATORY_STEP
+        description: >-
+          The same ligand-activated receptor/JAK complex that drives STAT
+          activation also branches into parallel "sidecar" pathways, and the
+          STATs receive convergent inputs from them. These interfaces are not part
+          of the canonical STAT trunk; each forks off the activated receptor and
+          is curated as its own reusable module. Modeled here as interface nodes
+          plus connections so the cross-talk is explicit without inlining the
+          sidecar mechanisms.
+        notes: >-
+          Sidecar modules: MODULE:ras_mapk_cascade and MODULE:pi3k_akt_mtor. Both
+          are reusable and are deployed by many other receptor systems (RTKs,
+          GPCRs, integrins), which is why they are separate module documents rather
+          than parts of this pathway. Additional non-canonical interfaces noted
+          but not separately moduled: receptor-tyrosine-kinase- / Src- / GPCR-driven
+          STAT activation that bypasses cytokine receptors, and non-canonical STAT
+          outputs (unphosphorylated-STAT signaling, STAT3-NF-kB cross-talk,
+          mitochondrial STAT3).
+        parts:
+          - order: 1
+            role: Ras-MAPK fork off the activated receptor
+            node:
+              id: mapk_branch_interface
+              label: Ras-MAPK branch interface
+              module_type: REGULATORY_STEP
+              description: >-
+                JAK-phosphorylated receptor tyrosines recruit GRB2/SHC adaptors
+                and fork into the Ras-RAF-MEK-ERK cascade in parallel with STAT
+                activation. ERK additionally converges back onto the STATs by
+                phosphorylating their C-terminal serine (e.g. STAT1/STAT3 Ser727)
+                to modulate maximal transcriptional activity. See
+                MODULE:ras_mapk_cascade.
+              concepts:
+                - preferred_term: MAPK cascade
+                  term:
+                    id: GO:0000165
+                    label: MAPK cascade
+                  description: Reusable Ras-RAF-MEK-ERK cascade; curated as MODULE:ras_mapk_cascade.
+              annotons:
+                - id: erk_stat_serine_feedback
+                  label: ERK serine phosphorylation of STATs
+                  participant:
+                    selector_type: ANY_WITH_FUNCTION
+                    required_function:
+                      preferred_term: MAP kinase activity
+                      term:
+                        id: GO:0004707
+                        label: MAP kinase activity
+                    description: ERK1/ERK2 (and other Ser kinases) acting on STAT C-terminal serine.
+                  function:
+                    preferred_term: peptidyl-serine phosphorylation
+                    term:
+                      id: GO:0018105
+                      label: peptidyl-serine phosphorylation
+                    targets:
+                      - preferred_term: STAT C-terminal serine (e.g. STAT1/STAT3 Ser727)
+                  role_description: Convergent input that tunes STAT transcriptional output.
+          - order: 2
+            role: PI3K-AKT fork off the activated receptor
+            node:
+              id: pi3k_branch_interface
+              label: PI3K-AKT-mTOR branch interface
+              module_type: REGULATORY_STEP
+              description: >-
+                JAK-phosphorylated receptor tyrosines (frequently via IRS-1/IRS-2
+                adaptors, e.g. for IL-4 and growth-hormone receptors) recruit
+                class I PI3K and fork into the PI3K-AKT-mTOR survival/growth axis
+                in parallel with STAT activation. See MODULE:pi3k_akt_mtor.
+              concepts:
+                - preferred_term: phosphatidylinositol 3-kinase/protein kinase B signal transduction
+                  term:
+                    id: GO:0043491
+                    label: phosphatidylinositol 3-kinase/protein kinase B signal transduction
+                  description: Reusable PI3K-AKT-mTOR axis; curated as MODULE:pi3k_akt_mtor.
+              annotons:
+                - id: pi3k_branch_recruitment
+                  label: PI3K recruitment at the cytokine receptor
+                  participant:
+                    selector_type: FAMILY
+                    family:
+                      preferred_term: class I PI3K (p110/p85) with IRS adaptors
+                      description: PI3K recruited to receptor/IRS phosphotyrosines downstream of JAK activation.
+                  function:
+                    preferred_term: insulin receptor substrate binding
+                    term:
+                      id: GO:0043560
+                      label: insulin receptor substrate binding
+                  role_description: Couples the activated cytokine receptor to the PI3K-AKT sidecar.
+          - order: 3
+            role: alternative (JAK-independent) inputs into STAT activation
+            node:
+              id: alt_stat_inputs
+              label: RTK / Src / GPCR inputs into STATs
+              module_type: REGULATORY_STEP
+              description: >-
+                STATs (especially STAT3 and STAT5) can be tyrosine-phosphorylated
+                independently of cytokine-receptor JAKs by receptor tyrosine
+                kinases (EGFR, PDGFR), non-receptor kinases (c-Src, BCR-ABL), and
+                downstream of GPCRs - a major route of STAT activation in cancer.
+                Represented as an alternative input interface, not part of the
+                canonical cytokine-receptor trunk.
+              annotons:
+                - id: rtk_src_stat_input
+                  label: RTK/Src tyrosine phosphorylation of STATs
+                  participant:
+                    selector_type: ANY_WITH_FUNCTION
+                    required_function:
+                      preferred_term: protein tyrosine kinase activity
+                      term:
+                        id: GO:0004713
+                        label: protein tyrosine kinase activity
+                    description: EGFR/PDGFR (RTKs) and c-Src/BCR-ABL (non-receptor) tyrosine kinases.
+                  processes:
+                    - preferred_term: tyrosine phosphorylation of STAT protein
+                      term:
+                        id: GO:0007260
+                        label: tyrosine phosphorylation of STAT protein
+                  role_description: JAK-independent activation of STATs, converging on the same STAT trunk.
   connections:
     - source: ligand_receptor_engagement
       target: jak_activation
@@ -809,3 +933,19 @@ module:
       target: socs_feedback
       connection_type: CAUSES
       description: STAT-driven transcription induces SOCS/CIS genes, closing the negative-feedback loop.
+    - source: receptor_phosphorylation
+      target: mapk_branch_interface
+      connection_type: PROVIDES_INPUT_FOR
+      description: Receptor phosphotyrosines recruit GRB2/SHC and fork into the Ras-MAPK sidecar (MODULE:ras_mapk_cascade).
+    - source: receptor_phosphorylation
+      target: pi3k_branch_interface
+      connection_type: PROVIDES_INPUT_FOR
+      description: Receptor/IRS phosphotyrosines recruit class I PI3K and fork into the PI3K-AKT sidecar (MODULE:pi3k_akt_mtor).
+    - source: mapk_branch_interface
+      target: stat_transcription
+      connection_type: POSITIVELY_REGULATES
+      description: ERK serine-phosphorylates STATs (e.g. Ser727), converging back to tune STAT transcriptional output.
+    - source: alt_stat_inputs
+      target: stat_recruitment_phosphorylation
+      connection_type: PROVIDES_INPUT_FOR
+      description: RTK/Src/GPCR tyrosine kinases can phosphorylate STATs independently of cytokine-receptor JAKs.
