@@ -92,6 +92,45 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
     compartments: nucleus vs cytoplasm, plasma membrane vs internal, one organelle vs
     another. This is the same "read the definition" trap as ATP7B's copper import.
 
+12. **Check taxon/lineage appropriateness for process terms.** The single biggest BP
+    error class is processes transferred across kingdoms to organisms where they don't
+    exist: inflammatory response on a mosquito Toll (from human TLR4), JAK-STAT on a
+    worm (no JAK), aerobic respiration on chloroplast NDH subunits, smell perception
+    on mosquito salivary OBP-fold proteins. The WITH/FROM naming a vertebrate/Drosophila
+    source is the tell; GO taxon constraints catch some. Always ask "does this process
+    occur in this lineage / this organelle system?"
+
+---
+
+## 2026-06-20 (d) — Fifth pass: biological-process cluster
+
+Triaged the 53 BP REMOVE candidates (44 genes). Verified each flagship against UniProt
++ WITH/FROM + (where cited) cached papers. Two new patterns, two reinforced.
+
+**New Pattern 14 — lineage-inappropriate / cross-kingdom process transfer** (largest BP
+class): TOLL9 inflammatory response ← human TLR4 (O00206); ndhA/D/K aerobic respiration
+(UniProt: chloroplastic NDH, plastid); che-3 cilium motility (dynein-2 IFT; worm cilia
+non-motile); D7r2/r4/r5/L1 smell perception (UniProt: blood-feeding salivary proteins);
+sta-2 JAK-STAT (no JAK in worms; from fly/mouse STATs); fshr-1 hormone signaling (no
+gonadotropins); HEN1 piRNA processing (plant; metazoan over-transfer); DpuGr29 male
+courtship (Drosophila-specific term).
+
+**New Pattern 15 — regulator/effector & direct/downstream conflation**: lys-7 (AMP
+effector, not a signal transducer); SIR3 (represses origins ≠ replication initiation);
+UBP3 (regulation of protein stability is downstream of its DUB activity).
+
+**Reinforced Pattern 8 (sub-activity)**: worm pseudo-sHSPs — hsp-12.3/hsp-12.6 have *no*
+chaperone activity (PMID:9744800 title verbatim), stronger than CRYAA. **Reinforced
+Pattern 12 (mis-grouping)**: opa1/eat-3 peroxisome fission on mitochondrial-fusion OPA1
+(DRP1-branch transfer); YAR1 transcription term on an RPS3-binding 40S-biogenesis factor;
+ACL4 mito-import by TOM70-family over-transfer; plus BP versions of the PIWI/germ-granule
+cluster (pgl-1 mRNA splicing/export, glh-4 SSU-rRNA maturation).
+
+**Noted but not separately featured (paralog conflation, already a known pattern):**
+mid1←mid2 (septin ring), Ang2←angiogenin/AMP paralogs, csr-1 (cell-differentiation IBA
+traceable to a nuclear-receptor node, not the Argonaute — a wrong-grouping case I left
+out pending tighter confirmation of the source).
+
 ---
 
 ## 2026-06-20 (c) — Fourth pass: the generic-localization cluster (two-sided)

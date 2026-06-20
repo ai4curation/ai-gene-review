@@ -113,7 +113,8 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 **Examples (REMOVE — verified)**:
 - **CAPG (human)** — `GO:0051014` (actin filament **severing**): CAPG caps but does **not** sever. The original characterization (cached PMID:1322908) states verbatim that CAPG *"reversibly blocks the barbed ends of actin filaments but does not sever preformed actin"*. The severing term over-extends from the gelsolin/villin family; CAPG retains capping only.
 - **human/CRYAA** — `GO:0042026` (protein **refolding**): αA-crystallin is an ATP-independent **holdase** that prevents aggregation but cannot refold clients. This one is corroborated **inside GOA itself**: there is an explicit curated `NOT|involved_in` (ISS) annotation to GO:0042026, which the IBA directly contradicts. UniProt describes only aggregation-prevention chaperone activity, no refolding.
-- **Lesson**: capping≠severing and holdase≠foldase are sub-activity distinctions that family-level IBA flattens. The CRYAA case is especially clean because a curator already negated the term.
+- **Worm small heat-shock proteins** — `GO:0042026` (protein refolding): a stronger version of the CRYAA case. hsp-16.2 is a holdase, not a foldase; and **hsp-12.3 / hsp-12.6 have *no* chaperone activity at all** — the title of PMID:9744800 is literally *"…Hsp12.2 and Hsp12.3 form tetramers and have no chaperone-like activity."* They are pseudo-sHSPs (tetramers/monomers rather than the large oligomers holdase function needs), so the family-level refolding IBA is fully refuted.
+- **Lesson**: capping≠severing and holdase≠foldase are sub-activity distinctions that family-level IBA flattens. The CRYAA and hsp-12.3 cases are especially clean because a curator negated the term (CRYAA) or a paper demonstrated zero activity (hsp-12.3).
 
 ### 9. Regulatory-Sign Inversion Within a Family
 
@@ -168,6 +169,8 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 - **ABRAXAS1 (human)** — `GO:0090307`/`GO:0008608`/`GO:0008017` (mitotic spindle assembly, spindle–kinetochore attachment, microtubule binding): every one of these IBAs traces via WITH/FROM to **`UniProtKB:Q15018` = ABRAXAS2** (ABRO1, the BRISC-complex paralog). ABRAXAS1 is a nuclear BRCA1-A DNA-damage scaffold; the spindle/MT biology belongs to ABRAXAS2.
 - **HINT2 (human)** — `GO:0005737` (cytoplasm): HINT2 has a mitochondrial targeting sequence and is mitochondrial; the cytoplasm term reflects the **HINT1** paralog.
 - **CPT1C** (above) similarly inherits CPT1A/B metabolism it no longer performs.
+- **opa1 (zebrafish) / eat-3 (worm)** — `GO:0016559` (peroxisome fission): both are UniProt *"Dynamin-like GTPase OPA1, mitochondrial"* inner-membrane **fusion** proteins. Peroxisome fission is done by the DRP1/DNM1L branch of the dynamin superfamily; the term is a within-superfamily mis-transfer (wrong organelle *and* wrong direction).
+- **YAR1 (yeast)** — `GO:0045944` (positive regulation of transcription): YAR1 is an RPS3-binding 40S-ribosome-biogenesis factor (UniProt: interacts with RPS3), not a transcription activator; **ACL4 (yeast)** likewise gets mitochondrial-import terms by TOM70-family over-transfer despite being an Rpl4 chaperone.
 - **Lesson**: **always read the WITH/FROM before flagging.** It tells you whether the IBA is a defensible family-level transfer or a traceable mis-grouping — and if a single paralog or out-of-family protein is the source, that is strong, near-mechanical evidence of error.
 
 ### 13. Generic / Mutually-Exclusive Compartment Over-Propagation
@@ -187,6 +190,30 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 - **Self-correction**: HINT2's "cytoplasm" flag (added in the WITH/FROM pass) belongs here too — HINT2 is mitochondrial, but mitochondrion ⊂ cytoplasm, so cytoplasm is not strictly wrong; downgraded from the findings.
 
 **Lesson**: before a localization REMOVE, place both compartments in the GO hierarchy. Mutually-exclusive (nucleus vs cytoplasm; PM vs internal; one organelle vs another) → valid. A broad subsuming term over a more specific true location (cytoplasm over any organelle; membrane over a membrane protein) → leave it.
+
+### 14. Lineage-Inappropriate (Cross-Kingdom) Process Transfer
+
+**The Problem**: Phylogenetic inference crosses kingdom/clade boundaries and lands a biological-process term on an organism where **the process does not exist** — or where the homolog was repurposed into a different system. The WITH/FROM typically names a vertebrate or *Drosophila* source. This is one of the largest and cleanest BP error classes.
+
+**Examples (REMOVE — verified via UniProt + WITH/FROM):**
+- **TOLL9 (mosquito, ANOGA)** — `GO:0006954` (inflammatory response): the IBA traces to **human TLR4 (O00206)** and other mammalian TLRs. Insects have Toll-pathway innate immunity but no vertebrate inflammation (no vasculature, immune-cell infiltration); the term is lineage-inappropriate.
+- **ndhA / ndhD / ndhK (poplar, POPTR)** — `GO:0009060` (aerobic respiration): UniProt labels these *"NAD(P)H-quinone oxidoreductase, **chloroplastic**"* (`OG Plastid; Chloroplast`). They are photosynthetic plastid NDH subunits homologous to mitochondrial complex I — an **organelle-system swap**, not mitochondrial respiration.
+- **che-3 (worm)** — `GO:0060294` (cilium movement involved in cell motility): che-3 is cytoplasmic **dynein-2** (retrograde IFT motor); *C. elegans* sensory cilia are **non-motile**. The motility term comes from axonemal-dynein orthologs in organisms with motile cilia.
+- **D7 salivary proteins (mosquito, ANOGA: D7r2/D7r4/D7r5/D7L1)** — `GO:0007608` (sensory perception of smell): UniProt calls D7r4 a *"salivary protein… modulates blood feeding,"* female-saliva-specific. The OBP/PBP-GOBP fold was repurposed for binding biogenic amines/eicosanoids in saliva — these proteins are not expressed in antennae and have no olfactory role.
+- **sta-2 (worm)** — `GO:0007259` (JAK-STAT signaling): transferred from fly/mammalian STATs, but *C. elegans* has **no JAK kinases**; STA-2 is activated via SNF-12/hemidesmosomes.
+- **fshr-1 (worm)** — `GO:0009755` (hormone-mediated signaling): *C. elegans* lacks gonadotropins (FSH/LH/TSH); FSHR-1 functions in innate immunity/stress.
+- **HEN1 (Arabidopsis)** — `GO:0034587` (piRNA processing): piRNAs are metazoan; plant HEN1 methylates miRNA/siRNA duplexes. Over-transfer from the metazoan HEN1/HENMT1 context.
+- **Lesson**: check **taxon appropriateness** — does the process even occur in this lineage? GO taxon constraints catch some of these; the WITH/FROM naming a vertebrate/insect source is the tell. Watch especially for organelle-system swaps (plastid↔mitochondrion; cytoplasmic↔axonemal dynein).
+
+### 15. Regulator / Effector and Direct / Downstream Conflation
+
+**The Problem**: IBA (and curation generally) can blur the line between a **regulator or effector** of a process and the **core machinery**, or between a **downstream consequence** and the **direct function**.
+
+**Examples (verified):**
+- **lys-7 (worm)** — `GO:0007165` (signal transduction): LYS-7 is an antimicrobial **effector** whose expression is regulated *by* signaling; it is not itself a signaling component. (Same logical error as arnF's "response to iron" — see §arnF.)
+- **SIR3 (yeast)** — `GO:0006270` (DNA replication initiation): SIR3 **represses** origin firing (negative regulation of MCM loading), the opposite of being part of the initiation machinery (ORC/CDC6/CDT1/MCM2-7).
+- **UBP3 (yeast)** — `GO:0031647` (regulation of protein stability): a downstream *consequence* of its deubiquitinase activity (`GO:0004843`, the direct function), not a separate function.
+- **Lesson**: distinguish "does X" from "regulates/enables/results-in X." Effectors are not signal transducers; repressors are not part of the machinery they inhibit; downstream consequences are not direct molecular functions.
 
 ## Featured Examples
 
@@ -359,6 +386,15 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 | BAIAP2L2, PIK3C3 | human | Nucleoplasm / peroxisome on membrane / autophagy protein | LOW | COMPLETE |
 | SCGB1A1 | human | Cytoplasm on a secreted (extracellular) protein | LOW | COMPLETE |
 | rqh1, HDA1 | SCHPO, yeast | Cytoplasm on strictly nuclear proteins | LOW | COMPLETE |
+| TOLL9 | ANOGA | Cross-kingdom: inflammatory response from vertebrate TLR4 | MEDIUM | COMPLETE |
+| ndhA/ndhD/ndhK | POPTR | Organelle swap: chloroplast NDH annotated as mito respiration | MEDIUM | COMPLETE |
+| che-3 | worm | Cross-lineage: cilium motility on non-motile sensory cilia (IFT dynein) | MEDIUM | COMPLETE |
+| D7r2/D7r4/D7r5/D7L1 | ANOGA | Cross-function: smell perception on repurposed salivary OBP-fold | MEDIUM | COMPLETE |
+| sta-2, fshr-1 | worm | Cross-kingdom: JAK-STAT / hormone signaling absent in nematodes | MEDIUM | COMPLETE |
+| opa1, eat-3 | DANRE, worm | Mis-grouping: peroxisome fission on mito-fusion OPA1 | MEDIUM | COMPLETE |
+| hsp-12.3/hsp-12.6 | worm | Pseudo-sHSP: refolding, but "no chaperone-like activity" (PMID:9744800) | HIGH | COMPLETE |
+| YAR1, ACL4 | yeast | Family over-transfer (Rps3 biogenesis factor; Rpl4 chaperone) | LOW | COMPLETE |
+| SIR3, lys-7, UBP3 | yeast, worm | Regulator/effector & downstream conflation | LOW | COMPLETE |
 
 ## Recommendations for IBA Curation
 
