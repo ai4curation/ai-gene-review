@@ -11,7 +11,7 @@ Sequences for the target genes come from the repo's local *-uniprot.txt files.
 Reference active enzymes and catalytic-residue POSITIONS are pulled live from the
 UniProt REST API (feature tables) so nothing is hardcoded/guessed. Alignment by FAMSA.
 """
-import re, json, sys, urllib.request
+import re, json, urllib.request
 from pyfamsa import Aligner, Sequence
 
 REPO = "../../.."
