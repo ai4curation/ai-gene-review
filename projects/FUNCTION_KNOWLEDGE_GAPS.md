@@ -137,7 +137,10 @@ A `KnowledgeGap` (see `src/ai_gene_review/schema/gene_review.yaml`) carries:
 - `provenance` — a list of `SupportingTextInReference`, so each "the field's own admission of
   ignorance" quote is a **verbatim substring checked by the reference validator**, exactly like
   `supported_by`. (When the only source is a DOI-only paper or a local analysis, anchor to a
-  `file:` reference, as elsewhere in this repo.)
+  `file:` reference, as elsewhere in this repo.) **Caveat:** only PMID/PMC-style references are
+  verbatim-checked; `file:` (and the other `skip_prefixes` in
+  `conf/reference_validator_config.yaml`) are *not* quote-checked, so a `file:`-anchored quote
+  such as RAB9A's must be verified by hand. Prefer a checkable PMID quote where one exists.
 - `proposed_terms` — inline `ProposedOntologyTerm`s for `ONTOLOGY` gaps.
 
 It can be attached at five levels — the whole gene (`GeneReview.knowledge_gaps`), a single
