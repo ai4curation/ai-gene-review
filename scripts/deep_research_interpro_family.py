@@ -35,6 +35,44 @@ import yaml
 DEFAULT_TIMEOUT = 1800
 TEMPLATE = "templates/interpro_family_research.md"
 
+# Markers that a deep-research run completed (exit 0, file written) but produced an
+# UNGROUNDED report -- the retrieval backend returned no evidence, so the body is the
+# bare model's guess rather than a literature-grounded review. Treated as a failure.
+UNGROUNDED_MARKERS = (
+    "no contexts were retrieved",
+    "Analysis incomplete due to technical failures",
+    "not grounded in evidence",
+)
+
+
+def is_grounded(report_text: str) -> bool:
+    """Return True if a deep-research report looks evidence-grounded.
+
+    A report is considered ungrounded if it carries any of the explicit failure markers
+    the client emits when retrieval returned nothing (the model answers from its own
+    weights instead of cited sources).
+
+    Examples:
+        >>> is_grounded("## 5. Verdict\\nGO:0005524 ACCEPT (kim2021 pages 1-2)")
+        True
+        >>> is_grounded("Warning: no contexts were retrieved, so this answer is not grounded in evidence")
+        False
+        >>> is_grounded("Analysis incomplete due to technical failures preventing evidence extraction")
+        False
+    """
+    return not any(marker in report_text for marker in UNGROUNDED_MARKERS)
+
+
+def _discard_ungrounded(output_path: Path) -> None:
+    """Remove an ungrounded report and its sibling artifacts directory."""
+    artifacts = output_path.with_name(f"{output_path.stem}_artifacts")
+    if output_path.exists():
+        output_path.unlink()
+    if artifacts.is_dir():
+        import shutil
+
+        shutil.rmtree(artifacts)
+
 
 def _strip_html(text: str) -> str:
     """Cheap tag/whitespace strip for InterPro description blocks."""
@@ -172,6 +210,7 @@ def run(
     fallback: Optional[list[str]],
     timeout: int,
     extra_args: Optional[list[str]],
+    retries: int = 1,
 ) -> int:
     metadata_path = ensure_metadata(interpro_id, database)
     context = load_family_context(metadata_path)
@@ -182,20 +221,34 @@ def run(
         output_path = family_dir / f"{interpro_id}-deep-research-{prov}.md"
         cmd = build_cmd(context, prov, output_path, extra_args)
         label = f"[fallback {i}] " if i else ""
-        print(f"{label}Running: {' '.join(cmd)}")
-        print(f"{label}Timeout: {timeout}s")
-        try:
-            result = subprocess.run(cmd, timeout=timeout)
-            if result.returncode == 0:
-                print(f"✅ Wrote {output_path}")
-                return 0
-            print(f"Provider {prov} exited with code {result.returncode}", file=sys.stderr)
-        except subprocess.TimeoutExpired:
-            print(f"Provider {prov} timed out after {timeout}s", file=sys.stderr)
+        for attempt in range(1, retries + 1):
+            suffix = f" (attempt {attempt}/{retries})" if retries > 1 else ""
+            print(f"{label}Running{suffix}: {' '.join(cmd)}")
+            print(f"{label}Timeout: {timeout}s")
+            try:
+                result = subprocess.run(cmd, timeout=timeout)
+            except subprocess.TimeoutExpired:
+                print(f"Provider {prov} timed out after {timeout}s", file=sys.stderr)
+                continue
+            if result.returncode != 0:
+                print(f"Provider {prov} exited with code {result.returncode}", file=sys.stderr)
+                continue
+            # Groundedness guard: a 0 exit + written file is NOT enough -- the report can
+            # be an ungrounded "no contexts retrieved" stub. Reject and retry/fallback.
+            if not (output_path.exists() and is_grounded(output_path.read_text(encoding="utf-8"))):
+                print(
+                    f"⚠️  Provider {prov} produced an UNGROUNDED report (no retrieved evidence); "
+                    f"discarding {output_path}",
+                    file=sys.stderr,
+                )
+                _discard_ungrounded(output_path)
+                continue
+            print(f"✅ Wrote {output_path}")
+            return 0
         if i < len(providers_to_try) - 1:
             print(f"Trying fallback provider: {providers_to_try[i + 1]}", file=sys.stderr)
 
-    print("All providers failed", file=sys.stderr)
+    print("All providers failed to produce a grounded report", file=sys.stderr)
     return 1
 
 
@@ -211,6 +264,13 @@ def main() -> int:
     parser.add_argument("--database", default="interpro", help="Source database (default: interpro)")
     parser.add_argument("--fallback", nargs="+", metavar="PROVIDER", help="Fallback providers")
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=1,
+        help="Attempts per provider before falling back (a run that finishes but is "
+        "ungrounded counts as a failed attempt). Default: 1.",
+    )
     parser.add_argument("--extra-args", nargs=argparse.REMAINDER, help="Extra args for deep-research-client")
     args = parser.parse_args()
 
@@ -221,6 +281,7 @@ def main() -> int:
         fallback=args.fallback,
         timeout=args.timeout,
         extra_args=args.extra_args,
+        retries=args.retries,
     )
 
 
