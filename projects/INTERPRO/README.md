@@ -19,9 +19,20 @@ Supporting material for the [InterPro Mapping Review project](../INTERPRO.md).
   it produced an accepted vs a suspect mapping across all reviewed genes. This is the
   ranked worklist for family-level deep research (entries that repeatedly produce
   suspect mappings first).
-- `interpro-family-research-template.md` — the deep-research template for an individual
-  InterPro family/domain (the InterPro analogue of the PANTHER family workflow). Copy to
-  `interpro/interpro/<IPRxxxxxx>/<IPRxxxxxx>-notes.md` and fill in.
+## Family deep research (generated process)
+
+Family deep research is generated, not hand-written. It is wired the same way as gene
+deep research:
+
+- `templates/interpro_family_research.md` — the deep-research prompt template.
+- `scripts/deep_research_interpro_family.py` — wrapper that loads the cached InterPro
+  metadata as context and runs `deep-research-client`.
+- `just deep-research-interpro-family <IPR> <provider>` — the recipe (in
+  `project.justfile`). Output: `interpro/<db>/<ID>/<ID>-deep-research-<provider>.md`.
+
+```bash
+just deep-research-interpro-family IPR000719 perplexity
+```
 
 ## Regenerate
 

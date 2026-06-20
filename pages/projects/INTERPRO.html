@@ -361,8 +361,10 @@ then inherits <strong>all</strong> of the entry's terms, with no subfamily resol
    correction). This is the InterPro analogue of the <a href="IBA_REVIEW.html">IBA Annotation Review</a><br />
    and <a href="OVER_ANNOTATION_PATTERNS.html">Over-Annotation Patterns</a> projects.</li>
 <li><strong>Deep-research the families themselves.</strong> For PANTHER, <code>just fetch-gene</code> already<br />
-   auto-caches the family into <code>interpro/panther/&lt;FAM&gt;/</code>. There was <strong>no equivalent<br />
-   workflow for InterPro entries</strong> — the gap this project closes (see<br />
+   auto-caches the family into <code>interpro/panther/&lt;FAM&gt;/</code>, and gene deep research is a<br />
+   generated process (<code>just deep-research-perplexity ...</code>). There was <strong>no equivalent<br />
+   deep-research process for InterPro entries</strong> — the gap this project closes by adding a<br />
+<code>just deep-research-interpro-family</code> recipe (see<br />
 <a href="#family-level-deep-research">Family deep research</a> below).</li>
 </ol>
 <h2 id="why-interpro2go-over-annotates">Why InterPro2GO over-annotates</h2>
@@ -499,19 +501,27 @@ the deep-research worklist:</p>
 activity</code> from IPR000719; reviewed as <strong>MODIFY → <a href="http://amigo.geneontology.org/amigo/term/GO:0004675">GO:0004675</a></strong> (transmembrane receptor<br />
 ser/thr kinase activity), and its <code>GO:0005524 ATP binding</code> as <strong>KEEP_AS_NON_CORE</strong>.</p>
 <h2 id="family-level-deep-research">Family-level deep research</h2>
-<p>The metadata fetcher already supports the <code>interpro</code> database — it just was never wired<br />
-into a research workflow. To research a family:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># fetch the InterPro entry (type, hierarchy, member DBs, InterPro2GO terms, literature)</span>
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/ai_gene_review/tools/fetch_interpro_family_simple.py<span class="w"> </span>interpro<span class="w"> </span>IPR000719<span class="w"> </span>--output-dir<span class="w"> </span>.
-<span class="c1"># add --include-proteins for the reviewed-member CSV (taxonomic / paralog scoping)</span>
+<p>Family deep research is a <strong>generated process</strong>, the same as gene deep research — not a<br />
+hand-written file. The new recipe drives <code>deep-research-client</code> with a dedicated<br />
+InterPro-family prompt template:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># generates interpro/interpro/IPR000719/IPR000719-deep-research-perplexity.md</span>
+just<span class="w"> </span>deep-research-interpro-family<span class="w"> </span>IPR000719<span class="w"> </span>perplexity
+just<span class="w"> </span>deep-research-interpro-family<span class="w"> </span>IPR001128<span class="w"> </span>openai<span class="w"> </span>--fallback<span class="w"> </span>perplexity-lite
+just<span class="w"> </span>deep-research-interpro-family<span class="w"> </span>PTHR10314<span class="w"> </span>perplexity<span class="w"> </span>--database<span class="w"> </span>panther
 </code></pre></div>
 
-<p>This caches <code>interpro/interpro/&lt;IPRxxxxxx&gt;/&lt;IPRxxxxxx&gt;-metadata.yaml</code>, whose <code>go_terms</code><br />
-field is exactly the set of mappings under review. Then copy<br />
-<a href="INTERPRO/interpro-family-research-template.html"><code>INTERPRO/interpro-family-research-template.md</code></a><br />
-to <code>interpro/interpro/&lt;IPRxxxxxx&gt;/&lt;IPRxxxxxx&gt;-notes.md</code> and write up the family: its<br />
-InterPro <code>type</code>, whether each InterPro2GO term holds for <em>all</em> members, functional<br />
-divergence across subfamilies, taxonomic scope, and the recommended GO action pattern.</p>
+<p>How it is wired (the InterPro analogue of <code>just deep-research-perplexity</code>):</p>
+<ul>
+<li><code>templates/interpro_family_research.md</code> — the deep-research prompt, focused on judging<br />
+  whether each InterPro2GO term is appropriate for <em>all</em> members, plus subfamily<br />
+  divergence, pseudo-enzymes, and taxonomic scope.</li>
+<li><code>scripts/deep_research_interpro_family.py</code> — wrapper that auto-fetches/loads the cached<br />
+<code>interpro/&lt;db&gt;/&lt;ID&gt;/&lt;ID&gt;-metadata.yaml</code> as context (entry type, InterPro2GO terms,<br />
+  member databases, description) and runs the provider, writing<br />
+<code>interpro/&lt;db&gt;/&lt;ID&gt;/&lt;ID&gt;-deep-research-&lt;provider&gt;.md</code>.</li>
+<li>The metadata fetcher already supported the <code>interpro</code> database; it just had no<br />
+  research process wired on top — that is the gap this closes.</li>
+</ul>
 <p>A worked starting point (<code>IPR000719</code>, Protein kinase domain) is already cached. Its<br />
 InterPro2GO terms are <code>GO:0005524 ATP binding</code> and <code>GO:0006468 protein phosphorylation</code><br />
 — both generic, which is exactly why genes matching it are repeatedly MODIFY'd to<br />
@@ -540,9 +550,11 @@ specific kinase-activity children or marked non-core.</p>
 <h2 id="workstream-2-family-deep-research">Workstream 2 — family deep research</h2>
 <ul>
 <li>[x] Confirmed the metadata fetcher supports <code>interpro</code> (IPR) entries</li>
-<li>[x] Family deep-research template (<code>interpro-family-research-template.md</code>)</li>
+<li>[x] Generated deep-research process: <code>templates/interpro_family_research.md</code>,<br />
+<code>scripts/deep_research_interpro_family.py</code>, and the<br />
+<code>just deep-research-interpro-family</code> recipe</li>
 <li>[x] Seed example cached (<code>interpro/interpro/IPR000719/</code>)</li>
-<li>[ ] Write <code>&lt;IPR&gt;-notes.md</code> deep-research files for the top entries</li>
+<li>[ ] Run <code>just deep-research-interpro-family &lt;IPR&gt; &lt;provider&gt;</code> for the top entries</li>
 </ul>
 <p>Last updated: 2026-06-20</p>
 <h1 id="notes">NOTES</h1>
@@ -552,11 +564,14 @@ extractor and the per-entry priority worklist from all 2732 reviewed genes: 3652
 InterPro2GO annotations, 47% flagged suspect across 1826 InterPro entries. Broad<br />
 domain/superfamily signatures dominate the suspect list (protein kinase domain, P450,<br />
 Cu/Zn SOD, GPCR), confirming the "fold ≠ function" failure mode as the main driver.</p>
-<p><strong>Closed the PANTHER-vs-InterPro template gap.</strong> <code>fetch-gene</code> auto-caches PANTHER<br />
-families but not the InterPro entries behind InterPro2GO annotations. Verified<br />
-<code>fetch_interpro_family_simple.py interpro &lt;IPR&gt;</code> already works, cached <code>IPR000719</code> as a<br />
-worked example, and wrote a dedicated InterPro family deep-research template so the<br />
-families can be researched the same way PANTHER families are.</p>
+<p><strong>Closed the PANTHER-vs-InterPro deep-research gap.</strong> Gene deep research is a generated<br />
+process (<code>just deep-research-&lt;provider&gt;</code>); there was no equivalent for the InterPro<br />
+entries behind InterPro2GO annotations. Added the InterPro-family analogue —<br />
+<code>templates/interpro_family_research.md</code>, <code>scripts/deep_research_interpro_family.py</code>, and<br />
+the <code>just deep-research-interpro-family &lt;IPR&gt; &lt;provider&gt;</code> recipe — so families are<br />
+researched by the same generated pipeline (output:<br />
+<code>interpro/&lt;db&gt;/&lt;ID&gt;/&lt;ID&gt;-deep-research-&lt;provider&gt;.md</code>), with <code>IPR000719</code> cached as a<br />
+seed.</p>
     </div>
 
     <footer>
