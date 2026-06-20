@@ -141,6 +141,16 @@ child) from this expected altitude difference.
 | G5 | Specificity-collapse | 679 terms, up to 67:1 | GO lacks substrate-specific MF children → many reactions flatten to one term |
 | G6 | Reverse-propagation gap | pilot below | UniProt RHEA annotations whose mapped GO term never reaches GOA |
 
+**Worked case reviews** of this gap on real Swiss-Prot enzymes — where a RHEA
+reaction has no `rhea2go` mapping and the GO molecular function is missing or
+only a class root — are in [RHEA-GAP-CASES.md](RHEA/RHEA-GAP-CASES.md): **PHYKPL**
+(MF = only `lyase activity`; propose new term), **B3GALNT2** (class-level
+GalNAc-T; propose new term; dystroglycanopathy gene), **SAMD8/SMSr** (the
+existing term `GO:0002950 ceramide phosphoethanolamine synthase activity` is
+simply not applied — pure propagation gap), and **SULT6B1** (only
+`sulfotransferase activity`; cautious fill given by-similarity evidence). Cases
+selected reproducibly by [`rhea_gap_finder.py`](RHEA/rhea_gap_finder.py).
+
 G1/G4 are mirror images: where EC and RHEA agree RHEA is redundant; where RHEA
 has no GO term EC usually still carries the protein at coarser EC granularity —
 so most gaps are **specificity** gaps (right activity, coarse GO representation),
