@@ -99,12 +99,14 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 **The Problem**: The Epe1 pseudo-demethylase case is not isolated. Catalytic-residue loss with fold retention recurs across human families, and IBA repeatedly transfers the ancestral enzymatic activity to the catalytically dead member. These are the **most defensible** REMOVE calls, because the catalytic deficiency is independently documented in UniProt.
 
 **Examples (REMOVE — each verified against the UniProt record, not just the review)**:
-- **DPYSL2 / CRMP1 / DPYSL3** — `GO:0016812` (metallo-hydrolase activity, cyclic amides): the CRMP/dihydropyrimidinase-like proteins are explicitly flagged by UniProt CAUTION — *"Lacks most of the conserved residues that are essential for binding the metal cofactor and hence for dihydropyrimidinase activity."* They are non-catalytic cytoskeletal regulators.
-- **AGO4** — `GO:0004521` (RNA endonuclease activity): UniProt FUNCTION states directly that AGO4 *"Lacks endonuclease activity and does not appear to cleave target mRNAs"* — only AGO2 is the catalytic slicer in humans.
+- **DPYSL2 / CRMP1 / DPYSL3** — `GO:0016812` (metallo-hydrolase activity, cyclic amides): the CRMP/dihydropyrimidinase-like proteins are explicitly flagged by UniProt CAUTION — *"Lacks most of the conserved residues that are essential for binding the metal cofactor and hence for dihydropyrimidinase activity."* **Confirmed first-hand by MSA** ([msa/RESULTS.md](IBA_REVIEW/msa/RESULTS.md)): aligned against active dihydropyrimidinase (DPYS), all five CRMP/DPYSL paralogs have lost the carbamylated catalytic Lys (K159→L/M/Q) plus multiple Zn-coordinating His/Asp. They are non-catalytic cytoskeletal regulators.
+- **AGO4** — `GO:0004521` (RNA endonuclease activity): UniProt FUNCTION states directly that AGO4 *"Lacks endonuclease activity and does not appear to cleave target mRNAs"* — only AGO2 is the catalytic slicer in humans. **MSA confirms** ([msa/RESULTS.md](IBA_REVIEW/msa/RESULTS.md)) AGO4 carries two substitutions in the catalytic tetrad (D669G, H807R) vs intact AGO2; usefully, the same alignment shows AGO3 *retains* the tetrad, so the "non-slicer" story is residue-specific, not a blanket family claim.
 - **UBAC2** — `GO:0004252` (serine-type endopeptidase activity): UBAC2 has a rhomboid-**like** fold (a known inactive-rhomboid/pseudoprotease clan) but UniProt attributes no protease function — its curated roles are as an ERAD/ER-phagy adaptor. *(Caveat: the absence of catalytic residues is inferred from the inactive-rhomboid classification and the lack of any curated protease activity, not from an explicit UniProt CAUTION.)*
 - **AKTIP** — `GO:0061631` (ubiquitin-conjugating enzyme activity): UniProt CAUTION states it *"Lacks the conserved Cys residue necessary for ubiquitin-[conjugating]"* activity. It is in the E2 PANTHER family (PTHR24067) and the IBA is inferred from many genuine UBE2 enzymes, but as a UEV-domain protein it is a catalytically dead pseudo-E2 (a component of the FTS/Hook/FHIP complex). A second annotation even records the NOT form.
-- **DPYSL4** — `GO:0016812`: a fourth CRMP-family member (Dihydropyrimidinase-related protein 4) carrying the same metallo-hydrolase IBA on the same basis as DPYSL2/3/CRMP1 — the whole CRMP/dihydropyrimidinase-*related* clade is non-catalytic; only true dihydropyrimidinase (DPYS) retains the activity.
-- **Lesson**: a degenerate/absent active site, **independently documented** (UniProt CAUTION/FUNCTION, missing catalytic residue), is the strongest single signal that an enzymatic IBA is wrong. Now represented by Epe1 (demethylase), the CRMP family DPYSL2/3/4/CRMP1 (amidohydrolase), AGO4 (slicer), UBAC2 (protease), and AKTIP (E2 ligase).
+- **DPYSL4** — `GO:0016812`: a fourth CRMP-family member (Dihydropyrimidinase-related protein 4) carrying the same metallo-hydrolase IBA on the same basis as DPYSL2/3/CRMP1 — the whole CRMP/dihydropyrimidinase-*related* clade is non-catalytic (see the MSA above); only true dihydropyrimidinase (DPYS) retains the activity.
+- **CASP12 (human)** — `GO:0004197` (cysteine-type endopeptidase activity): UniProt RecName is literally *"Inactive caspase-12."* Most humans carry a truncated, catalytically dead variant; the caspase-family protease IBA is over-propagated.
+- **Serpinh1/HSP47 (mouse)** — `GO:0004867` (serine-type endopeptidase inhibitor activity): the textbook **non-inhibitory serpin** — UniProt describes a collagen-specific ER molecular chaperone (*"Collagen-binding protein"*), not a protease inhibitor. The serpin-fold IBA propagates inhibitory activity HSP47 does not have.
+- **Lesson**: a degenerate/absent active site, **independently documented** (UniProt CAUTION/FUNCTION, an "Inactive"/non-inhibitory RecName, or — best — the missing catalytic residue seen in an MSA), is the strongest single signal that an enzymatic IBA is wrong. Now represented by Epe1 (demethylase), the CRMP family DPYSL2/3/4/CRMP1 (amidohydrolase), AGO4 (slicer), UBAC2 (protease), AKTIP (E2 ligase), CASP12 (protease), and HSP47 (protease inhibitor).
 
 ### 8. Partial Sub-Activity Loss Within a Multidomain Family
 
@@ -213,7 +215,8 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 - **lys-7 (worm)** — `GO:0007165` (signal transduction): LYS-7 is an antimicrobial **effector** whose expression is regulated *by* signaling; it is not itself a signaling component. (Same logical error as arnF's "response to iron" — see §arnF.)
 - **SIR3 (yeast)** — `GO:0006270` (DNA replication initiation): SIR3 **represses** origin firing (negative regulation of MCM loading), the opposite of being part of the initiation machinery (ORC/CDC6/CDT1/MCM2-7).
 - **UBP3 (yeast)** — `GO:0031647` (regulation of protein stability): a downstream *consequence* of its deubiquitinase activity (`GO:0004843`, the direct function), not a separate function.
-- **Lesson**: distinguish "does X" from "regulates/enables/results-in X." Effectors are not signal transducers; repressors are not part of the machinery they inhibit; downstream consequences are not direct molecular functions.
+- **sigF / sigG / sigK (*B. subtilis*)** — `GO:0003899` (DNA-directed RNA polymerase activity): these are **sigma initiation factors** (UniProt: *"initiation factors that promote…"* promoter recognition) — they confer promoter specificity to RNA polymerase but have **no catalytic polymerase activity**, which belongs to the core enzyme (RpoB/RpoC). A regulatory subunit assigned the **holoenzyme's** catalytic activity.
+- **Lesson**: distinguish "does X" from "regulates/enables/results-in X." Effectors are not signal transducers; repressors are not part of the machinery they inhibit; a specificity subunit does not carry the catalytic activity of the complex it joins; downstream consequences are not direct molecular functions.
 
 ## Featured Examples
 
@@ -395,6 +398,9 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 | hsp-12.3/hsp-12.6 | worm | Pseudo-sHSP: refolding, but "no chaperone-like activity" (PMID:9744800) | HIGH | COMPLETE |
 | YAR1, ACL4 | yeast | Family over-transfer (Rps3 biogenesis factor; Rpl4 chaperone) | LOW | COMPLETE |
 | SIR3, lys-7, UBP3 | yeast, worm | Regulator/effector & downstream conflation | LOW | COMPLETE |
+| CASP12 | human | Pseudo-enzyme (UniProt "Inactive caspase-12") | MEDIUM | COMPLETE |
+| Serpinh1/HSP47 | mouse | Pseudo-inhibitor (non-inhibitory serpin; collagen chaperone) | MEDIUM | COMPLETE |
+| sigF/sigG/sigK | BACSU | Subunit assigned holoenzyme catalytic activity (sigma ≠ RNA pol) | LOW | COMPLETE |
 
 ## Recommendations for IBA Curation
 
@@ -447,3 +453,7 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 This page records the **synthesized findings**. The dated project log, the per-pass
 verification narrative (what was added, what was retracted and why), and the
 **lessons learned** are kept separately in [IBA_REVIEW/HISTORY.md](IBA_REVIEW/HISTORY.md).
+
+A reproducible **multiple-sequence-alignment check** of the two central pseudo-enzyme
+claims (Argonaute catalytic tetrad; CRMP/DPYSL metal-coordinating residues) lives in
+[IBA_REVIEW/msa/](IBA_REVIEW/msa/RESULTS.md) — `uv run python catalytic_residue_msa.py`.

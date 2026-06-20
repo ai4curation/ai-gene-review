@@ -102,6 +102,37 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 ---
 
+## 2026-06-20 (e) — Final sweep + first actual MSAs
+
+**MSAs (finally — addressing the standing gap).** Through passes (a)–(d) I never built
+an alignment; "missing catalytic residue" rested on UniProt CAUTION text. Built a
+reproducible FAMSA pipeline ([msa/](msa/RESULTS.md), pyfamsa+biopython under `uv`) that
+pulls catalytic-residue *positions* live from UniProt feature tables and inspects them:
+- **Argonautes**: AGO2 tetrad intact (D/D/H); AGO4 has **two** substitutions (D669G,
+  H807R) → confirms no slicer activity. Bonus nuance: **AGO3 retains the tetrad**, so the
+  blanket "only AGO2 has the residues" framing would have been wrong — the MSA corrected it.
+- **CRMP/DPYSL**: all five paralogs have lost the carbamylated catalytic **Lys159** (→L/M/Q)
+  plus Zn-coordinating His/Asp vs active DPYS — first-hand confirmation of the CAUTION.
+This is the lesson-5 / lesson-9 method applied properly; cited from Pattern 7.
+
+**Final sweep of remaining ~38 REMOVE stragglers.** Added the clearly-verified ones:
+- Pseudo-enzyme (Pattern 7): **CASP12** (UniProt RecName "Inactive caspase-12") and
+  **Serpinh1/HSP47** (non-inhibitory serpin; collagen ER chaperone).
+- Regulator/effector (Pattern 15): **sigF/sigG/sigK** sigma factors given RNA-polymerase
+  catalytic activity — a specificity subunit assigned the holoenzyme's catalytic activity
+  (belongs to RpoB/RpoC).
+
+**Excluded for insufficient verification (discipline):** PGRPLC/PGRPS1 (the PGRP/amidase-2
+family has both catalytic and non-catalytic members; flagging amidase activity needs the
+same residue check I did for CRMP — not done). Left in backlog with UQCRC1.
+
+**Remaining backlog** is now heterogeneous singletons (e.g. lgg-1 GABA-receptor binding,
+ubl-5 protein-tag activity, bbs-1 patched/smoothened binding, CFTR basolateral PM,
+generic metal/calcium-binding over-annotations) — no further coherent clusters; returns
+have diminished.
+
+---
+
 ## 2026-06-20 (d) — Fifth pass: biological-process cluster
 
 Triaged the 53 BP REMOVE candidates (44 genes). Verified each flagship against UniProt
