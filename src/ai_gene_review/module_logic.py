@@ -48,7 +48,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterator, Optional, Union
+from typing import Callable, Iterator, Literal, Optional, Union
 
 import yaml
 
@@ -169,6 +169,12 @@ def enumerate_routes(circuit: Circuit) -> list[list[Atom]]:
 
     Each route picks exactly one branch per :class:`Or` node and includes every
     atom on the conjunctive backbone. Returns one atom-list per route.
+
+    Note: route count is the Cartesian product of branch counts across all OR
+    nodes, so it grows multiplicatively. Curated modules are small (<= tens of
+    routes); if this engine is ever applied to deeply nested / genome-scale module
+    sets, prefer satisfiability/gap queries (which do not materialise all routes)
+    over enumerating them, or add a route-count guard.
     """
     if isinstance(circuit, Atom):
         return [[circuit]]
@@ -226,6 +232,12 @@ def step_id(circuit: Circuit) -> str:
     return circuit.node_id
 
 
+#: The closed set of abduction outcomes (see :func:`abduce`).
+Classification = Literal[
+    "CONSISTENT_ACTIVE", "CONSISTENT_INACTIVE", "ABDUCTION_TARGET", "OVERPREDICTION"
+]
+
+
 @dataclass
 class Abduction:
     """Reconciliation of engine satisfiability with an independent activity claim.
@@ -237,7 +249,7 @@ class Abduction:
     does not yet capture. This object records that reconciliation.
     """
 
-    classification: str            # see classify() below
+    classification: Classification
     consistent: bool               # engine agrees with the asserted activity
     asserted_active: bool
     satisfiable: bool

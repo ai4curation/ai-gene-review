@@ -78,7 +78,7 @@ def write_cache(tissues: list[str], matrix: dict[str, dict[str, float]], path: P
     with path.open("w") as fh:
         fh.write("gene\t" + "\t".join(tissues) + "\n")
         for gene, expr in matrix.items():
-            fh.write(gene + "\t" + "\t".join(f"{expr.get(t, ''):}" for t in tissues) + "\n")
+            fh.write(gene + "\t" + "\t".join(str(expr.get(t, "")) for t in tissues) + "\n")
 
 
 def load_cache(path: Path = CACHE) -> tuple[list[str], dict[str, dict[str, float]]]:
