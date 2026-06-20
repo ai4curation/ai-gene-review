@@ -194,6 +194,9 @@ uv run python projects/INTERPRO/extract_suspect_interpro_mappings.py
 | IPR000276 | GPCR, rhodopsin-like (Class A) | family | `GPCR activity` + `GPCR signaling pathway` → MARK_AS_OVER_ANNOTATED / MODIFY (atypical chemokine + orphan receptors lack canonical G-protein coupling); `membrane` → KEEP_AS_NON_CORE |
 | IPR001046 | NRAMP / SLC11 metal transporter | family | `metal ion transmembrane transporter activity` + `metal ion transport` → ACCEPT as broad family terms; `membrane` → KEEP_AS_NON_CORE; do not add more specific terms at family level |
 | IPR012724 | Chaperone DnaJ (J-domain) | family | `ATP binding` → **REMOVE** (factually wrong — the Hsp70 *partner* binds ATP, not DnaJ); `protein folding` → ACCEPT; `response to heat` → KEEP_AS_NON_CORE (only heat-inducible subfamilies) |
+| IPR007197 | Radical SAM | domain | `catalytic activity` → **ACCEPT** despite being the MF *root* term — see note below; `iron-sulfur cluster binding` → ACCEPT (defining [4Fe-4S] cofactor) |
+| IPR020849 | Small GTPase, Ras-type | family | `GTP binding` → ACCEPT; **ADD `GTPase activity` (GO:0003924)** — proposed new mapping (annotation gain); `signal transduction` → demote to subfamily (GO:0007265); `membrane` → MARK_AS_OVER_ANNOTATED |
+| IPR002100 | Transcription factor, MADS-box | domain | `DNA binding` + `protein dimerization activity` → ACCEPT (both domain-intrinsic). Notably **do NOT add** `DNA-binding TF activity` — TF function is a whole-protein property (K/C domains + complex), not the MADS domain |
 
 - [ ] Run `just deep-research-interpro-family <IPR>` (falcon/Edison default) for the next entries
 
@@ -217,6 +220,30 @@ the `just deep-research-interpro-family <IPR> [provider]` recipe (provider defau
 `falcon`/Edison) — so families are researched by the same generated pipeline (output:
 `interpro/<db>/<ID>/<ID>-deep-research-<provider>.md`), with `IPR000719` cached as a
 seed.
+
+**Batch 2 + first proposed new mapping.** Researched 6 more families; 3 grounded cleanly
+(Radical SAM, Ras-type small GTPase, MADS-box) and are in the SSSOM (now 25 mappings).
+Notable findings:
+
+- **Genericity ≠ wrongness (Radical SAM, IPR007197).** I predicted the MF *root* term
+  `catalytic activity` would be a REMOVE. The research says **ACCEPT**: because the
+  superfamily catalyzes >100 mechanistically different reactions, the *only* universally
+  true MF really is "is an enzyme", so the maximally generic term is the correct
+  family-level annotation — replacing it with anything more specific would over-annotate.
+- **First annotation-gain proposal (Ras-type, IPR020849).** The entry maps `GTP binding`
+  but not `GTPase activity` (GO:0003924), even though the GTP-hydrolysis machinery
+  (P-loop, Switch II/Gln61, Mg²⁺) is universal — so we **propose ADDING** it (an
+  `exactMatch` row, flagged for curator confirmation since intrinsic hydrolysis is
+  GAP-accelerated).
+- **Domain-intrinsic vs whole-protein (MADS-box, IPR002100).** I expected to *add*
+  `DNA-binding TF activity`; the research argues against it — the MADS domain provides
+  DNA binding + dimerization, but being a transcription factor is a whole-protein
+  property (K/C domains, complex context), so adding it would over-annotate the domain.
+- **QC catch.** 3 of the 6 runs (sigma-54, pseudouridine synthase, GAPDH) silently
+  returned **ungrounded** reports (exit 0, file written, but "no contexts were retrieved
+  … not grounded in evidence", zero real citations) — likely Edison retrieval throttling
+  under 6-way parallel load. They are excluded from the SSSOM and being re-run
+  sequentially. (Detect with: grep for "no contexts were retrieved".)
 
 **Batch 1 of family deep research (falcon/Edison).** Ran five more top entries: P450
 (`IPR001128`), Cu/Zn SOD (`IPR001424`), GPCR Class A (`IPR000276`), NRAMP/SLC11
