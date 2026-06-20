@@ -66,3 +66,44 @@ Total: **42** reviewed annotations across 14 mappings.
 ```bash
 uv run python rhea_annotation_gain.py
 ```
+
+## Litmus test: is there a *missed-mapping* gap? (no)
+
+Per the project's value test — *would a Swiss-Prot curated entry lose a good,
+non-redundant GO annotation if we did not make the mapping?* — and **without
+assuming EC2GO will be extended**, I hunted the no-`ec2go` space for reactions
+where a correct GO term already exists but isn't reachable by EC/RHEA xref.
+
+First, a structural check: **GO's own RHEA xrefs equal `rhea2go` exactly** (7,746,
+zero difference) and **GO's EC xrefs equal `ec2go` exactly** (4,830, zero
+difference). So there is no hidden bridge — a reaction unmapped in `rhea2go` whose
+EC is absent from `ec2go` has **no xref path to GO at all**.
+
+Name-matching reviewed enzymes for those reactions to GO terms produced 30
+Swiss-Prot-gain candidates — but **verification against each GO term's definition
+reaction rejected all of them**: the matched term is for a *different* reaction
+(different cofactor, electron acceptor, or stereochemistry), which is exactly why
+GO keeps it separate and why it isn't xref-linked:
+
+| Reaction (unmapped) | Name-matched GO term | Why it is the WRONG term |
+|---------------------|----------------------|--------------------------|
+| RHEA:28202 light-independent protochlorophyllide reductase (EC 1.3.7.7, **ferredoxin**) | GO:0016630 (def uses **NADPH**) | different reductant (DPOR vs LPOR) |
+| RHEA:26522 2-methylcitrate dehydratase (EC 4.2.1.117, **trans**) | GO:0047547 (def is **cis**, EC 4.2.1.79) | different stereochemistry |
+| RHEA:26442 alcohol dehydrogenase (EC 1.1.5.5, **quinone**) | GO:0004022 (def is **NAD⁺**) | different electron acceptor |
+| RHEA:27417 nicotinate dehydrogenase (EC 1.17.2.1, **cytochrome**) | GO:0050138 (def is **NADP**) | different electron acceptor |
+| RHEA:29595 sulfoacetaldehyde dehydrogenase (EC 1.2.1.81, **acylating/NADP**) | GO:0102984 (def is **NAD, non-acylating**) | different reaction |
+
+The remaining candidates matched **generic class roots** (`hydro-lyase activity`,
+`demethylase activity`, `5'-nucleotidase activity`) or were outright **name
+collisions** (RHEA:16301, an IL-18-receptor protein carrying a spurious NADase
+reaction, matched `interleukin-18 receptor activity`; another matched `iron ion
+binding`). None is a good non-redundant annotation.
+
+**Conclusion.** There is **no missed-mapping gap**: every reviewed entry whose
+reaction has a *correct* existing GO term is already covered (the EC-bridge work
+above), and the reactions that remain genuinely **lack a correct GO term** —
+GO distinguishes the cofactor/stereochemistry variants they represent. So closing
+the rest is strictly a **new-GO-term** effort (the 7 seeded `sssom:NoTermFound`
+rows are the start), not more mapping. This holds the line on the litmus test:
+we do not add a mapping unless a Swiss-Prot entry would gain a *correct*,
+non-redundant annotation.
