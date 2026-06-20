@@ -9,21 +9,28 @@ description: >-
 
   This is the entry-centric alternative to a flat SSSOM mapping set: instead of one
   subject->predicate->object row per assertion, a review captures the full curation
-  context for one Pfam family -- its parent InterPro entry and the *sibling* member
-  families lumped under it, why an InterPro-level GO mapping is or is not viable, and
-  a list of proposed GO annotations each with its own relation, aspect, evidence,
-  confidence and status.
+  context for one Pfam family. It records (1) an explicit ``interpro`` block -- the
+  parent InterPro entry, every member Pfam lumped under it, and why a GO mapping at
+  the entry level is or is not viable; and (2) per proposed GO annotation, the
+  relation/aspect/confidence/status PLUS the grounding that distinguishes a real
+  family-function alignment from a family merely *named* after a function:
+  ``supporting_examples`` (characterized SwissProt members that have the function,
+  linked to in-repo gene reviews where they exist) and ``counter_examples`` (members
+  -- sibling families, or the SAME family -- that lack/contradict the function and
+  would be mis-annotated). A proposal whose own family contains functionally distinct
+  members (counter_examples within the family) is recorded with ``status: REJECTED``.
 
   GO targets are id/label tuples bound to a GO branch enum so that
   ``linkml-term-validator`` checks every proposed term id resolves and its label
-  matches the ontology. The Pfam/InterPro ids are curated id/label tuples and are not
-  ontology-label-validated here (their labels are short names, not rdfs:labels).
+  matches the ontology. Pfam/InterPro/UniProt ids are curated id/label tuples and are
+  not ontology-label-validated here.
 
 prefixes:
   linkml: https://w3id.org/linkml/
   pfamreview: https://ai4curation.io/ai-gene-review/pfam_entry_review/
   Pfam: https://www.ebi.ac.uk/interpro/entry/pfam/
   InterPro: https://www.ebi.ac.uk/interpro/entry/InterPro/
+  UniProt: https://www.uniprot.org/uniprotkb/
   GO: http://purl.obolibrary.org/obo/GO_
   RO: http://purl.obolibrary.org/obo/RO_
   BFO: http://purl.obolibrary.org/obo/BFO_
@@ -56,56 +63,53 @@ slots:
   pfam_description:
     range: string
     description: Short curator-facing description of the family's function.
-  parent_interpro:
-    range: InterProEntry
+  interpro:
+    range: InterProContext
     inlined: true
-    description: The InterPro entry this Pfam is integrated into (its member_list parent).
-  interpro_go_status:
-    range: InterProGOStatusEnum
     required: true
-    description: Whether/how the parent InterPro entry currently carries an interpro2go term.
-  interpro_mapping_viability:
-    range: MappingViabilityEnum
-    required: true
-    description: >-
-      Whether a function-specific GO mapping is viable at the InterPro entry level.
-      NOT_VIABLE is the case this schema is designed for: the entry lumps functionally
-      distinct member families, so a specific term cannot sit on the whole entry.
-  viability_reason:
-    range: string
-    description: Why the InterPro-level mapping is (not) viable.
-  sibling_members:
-    range: SiblingMember
-    inlined_as_list: true
-    multivalued: true
-    description: >-
-      Other member families lumped under the same InterPro entry, with a note on how
-      they differ functionally (the evidence that the entry is heterogeneous).
+    description: The parent InterPro entry, its member Pfams, and the entry-level mapping viability.
   proposed_annotations:
     range: ProposedAnnotation
     inlined_as_list: true
     multivalued: true
-    description: Proposed GO annotations for THIS Pfam family.
+    description: Proposed (or rejected) GO annotations for THIS Pfam family.
   notes:
     range: string
     description: Free-text curator notes.
-  curator:
-    range: string
-    description: Who authored the review.
-  review_date:
-    range: string
-    description: ISO date the review was authored/updated.
 
-  # --- nested-object slots ---
+  # --- InterProContext slots ---
   type:
     range: string
     description: InterPro entry type (Domain, Family, Homologous_superfamily, Repeat, ...).
-  n_pfam_members:
-    range: integer
-    description: Number of Pfam families that are members of the InterPro entry.
+  member_pfams:
+    range: MemberPfam
+    inlined_as_list: true
+    multivalued: true
+    description: All Pfam families that are members of the InterPro entry (including the subject family).
+  go_status:
+    range: InterProGOStatusEnum
+    required: true
+    description: Whether/how the parent InterPro entry currently carries an interpro2go term.
+  mapping_viability:
+    range: MappingViabilityEnum
+    required: true
+    description: >-
+      Whether a function-specific GO mapping is viable at the InterPro entry level.
+      NOT_VIABLE is the typical case: the entry lumps functionally distinct member
+      families, so a specific term cannot sit on the whole entry.
+  viability_reason:
+    range: string
+    description: Why the InterPro-level mapping is (not) viable.
+
+  # --- MemberPfam slots ---
+  is_subject:
+    range: boolean
+    description: True for the Pfam family this review is about.
   note:
     range: string
     description: Free-text note.
+
+  # --- ProposedAnnotation slots ---
   term:
     range: GOTerm
     inlined: true
@@ -128,33 +132,85 @@ slots:
     range: ConfidenceEnum
     required: true
     description: Reviewer confidence in the proposed annotation.
-  evidence:
-    range: string
-    required: true
-    description: Reviewer rationale grounded in the Pfam family definition / biochemistry.
   status:
     range: AnnotationStatusEnum
     required: true
     description: Curation status of the proposed annotation.
+  rationale:
+    range: string
+    required: true
+    description: >-
+      Reviewer rationale: for a PROPOSED annotation, why the family's HMM tracks the
+      function (not merely shares its name); for a REJECTED one, why it does not.
+  supporting_examples:
+    range: ProteinExample
+    inlined_as_list: true
+    multivalued: true
+    description: Characterized members of THIS family that have the proposed function.
+  counter_examples:
+    range: CounterExample
+    inlined_as_list: true
+    multivalued: true
+    description: >-
+      Members that lack/contradict the function and would be mis-annotated -- in a
+      sibling member family, or (for REJECTED proposals) in the SAME family.
+
+  # --- ProteinExample / CounterExample shared slots ---
+  accession:
+    range: string
+    required: true
+    pattern: "^UniProt:[A-Z0-9]+$"
+    description: UniProt accession (e.g. UniProt:P0A8F0).
+  protein_name:
+    range: string
+    description: UniProt entry/protein name (e.g. UPP_ECOLI uracil phosphoribosyltransferase).
+  organism:
+    range: string
+    description: Source organism.
+  ec:
+    range: string
+    description: EC number(s), if the member is an enzyme with an assigned activity.
+  reviewed:
+    range: boolean
+    description: True if the UniProt entry is SwissProt-reviewed.
+  gene_review:
+    range: string
+    description: Path to an in-repo gene review for this protein, if one exists (e.g. genes/BACSU/spoIIE/spoIIE-ai-review.yaml).
+  member_pfam:
+    range: string
+    pattern: "^Pfam:PF[0-9]{5}$"
+    description: The member Pfam family this counter-example belongs to (same family for REJECTED, else a sibling).
+  reason:
+    range: string
+    required: true
+    description: Why this protein lacks/contradicts the proposed function.
 
 classes:
-  InterProEntry:
-    description: The parent InterPro entry, as a curated id/label tuple plus type/membership context.
+  InterProContext:
+    description: The parent InterPro entry, its member Pfams, and the entry-level mapping viability.
     slots:
       - id
       - label
       - type
-      - n_pfam_members
+      - member_pfams
+      - go_status
+      - mapping_viability
+      - viability_reason
     slot_usage:
       id:
         pattern: "^InterPro:IPR[0-9]{6}$"
+        required: true
 
-  SiblingMember:
-    description: A sibling member family lumped under the same InterPro entry.
+  MemberPfam:
+    description: A Pfam family that is a member of the InterPro entry.
     slots:
       - id
       - label
+      - is_subject
       - note
+    slot_usage:
+      id:
+        pattern: "^Pfam:PF[0-9]{5}$"
 
   GOTerm:
     description: A GO term as an id/label pair.
@@ -173,15 +229,40 @@ classes:
       - id
       - label
 
+  ProteinExample:
+    description: A characterized member protein that has the proposed function.
+    slots:
+      - accession
+      - protein_name
+      - organism
+      - ec
+      - reviewed
+      - gene_review
+      - note
+
+  CounterExample:
+    description: A member protein that lacks/contradicts the proposed function (would be mis-annotated).
+    slots:
+      - accession
+      - protein_name
+      - organism
+      - ec
+      - member_pfam
+      - reviewed
+      - gene_review
+      - reason
+
   ProposedAnnotation:
-    description: One proposed GO annotation for the Pfam family.
+    description: One proposed (or rejected) GO annotation for the Pfam family.
     slots:
       - term
       - relation
       - aspect
       - confidence
-      - evidence
       - status
+      - rationale
+      - supporting_examples
+      - counter_examples
 
   PfamEntryReview:
     tree_root: true
@@ -190,15 +271,9 @@ classes:
       - pfam_id
       - pfam_name
       - pfam_description
-      - parent_interpro
-      - interpro_go_status
-      - interpro_mapping_viability
-      - viability_reason
-      - sibling_members
+      - interpro
       - proposed_annotations
       - notes
-      - curator
-      - review_date
 
 enums:
   InterProGOStatusEnum:
@@ -215,7 +290,7 @@ enums:
       NOT_VIABLE:
         description: >-
           A function-specific GO term cannot be placed on the InterPro entry (it would be
-          wrong for a functionally distinct sibling member); the term belongs at the Pfam level.
+          wrong for a functionally distinct member); a viable term, if any, belongs at the Pfam level.
       VIABLE:
         description: >-
           A GO term could equally be placed at the InterPro entry level (e.g. the entry is
@@ -240,7 +315,10 @@ enums:
       ACCEPTED:
         description: Confirmed by a curator.
       REJECTED:
-        description: Rejected after review.
+        description: >-
+          Rejected after member verification -- typically because the Pfam family itself is
+          functionally heterogeneous (see counter_examples in the same family), so the term
+          would over-annotate even at the Pfam level.
 
   GOTermEnum:
     description: Any term in the Gene Ontology (MF, BP, or CC branch).
