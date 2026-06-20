@@ -52,6 +52,65 @@ def _base_review(knowledge_gaps: list[dict]) -> dict:
     }
 
 
+def _review_with_gap_at(level: str) -> dict:
+    """Build a GeneReview that carries one gap at the requested attachment point.
+
+    Covers the three attachment points reachable from a GeneReview target:
+    the whole gene, a single existing annotation's review, and a core function.
+    (ModuleReview / ModuleNode are validated under the ModuleReview target.)
+    """
+    base = {
+        "id": "Q12345",
+        "gene_symbol": "TEST1",
+        "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        "description": "Test gene for knowledge-gap attachment points",
+        "references": [],
+    }
+    if level == "gene":
+        base["knowledge_gaps"] = [_gap()]
+    elif level == "annotation":
+        base["existing_annotations"] = [
+            {
+                "term": {"id": "GO:0003924", "label": "GTPase activity"},
+                "evidence_type": "IEA",
+                "original_reference_id": "GO_REF:0000002",
+                "review": {
+                    "summary": "core activity",
+                    "action": "ACCEPT",
+                    "knowledge_gaps": [_gap(dark_aspect="RESIDUAL_SUBGAP")],
+                },
+            }
+        ]
+    elif level == "core_function":
+        base["core_functions"] = [
+            {
+                "description": "core function carrying a residual sub-gap",
+                "molecular_function": {
+                    "id": "GO:0003924",
+                    "label": "GTPase activity",
+                },
+                "knowledge_gaps": [_gap(dark_aspect="RESIDUAL_SUBGAP")],
+            }
+        ]
+    else:  # pragma: no cover - guard against typos in parametrize
+        raise ValueError(level)
+    return base
+
+
+@pytest.mark.parametrize("level", ["gene", "annotation", "core_function"])
+def test_gap_validates_at_each_attachment_point(level: str):
+    """A gap validates whether attached at the gene, annotation, or core function."""
+    data = _review_with_gap_at(level)
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump(data, f)
+        temp_path = Path(f.name)
+    try:
+        report = validate_gene_review(temp_path, check_best_practices=False)
+        assert report.is_valid, f"Unexpected validation failure: {report.issues}"
+    finally:
+        temp_path.unlink()
+
+
 def test_knowledge_gap_dataclass_roundtrip():
     """The generated dataclass accepts all gap fields and normalizes enums."""
     gap = KnowledgeGap(
