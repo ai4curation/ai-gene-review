@@ -142,6 +142,45 @@ def test_gluconeogenesis_expression_grounded(expressed, expected_sat, active):
     assert len(active_routes(circuit, holds)) == active
 
 
+GLUCONEO_SUBSTRATES = Path("modules/gluconeogenesis_human_substrates.yaml")
+
+
+@pytest.mark.skipif(not GLUCONEO_SUBSTRATES.exists(), reason="module file absent")
+def test_substrate_module_glycerol_bypasses_carboxylation():
+    """Glycerol entry omits PC/PEPCK, so the universal gate is only the terminal step."""
+    circuit = compile_module_file(GLUCONEO_SUBSTRATES)
+    routes = enumerate_routes(circuit)
+    assert len(routes) == 18  # (lactate|alanine x LDH/ALT isozymes) x PEPCK x FBPase + glycerol x FBPase
+    # PC is required by every pyruvate-derived route but NOT by glycerol routes,
+    # so it must drop out of the AND-core; only the terminal system is universal.
+    assert sorted(a.gene_symbol for a in core_atoms(circuit)) == ["G6PC1", "SLC37A4"]
+    glycerol_routes = [r for r in routes if "GK" in {a.gene_symbol for a in r}]
+    assert glycerol_routes
+    for r in glycerol_routes:
+        syms = {a.gene_symbol for a in r}
+        assert "PC" not in syms and "PCK1" not in syms and "PCK2" not in syms
+        assert {"GK", "GPD1", "G6PC1", "SLC37A4"} <= syms
+
+
+@pytest.mark.skipif(not GLUCONEO_SUBSTRATES.exists(), reason="module file absent")
+@pytest.mark.parametrize(
+    "expressed,sat",
+    [
+        ({"GK", "GPD1", "FBP1", "G6PC1", "SLC37A4"}, True),   # glycerol-only, no PC needed
+        ({"LDHA", "PC", "PCK1", "FBP1", "G6PC1", "SLC37A4"}, True),  # lactate via pyruvate
+        ({"GPT", "FBP1", "G6PC1", "SLC37A4"}, False),         # alanine but missing PC/PEPCK
+        ({"GK", "GPD1", "FBP1", "SLC37A4"}, False),           # missing terminal catalytic gate
+    ],
+)
+def test_substrate_module_satisfiability(expressed, sat):
+    circuit = compile_module_file(GLUCONEO_SUBSTRATES)
+
+    def holds(atom):
+        return atom.gene_symbol in expressed
+
+    assert is_satisfied(circuit, holds) is sat
+
+
 def test_atom_is_hashable():
     # frozen dataclass -> usable in sets (a regression we want to keep)
     atoms = set(iter_atoms(compile_module(_toy_module())))

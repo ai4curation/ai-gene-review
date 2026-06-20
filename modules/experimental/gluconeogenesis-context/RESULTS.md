@@ -106,6 +106,50 @@ orthologs — `G6PC1`→`G6pc`, `PCK1`→`Pck1`, `PC`→`Pcx`, etc. The large ra
 is re-fetched on demand via Europe PMC; only the 15-gene derived matrix
 `cache/halpern_zonation.tsv` is committed.)
 
+## Which precursor? Substrate-resolved routes
+
+`gluconeogenesis_human_substrates.yaml` makes the carbon source explicit. Lactate
+(via LDHA/LDHB) and the amino acid alanine (via GPT/GPT2) enter as **pyruvate** and
+so need the PC + PEPCK carboxylation backbone; **glycerol** (via GK + GPD1) enters at
+dihydroxyacetone phosphate, *bypassing PC and PEPCK*. All routes converge on the
+shared FBPase and terminal G6PC1·SLC37A4 gate. Consequence, recovered automatically:
+
+```
+Routes: 18   Universal gate (atoms in EVERY route): ['G6PC1', 'SLC37A4']
+```
+
+Because glycerol skips the carboxylation arm, **PC is no longer universal** — it drops
+out of the AND-core, leaving the terminal ER system as the single gate shared by all
+precursor routes. Resolving against GTEx then answers *which precursor each tissue can
+use* (not just whether it can make glucose):
+
+```
+tissue                      precursors                 capacity (lac / ala / gly, TPM)
+Liver                       lactate,alanine,glycerol   243 / 128 / 14
+Kidney_Cortex               lactate,alanine,glycerol   622 /  17 /  7
+Small_Intestine             lactate,alanine,glycerol   232 /  19 /  7
+Muscle/Brain/Adipose        — (gated at terminal G6PC1·SLC37A4 regardless of precursor)
+```
+
+All three gluconeogenic tissues are equipped for all three precursors, but with
+physiologically faithful skews: **kidney cortex is lactate-dominant** (LDHB ≈ 620 TPM)
+while **liver has by far the greatest alanine capacity** (GPT ≈ 128 vs ~17), matching
+the liver's central role in the alanine cycle. Gated tissues cannot release free
+glucose from *any* precursor — the precursor question is moot once the terminal gate
+fails.
+
+### Note on the human zonation oracle
+
+Removing the mouse-ortholog caveat on the zonation result would need a **human**
+gene×zone matrix. The relevant human studies (e.g. the Nature 2026 live-donor liver
+spatial atlas; GEO GSE239480) publish raw spatial/snRNA data that require a full
+zonation-reconstruction pipeline rather than a ready-to-parse table, so a faithful
+human zonation oracle is not buildable from a single fetch here — and fabricating one
+would violate the project's "never invent data" rule. The mouse Halpern result stands
+as the zonation evidence; the human spatial atlas is the validation target. The
+substrate extension above was built instead because it is fully grounded in human
+GTEx data already in hand.
+
 ## Honest scope / epistemics
 
 - **Expression is used asymmetrically:** absence excludes a route (no enzyme → no
@@ -139,6 +183,9 @@ uv run python resolve_context.py --threshold 5        # graded gate
 
 uv run --with openpyxl python zonation_oracle.py      # fetch/cache Halpern zonation
 uv run python resolve_zonation.py                     # per-lobule-layer resolution + sweep
+
+uv run python resolve_substrates.py                   # which precursor can each tissue use?
+uv run pytest tests/test_module_logic.py -q           # engine unit tests (from repo root)
 ```
 
 ## Next steps
@@ -147,8 +194,10 @@ uv run python resolve_zonation.py                     # per-lobule-layer resolut
    **Done** (`resolve_zonation.py`): periportal restriction recovered from Halpern 2017.
    Next: a human spatial/scRNA oracle (e.g. the 2025 human-liver spatial atlas) to
    confirm the same zonation directly in human rather than via mouse orthologs.
-2. Add the substrate-entry OR-branches (lactate / alanine / glycerol) as their own
-   variant set so the engine also resolves *which precursor* a tissue can use.
+2. ~~Add the substrate-entry OR-branches (lactate / alanine / glycerol).~~ **Done**
+   (`gluconeogenesis_human_substrates.yaml` + `resolve_substrates.py`): glycerol
+   bypasses PC/PEPCK, collapsing the universal gate to the terminal step; per-tissue
+   precursor capability resolved against GTEx.
 3. ~~Promote `module_logic.py` into `src/ai_gene_review/` with pytest coverage.~~
    **Done**: the engine now lives at `src/ai_gene_review/module_logic.py` (frozen
    `Atom`, doctested, mypy-clean) with `tests/test_module_logic.py`; the oracles
