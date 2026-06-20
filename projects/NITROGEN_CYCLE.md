@@ -33,7 +33,7 @@ entry point (GS/GOGAT).
 > microbial machinery and the specific descendant pathway terms that
 > mis-annotated entries should be re-routed to. Read the two together.
 
-## The six core transformations
+## Core transformations
 
 | Arm | Net reaction | Direction | Key marker genes |
 |---|---|---|---|
@@ -139,7 +139,7 @@ convergent solutions to the same NO₂⁻→NO step — reviewing both makes the
 
 | Gene | UniProt | Organism | Protein |
 |---|---|---|---|
-| `narB` | P39458 | *Synechococcus elongatus* PCC 7942 | Ferredoxin nitrate reductase (EC 1.7.5.1) |
+| `narB` | P39458 | *Synechococcus elongatus* PCC 7942 | Ferredoxin nitrate reductase (EC 1.7.7.2) |
 | `nasA` | Q06457 | *Klebsiella oxytoca* | Assimilatory nitrate reductase (EC 1.7.-.-) |
 | `nirA` | P39661 | *Synechococcus elongatus* PCC 7942 | Ferredoxin–nitrite reductase (EC 1.7.7.1) |
 | `nirB` | P08201 | *Escherichia coli* | NADH nitrite reductase large subunit (EC 1.7.1.15) |
