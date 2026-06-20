@@ -17,7 +17,8 @@ from pyfamsa import Aligner, Sequence
 REPO = "../../.."
 
 def local_seq(species, gene):
-    txt = open(f"{REPO}/genes/{species}/{gene}/{gene}-uniprot.txt").read()
+    with open(f"{REPO}/genes/{species}/{gene}/{gene}-uniprot.txt") as fh:
+        txt = fh.read()
     acc = re.search(r"^AC\s+(\S+?);", txt, re.M).group(1)
     sq = txt.split("SQ   ", 1)[1].split("\n", 1)[1]
     seq = "".join(sq.replace("//", "").split())
