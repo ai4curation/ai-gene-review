@@ -15,7 +15,10 @@ exact-match one.
 
   gain = N(rhea) - N(rhea AND go)
 
-Reported for both all of UniProtKB and the reviewed (Swiss-Prot) subset.
+**Gain is measured from Swiss-Prot (reviewed) by default** -- the curation-
+relevant, trustworthy number. The all-of-UniProtKB figure (mostly TrEMBL,
+inheriting the reliability of automated RHEA annotations) is reported as
+secondary context.
 
 Usage:
     uv run python rhea_annotation_gain.py [--sssom rhea2go.sssom.yaml] [--reviewed-only]
@@ -80,9 +83,9 @@ def main(argv=None) -> int:
         print(f"{rhea}\t{go}\t{pl}\t{n_all}\t{n_all_go}\t{gain}\t{n_rev}\t{n_rev_go}\t{gain_rev}\t{label}")
         time.sleep(args.sleep)
 
-    print(f"\n# mappings scored: {len(pairs)}  (with non-zero gain: {nonzero})")
-    print(f"# TOTAL new annotations (all UniProtKB): {tot}")
-    print(f"# TOTAL new annotations (reviewed/Swiss-Prot only): {tot_rev}")
+    print(f"\n# mappings scored: {len(pairs)}  (non-zero all-UniProt gain: {nonzero})")
+    print(f"# TOTAL new annotations, Swiss-Prot (reviewed) [PRIMARY]: {tot_rev}")
+    print(f"# TOTAL new annotations, all UniProtKB (secondary/TrEMBL): {tot}")
     return 0
 
 

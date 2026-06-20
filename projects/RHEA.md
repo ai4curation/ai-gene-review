@@ -192,8 +192,9 @@ validation (GO objects bound to the molecular-function branch; generated nested
 view [`rhea2go.terms.yaml`](RHEA/rhea2go.terms.yaml)).
 
 **Propagation gain.** If these mappings were added to `rhea2go`, they would
-yield **~25,842 new GO molecular-function annotations across UniProtKB** (reviewed/
-Swiss-Prot entries gain only 34) — almost all the gain is bulk propagation into TrEMBL,
+add **34 new GO molecular-function annotations to Swiss-Prot (reviewed)** entries — the
+curation-relevant gain we track — filling real reviewed-entry gaps; the all-UniProtKB figure
+(~25,842, mostly automated TrEMBL) is secondary because curated enzymes already carry the term,
 because reviewed enzymes carrying the reaction already have the term (the
 EC-masking result at the annotation level). See
 [RHEA-ANNOTATION-GAIN.md](RHEA/RHEA-ANNOTATION-GAIN.md)
