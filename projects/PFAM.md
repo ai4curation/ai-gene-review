@@ -25,7 +25,13 @@ That raises a natural gap-filling hypothesis:
 > be harvested to enrich IEA annotation.
 
 This project tests that hypothesis directly and reproducibly, and reports the
-result honestly whether positive or negative.
+result honestly whether positive or negative. It has **two parts**:
+
+1. **Does the *existing* `pfam2go` already carry hidden precision?** (No — it is a
+   derived copy of InterPro2GO; see below.)
+2. **Is there headroom to author *new* Pfam→GO mappings with more precision than
+   InterPro2GO gives?** This is the generative question and the more interesting
+   one; see [HEADROOM.md](PFAM/HEADROOM.md).
 
 ## Method
 
@@ -50,7 +56,7 @@ The analysis is a single self-contained script,
 [`analyze_pfam_go_gaps.py`](PFAM/analyze_pfam_go_gaps.py); full numbers and tables
 are in the auto-generated [results page](PFAM/RESULTS.md).
 
-## Result: the hypothesis is not supported
+## Part 1 — The existing `pfam2go` adds no precision
 
 The full numbers are in [PFAM/RESULTS.md](PFAM/RESULTS.md). In summary, of the
 **9,871** `pfam2go` assertions on integrated families:
@@ -90,6 +96,76 @@ are byte-identical to the parent entry's terms; the rest are explained by:
   very high-level terms (*biosynthetic process*, *cell adhesion*, *mRNA
   stabilization*) — negligible and non-specific.
 
+## Part 2 — Headroom for *new* mappings (the generative question)
+
+Since the existing file is a copy, the real question is whether one *could* author
+new per-Pfam mappings that beat InterPro2GO. The script
+[`headroom_analysis.py`](PFAM/headroom_analysis.py) measures the opportunity
+against the full Pfam-A universe (30,134 families) without inventing any mapping;
+full numbers in [HEADROOM.md](PFAM/HEADROOM.md). Two routes were tested:
+
+**Route A — "splitting" lumped entries: essentially no headroom.** The premise was
+that InterPro lumps several functionally-distinct Pfams under one general GO term.
+Empirically this barely happens for GO-bearing entries: only **76** InterPro
+entries with a GO term have ≥2 Pfam members at all (184 families), and just **4**
+are Family/Homologous-superfamily. The rest are *Repeat*/*Domain* entries whose
+multiple Pfam members are **redundant HMM signatures of the same domain** (e.g. the
+GNAT acyltransferase or EF-hand entries list several alternative Pfam models) — a
+per-Pfam term would be identical, not finer. GO-bearing InterPro entries are
+overwhelmingly 1 Pfam = 1 entry, so **InterPro2GO already sits at Pfam
+granularity**; there is nothing to split.
+
+**Route B — coverage: a large opportunity, and where coverage meets precision.**
+The dominant finding is how *little* of Pfam is GO-annotated through InterPro at all:
+
+| | Pfam-A families | % |
+|---|---:|---:|
+| Total | 30,134 | 100% |
+| Get ≥1 GO via InterPro (covered) | 5,246 | 17.4% |
+| **Zero GO via InterPro** | **24,888** | **82.6%** |
+| …of those, DUF / unknown function | 6,529 | 26% of gap |
+| …named, tractable targets | 18,359 | 74% of gap |
+
+Crucially, InterPro2GO is **conservative**: even canonical, well-understood domains
+are left unmapped — SH2 (IPR000980), EGF (IPR000742), Kringle (IPR000001), Actin
+(IPR004000) all have **no** interpro2go term. For these, a new mapping is not
+boxed in by an existing general term, so it can be authored *directly at a specific
+level* (e.g. SH2 → phosphotyrosine residue binding, GO:0001784). **Here coverage
+and precision coincide.**
+
+**Bottom line for the generative question:** yes, new mappings can beat
+InterPro2GO — but by **annotating where InterPro abstained** (the ~18k named
+uncovered families, often at a specific level) and by going **below the family**
+(clan subfamilies, domain architectures, active-site/residue signatures, structure)
+to refine the ~5k already-covered families — *not* by splitting lumped entries.
+Realizing it means *authoring* mappings (curation or grounded model prediction) and
+validating them; `pfam2go` does none of this today.
+
+### Worked proposals: Pfam mappings where InterPro can't
+
+As a concrete demonstration, [PROPOSED_MAPPINGS.md](PFAM/PROPOSED_MAPPINGS.md)
+gives **8 proposed Pfam→GO mappings** (6 families, 5 InterPro entries) drawn from
+the sharpest "InterPro not viable" category: **heterogeneous InterPro entries** that
+group functionally *distinct* Pfam families under one shared fold. Because a
+substrate-specific term on the whole entry would be wrong for the sibling family,
+those entries carry **no** interpro2go term — but the individual Pfam is specific.
+Examples:
+
+| Pfam | family | proposed GO | parent entry can't, because it also contains |
+|---|---|---|---|
+| PF14681 | UPRTase | uracil phosphoribosyltransferase activity (GO:0004845) | generic Pribosyltran (all PRTases) |
+| PF16363 | GDP_Man_Dehyd | GDP-mannose 4,6-dehydratase activity (GO:0008446) | generic NAD(P)-binding Rossmann |
+| PF09043 | Lys-AminoMut_A | D-lysine 5,6-aminomutase activity (GO:0047826) | D-ornithine 4,5-aminomutase (sibling) |
+| PF27512 | LeuD | 3-isopropylmalate dehydratase activity (GO:0003861) | aconitase swivel domain |
+| PF13561 | adh_short_C2 | enoyl-[ACP] reductase [NAD(P)H] (GO:0016631) | the generic SDR domain |
+
+These are produced by [`propose_mappings.py`](PFAM/propose_mappings.py), which
+**auto-verifies every structural claim** — GO id valid & non-obsolete, Pfam
+membership, parent entry heterogeneity, and that the parent entry carries no
+equivalent term (it aborts otherwise). The *biological* assignment is a reviewer
+proposal grounded in the Pfam family definition; each is a **candidate needing
+curator / experimental validation**, not an asserted fact.
+
 ## Implications for AIGR / GO annotation
 
 - **Do not mine `pfam2go` for extra precision over `interpro2go`.** For
@@ -123,20 +199,30 @@ See [PANTHER_IBA_REVIEW](PANTHER_IBA_REVIEW/) and
 
 ```bash
 cd projects/PFAM
-python3 analyze_pfam_go_gaps.py --download   # fetch + cache inputs into ./data, run
+python3 analyze_pfam_go_gaps.py --download   # Part 1: existing pfam2go vs interpro2go
+python3 headroom_analysis.py                 # Part 2: headroom for new mappings
+python3 propose_mappings.py                  # Part 2: worked proposals (self-validating)
 ```
 
 Inputs (cached under `PFAM/data/`, git-ignored; reproducible via `--download`):
 
 - `pfam2go`, `interpro2go` — current.geneontology.org `external2go/`
-- `interpro.xml.gz` — EBI InterPro FTP (`<member_list>` Pfam↔InterPro membership)
+- `interpro.xml.gz` — EBI InterPro FTP (`<member_list>` membership + entry types)
 - `go-basic.obo` — current.geneontology.org (GO `is_a`/`part_of` DAG)
+- `Pfam-A.clans.tsv.gz` — Pfam FTP (full family universe + clan + description; fetch
+  manually for `headroom_analysis.py`)
 
 Outputs (committed):
 
-- [`RESULTS.md`](PFAM/RESULTS.md) — human-readable summary (auto-generated)
-- `PFAM/pfam_go_precision_gaps.tsv` — every classified assertion
+- [`RESULTS.md`](PFAM/RESULTS.md) — Part 1 summary (auto-generated)
+- [`HEADROOM.md`](PFAM/HEADROOM.md) — Part 2 summary (auto-generated)
+- [`PROPOSED_MAPPINGS.md`](PFAM/PROPOSED_MAPPINGS.md) + `proposed_pfam_go_mappings.tsv`
+  — worked Pfam→GO proposals where InterPro can't (self-validated)
+- `PFAM/pfam_go_precision_gaps.tsv` — Part 1 non-SAME classified assertions
 - `PFAM/unintegrated_pfam_with_go.tsv` — pfam2go terms for unintegrated families
+- `PFAM/lumped_entries_headroom.tsv` — multi-Pfam GO-bearing entries, ranked
+- (`data/pfam_no_go_coverage_gap.tsv` — full ~25k-row coverage gap list, git-ignored,
+  regenerable)
 
-The script hardcodes no results and fabricates no mappings; if an input is missing
-it errors out rather than guessing.
+The scripts hardcode no results and fabricate no mappings; if an input is missing
+they error out rather than guessing.
