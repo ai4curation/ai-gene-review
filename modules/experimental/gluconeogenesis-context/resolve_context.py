@@ -40,7 +40,9 @@ def resolve(module_path: str, threshold: float) -> dict:
 
     report: dict[str, dict] = {}
     for tissue in tissues:
-        holds = lambda atom, _t=tissue: expressed(atom.gene_symbol, _t) if atom.gene_symbol else True
+        def holds(atom, _t=tissue):
+            return expressed(atom.gene_symbol, _t) if atom.gene_symbol else True
+
         sat = is_satisfied(circuit, holds)
         active_routes = [
             [a.gene_symbol for a in r if a.gene_symbol]

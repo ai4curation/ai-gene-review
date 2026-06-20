@@ -217,3 +217,32 @@ def core_atoms(circuit: Circuit) -> list[Atom]:
         if a.node_id in common:
             seen[a.node_id] = a
     return list(seen.values())
+
+
+def step_id(circuit: Circuit) -> str:
+    """Return the identifier of a circuit node (atom/AND node id, or OR set id)."""
+    if isinstance(circuit, Or):
+        return circuit.set_id
+    return circuit.node_id
+
+
+def unsatisfied_steps(circuit: Circuit, holds: Predicate) -> list[Circuit]:
+    """Top-level conjuncts (pathway steps) that are not satisfied under ``holds``.
+
+    For a pathway compiled as an AND over its steps, these are the **gaps**: the
+    steps for which no variant/candidate is present in the context. This is the
+    GapMind "which required step is missing" diagnostic, expressed on the circuit.
+
+    >>> doc = {"module": {"id": "m", "parts": [
+    ...   {"order": 1, "node": {"id": "s1", "annotons": [{"id": "a",
+    ...      "participant": {"gene": {"preferred_term": "A"}}}]}},
+    ...   {"order": 2, "node": {"id": "s2", "annotons": [{"id": "b",
+    ...      "participant": {"gene": {"preferred_term": "B"}}}]}}]}}
+    >>> circ = compile_module(doc)
+    >>> [step_id(s) for s in unsatisfied_steps(circ, lambda atom: atom.gene_symbol == "A")]
+    ['s2']
+    """
+    if isinstance(circuit, And):
+        return [c for c in circuit.children if not is_satisfied(c, holds)]
+    return [] if is_satisfied(circuit, holds) else [circuit]
+

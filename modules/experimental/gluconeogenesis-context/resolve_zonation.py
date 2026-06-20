@@ -21,7 +21,6 @@ from ai_gene_review.module_logic import (
 )
 from zonation_oracle import (
     load_profiles, relative_profile, portal_pole, zone_label, N_LAYERS,
-    PERICENTRAL_LANDMARKS,
 )
 
 # Human module symbols -> mouse symbols used in Halpern Table S3.
@@ -50,7 +49,9 @@ def resolve(module_path: str, threshold: float) -> dict:
 
     layers = []
     for li in range(N_LAYERS):
-        holds = lambda a, _li=li: holds_in_layer(a, _li)
+        def holds(a, _li=li):
+            return holds_in_layer(a, _li)
+
         sat = is_satisfied(circuit, holds)
         missing = [a.gene_symbol for a in gate if not holds(a)]
         layers.append({

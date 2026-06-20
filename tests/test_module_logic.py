@@ -24,6 +24,8 @@ from ai_gene_review.module_logic import (
     is_satisfied,
     core_atoms,
     iter_atoms,
+    step_id,
+    unsatisfied_steps,
 )
 
 GLUCONEO_HUMAN = Path("modules/gluconeogenesis_human.yaml")
@@ -179,6 +181,52 @@ def test_substrate_module_satisfiability(expressed, sat):
         return atom.gene_symbol in expressed
 
     assert is_satisfied(circuit, holds) is sat
+
+
+# --------------------------------------------------------------------------- #
+# Microbial GapMind-style genome reconstruction                               #
+# --------------------------------------------------------------------------- #
+
+METHIONINE = Path("modules/methionine_biosynthesis.yaml")
+
+
+@pytest.mark.skipif(not METHIONINE.exists(), reason="module file absent")
+def test_methionine_template_structure():
+    circuit = compile_module_file(METHIONINE)
+    assert [step_id(c) for c in circuit.children] == [
+        "acylation", "sulfur_incorporation", "methylation"]
+    assert len(enumerate_routes(circuit)) == 8
+    # every step is an OR, so no enzyme is universally required
+    assert core_atoms(circuit) == []
+    assert sorted({a.gene_symbol for a in iter_atoms(circuit)}) == [
+        "metA", "metB", "metC", "metE", "metH", "metX", "metY"]
+
+
+@pytest.mark.skipif(not METHIONINE.exists(), reason="module file absent")
+@pytest.mark.parametrize(
+    "present,found,gaps",
+    [
+        # E. coli-like: succinyl + trans-sulfuration + both synthases -> found, no gaps
+        ({"metA", "metB", "metC", "metE", "metH"}, True, []),
+        # H. influenzae-like: acetyl acylation route still completes
+        ({"metX", "metB", "metC", "metE"}, True, []),
+        # C. glutamicum-like: trans-sulfuration incomplete (no metC) but metY rescues it
+        ({"metX", "metB", "metY", "metE", "metH"}, True, []),
+        # Buchnera-like reduced genome: only metE -> gap at acylation + sulfur step
+        ({"metE"}, False, ["acylation", "sulfur_incorporation"]),
+        # missing only the methylation step
+        ({"metA", "metB", "metC"}, False, ["methylation"]),
+    ],
+)
+def test_methionine_genome_reconstruction(present, found, gaps):
+    """Genome-presence predicate drives route selection and gap detection."""
+    circuit = compile_module_file(METHIONINE)
+
+    def holds(atom):
+        return atom.gene_symbol in present
+
+    assert is_satisfied(circuit, holds) is found
+    assert [step_id(s) for s in unsatisfied_steps(circuit, holds)] == gaps
 
 
 def test_atom_is_hashable():

@@ -150,6 +150,44 @@ as the zonation evidence; the human spatial atlas is the validation target. The
 substrate extension above was built instead because it is fully grounded in human
 GTEx data already in hand.
 
+## Same engine, the other kingdom: GapMind-style genome reconstruction
+
+The expression oracles answer "is this isozyme *expressed* in this context?". In a
+microbe the question reverts to GapMind's: "is this step's ortholog *encoded* in this
+genome?". The **same circuit engine** handles it — only the oracle changes. The
+template `modules/methionine_biosynthesis.yaml` defines L-methionine biosynthesis from
+homoserine with an alternative at every step (acylation metA|metX; sulfur incorporation
+trans-sulfuration metB+metC | direct sulfhydrylation metY; methylation metE|metH), so no
+enzyme is universal. `kegg_oracle.py` decides per-genome step presence via KEGG Orthology
+(the step→KO table is the oracle's "step definitions", exactly GapMind's split between a
+pathway and its candidate definitions), and `resolve_genomes.py` reconstructs the pathway:
+
+```
+[FOUND] eco  E. coli K-12        metA(succinyl) | trans-sulfuration | metE or metH   (2 routes)
+[FOUND] bsu  B. subtilis 168     metA(succinyl) | trans-sulfuration | metE           (1 route)
+[FOUND] hin  H. influenzae Rd    metX(ACETYL)   | trans-sulfuration | metE           (1 route)
+[FOUND] cgl  C. glutamicum       metX(acetyl)   | DIRECT (metY)     | metE or metH   (2 routes)
+[GAP]   buc  Buchnera aphidicola only metE present -> missing steps: acylation, sulfur_incorporation
+```
+
+Recovered automatically, matching known biology:
+
+* **Route selection differs by genome.** *H. influenzae* uses the *acetyl* acylation route
+  (metX), not the succinyl route (metA) of *E. coli*; *C. glutamicum* uses *direct
+  sulfhydrylation* (metY). Each genome's encoded route is the one the engine reports.
+* **OR really matters.** *C. glutamicum* has metB but **lacks metC**, so its
+  trans-sulfuration branch is incomplete — yet the pathway is still FOUND because the engine
+  routes through the alternative direct-sulfhydrylation branch (metY). A naive "all of metB,
+  metC" check would have produced a false gap.
+* **Gap detection = auxotrophy.** *Buchnera aphidicola* (a genome-reduced aphid endosymbiont)
+  encodes only metE; the engine flags `acylation` and `sulfur_incorporation` as gaps —
+  precisely why Buchnera is a methionine auxotroph dependent on its host.
+
+`unsatisfied_steps()` (the GapMind "which required step is missing" diagnostic) is now a
+first-class engine primitive in `src/ai_gene_review/module_logic.py`. The upshot: one
+satisfiability core spans **prokaryote genome-presence and eukaryote expression-gating** —
+the original framing, demonstrated end to end.
+
 ## Honest scope / epistemics
 
 - **Expression is used asymmetrically:** absence excludes a route (no enzyme → no
@@ -185,7 +223,10 @@ uv run --with openpyxl python zonation_oracle.py      # fetch/cache Halpern zona
 uv run python resolve_zonation.py                     # per-lobule-layer resolution + sweep
 
 uv run python resolve_substrates.py                   # which precursor can each tissue use?
-uv run pytest tests/test_module_logic.py -q           # engine unit tests (from repo root)
+
+uv run python kegg_oracle.py                           # cache KEGG ortholog presence per genome
+uv run python resolve_genomes.py                       # GapMind-style methionine reconstruction
+uv run pytest tests/test_module_logic.py -q            # engine unit tests (from repo root)
 ```
 
 ## Next steps
@@ -202,5 +243,10 @@ uv run pytest tests/test_module_logic.py -q           # engine unit tests (from 
    **Done**: the engine now lives at `src/ai_gene_review/module_logic.py` (frozen
    `Atom`, doctested, mypy-clean) with `tests/test_module_logic.py`; the oracles
    here import it (`from ai_gene_review.module_logic import ...`).
-4. Wire the "known-active + unexpressed required atom = gap" abduction path and emit
-   gaps as reviewable predictions.
+4. ~~Apply the engine to a microbial GapMind-style module (genome-presence oracle)
+   to prove the core spans prokaryote→eukaryote.~~ **Done**
+   (`modules/methionine_biosynthesis.yaml` + `kegg_oracle.py` + `resolve_genomes.py`):
+   route selection and gap/auxotrophy detection across five genomes from KEGG.
+5. Wire the "known-active + unexpressed required atom = gap" abduction path and emit
+   gaps as reviewable predictions (the eukaryotic counterpart of the Buchnera gap:
+   a pathway known active in a context but with a required atom unexpressed).
