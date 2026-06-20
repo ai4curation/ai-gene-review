@@ -1,0 +1,2501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>qhnDH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>qhnDH</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P0A181" target="_blank" class="term-link">
+                        P0A181
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "qhnDH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P0A181" data-a="DESCRIPTION: qhnDH (PP_3460, UniProt P0A181) encodes the ~9 kDa..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>qhnDH (PP_3460, UniProt P0A181) encodes the ~9 kDa gamma catalytic subunit of the periplasmic quinohemoprotein amine dehydrogenase (QH-AmDH), an alpha-beta-gamma heterotrimer that oxidatively deaminates aliphatic primary amines (e.g. n-butylamine). The gamma subunit carries the protein-derived cysteine tryptophylquinone (CTQ) redox cofactor and extensive intrapeptidyl thioether crosslinks, providing the active-site redox center; electrons pass through the c-type hemes of the alpha subunit to periplasmic acceptors (cytochrome c550, azurin) and the respiratory chain. The catalytic phenotype belongs to the assembled holoenzyme rather than to the gamma subunit in isolation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016638" target="_blank" class="term-link">
+                                    GO:0016638
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-NH2 group of donors</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P0A181" data-a="GO:0016638" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This oxidoreductase parent is true but less specific than aliphatic amine dehydrogenase activity. Falcon deep research confirms the gamma subunit houses the cysteine tryptophylquinone (CTQ) redox cofactor that performs the CH-NH2 oxidation, so the parent term is correct but under-specified.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0030058 (aliphatic amine dehydrogenase activity) captures the substrate class and dehydrogenase reaction more precisely than the CH-NH2 oxidoreductase parent.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">oxidative deamination of a wide range of</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">γ (~9 kDa) containing the redox-active quinone cofactor</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0016638	oxidoreductase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030058" target="_blank" class="term-link">
+                                    GO:0030058
+                                </a>
+                            </span>
+                            <span class="term-label">aliphatic amine dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000116
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0A181" data-a="GO:0030058" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Aliphatic amine dehydrogenase activity is the core molecular function for QhnDH. Falcon deep research confirms that the CTQ-bearing gamma subunit is the cofactor-bearing catalytic element of the heterotrimeric quinohemoprotein amine dehydrogenase that oxidatively deaminates aliphatic primary amines such as n-butylamine, with the catalytic phenotype realized by the whole holoenzyme complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt and Rhea describe oxidative deamination of aliphatic amines, and falcon deep research independently supports this molecular function for the qhp gamma subunit.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Catalyzes the oxidative deamination of a wide range of</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=an aliphatic amine + A + H2O</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Experimental and mechanistic literature most strongly supports activity toward **aliphatic primary amines**, with **n-butylamine** frequently used as the physiological/inducing substrate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0030058	aliphatic amine dehydrogenase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0A181" data-a="GO:0042597" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The periplasmic-space annotation is correct for QhnDH. Falcon deep research confirms the quinohemoprotein amine dehydrogenase holoenzyme is periplasmic, consistent with its coupling to periplasmic electron-transfer partners (cytochrome c550, azurin) and the respiratory chain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> QhnDH is a periplasmic subunit, but location is secondary to the catalytic amine dehydrogenase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Periplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">QHNDH is described as **periplasmic** in Gram-negative bacteria, consistent with its use of periplasmic electron transfer partners and respiratory chain coupling</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0042597	periplasmic space</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030058" target="_blank" class="term-link">
+                                    GO:0030058
+                                </a>
+                            </span>
+                            <span class="term-label">aliphatic amine dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0A181" data-a="GO:0030058" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The ISS aliphatic amine dehydrogenase annotation is consistent with the Rhea-supported IEA row. Falcon deep research supports assigning aliphatic amine dehydrogenase activity to the conserved qhp gamma subunit by homology across the widely distributed quinohemoprotein amine dehydrogenase family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The homologous P. putida QH-AmDH entry (P0A182) supports the same aliphatic amine dehydrogenase activity, reinforced by falcon deep research on the conserved qhp gamma subunit.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=1.4.9.-</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyzes the **oxidative deamination of primary amines**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0030058	aliphatic amine dehydrogenase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0A181" data-a="GO:0042597" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The ISS periplasm annotation is consistent with the UniProt subcellular-location annotation and with falcon deep research describing the holoenzyme as a periplasmic, inducible enzyme system.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Periplasmic localization is correct context for QhnDH but non-core relative to catalytic activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Periplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">QHNDH is described as **periplasmic** in Gram-negative bacteria, consistent with its use of periplasmic electron transfer partners and respiratory chain coupling</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/qhnDH/qhnDH-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0042597	periplasmic space</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Periplasmic aliphatic amine dehydrogenase catalytic subunit. As the CTQ-bearing gamma subunit of the QH-AmDH alpha-beta-gamma heterotrimer, it provides the active-site redox center for oxidative deamination of aliphatic primary amines (e.g. n-butylamine), with electrons relayed via the alpha-subunit hemes to periplasmic acceptors. The catalytic activity is realized by the assembled holoenzyme.</h3>
+                <span class="vote-buttons" data-g="P0A181" data-a="FUNCTION: Periplasmic aliphatic amine dehydrogenase catalyti..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030058" target="_blank" class="term-link">
+                            aliphatic amine dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/qhnDH/qhnDH-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Catalyzes the oxidative deamination of a wide range of</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/qhnDH/qhnDH-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Reaction=an aliphatic amine + A + H2O</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">the most defensible annotation is not a standalone enzyme but the γ component of a multisubunit periplasmic amine dehydrogenase</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/qhnDH/qhnDH-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB reviewed entry for qhnDH</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"Quinohemoprotein amine dehydrogenase catalytic subunit"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"Heterotrimer of an alpha, a beta and a gamma subunit"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/qhnDH/qhnDH-goa.tsv
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">QuickGO GOA annotations for qhnDH</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"Quinohemoprotein amine dehydrogenase subunit gamma"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for qhnDH (Pseudomonas putida KT2440)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"the redox-active quinone cofactor **cysteine tryptophylquinone (CTQ)**"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"QHNDH is an **αβγ heterotrimer**"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"the most defensible annotation is not a standalone enzyme but the γ component of a multisubunit periplasmic amine dehydrogenase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"Electrons generated at CTQ are transferred through the hemes in the α-subunit to external acceptors such as **cytochrome c550** and **azurin**"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"transcriptional activation is reported to be mediated by **QhpR** upon binding long-chain primary amines such as **n-butylamine**"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which aliphatic amines are physiological substrates for the KT2440 QH-AmDH complex?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P0A181" data-a="Q: Which aliphatic amines are physiological substrate..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute the QH-AmDH complex and measure activity across monoamine and diamine substrates with the physiological azurin-like electron acceptor.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: enzyme substrate panel</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P0A181" data-a="EXPERIMENT: Reconstitute the QH-AmDH complex and measure activ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(qhnDH-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P0A181" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">19 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-03T03:35:00.574663</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="qhnDH-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="qhnDH-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000008 The document provides several figures illustrating the structure of the proteins and the biogenesis pathway of the CTQ cofactor. - </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-qhndh-uniprot-p0a181-in-pseudomonas-putida-kt2440-psepk">Research report: functional annotation of <strong>qhnDH</strong> (UniProt <strong>P0A181</strong>) in <em>Pseudomonas putida</em> KT2440 (PSEPK)</h2>
+<h3 id="0-target-verification-critical-identity-check">0) Target verification (critical identity check)</h3>
+<p>The UniProt target (P0A181) is annotated as <strong>quinohemoprotein amine dehydrogenase subunit gamma</strong> (~9 kDa) from <em>Pseudomonas putida</em> KT2440. In the primary literature, this γ-subunit is most commonly referred to as <strong>QhpC</strong>, encoded within the conserved <strong>qhp operon</strong> that also carries the structural genes for the α- and β-subunits (qhpA/qhpB) and multiple biogenesis factors (qhpD/E/F/G/R). The defining features match the UniProt description: a small (~9 kDa) subunit containing the <strong>protein-derived quinone cofactor CTQ</strong> and extensive intrapeptidyl crosslinks, functioning as part of an αβγ heterotrimeric periplasmic amine dehydrogenase. (oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 8-14, nakai2012anunusualsubtilisinlike pages 1-2)</p>
+<h3 id="1-key-concepts-definitions-and-current-understanding">1) Key concepts, definitions, and current understanding</h3>
+<h4 id="11-quinohemoprotein-amine-dehydrogenase-qhndh-qh-amdh">1.1 Quinohemoprotein amine dehydrogenase (QHNDH / QH-AmDH)</h4>
+<p><strong>QHNDH</strong> is a periplasmic, inducible <strong>αβγ heterotrimeric oxidoreductase</strong> found in Gram-negative bacteria that catalyzes the <strong>oxidative deamination of primary amines</strong> used as carbon/energy sources. The enzyme is described as: α (~60 kDa) containing <strong>two c-type hemes</strong>, β (~37–40 kDa), and γ (~9 kDa) containing the redox-active quinone cofactor <strong>cysteine tryptophylquinone (CTQ)</strong>. (oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 8-14, nakai2012anunusualsubtilisinlike pages 1-2)</p>
+<h4 id="12-the-qhndh-gene-product-subunit-qhpc-like-protein">1.2 The qhnDH gene product (γ-subunit; QhpC-like protein)</h4>
+<p>The <strong>qhnDH/P0A181 protein</strong> corresponds functionally to the <strong>γ-subunit</strong>: a small, heavily post-translationally modified peptide that bears CTQ and forms the core redox center for substrate oxidation within the holoenzyme complex. (oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 8-14)</p>
+<h4 id="13-protein-derived-cofactors-and-ctq">1.3 Protein-derived cofactors and CTQ</h4>
+<p>CTQ is part of a broader class of <strong>protein-derived (“built-in”) redox cofactors</strong>, where catalytic moieties arise from posttranslational modification and/or crosslinking of amino acid side chains. A recent authoritative review highlights the rapid expansion in known protein-derived cofactor chemistries—reporting a surveyed list of <strong>38 distinct types</strong>—and emphasizes that high-resolution structural methods remain critical because current structure predictors may miss such modifications. (graciano2025proteinderivedcofactorschemical pages 2-4)</p>
+<h3 id="2-primary-biochemical-function-reaction-substrate-scope-and-mechanism">2) Primary biochemical function: reaction, substrate scope, and mechanism</h3>
+<h4 id="21-reaction-catalyzed-system-level-function">2.1 Reaction catalyzed (system-level function)</h4>
+<p>QHNDH catalyzes oxidative deamination of primary amines. One explicit stoichiometry reported for QHNDH is:</p>
+<p><strong>RCH2NH3+ + H2O → RCHO + NH4+ + 2H+ + 2e−</strong> (俊範2021biochemicalandstructural pages 8-14)</p>
+<p>While qhnDH encodes only the γ-subunit, its CTQ cofactor is the key redox center enabling this chemistry in the mature αβγ complex. (俊範2021biochemicalandstructural pages 8-14, nakai2012anunusualsubtilisinlike pages 1-2)</p>
+<h4 id="22-substrate-specificity-best-supported">2.2 Substrate specificity (best-supported)</h4>
+<p>Experimental and mechanistic literature most strongly supports activity toward <strong>aliphatic primary amines</strong>, with <strong>n-butylamine</strong> frequently used as the physiological/inducing substrate. Some descriptions also include oxidation of <strong>benzylamine</strong> among primary amines. (nakai2012anunusualsubtilisinlike pages 1-2, 俊範2021biochemicalandstructural pages 8-14)</p>
+<h4 id="23-catalytic-mechanism-at-the-ctq-site">2.3 Catalytic mechanism at the CTQ site</h4>
+<p>High-resolution structural work proposed that substrates attack the CTQ cofactor (site proposed at <strong>CTQ O-6</strong>) and that catalysis proceeds via <strong>Schiff-base chemistry</strong> (substrate Schiff base → product Schiff base) with a carbanion intermediate and a candidate catalytic base (Asp) positioned in the active site environment. (datta2001structureofa pages 5-5)</p>
+<h3 id="3-cofactors-electron-transfer-and-role-of-the-subunit">3) Cofactors, electron transfer, and role of the γ-subunit</h3>
+<h4 id="31-cofactor-placement-across-subunits">3.1 Cofactor placement across subunits</h4>
+<p>Across the mature QHNDH heterotrimer:<br />
+- <strong>γ-subunit (qhnDH/QhpC-like):</strong> contains <strong>CTQ</strong> and multiple stabilizing thioether crosslinks. (oozeki2021functionalandstructural pages 1-2, nakai2012anunusualsubtilisinlike pages 1-2)<br />
+- <strong>α-subunit (QhpA):</strong> contains <strong>two covalently bound c-type hemes</strong> for electron transfer to external acceptors. (oozeki2021functionalandstructural pages 1-2, nakai2012anunusualsubtilisinlike pages 1-2)</p>
+<p>This division of labor supports annotation of qhnDH as the <strong>CTQ-bearing redox/catalytic subunit component</strong>, but not as a complete, standalone enzyme. (oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 8-14)</p>
+<h4 id="32-electron-acceptors-and-physiological-wiring">3.2 Electron acceptors and physiological wiring</h4>
+<p>Electrons generated at CTQ are transferred through the hemes in the α-subunit to external acceptors such as <strong>cytochrome c550</strong> and <strong>azurin</strong>, and ultimately to oxygen via the respiratory chain. (nakai2012anunusualsubtilisinlike pages 1-2, 俊範2021biochemicalandstructural pages 8-14)</p>
+<h4 id="33-quantitative-electrochemical-parameters-recently-reused-benchmarks">3.3 Quantitative electrochemical parameters (recently reused benchmarks)</h4>
+<p>Electrochemical/spectroelectrochemical characterization provides quantitative evidence for internal electron transfer ordering:<br />
+- Midpoint potentials assigned to the two hemes and CTQ were approximately <strong>235 mV</strong>, <strong>149 mV</strong>, and <strong>65 mV</strong>, respectively. (ikeda2004anovelelectrochemical pages 4-6)</p>
+<p>In mediated bioelectrocatalysis using cytochrome c-550 as physiological partner, one analysis reported <strong>kcat ≈ 4.5 s−1</strong> and <strong>Km ≈ 1.0 × 10−7 M</strong> for the cytochrome c-550 interaction/turnover context studied. (ikeda2004anovelelectrochemical pages 6-7)</p>
+<h3 id="4-cellular-localization-and-pathway-context">4) Cellular localization and pathway context</h3>
+<h4 id="41-periplasmic-localization">4.1 Periplasmic localization</h4>
+<p>QHNDH is described as <strong>periplasmic</strong> in Gram-negative bacteria, consistent with its use of periplasmic electron transfer partners and respiratory chain coupling. (nakai2012anunusualsubtilisinlike pages 1-2, oozeki2021functionalandstructural pages 1-2)</p>
+<h4 id="42-operon-context-qhp-and-amine-induced-regulation">4.2 Operon context (qhp) and amine-induced regulation</h4>
+<p>The qhp system is organized as an operon including <strong>qhpA/B/C</strong> (α/β/γ subunits) plus accessory genes <strong>qhpD/E/F/G/R</strong>, which collectively enable CTQ biogenesis, processing, export, and regulation; transcriptional activation is reported to be mediated by <strong>QhpR</strong> upon binding long-chain primary amines such as <strong>n-butylamine</strong>. (俊範2021biochemicalandstructural pages 14-20)</p>
+<h3 id="5-posttranslational-maturation-of-the-subunit-ctq-biogenesis-current-model">5) Posttranslational maturation of the γ-subunit (CTQ biogenesis): current model</h3>
+<p>The most substantial “modern” advance relevant to functional annotation is that the CTQ-bearing γ-subunit is not active when translated; it is produced via a <strong>multi-enzyme, multistep maturation pathway</strong>:</p>
+<ol>
+<li><strong>Precursor features:</strong> γ-subunit is synthesized with an <strong>~28 aa N-terminal leader peptide</strong> required for productive maturation but removed later. (nakai2012anunusualsubtilisinlike pages 1-2, oozeki2021functionalandstructural pages 1-2)</li>
+<li><strong>Thioether crosslinks:</strong> a radical SAM enzyme (<strong>QhpD</strong>) installs multiple <strong>Cys-to-Asp/Glu thioether crosslinks</strong> that pre-organize the fold and “cage” the cofactor environment. (oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 14-20)</li>
+<li><strong>Tryptophan oxygenation / CTQ formation:</strong> an FAD-dependent monooxygenase (<strong>QhpG</strong>) catalyzes <strong>single-turnover dihydroxylation</strong> of the precursor tryptophan residue in the γ-subunit during CTQ formation; mechanistically, this step was directly characterized in 2021 and is a key “latest research” insight for this gene family. (oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 33-38)</li>
+<li><strong>Leader peptide cleavage:</strong> a subtilisin-like serine protease (<strong>QhpE</strong>) is essential for leader removal; operon disruption yields inactive enzyme with unprocessed γ-subunit, and complementation restores processing and activity. (nakai2012anunusualsubtilisinlike pages 1-2, nakai2012anunusualsubtilisinlike pages 9-10)</li>
+<li><strong>Export/assembly:</strong> an ABC transporter (<strong>QhpF</strong>) is implicated in export of the modified γ-subunit to the periplasm, where association with the heme-containing α-subunit and β-subunit forms the mature holoenzyme. (俊範2021biochemicalandstructural pages 14-20)</li>
+</ol>
+<p>Visual support for the γ-subunit location within the heterotrimer and for the CTQ/crosslink architecture and biogenesis machinery is provided by figure panels from Oozeki et al. (Nature Communications, Feb 2021). (oozeki2021functionalandstructural media 32ec60b6, oozeki2021functionalandstructural media 4a69fa5d, oozeki2021functionalandstructural media 4e2048c8)</p>
+<h3 id="6-recent-developments-20232024-priority-and-evidence-gaps">6) Recent developments (2023–2024 priority) and evidence gaps</h3>
+<p><strong>Direct 2023–2024 primary studies specifically on <em>Pseudomonas putida</em> KT2440 qhnDH/P0A181</strong> were not retrieved via the available tool searches; therefore, this report relies on:<br />
+- Foundational structural/mechanistic work (PNAS 2001), (datta2001structureofa pages 5-5)<br />
+- Biogenesis/processing studies that define γ-subunit maturation steps (JBC 2012; Nat Commun 2021), (nakai2012anunusualsubtilisinlike pages 1-2, oozeki2021functionalandstructural pages 1-2)<br />
+- A recent (2023) catabolic-network review that references the CTQ/QHNDH-type systems in broader metabolic context (tool retrieved but did not yield extractable qhnDH-specific evidence in the scanned excerpts). </p>
+<p>Nevertheless, the <strong>2021 mechanistic/structural clarification of QhpG-catalyzed Trp dihydroxylation</strong> remains the most relevant “recent” step-change for functional annotation of qhnDH-like γ-subunits because it converts an earlier “putative oxidation” step into a defined enzymatic transformation. (oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 33-38)</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<h4 id="71-electrochemical-characterization-and-bioelectrocatalysis">7.1 Electrochemical characterization and bioelectrocatalysis</h4>
+<p>QHNDH has been used as a <strong>model oxidoreductase</strong> for advanced electrochemical methods (mediator-assisted spectroelectrochemistry, mediated bioelectrocatalysis), enabling assignment of CTQ/heme redox potentials and kinetic evaluation of electron transfer to cytochrome c550. (ikeda2004anovelelectrochemical pages 4-6, ikeda2004anovelelectrochemical pages 6-7)</p>
+<h4 id="72-synthetic-biologybiotechnology-leveraging-biogenesis-enzymes">7.2 Synthetic biology/biotechnology: leveraging biogenesis enzymes</h4>
+<p>Mechanistic work on the qhp system has motivated <strong>biotechnological use of biogenesis enzymes</strong> (e.g., QhpD and QhpE) to prepare noncanonical crosslinked/cyclic peptide products (an emerging application direction rather than a mature industrial implementation). (俊範2021biochemicalandstructural pages 122-129)</p>
+<p>No evidence of commercialized biosensor products or industrial-scale biocatalytic deployment specifically using qhnDH/P0A181 was identified in the retrieved sources; thus, application statements here are limited to documented experimental implementations. (ikeda2004anovelelectrochemical pages 6-7, 俊範2021biochemicalandstructural pages 122-129)</p>
+<h3 id="8-expert-interpretation-authoritative-synthesis">8) Expert interpretation (authoritative synthesis)</h3>
+<p>From a gene-annotation perspective, qhnDH/P0A181 should be curated as:<br />
+1. A <strong>γ-subunit component</strong> (not a complete enzyme on its own) of a periplasmic QHNDH system that oxidizes primary amines, with CTQ serving as the active-site redox cofactor. (俊範2021biochemicalandstructural pages 8-14, nakai2012anunusualsubtilisinlike pages 1-2)<br />
+2. A protein that is only functional after extensive <strong>posttranslational maturation</strong> (thioether crosslinking, Trp oxygenation, leader peptide processing) orchestrated by the qhp operon accessory genes. (oozeki2021functionalandstructural pages 1-2, nakai2012anunusualsubtilisinlike pages 1-2)<br />
+3. A representative of a broader, fast-growing class of <strong>protein-derived cofactor enzymes</strong>, where the “cofactor chemistry” is encoded genetically but realized posttranslationally—an area where reviews emphasize the need for structural/chemical validation beyond sequence-based predictions. (graciano2025proteinderivedcofactorschemical pages 2-4)</p>
+<h3 id="summary-table-evidence-mapped">Summary table (evidence-mapped)</h3>
+<p>The following table consolidates key functional, mechanistic, localization, and quantitative parameters for qhnDH/P0A181.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>What is known</th>
+<th>Key evidence/source (citation id)</th>
+<th>Notes/implications</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protein identity / size</td>
+<td>qhnDH (UniProt P0A181) matches the QH-AmDH/QHNDH γ-subunit-equivalent in the qhp system: a small ~9 kDa polypeptide; homologous QhpC is reported as ~82 aa / ~9 kDa.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 8-14)</td>
+<td>The literature more often uses <strong>qhpC</strong> nomenclature than <strong>qhnDH</strong>; function assignment is strongest by homology to the conserved QHNDH γ-subunit.</td>
+</tr>
+<tr>
+<td>Primary molecular role</td>
+<td>The γ-subunit is the <strong>cofactor-bearing catalytic subunit element</strong> of quinohemoprotein amine dehydrogenase, housing the redox cofactor used for substrate oxidation while associating with α and β subunits in the mature heterotrimer.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 8-14, nakai2012anunusualsubtilisinlike pages 1-2)</td>
+<td>For P0A181, the most defensible annotation is not a standalone enzyme but the γ component of a multisubunit periplasmic amine dehydrogenase.</td>
+</tr>
+<tr>
+<td>Cofactor: CTQ</td>
+<td>The γ-subunit contains <strong>cysteine tryptophylquinone (CTQ)</strong>, a protein-derived quinone cofactor formed from a Cys and Trp residue. In Paracoccus QhpC, CTQ derives from Cys37 and Trp43.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 8-14)</td>
+<td>CTQ is the hallmark functional feature of this subunit family and is central to catalytic annotation.</td>
+</tr>
+<tr>
+<td>Posttranslational modifications</td>
+<td>Mature γ-subunit contains CTQ plus <strong>three additional intrapeptidyl thioether crosslinks</strong> (Cys-to-Asp/Glu), giving an unusually constrained fold around the cofactor.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 20-24, nakai2012anunusualsubtilisinlike pages 1-2)</td>
+<td>These extensive PTMs are essential for proper folding, cofactor encagement, and activity.</td>
+</tr>
+<tr>
+<td>Leader peptide / precursor processing</td>
+<td>The nascent γ-subunit is synthesized with an <strong>N-terminal ~28-residue leader peptide</strong> that is required during maturation but must be proteolytically removed to generate active enzyme.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, nakai2012anunusualsubtilisinlike pages 1-2, nakai2012anunusualsubtilisinlike pages 9-10)</td>
+<td>Presence of a leader peptide implies that UniProt sequence features may represent a precursor form rather than the mature periplasmic subunit.</td>
+</tr>
+<tr>
+<td>Enzyme complex architecture</td>
+<td>QHNDH is an <strong>αβγ heterotrimer</strong>: α ~60 kDa with <strong>two c-type hemes</strong>, β ~37–40 kDa, and γ ~9 kDa carrying CTQ.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 8-14, 俊範2021biochemicalandstructural pages 14-20)</td>
+<td>Functional annotation of qhnDH should explicitly note dependence on the α-subunit hemes for downstream electron transfer.</td>
+</tr>
+<tr>
+<td>Reaction catalyzed</td>
+<td>QHNDH catalyzes <strong>oxidative deamination of primary amines</strong>: RCH2NH3+ + H2O → RCHO + NH4+ + 2H+ + 2e−.</td>
+<td>(俊範2021biochemicalandstructural pages 8-14, nakai2012anunusualsubtilisinlike pages 1-2, graciano2025proteinderivedcofactorschemical pages 12-13)</td>
+<td>The γ-subunit contributes the redox-active CTQ chemistry, but the catalytic phenotype belongs to the whole holoenzyme complex.</td>
+</tr>
+<tr>
+<td>Substrate range / specificity</td>
+<td>Reported substrates include <strong>various aliphatic primary amines</strong>, especially <strong>n-butylamine</strong>; some descriptions also include <strong>benzylamine</strong> among oxidized primary amines.</td>
+<td>(俊範2021biochemicalandstructural pages 8-14, nakai2012anunusualsubtilisinlike pages 1-2)</td>
+<td>Best-supported specificity is toward primary amines used in amine assimilation; substrate breadth may vary by species/homolog.</td>
+</tr>
+<tr>
+<td>Catalytic mechanism</td>
+<td>Structural/mechanistic work supports <strong>Schiff-base chemistry at CTQ</strong>, with substrate attack proposed at CTQ O-6 and a catalytic base candidate identified as Asp-33 in the active site environment.</td>
+<td>(datta2001structureofa pages 5-5)</td>
+<td>This provides mechanistic support for assigning the γ-subunit as the cofactor-bearing redox center.</td>
+</tr>
+<tr>
+<td>Electron acceptors / electron flow</td>
+<td>Electrons from reduced CTQ are transferred intramolecularly to the α-subunit hemes, then to external acceptors such as <strong>cytochrome c550</strong> and <strong>azurin</strong>, and ultimately to oxygen in respiratory chains.</td>
+<td>(俊範2021biochemicalandstructural pages 8-14, nakai2012anunusualsubtilisinlike pages 1-2, ikeda2004anovelelectrochemical pages 4-6)</td>
+<td>This links qhnDH to periplasmic electron-transfer and amine catabolism rather than cytosolic nitrogen metabolism.</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>QHNDH is a <strong>periplasmic</strong>, inducible enzyme system in Gram-negative bacteria; maturation includes export/translocation steps and assembly in the periplasm.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 8-14, nakai2012anunusualsubtilisinlike pages 1-2)</td>
+<td>Localization is important for annotation: activity occurs outside the cytoplasm, consistent with respiratory electron transfer.</td>
+</tr>
+<tr>
+<td>Operon / gene system</td>
+<td>The conserved <strong>qhp operon</strong> includes structural genes <strong>qhpA/qhpB/qhpC</strong> and accessory genes <strong>qhpD/qhpE/qhpF/qhpG/qhpR</strong>.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 14-20)</td>
+<td>This operon context is highly informative for validating gene identity in genome annotation.</td>
+</tr>
+<tr>
+<td>qhpA role</td>
+<td><strong>qhpA</strong> encodes the α-subunit containing the two c-type hemes and participating in electron transfer; heme insertion occurs during maturation/assembly.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 14-20)</td>
+<td>Neighboring heme-binding motifs in qhpA would strongly support a genuine QHNDH locus.</td>
+</tr>
+<tr>
+<td>qhpB role</td>
+<td><strong>qhpB</strong> encodes the β-subunit (~37–40 kDa), a structural partner of the mature heterotrimer.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 14-20)</td>
+<td>β is required for the intact holoenzyme but is not the principal cofactor-bearing subunit.</td>
+</tr>
+<tr>
+<td>qhpC role</td>
+<td><strong>qhpC</strong> is the canonical name for the γ-subunit homolog: CTQ-bearing, heavily crosslinked, and leader-peptide processed.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 8-14)</td>
+<td>P0A181 is most plausibly a qhpC-like protein despite the submitted symbol qhnDH.</td>
+</tr>
+<tr>
+<td>qhpD role</td>
+<td><strong>qhpD</strong> encodes a radical SAM enzyme that installs the three Cys-to-Asp/Glu thioether crosslinks in QhpC before CTQ completion.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 14-20)</td>
+<td>Radical-SAM-dependent crosslinking is a defining biosynthetic signature of this family.</td>
+</tr>
+<tr>
+<td>qhpE role</td>
+<td><strong>qhpE</strong> encodes an unusual subtilisin-like serine protease that cleaves the γ-subunit leader peptide; disruption causes inactive QHNDH with unprocessed γ-subunit.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, nakai2012anunusualsubtilisinlike pages 1-2, nakai2012anunusualsubtilisinlike pages 9-10)</td>
+<td>Strong experimental evidence supports qhpE as essential for biogenesis, not general proteolysis.</td>
+</tr>
+<tr>
+<td>qhpF role</td>
+<td><strong>qhpF</strong> encodes an ABC transporter/export factor implicated in translocation of modified QhpC to the periplasm.</td>
+<td>(俊範2021biochemicalandstructural pages 14-20)</td>
+<td>Supports extracellular/periplasmic maturation pathway annotation.</td>
+</tr>
+<tr>
+<td>qhpG role</td>
+<td><strong>qhpG</strong> encodes a flavoprotein monooxygenase (FAD-dependent) that catalyzes single-turnover <strong>dihydroxylation of the precursor Trp</strong> in crosslinked QhpC during CTQ biosynthesis.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 33-38, 俊範2021biochemicalandstructural pages 70-77)</td>
+<td>One of the most important modern mechanistic findings for this system.</td>
+</tr>
+<tr>
+<td>qhpR role</td>
+<td><strong>qhpR</strong> is a transcriptional regulator reported to activate qhp operon expression in response to long-chain primary amines such as <strong>n-butylamine</strong>.</td>
+<td>(俊範2021biochemicalandstructural pages 14-20)</td>
+<td>Places qhnDH within inducible amine-utilization regulation.</td>
+</tr>
+<tr>
+<td>Electrochemical properties</td>
+<td>Mediated spectroelectrochemistry assigned midpoint potentials of approximately <strong>235 mV, 149 mV, and 65 mV</strong> to the two hemes and CTQ, respectively, supporting electron flow from CTQ to hemes.</td>
+<td>(ikeda2004anovelelectrochemical pages 4-6)</td>
+<td>These quantitative redox data help distinguish functional roles of cofactors within the complex.</td>
+</tr>
+<tr>
+<td>Kinetic/electron-transfer data</td>
+<td>Using cytochrome c-550 as physiological electron acceptor, electrochemical analysis reported <strong>kcat ≈ 4.5 s−1</strong> and <strong>Km ≈ 1.0 × 10−7 M</strong> for the partner interaction/turnover context studied.</td>
+<td>(ikeda2004anovelelectrochemical pages 6-7)</td>
+<td>Useful as a benchmark for efficient periplasmic electron transfer, though values are for the enzyme system rather than isolated γ-subunit.</td>
+</tr>
+<tr>
+<td>Recent conceptual developments</td>
+<td>Recent work has clarified that CTQ biogenesis proceeds through a <strong>multistep pathway</strong> involving QhpD/QhpG/QhpE and ternary-complex interactions, rather than a single spontaneous oxidation event.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 122-129, 俊範2021biochemicalandstructural pages 70-77)</td>
+<td>This is the main “current understanding” advance relevant to functional annotation.</td>
+</tr>
+<tr>
+<td>Distribution / prevalence</td>
+<td>The qhp/QHNDH system is described as <strong>widely distributed</strong>, with the operon reported in <strong>&gt;1,300 species</strong>; a 2025 review also notes the surveyed number of distinct protein-derived cofactors has expanded to <strong>38 types</strong>.</td>
+<td>(oozeki2021functionalandstructural pages 1-2, graciano2025proteinderivedcofactorschemical pages 2-4)</td>
+<td>The &gt;1,300-species figure supports evolutionary conservation; the 38-cofactor statistic contextualizes CTQ within a rapidly expanding cofactor class.</td>
+</tr>
+<tr>
+<td>Broader expert context</td>
+<td>Recent expert review identifies <strong>CTQ</strong> as one of the recognized amino-acid-crosslinked quinone cofactors and places QHNDH among enzymes using protein-derived cofactors to expand catalytic chemistry.</td>
+<td>(graciano2025proteinderivedcofactorschemical pages 11-12, graciano2025proteinderivedcofactorschemical pages 2-4)</td>
+<td>Supports high-confidence annotation of qhnDH/P0A181 as a specialized cofactor-bearing redox protein subunit.</td>
+</tr>
+<tr>
+<td>Application relevance</td>
+<td>QHNDH has been used as a <strong>model system for electrochemical characterization</strong> of oxidoreductases; related biogenesis enzymes (<strong>QhpD/QhpE</strong>) have been suggested as tools to prepare <strong>novel cyclic peptides</strong>.</td>
+<td>(ikeda2004anovelelectrochemical pages 6-7, 俊範2021biochemicalandstructural pages 122-129)</td>
+<td>Real-world deployment appears more methodological/biotechnological than industrially mature for qhnDH itself.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported functional annotation for qhnDH/P0A181 as the qhpC-like gamma subunit of quinohemoprotein amine dehydrogenase. It integrates structural, mechanistic, localization, operon, and electrochemical evidence most useful for gene function curation.</em></p>
+<h3 id="key-cited-sources-with-urls-and-publication-dates">Key cited sources (with URLs and publication dates)</h3>
+<ul>
+<li>Datta et al., <strong>2001-11</strong>. <em>PNAS</em>. “Structure of a quinohemoprotein amine dehydrogenase with an uncommon redox cofactor and highly unusual crosslinking.” https://doi.org/10.1073/pnas.241429098 (datta2001structureofa pages 5-5)</li>
+<li>Ikeda, <strong>2004-01</strong>. <em>Chemical Record</em>. “A novel electrochemical approach to the characterization of oxidoreductase reactions.” https://doi.org/10.1002/tcr.20014 (ikeda2004anovelelectrochemical pages 4-6, ikeda2004anovelelectrochemical pages 6-7)</li>
+<li>Nakai et al., <strong>2012-02</strong>. <em>JBC</em>. “An unusual subtilisin-like serine protease is essential for biogenesis of quinohemoprotein amine dehydrogenase.” https://doi.org/10.1074/jbc.m111.324756 (nakai2012anunusualsubtilisinlike pages 1-2, nakai2012anunusualsubtilisinlike pages 9-10)</li>
+<li>Oozeki et al., <strong>2021-02</strong>. <em>Nature Communications</em>. “Functional and structural characterization of a flavoprotein monooxygenase essential for biogenesis of tryptophylquinone cofactor.” https://doi.org/10.1038/s41467-021-21200-9 (oozeki2021functionalandstructural pages 1-2, 俊範2021biochemicalandstructural pages 33-38, oozeki2021functionalandstructural media 32ec60b6, oozeki2021functionalandstructural media 4a69fa5d, oozeki2021functionalandstructural media 4e2048c8)</li>
+<li>Graciano &amp; Liu, <strong>2025-03</strong>. <em>Chemical Society Reviews</em>. “Protein-derived cofactors: chemical innovations expanding enzyme catalysis.” https://doi.org/10.1039/d4cs00981a (graciano2025proteinderivedcofactorschemical pages 2-4, graciano2025proteinderivedcofactorschemical pages 11-12)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(oozeki2021functionalandstructural pages 1-2): Toshinori Oozeki, Tadashi Nakai, Kazuki Kozakai, Kazuki Okamoto, Shun’ichi Kuroda, Kazuo Kobayashi, Katsuyuki Tanizawa, and Toshihide Okajima. Functional and structural characterization of a flavoprotein monooxygenase essential for biogenesis of tryptophylquinone cofactor. Nature Communications, Feb 2021. URL: https://doi.org/10.1038/s41467-021-21200-9, doi:10.1038/s41467-021-21200-9. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(俊範2021biochemicalandstructural pages 8-14): 大関， 俊範. Biochemical and structural studies of multistep. Unknown journal, 2021.</p>
+</li>
+<li>
+<p>(nakai2012anunusualsubtilisinlike pages 1-2): Tadashi Nakai, Kazutoshi Ono, Shun'ichi Kuroda, Katsuyuki Tanizawa, and Toshihide Okajima. An unusual subtilisin-like serine protease is essential for biogenesis of quinohemoprotein amine dehydrogenase. Journal of Biological Chemistry, 287:6530-6538, Feb 2012. URL: https://doi.org/10.1074/jbc.m111.324756, doi:10.1074/jbc.m111.324756. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(graciano2025proteinderivedcofactorschemical pages 2-4): Angelica Graciano and Aimin Liu. Protein-derived cofactors: chemical innovations expanding enzyme catalysis. Chemical Society Reviews, 54:4502-4530, Mar 2025. URL: https://doi.org/10.1039/d4cs00981a, doi:10.1039/d4cs00981a. This article has 10 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(datta2001structureofa pages 5-5): Saumen Datta, Youichi Mori, Kazuyoshi Takagi, Katsunori Kawaguchi, Zhi-Wei Chen, Toshihide Okajima, Shun'ichi Kuroda, Tokuji Ikeda, Kenji Kano, Katsuyuki Tanizawa, and F. Scott Mathews. Structure of a quinohemoprotein amine dehydrogenase with an uncommon redox cofactor and highly unusual crosslinking. Proceedings of the National Academy of Sciences of the United States of America, 98:14268-14273, Nov 2001. URL: https://doi.org/10.1073/pnas.241429098, doi:10.1073/pnas.241429098. This article has 173 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ikeda2004anovelelectrochemical pages 4-6): Tokuji Ikeda. A novel electrochemical approach to the characterization of oxidoreductase reactions. Chemical record, 4 3:192-203, Jan 2004. URL: https://doi.org/10.1002/tcr.20014, doi:10.1002/tcr.20014. This article has 19 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ikeda2004anovelelectrochemical pages 6-7): Tokuji Ikeda. A novel electrochemical approach to the characterization of oxidoreductase reactions. Chemical record, 4 3:192-203, Jan 2004. URL: https://doi.org/10.1002/tcr.20014, doi:10.1002/tcr.20014. This article has 19 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(俊範2021biochemicalandstructural pages 14-20): 大関， 俊範. Biochemical and structural studies of multistep. Unknown journal, 2021.</p>
+</li>
+<li>
+<p>(俊範2021biochemicalandstructural pages 33-38): 大関， 俊範. Biochemical and structural studies of multistep. Unknown journal, 2021.</p>
+</li>
+<li>
+<p>(nakai2012anunusualsubtilisinlike pages 9-10): Tadashi Nakai, Kazutoshi Ono, Shun'ichi Kuroda, Katsuyuki Tanizawa, and Toshihide Okajima. An unusual subtilisin-like serine protease is essential for biogenesis of quinohemoprotein amine dehydrogenase. Journal of Biological Chemistry, 287:6530-6538, Feb 2012. URL: https://doi.org/10.1074/jbc.m111.324756, doi:10.1074/jbc.m111.324756. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(oozeki2021functionalandstructural media 32ec60b6): Toshinori Oozeki, Tadashi Nakai, Kazuki Kozakai, Kazuki Okamoto, Shun’ichi Kuroda, Kazuo Kobayashi, Katsuyuki Tanizawa, and Toshihide Okajima. Functional and structural characterization of a flavoprotein monooxygenase essential for biogenesis of tryptophylquinone cofactor. Nature Communications, Feb 2021. URL: https://doi.org/10.1038/s41467-021-21200-9, doi:10.1038/s41467-021-21200-9. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(oozeki2021functionalandstructural media 4a69fa5d): Toshinori Oozeki, Tadashi Nakai, Kazuki Kozakai, Kazuki Okamoto, Shun’ichi Kuroda, Kazuo Kobayashi, Katsuyuki Tanizawa, and Toshihide Okajima. Functional and structural characterization of a flavoprotein monooxygenase essential for biogenesis of tryptophylquinone cofactor. Nature Communications, Feb 2021. URL: https://doi.org/10.1038/s41467-021-21200-9, doi:10.1038/s41467-021-21200-9. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(oozeki2021functionalandstructural media 4e2048c8): Toshinori Oozeki, Tadashi Nakai, Kazuki Kozakai, Kazuki Okamoto, Shun’ichi Kuroda, Kazuo Kobayashi, Katsuyuki Tanizawa, and Toshihide Okajima. Functional and structural characterization of a flavoprotein monooxygenase essential for biogenesis of tryptophylquinone cofactor. Nature Communications, Feb 2021. URL: https://doi.org/10.1038/s41467-021-21200-9, doi:10.1038/s41467-021-21200-9. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(俊範2021biochemicalandstructural pages 122-129): 大関， 俊範. Biochemical and structural studies of multistep. Unknown journal, 2021.</p>
+</li>
+<li>
+<p>(俊範2021biochemicalandstructural pages 20-24): 大関， 俊範. Biochemical and structural studies of multistep. Unknown journal, 2021.</p>
+</li>
+<li>
+<p>(graciano2025proteinderivedcofactorschemical pages 12-13): Angelica Graciano and Aimin Liu. Protein-derived cofactors: chemical innovations expanding enzyme catalysis. Chemical Society Reviews, 54:4502-4530, Mar 2025. URL: https://doi.org/10.1039/d4cs00981a, doi:10.1039/d4cs00981a. This article has 10 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(俊範2021biochemicalandstructural pages 70-77): 大関， 俊範. Biochemical and structural studies of multistep. Unknown journal, 2021.</p>
+</li>
+<li>
+<p>(graciano2025proteinderivedcofactorschemical pages 11-12): Angelica Graciano and Aimin Liu. Protein-derived cofactors: chemical innovations expanding enzyme catalysis. Chemical Society Reviews, 54:4502-4530, Mar 2025. URL: https://doi.org/10.1039/d4cs00981a, doi:10.1039/d4cs00981a. This article has 10 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="qhnDH-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000008 The document provides several figures illustrating the structure of the proteins and the biogenesis pathway of the CTQ cofactor. - " src="qhnDH-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>graciano2025proteinderivedcofactorschemical pages 2-4</li>
+<li>datta2001structureofa pages 5-5</li>
+<li>ikeda2004anovelelectrochemical pages 4-6</li>
+<li>ikeda2004anovelelectrochemical pages 6-7</li>
+<li>oozeki2021functionalandstructural pages 1-2</li>
+<li>nakai2012anunusualsubtilisinlike pages 1-2</li>
+<li>nakai2012anunusualsubtilisinlike pages 9-10</li>
+<li>graciano2025proteinderivedcofactorschemical pages 12-13</li>
+<li>graciano2025proteinderivedcofactorschemical pages 11-12</li>
+<li>https://doi.org/10.1073/pnas.241429098</li>
+<li>https://doi.org/10.1002/tcr.20014</li>
+<li>https://doi.org/10.1074/jbc.m111.324756</li>
+<li>https://doi.org/10.1038/s41467-021-21200-9</li>
+<li>https://doi.org/10.1039/d4cs00981a</li>
+<li>https://doi.org/10.1038/s41467-021-21200-9,</li>
+<li>https://doi.org/10.1074/jbc.m111.324756,</li>
+<li>https://doi.org/10.1039/d4cs00981a,</li>
+<li>https://doi.org/10.1073/pnas.241429098,</li>
+<li>https://doi.org/10.1002/tcr.20014,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P0A181
+gene_symbol: qhnDH
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: qhnDH (PP_3460, UniProt P0A181) encodes the ~9 kDa gamma catalytic subunit of the periplasmic
+  quinohemoprotein amine dehydrogenase (QH-AmDH), an alpha-beta-gamma heterotrimer that oxidatively deaminates
+  aliphatic primary amines (e.g. n-butylamine). The gamma subunit carries the protein-derived cysteine
+  tryptophylquinone (CTQ) redox cofactor and extensive intrapeptidyl thioether crosslinks, providing the
+  active-site redox center; electrons pass through the c-type hemes of the alpha subunit to periplasmic
+  acceptors (cytochrome c550, azurin) and the respiratory chain. The catalytic phenotype belongs to the
+  assembled holoenzyme rather than to the gamma subunit in isolation.
+existing_annotations:
+- term:
+    id: GO:0016638
+    label: oxidoreductase activity, acting on the CH-NH2 group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This oxidoreductase parent is true but less specific than aliphatic amine dehydrogenase activity.
+      Falcon deep research confirms the gamma subunit houses the cysteine tryptophylquinone (CTQ) redox cofactor
+      that performs the CH-NH2 oxidation, so the parent term is correct but under-specified.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0030058 (aliphatic amine dehydrogenase activity) captures the substrate class and dehydrogenase
+      reaction more precisely than the CH-NH2 oxidoreductase parent.
+    supported_by:
+    - reference_id: file:PSEPK/qhnDH/qhnDH-uniprot.txt
+      supporting_text: oxidative deamination of a wide range of
+    - reference_id: file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+      supporting_text: γ (~9 kDa) containing the redox-active quinone cofactor
+    - reference_id: file:PSEPK/qhnDH/qhnDH-goa.tsv
+      supporting_text: &#34;GO:0016638\toxidoreductase activity&#34;
+- term:
+    id: GO:0030058
+    label: aliphatic amine dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  review:
+    summary: Aliphatic amine dehydrogenase activity is the core molecular function for QhnDH. Falcon deep
+      research confirms that the CTQ-bearing gamma subunit is the cofactor-bearing catalytic element of the
+      heterotrimeric quinohemoprotein amine dehydrogenase that oxidatively deaminates aliphatic primary amines
+      such as n-butylamine, with the catalytic phenotype realized by the whole holoenzyme complex.
+    action: ACCEPT
+    reason: UniProt and Rhea describe oxidative deamination of aliphatic amines, and falcon deep research
+      independently supports this molecular function for the qhp gamma subunit.
+    supported_by:
+    - reference_id: file:PSEPK/qhnDH/qhnDH-uniprot.txt
+      supporting_text: Catalyzes the oxidative deamination of a wide range of
+    - reference_id: file:PSEPK/qhnDH/qhnDH-uniprot.txt
+      supporting_text: Reaction=an aliphatic amine + A + H2O
+    - reference_id: file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+      supporting_text: Experimental and mechanistic literature most strongly supports activity toward **aliphatic
+        primary amines**, with **n-butylamine** frequently used as the physiological/inducing substrate
+    - reference_id: file:PSEPK/qhnDH/qhnDH-goa.tsv
+      supporting_text: &#34;GO:0030058\taliphatic amine dehydrogenase activity&#34;
+- term:
+    id: GO:0042597
+    label: periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: The periplasmic-space annotation is correct for QhnDH. Falcon deep research confirms the
+      quinohemoprotein amine dehydrogenase holoenzyme is periplasmic, consistent with its coupling to
+      periplasmic electron-transfer partners (cytochrome c550, azurin) and the respiratory chain.
+    action: KEEP_AS_NON_CORE
+    reason: QhnDH is a periplasmic subunit, but location is secondary to the catalytic amine dehydrogenase activity.
+    supported_by:
+    - reference_id: file:PSEPK/qhnDH/qhnDH-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Periplasm&#39;
+    - reference_id: file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+      supporting_text: QHNDH is described as **periplasmic** in Gram-negative bacteria, consistent with its
+        use of periplasmic electron transfer partners and respiratory chain coupling
+    - reference_id: file:PSEPK/qhnDH/qhnDH-goa.tsv
+      supporting_text: &#34;GO:0042597\tperiplasmic space&#34;
+- term:
+    id: GO:0030058
+    label: aliphatic amine dehydrogenase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: The ISS aliphatic amine dehydrogenase annotation is consistent with the Rhea-supported IEA row.
+      Falcon deep research supports assigning aliphatic amine dehydrogenase activity to the conserved qhp
+      gamma subunit by homology across the widely distributed quinohemoprotein amine dehydrogenase family.
+    action: ACCEPT
+    reason: The homologous P. putida QH-AmDH entry (P0A182) supports the same aliphatic amine dehydrogenase
+      activity, reinforced by falcon deep research on the conserved qhp gamma subunit.
+    supported_by:
+    - reference_id: file:PSEPK/qhnDH/qhnDH-uniprot.txt
+      supporting_text: EC=1.4.9.-
+    - reference_id: file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+      supporting_text: catalyzes the **oxidative deamination of primary amines**
+    - reference_id: file:PSEPK/qhnDH/qhnDH-goa.tsv
+      supporting_text: &#34;GO:0030058\taliphatic amine dehydrogenase activity&#34;
+- term:
+    id: GO:0042597
+    label: periplasmic space
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: The ISS periplasm annotation is consistent with the UniProt subcellular-location annotation and
+      with falcon deep research describing the holoenzyme as a periplasmic, inducible enzyme system.
+    action: KEEP_AS_NON_CORE
+    reason: Periplasmic localization is correct context for QhnDH but non-core relative to catalytic activity.
+    supported_by:
+    - reference_id: file:PSEPK/qhnDH/qhnDH-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Periplasm&#39;
+    - reference_id: file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+      supporting_text: QHNDH is described as **periplasmic** in Gram-negative bacteria, consistent with its
+        use of periplasmic electron transfer partners and respiratory chain coupling
+    - reference_id: file:PSEPK/qhnDH/qhnDH-goa.tsv
+      supporting_text: &#34;GO:0042597\tperiplasmic space&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence
+    similarity
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative
+    changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: file:PSEPK/qhnDH/qhnDH-uniprot.txt
+  title: UniProtKB reviewed entry for qhnDH
+  findings:
+  - supporting_text: Quinohemoprotein amine dehydrogenase catalytic subunit
+    reference_section_type: OTHER
+  - supporting_text: Heterotrimer of an alpha, a beta and a gamma subunit
+    reference_section_type: OTHER
+- id: file:PSEPK/qhnDH/qhnDH-goa.tsv
+  title: QuickGO GOA annotations for qhnDH
+  findings:
+  - supporting_text: Quinohemoprotein amine dehydrogenase subunit gamma
+    reference_section_type: OTHER
+- id: file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+  title: Falcon deep research report for qhnDH (Pseudomonas putida KT2440)
+  findings:
+  - supporting_text: the redox-active quinone cofactor **cysteine tryptophylquinone (CTQ)**
+    reference_section_type: OTHER
+  - supporting_text: QHNDH is an **αβγ heterotrimer**
+    reference_section_type: OTHER
+  - supporting_text: the most defensible annotation is not a standalone enzyme but the γ component of a
+      multisubunit periplasmic amine dehydrogenase
+    reference_section_type: OTHER
+  - supporting_text: Electrons generated at CTQ are transferred through the hemes in the α-subunit to external
+      acceptors such as **cytochrome c550** and **azurin**
+    reference_section_type: OTHER
+  - supporting_text: transcriptional activation is reported to be mediated by **QhpR** upon binding long-chain
+      primary amines such as **n-butylamine**
+    reference_section_type: OTHER
+core_functions:
+- description: Periplasmic aliphatic amine dehydrogenase catalytic subunit. As the CTQ-bearing gamma subunit
+    of the QH-AmDH alpha-beta-gamma heterotrimer, it provides the active-site redox center for oxidative
+    deamination of aliphatic primary amines (e.g. n-butylamine), with electrons relayed via the alpha-subunit
+    hemes to periplasmic acceptors. The catalytic activity is realized by the assembled holoenzyme.
+  molecular_function:
+    id: GO:0030058
+    label: aliphatic amine dehydrogenase activity
+  supported_by:
+  - reference_id: file:PSEPK/qhnDH/qhnDH-uniprot.txt
+    supporting_text: Catalyzes the oxidative deamination of a wide range of
+  - reference_id: file:PSEPK/qhnDH/qhnDH-uniprot.txt
+    supporting_text: Reaction=an aliphatic amine + A + H2O
+  - reference_id: file:PSEPK/qhnDH/qhnDH-deep-research-falcon.md
+    supporting_text: the most defensible annotation is not a standalone enzyme but the γ component of a
+      multisubunit periplasmic amine dehydrogenase
+proposed_new_terms: []
+suggested_questions:
+- question: Which aliphatic amines are physiological substrates for the KT2440 QH-AmDH complex?
+suggested_experiments:
+- description: Reconstitute the QH-AmDH complex and measure activity across monoamine and diamine substrates with the physiological
+    azurin-like electron acceptor.
+  experiment_type: enzyme substrate panel
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

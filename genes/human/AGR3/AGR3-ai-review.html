@@ -1,0 +1,3447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGR3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AGR3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8TD06" target="_blank" class="term-link">
+                        Q8TD06
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "AGR3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8TD06" data-a="DESCRIPTION: AGR3 encodes anterior gradient protein 3, a small ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AGR3 encodes anterior gradient protein 3, a small secretory-pathway AGR/thioredoxin-like protein with an N-terminal signal peptide and C-terminal ER retrieval motif. AGR3 is enriched in ciliated airway epithelial cells and other epithelia, and loss-of-function evidence supports a role in calcium-dependent control of ciliary beat frequency and mucociliary clearance. AGR3 also has reported cancer-associated extracellular interactions with alpha-dystroglycan and LYPD3/C4.4a, but its precise molecular catalytic activity and physiological client proteins remain unresolved.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER localization is well supported for AGR3 by its signal peptide, QSEL retrieval motif, KDEL-receptor localization study, and airway epithelial cell localization evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ER residence is the best-supported compartment for AGR3 and is consistent with both phylogenetic transfer and direct experimental localization evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18086916" target="_blank" class="term-link">
+                                        PMID:18086916
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Three of the 16 constructs, ERp18, Hag3, and GP7R, changed their localization from the ER to the Golgi when the putative ER-retention motif was not present</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" target="_blank" class="term-link">
+                                        PMID:25751668
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here we report that AGR3, unlike its closest homolog AGR2, is restricted to ciliated cells in the airway epithelium and is not induced by ER stress.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002162" target="_blank" class="term-link">
+                                    GO:0002162
+                                </a>
+                            </span>
+                            <span class="term-label">dystroglycan binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0002162" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AGR3 binding to alpha-dystroglycan was reported in yeast two-hybrid screens, but the evidence is cancer/extracellular-context interaction evidence rather than the main physiological airway/ER function of AGR3.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is specific enough to retain, and the IBA is consistent with the original AGR2/AGR3 two-hybrid evidence, but it should not be treated as the core function because the paper itself called for additional clinical-context validation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link">
+                                        PMID:12592373
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan (DAG-1) as binding partners for both hAG-2 and hAG-3</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link">
+                                        PMID:12592373
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Clearly, further analyses such as coimmunoprecipitation are required to confirm that these interactions occur in clinical cancers</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002162" target="_blank" class="term-link">
+                                    GO:0002162
+                                </a>
+                            </span>
+                            <span class="term-label">dystroglycan binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0002162" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA transfer of dystroglycan binding is consistent with direct AGR3/DAG1 yeast two-hybrid evidence, but it remains a non-core cancer/extracellular interaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Keep the specific binding term as non-core: the interaction is reported, but the strongest physiological evidence for AGR3 concerns ER-localized control of airway ciliary beat regulation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link">
+                                        PMID:12592373
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan (DAG-1) as binding partners for both hAG-2 and hAG-3</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link">
+                                        PMID:12592373
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Clearly, further analyses such as coimmunoprecipitation are required to confirm that these interactions occur in clinical cancers</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0005783" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated ER localization is consistent with experimental literature and the UniProt-recognized AGR3 ER retrieval motif.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ER is the principal supported cellular compartment for AGR3.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18086916" target="_blank" class="term-link">
+                                        PMID:18086916
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Three of the 16 constructs, ERp18, Hag3, and GP7R, changed their localization from the ER to the Golgi when the putative ER-retention motif was not present</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" target="_blank" class="term-link">
+                                        PMID:25751668
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here we report that AGR3, unlike its closest homolog AGR2, is restricted to ciliated cells in the airway epithelium and is not induced by ER stress.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21516116
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Next-generation sequencing to generate interactome datasets.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0005515" data-r="PMID:21516116" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This Stitch-seq interactome annotation reports an AGR3 binary interaction but collapses it to generic protein binding, which is not informative for AGR3 functional curation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding should not be retained as a meaningful AGR3 function, especially for high-throughput interactome rows without a mechanistic connection to AGR3 airway or ER biology.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link">
+                                        PMID:21516116
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We describe a massively parallel interactome-mapping pipeline, Stitch-seq, that combines PCR stitching with next-generation sequencing and used it to generate a new human interactome dataset.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The proteome-scale interactome map contributes several AGR3 binary interaction rows, but the resulting GO term protein binding is too broad to clarify AGR3 function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation should not be treated as core AGR3 biology because it is a broad high-throughput interaction label without a specific biochemical or pathway interpretation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HuRI reports many AGR3 binary interaction partners, but generic protein binding obscures rather than explains the protein&#39;s biological role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This high-throughput interaction evidence is useful as candidate-interactor context but should not be propagated as a core or informative molecular function annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0005783" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence-based ER localization is consistent with direct literature showing AGR3 as an ER-resident ciliated-airway protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The experimental cellular-component annotation matches the best-supported localization for AGR3.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18086916" target="_blank" class="term-link">
+                                        PMID:18086916
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Three of the 16 constructs, ERp18, Hag3, and GP7R, changed their localization from the ER to the Golgi when the putative ER-retention motif was not present</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" target="_blank" class="term-link">
+                                        PMID:25751668
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here we report that AGR3, unlike its closest homolog AGR2, is restricted to ciliated cells in the airway epithelium and is not induced by ER stress.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12592373
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    hAG-2 and hAG-3, human homologues of genes involved in diffe...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0005515" data-r="PMID:12592373" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein-binding annotation from PMID:12592373 reflects specific yeast-two-hybrid interactions with C4.4a/LYPD3 and alpha-dystroglycan; dystroglycan binding is the more informative existing GO term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein binding is too generic. Replace it with the specific supported DAG1 interaction term, while noting that the LYPD3/C4.4a interaction does not currently have an equivalently specific GO binding term in this review.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002162" target="_blank" class="term-link">
+                                    dystroglycan binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link">
+                                        PMID:12592373
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan (DAG-1) as binding partners for both hAG-2 and hAG-3</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link">
+                                        PMID:12592373
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Clearly, further analyses such as coimmunoprecipitation are required to confirm that these interactions occur in clinical cancers</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002162" target="_blank" class="term-link">
+                                    GO:0002162
+                                </a>
+                            </span>
+                            <span class="term-label">dystroglycan binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12592373
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    hAG-2 and hAG-3, human homologues of genes involved in diffe...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0002162" data-r="PMID:12592373" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct yeast-two-hybrid evidence supports AGR3 binding to alpha-dystroglycan, but this is not AGR3&#39;s main supported physiological function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retain the specific molecular interaction as non-core because the best functional evidence instead points to ER-localized regulation of ciliary beat frequency in airway epithelium.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link">
+                                        PMID:12592373
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan (DAG-1) as binding partners for both hAG-2 and hAG-3</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link">
+                                        PMID:12592373
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Clearly, further analyses such as coimmunoprecipitation are required to confirm that these interactions occur in clinical cancers</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003351" target="_blank" class="term-link">
+                                    GO:0003351
+                                </a>
+                            </span>
+                            <span class="term-label">epithelial cilium movement involved in extracellular fluid movement</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25751668
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Endoplasmic Reticulum Resident Protein AGR3. Required fo...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0003351" data-r="PMID:25751668" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. Mouse Agr3 loss reduces airway ciliary beat frequency and mucociliary transport while preserving ciliary ultrastructure, supporting a conserved AGR3 role in epithelial motile-cilium function rather than ciliogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the clearest biological-process annotation for AGR3&#39;s best-supported physiological role. It is proposed for human AGR3 by sequence/orthology-supported inference from the mouse knockout and airway epithelial evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" target="_blank" class="term-link">
+                                        PMID:25751668
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mice lacking AGR3 are viable and develop ciliated cells with normal-appearing cilia. However, ciliary beat frequency was lower in airways from AGR3-deficient mice compared with control mice</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" target="_blank" class="term-link">
+                                        PMID:25751668
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Decreased CBF was associated with impaired mucociliary clearance in AGR3-deficient airways.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019722" target="_blank" class="term-link">
+                                    GO:0019722
+                                </a>
+                            </span>
+                            <span class="term-label">calcium-mediated signaling</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25751668
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Endoplasmic Reticulum Resident Protein AGR3. Required fo...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TD06" data-a="GO:0019722" data-r="PMID:25751668" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. AGR3 deficiency affects ciliary beat frequency in a calcium-dependent manner, supporting involvement in calcium-mediated control of airway ciliary function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term captures the calcium-dependent mechanism reported for AGR3 more conservatively than asserting a specific calcium transporter, channel, or enzymatic activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" target="_blank" class="term-link">
+                                        PMID:25751668
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">AGR3 deficiency had no detectable effects on ciliary beat frequency (CBF) when airways were perfused with a calcium-free solution, suggesting that AGR3 is required for calcium-mediated regulation of ciliary function.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>AGR3 is an ER-retained AGR/thioredoxin-like protein in ciliated airway epithelial cells that is required for normal calcium-dependent regulation of ciliary beat frequency and mucociliary clearance. The molecular client or catalytic activity remains unresolved, and current evidence does not justify a canonical protein disulfide isomerase activity annotation.</h3>
+                <span class="vote-buttons" data-g="Q8TD06" data-a="FUNCTION: AGR3 is an ER-retained AGR/thioredoxin-like protei..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003351" target="_blank" class="term-link">
+                                epithelial cilium movement involved in extracellular fluid movement
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019722" target="_blank" class="term-link">
+                                calcium-mediated signaling
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                endoplasmic reticulum
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" target="_blank" class="term-link">
+                                PMID:25751668
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">AGR3 deficiency had no detectable effects on ciliary beat frequency (CBF) when airways were perfused with a calcium-free solution, suggesting that AGR3 is required for calcium-mediated regulation of ciliary function. Decreased CBF was associated with impaired mucociliary clearance in AGR3-deficient airways.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/AGR3/AGR3-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">AGR3 lacks the canonical PDI/thioredoxin CXXC or WCXXC motif; structure paper reports a DCYQS motif with solvent-exposed Cys71 in reduced state. Because the second catalytic cysteine is absent and an adjacent acidic residue likely raises cysteine pKa, AGR3 is inferred to have reduced/atypical thiol-disulfide exchange activity relative to classical PDIs</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" target="_blank" class="term-link">
+                            PMID:12592373
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">hAG-2 and hAG-3, human homologues of genes involved in differentiation, are associated with oestrogen receptor-positive breast tumours and interact with metastasis gene C4.4a and dystroglycan.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AGR3 was reported to bind C4.4a/LYPD3 and alpha-dystroglycan in yeast two-hybrid screens.</div>
+                        
+                        <div class="finding-text">"Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan (DAG-1) as binding partners for both hAG-2 and hAG-3"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18086916" target="_blank" class="term-link">
+                            PMID:18086916
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A molecular specificity code for the three mammalian KDEL receptors.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AGR3/hAG-3 is ER localized and loses ER localization when its C-terminal retrieval motif is removed.</div>
+                        
+                        <div class="finding-text">"Three of the 16 constructs, ERp18, Hag3, and GP7R, changed their localization from the ER to the Golgi when the putative ER-retention motif was not present"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link">
+                            PMID:21516116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Next-generation sequencing to generate interactome datasets.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" target="_blank" class="term-link">
+                            PMID:25751668
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Endoplasmic Reticulum Resident Protein AGR3. Required for Regulation of Ciliary Beat Frequency in the Airway.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AGR3 is required for calcium-mediated ciliary beat regulation and mucociliary clearance in airway epithelium.</div>
+                        
+                        <div class="finding-text">"AGR3 deficiency had no detectable effects on ciliary beat frequency (CBF) when airways were perfused with a calcium-free solution, suggesting that AGR3 is required for calcium-mediated regulation of ciliary function. Decreased CBF was associated with impaired mucociliary clearance in AGR3-deficient airways."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26170690" target="_blank" class="term-link">
+                            PMID:26170690
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Anterior gradient protein 3 is associated with less aggressive tumors and better outcome of breast cancer patients.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AGR3 is expressed in ciliated cells of the oviduct and in several cancer contexts.</div>
+                        
+                        <div class="finding-text">"AGR3 expression was demonstrated in various cancers, including breast,7 prostate,21 ovary,19,20 and liver.18"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/AGR3/AGR3-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for human AGR3.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AGR3 is not currently supported as a canonical protein disulfide isomerase despite its PDI-family/thioredoxin-like fold.</div>
+                        
+                        <div class="finding-text">"Although structurally in the PDI/thioredoxin family, AGR3&#39;s **DCYQS** motif (lacking the second cysteine) supports the view that AGR3 is **not a canonical disulfide isomerase**; it likely mediates **selective protein interactions** or specialized redox behavior rather than generalized thiol-disulfide exchange"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does purified AGR3 have measurable protein disulfide isomerase or other redox/foldase activity, or should the PN PDI-family projection be treated as family context only?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TD06" data-a="Q: Does purified AGR3 have measurable protein disulfi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which ER client protein or calcium-handling pathway links AGR3 to airway epithelial ciliary beat regulation?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TD06" data-a="Q: Which ER client protein or calcium-handling pathwa..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is extracellular AGR3/Src signaling a physiological epithelial function, a cancer-specific state, or a consequence of altered ER retention/secretion?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TD06" data-a="Q: Is extracellular AGR3/Src signaling a physiologica..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test purified AGR3, Cys71 mutants, and canonical PDI controls against standard disulfide isomerase/reductase substrates and candidate airway epithelial client proteins.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemical activity assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TD06" data-a="EXPERIMENT: Test purified AGR3, Cys71 mutants, and canonical P..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Rescue AGR3-deficient differentiated airway epithelial cultures with wild-type AGR3, QSEL-retention mutants, and Cys71 mutants while measuring ER localization, live-cell Ca2+ dynamics, ciliary beat frequency, and mucociliary transport.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: structure-function rescue</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TD06" data-a="EXPERIMENT: Rescue AGR3-deficient differentiated airway epithe..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use proximity labeling or crosslinking/coimmunoprecipitation in differentiated ciliated airway epithelium to identify AGR3-proximal ER proteins and distinguish physiological clients from high-throughput interactome candidates.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: client discovery</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TD06" data-a="EXPERIMENT: Use proximity labeling or crosslinking/coimmunopre..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">proteostasis-network-review</span>
+            
+            <span class="badge">pn-projection-reviewed</span>
+            
+            <span class="badge">ciliary-function</span>
+            
+            <span class="badge">er-localized</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AGR3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8TD06" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">16 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-03T10:02:13.975321</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="AGR3-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-human-agr3-pdia18-uniprot-q8td06-functional-annotation">Research report: Human <strong>AGR3 / PDIA18</strong> (UniProt <strong>Q8TD06</strong>) functional annotation</h2>
+<h3 id="0-target-verification-critical-identity-check">0) Target verification (critical identity check)</h3>
+<p>AGR3 in this report refers specifically to the <strong>human</strong> protein <strong>Anterior gradient protein 3</strong>, also annotated as <strong>PDIA18</strong> (protein disulfide isomerase family A member 18), corresponding to UniProt accession <strong>Q8TD06</strong>. It is a <strong>small (~166 aa) single-domain thioredoxin/PDI-family protein</strong> with a <strong>noncanonical CXXS-like active-site region</strong> and a <strong>C‑terminal ER retention signal</strong> (QSEL), consistent across structural, airway-epithelium, and review literature describing AGR3 (bonser2015theendoplasmicreticulum pages 1-5, boisteau2022anteriorgradientproteins pages 6-10, nguyen2018crystalstructureof pages 1-2).</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-agr-family-and-pdithioredoxin-context">1.1 AGR family and PDI/thioredoxin context</h4>
+<p>AGR3 is part of the <strong>anterior gradient (AGR) family</strong> (AGR1/AGR2/AGR3), a subset of <strong>protein disulfide isomerase (PDI)</strong>-related proteins typically associated with the <strong>secretory pathway</strong> and the <strong>endoplasmic reticulum (ER)</strong>. Reviews position AGR proteins as PDI-like factors involved in <strong>secretory and transmembrane protein biogenesis in the ER</strong> (boisteau2022anteriorgradientproteins pages 1-6, boisteau2022anteriorgradientproteins pages 6-10).</p>
+<p>A key concept for AGR3 is that, unlike canonical PDIs that catalyze thiol–disulfide exchange via a <strong>CXXC</strong> motif, AGR3 contains a <strong>noncanonical motif</strong> that lacks the second catalytic cysteine, implying <strong>atypical or reduced classical thiol–disulfide exchange capability</strong> (nguyen2018crystalstructureof pages 1-2, nguyen2018crystalstructureof pages 5-6).</p>
+<h4 id="12-what-catalytic-activity-likely-means-for-agr3">1.2 What “catalytic activity” likely means for AGR3</h4>
+<p>The AGR3 crystal structure literature explicitly emphasizes divergence from the canonical catalytic PDI motif and interprets this as evidence that AGR3 is <strong>unlikely to function as a typical thiol–disulfide exchange enzyme</strong> in oxidative protein folding (nguyen2018crystalstructureof pages 1-2). Thus, AGR3 is best conceptualized as a <strong>PDI-family/thioredoxin-fold protein whose primary biological roles may include selective protein–protein interactions, chaperone-like behavior, or specialized quality-control functions</strong>, rather than broad-spectrum disulfide isomerization.</p>
+<h3 id="2-molecular-features-domains-motifs-and-structural-mechanism">2) Molecular features: domains, motifs, and structural mechanism</h3>
+<h4 id="21-domain-architecture-and-targeting-signals">2.1 Domain architecture and targeting signals</h4>
+<p>AGR3 is described as a <strong>single-domain thioredoxin/PDI-like protein</strong> that is routed into the secretory pathway by an <strong>N‑terminal signal peptide</strong> and contains a <strong>nonstandard ER-retention sequence QSEL</strong> (nguyen2018crystalstructureof pages 1-2, boisteau2022anteriorgradientproteins pages 6-10).</p>
+<h4 id="22-active-site-motif-and-catalytic-implications-structure-informed">2.2 Active-site motif and catalytic implications (structure-informed)</h4>
+<p>Crystal structure work reports that AGR3 <strong>lacks the canonical WCXXC/CXXC active-site motif</strong> and instead contains <strong>DCYQS</strong> at the equivalent position (nguyen2018crystalstructureof pages 1-2). Structural analysis places this motif in helix 2 and identifies <strong>Cys71</strong> as <strong>solvent-exposed</strong> and <strong>observed in a reduced (not oxidized) state</strong> in the crystal (nguyen2018crystalstructureof pages 3-5).</p>
+<p>Mechanistically, the missing second cysteine (relative to CXXC PDIs) and the presence of an adjacent acidic residue predicted to modulate cysteine pKa support the interpretation that AGR3 has <strong>reduced/altered thiolate reactivity</strong> and therefore may not efficiently catalyze classical disulfide exchange reactions characteristic of canonical PDIs (nguyen2018crystalstructureof pages 5-6, nguyen2018crystalstructureof pages 1-2). Nonetheless, the exposed cysteine and nearby structural elements (e.g., a cis-proline near the motif) are consistent with a role in <strong>substrate binding or specialized redox interactions</strong> (nguyen2018crystalstructureof pages 3-5).</p>
+<h4 id="23-oligomerization-state">2.3 Oligomerization state</h4>
+<p>In the AGR3 crystal asymmetric unit, two molecules associate, but the authors report that biochemical/PISA analyses provide <strong>no evidence for a stable dimer in solution</strong> and that AGR3 lacks a component of the salt bridge found in AGR2 dimers (nguyen2018crystalstructureof pages 3-5). This indicates that <strong>stable dimerization is not strongly supported</strong> for AGR3 under the conditions tested, although transient or context-dependent interactions remain possible.</p>
+<h3 id="3-subcellular-localization-and-tissuecell-type-specificity">3) Subcellular localization and tissue/cell-type specificity</h3>
+<h4 id="31-er-localization-in-ciliated-airway-cells">3.1 ER localization in ciliated airway cells</h4>
+<p>A core, well-supported feature of AGR3 is its <strong>ER localization in ciliated airway epithelial cells</strong>.</p>
+<p>Bonser et al. report ER localization by immunostaining/colocalization: <strong>99.5%</strong> of AGR3 signal colocalized with ER markers (GRP78/GRP94), and AGR3 staining was largely distinct from AGR2 (<strong>97.7%</strong> in regions distinct from AGR2), reinforcing that AGR3 is an ER-resident protein with cell-type specificity in the airway epithelium (bonser2015theendoplasmicreticulum pages 5-10).</p>
+<h4 id="32-expression-is-differentiation-linked-and-not-a-canonical-er-stressupr-target">3.2 Expression is differentiation-linked and not a canonical ER-stress/UPR target</h4>
+<p>AGR3 expression increases sharply during airway epithelial differentiation: AGR3 mRNA increased ~<strong>1000‑fold</strong> from day 7 to day 21 in differentiated airway epithelial cultures (bonser2015theendoplasmicreticulum pages 10-13). In contrast to AGR2, AGR3 is <strong>not induced by ER stress</strong>: tunicamycin increased AGR2 mRNA ~<strong>13‑fold</strong> but did not increase AGR3 mRNA (bonser2015theendoplasmicreticulum pages 5-10). Reviews similarly describe AGR3 expression as <strong>independent of ER stress</strong> (boisteau2022anteriorgradientproteins pages 1-6, boisteau2022anteriorgradientproteins pages 6-10).</p>
+<h3 id="4-biological-function-and-pathways">4) Biological function and pathways</h3>
+<h4 id="41-primary-physiological-role-supported-by-in-vivo-genetics-ciliary-beat-regulation">4.1 Primary physiological role supported by in vivo genetics: ciliary beat regulation</h4>
+<p>The strongest mechanistic functional evidence for AGR3 comes from mouse genetics and airway physiology. Agr3 knockout mice (<strong>Agr3−/−</strong>) were viable and had normal ciliary ultrastructure (normal “9+2” arrangement and dynein arms), indicating AGR3 is <strong>not required for ciliogenesis</strong> per se (bonser2015theendoplasmicreticulum pages 10-13).</p>
+<p>However, Agr3−/− tracheal cilia exhibited a clear functional defect:<br />
+- Baseline ciliary beat frequency (CBF) was reduced by <strong>~20%</strong> vs controls in 1 mM extracellular Ca2+ (bonser2015theendoplasmicreticulum pages 10-13).<br />
+- After extracellular ATP stimulation, CBF was <strong>~35% lower</strong> in Agr3−/− tracheas (bonser2015theendoplasmicreticulum pages 10-13).<br />
+- Mucociliary particle transport speed was reduced by <strong>35%</strong> in Agr3−/− tracheas, supporting impaired mucociliary clearance (bonser2015theendoplasmicreticulum pages 10-13).</p>
+<p>These data define AGR3’s best-supported physiological role as <strong>regulation of ciliary motility and mucociliary clearance</strong>, rather than structural assembly of cilia.</p>
+<h4 id="42-calcium-signaling-link">4.2 Calcium signaling link</h4>
+<p>Bonser et al. provide evidence that the ciliary phenotype is <strong>calcium-dependent</strong>:<br />
+- The genotype difference in CBF disappeared in <strong>calcium-free</strong> solution (bonser2015theendoplasmicreticulum pages 10-13).<br />
+- Cultured tracheal epithelial cells from Agr3−/− mice had lower intracellular Ca2+ than wild-type (<strong>139.7 ± 98.2 nM</strong> vs <strong>362.1 ± 55.0 nM</strong>, n=6, p&lt;0.001) (bonser2015theendoplasmicreticulum pages 10-13).</p>
+<p>Thus, AGR3 appears to influence <strong>intracellular Ca2+ homeostasis/signaling</strong> in ciliated cells in a way that impacts ciliary beat regulation.</p>
+<h3 id="5-cancer-related-roles-and-extracellular-agr3-biology">5) Cancer-related roles and extracellular AGR3 biology</h3>
+<h4 id="51-cancer-associations-overview">5.1 Cancer associations (overview)</h4>
+<p>Reviews summarize that AGR3 has been detected beyond the ER context in cancer, including reports of <strong>cell membrane association</strong> and <strong>extracellular AGR3 (eAGR3)</strong>, and that AGR3 expression in breast cancer correlates with estrogen receptor status (boisteau2022anteriorgradientproteins pages 6-10). These observations motivate mechanistic studies of extracellular AGR3.</p>
+<h4 id="52-experimental-evidence-eagr3-promotes-migrationadhesion-and-activates-src">5.2 Experimental evidence: eAGR3 promotes migration/adhesion and activates Src</h4>
+<p>A key primary study demonstrated that <strong>breast cancer cells secrete AGR3</strong> and that extracellular AGR3 has functional activity. In ER-positive breast cancer cell lines (MCF‑7, T‑47D), AGR3 was found in conditioned media at <strong>nanomolar concentrations</strong> (obacz2019extracellularagr3regulates pages 2-4). The same study reports <strong>higher serum eAGR3 in breast cancer patients vs healthy controls</strong> (no absolute concentration values were present in the retrieved excerpt) (obacz2019extracellularagr3regulates pages 6-8).</p>
+<p>Functionally, recombinant eAGR3 (commonly <strong>5 ng/mL</strong>, tested across ~0.5–50 ng/mL) increased migration in wound-healing assays and increased resistance to detachment in adhesion-related assays (obacz2019extracellularagr3regulates pages 4-6, obacz2019extracellularagr3regulates pages 2-4).</p>
+<p>Mechanistically, the study provides both pharmacologic and genetic evidence that eAGR3 acts via <strong>Src kinase signaling</strong>:<br />
+- eAGR3 increased <strong>tyrosine phosphorylation</strong> and increased <strong>c‑Src phosphorylation</strong>; Src phosphorylation was blocked by <strong>dasatinib</strong> (obacz2019extracellularagr3regulates pages 4-6).<br />
+- Dasatinib (1 µM in migration assays) significantly reduced migration in both control and eAGR3-stimulated cells (obacz2019extracellularagr3regulates pages 4-6).<br />
+- A kinase-dead/dominant-negative Src mutant (<strong>K298R</strong>) abolished the migratory response to eAGR3, while wild-type Src did not (obacz2019extracellularagr3regulates pages 4-6).</p>
+<p>The authors additionally note that dasatinib did not fully abolish the eAGR3 migration effect, suggesting additional pathways may contribute (obacz2019extracellularagr3regulates pages 6-8).</p>
+<h3 id="6-applications-and-real-world-implementations">6) Applications and real-world implementations</h3>
+<h4 id="61-airway-biology-and-mucociliary-clearance-relevance">6.1 Airway biology and mucociliary clearance relevance</h4>
+<p>Given the magnitude of effects on CBF and mucociliary transport in Agr3−/− models, AGR3 is a plausible <strong>mechanistic node</strong> for disorders where <strong>mucociliary clearance is compromised</strong>, though the provided evidence does not include direct AGR3-targeted therapies (bonser2015theendoplasmicreticulum pages 10-13).</p>
+<h4 id="62-potential-biomarker-concept-in-breast-cancer-early-translational-signal">6.2 Potential biomarker concept in breast cancer (early translational signal)</h4>
+<p>Patient serum elevation of eAGR3 relative to healthy controls suggests a potential <strong>liquid-biopsy biomarker direction</strong>, but the retrieved evidence excerpt does not provide performance metrics (AUC, sensitivity/specificity) or absolute concentration ranges needed for clinical evaluation (obacz2019extracellularagr3regulates pages 6-8).</p>
+<h3 id="7-recent-developments-20232024-prioritization-and-evidence-limitations">7) Recent developments (2023–2024 prioritization) and evidence limitations</h3>
+<p>Searches prioritized to 2023–2024 AGR3/PDIA18 did not yield additional AGR3-focused primary literature within the accessible corpus for this run; the most recent authoritative synthesis available here is a 2022 review, while the strongest primary mechanistic studies remain 2015 (airway) and 2019 (extracellular Src signaling) (boisteau2022anteriorgradientproteins pages 6-10, bonser2015theendoplasmicreticulum pages 10-13, obacz2019extracellularagr3regulates pages 4-6). Therefore, this report emphasizes <strong>high-confidence mechanistic findings</strong> from these studies and explicitly avoids extrapolating beyond available evidence.</p>
+<h3 id="8-expert-synthesis-interpretation-bounded-by-evidence">8) Expert synthesis / interpretation (bounded by evidence)</h3>
+<ol>
+<li><strong>Primary functional annotation (most evidence-supported):</strong> AGR3 is an <strong>ER-resident protein in ciliated airway epithelial cells</strong> that is required for <strong>normal calcium-dependent regulation of ciliary beat frequency</strong> and <strong>effective mucociliary clearance</strong>, without being required for formation of normal ciliary ultrastructure (bonser2015theendoplasmicreticulum pages 10-13, bonser2015theendoplasmicreticulum pages 5-10).</li>
+<li><strong>Biochemical role:</strong> Although structurally in the PDI/thioredoxin family, AGR3’s <strong>DCYQS</strong> motif (lacking the second cysteine) supports the view that AGR3 is <strong>not a canonical disulfide isomerase</strong>; it likely mediates <strong>selective protein interactions</strong> or specialized redox behavior rather than generalized thiol–disulfide exchange (nguyen2018crystalstructureof pages 1-2, nguyen2018crystalstructureof pages 5-6, nguyen2018crystalstructureof pages 3-5).</li>
+<li><strong>Cancer microenvironment role:</strong> In ER-positive breast cancer cell systems, secreted AGR3 functions as an extracellular signaling effector promoting migration/adhesion, at least partly through <strong>Src activation</strong>, with inhibition by dasatinib and ablation by dominant-negative Src (obacz2019extracellularagr3regulates pages 4-6, obacz2019extracellularagr3regulates pages 2-4).</li>
+</ol>
+<h3 id="9-quantitative-findings-selected">9) Quantitative findings (selected)</h3>
+<ul>
+<li>ER colocalization: <strong>99.5%</strong> AGR3 colocalization with GRP78/GRP94; <strong>97.7%</strong> of AGR3 staining distinct from AGR2 (airway ciliated cells) (bonser2015theendoplasmicreticulum pages 5-10).</li>
+<li>Differentiation-associated induction: AGR3 mRNA increased <strong>~1000‑fold</strong> (day 7 → day 21) in airway epithelial differentiation cultures (bonser2015theendoplasmicreticulum pages 10-13).</li>
+<li>ER stress response: tunicamycin increased AGR2 mRNA <strong>13‑fold</strong> but did not increase AGR3 mRNA (bonser2015theendoplasmicreticulum pages 5-10).</li>
+<li>Ciliary beat frequency: <strong>~20%</strong> lower baseline CBF; <strong>~35%</strong> lower after ATP stimulation in Agr3−/− tracheas (bonser2015theendoplasmicreticulum pages 10-13).</li>
+<li>Mucociliary transport: <strong>35%</strong> reduction in particle transport speed in Agr3−/− tracheas (bonser2015theendoplasmicreticulum pages 10-13).</li>
+<li>Intracellular Ca2+: <strong>139.7 ± 98.2 nM</strong> (Agr3−/−) vs <strong>362.1 ± 55.0 nM</strong> (WT), n=6, p&lt;0.001 (bonser2015theendoplasmicreticulum pages 10-13).</li>
+</ul>
+<h3 id="10-structured-summary-of-key-evidence">10) Structured summary of key evidence</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key findings</th>
+<th>Evidence type</th>
+<th>Primary source (first author, journal)</th>
+<th>Publication date (month year)</th>
+<th>URL</th>
+<th>Notes/limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>Human AGR3 corresponds to UniProt Q8TD06 / PDIA18, an AGR-family, PDI-like protein encoded on chromosome 7p21.1; reported as a 166-aa protein of ~19.2 kDa (boisteau2022anteriorgradientproteins pages 6-10, bonser2015theendoplasmicreticulum pages 1-5)</td>
+<td>Review synthesis of gene/protein annotation; primary experimental background</td>
+<td>Boisteau, <em>Oncogene</em>; Bonser, <em>Am J Respir Cell Mol Biol</em></td>
+<td>Sep 2022; Oct 2015</td>
+<td>https://doi.org/10.1038/s41388-022-02452-1 ; https://doi.org/10.1165/rcmb.2014-0318oc</td>
+<td>Annotation-level facts; not itself a direct functional assay</td>
+</tr>
+<tr>
+<td>Domains / family</td>
+<td>AGR3 is a small, single-domain PDI-family protein with a thioredoxin-like fold; it carries an N-terminal signal peptide for secretory-pathway entry and a noncanonical ER-retention motif QSEL (nguyen2018crystalstructureof pages 1-2, boisteau2022anteriorgradientproteins pages 6-10)</td>
+<td>Crystal structure; review</td>
+<td>Nguyen, <em>Acta Crystallogr F Struct Biol Commun</em>; Boisteau, <em>Oncogene</em></td>
+<td>Jun 2018; Sep 2022</td>
+<td>https://doi.org/10.1107/S2053230X18009093 ; https://doi.org/10.1038/s41388-022-02452-1</td>
+<td>Signal peptide/retention motif support localization but do not identify client proteins</td>
+</tr>
+<tr>
+<td>Active-site motif / catalytic implication</td>
+<td>AGR3 lacks the canonical PDI/thioredoxin CXXC or WCXXC motif; structure paper reports a DCYQS motif with solvent-exposed Cys71 in reduced state. Because the second catalytic cysteine is absent and an adjacent acidic residue likely raises cysteine pKa, AGR3 is inferred to have reduced/atypical thiol-disulfide exchange activity relative to classical PDIs (nguyen2018crystalstructureof pages 1-2, nguyen2018crystalstructureof pages 3-5, nguyen2018crystalstructureof pages 5-6, obaczUnknownyearinvestigationofagr3 pages 61-62)</td>
+<td>Crystal structure; comparative structural inference</td>
+<td>Nguyen, <em>Acta Crystallogr F Struct Biol Commun</em></td>
+<td>Jun 2018</td>
+<td>https://doi.org/10.1107/S2053230X18009093</td>
+<td>Catalytic activity is inferred structurally; no direct AGR3 enzymatic rate/substrate assay in provided snippets</td>
+</tr>
+<tr>
+<td>Structural features / oligomerization</td>
+<td>AGR3 adopts a thioredoxin fold with four β-strands and four α-helices, a bent helix 2, and cis-Pro117 near the DCYQS motif. Two molecules appear in the asymmetric unit, but biochemical/PISA analysis found no evidence for a stable dimer in solution; AGR3 lacks an AGR2-like inter-subunit salt-bridge component (nguyen2018crystalstructureof pages 3-5, nguyen2018crystalstructureof pages 5-6)</td>
+<td>X-ray crystal structure</td>
+<td>Nguyen, <em>Acta Crystallogr F Struct Biol Commun</em></td>
+<td>Jun 2018</td>
+<td>https://doi.org/10.1107/S2053230X18009093</td>
+<td>Structural study does not establish physiological oligomer state in cells</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>AGR3 is ER luminal/ER resident in ciliated airway cells. In human airway epithelium, 99.5% of AGR3 signal colocalized with ER markers GRP78/GRP94, and 97.7% of AGR3 staining was spatially distinct from AGR2. Review evidence also notes membrane and extracellular detection in some cancer contexts (bonser2015theendoplasmicreticulum pages 5-10, boisteau2022anteriorgradientproteins pages 6-10)</td>
+<td>Immunostaining / colocalization; review synthesis</td>
+<td>Bonser, <em>Am J Respir Cell Mol Biol</em>; Boisteau, <em>Oncogene</em></td>
+<td>Oct 2015; Sep 2022</td>
+<td>https://doi.org/10.1165/rcmb.2014-0318oc ; https://doi.org/10.1038/s41388-022-02452-1</td>
+<td>Membrane/extracellular localization in cancer is less mechanistically resolved than ER localization</td>
+</tr>
+<tr>
+<td>Expression pattern</td>
+<td>AGR3 is enriched in ciliated airway epithelial cells and increases strongly with epithelial differentiation; AGR3 mRNA rose by ~1000-fold from day 7 to day 21 in differentiated airway epithelial cultures. It is not induced by ER stress; tunicamycin increased AGR2 mRNA 13-fold but not AGR3 (bonser2015theendoplasmicreticulum pages 10-13, bonser2015theendoplasmicreticulum pages 5-10, bonser2015theendoplasmicreticulum pages 1-5, boisteau2022anteriorgradientproteins pages 1-6)</td>
+<td>Differentiation time course; ER-stress perturbation</td>
+<td>Bonser, <em>Am J Respir Cell Mol Biol</em>; Boisteau, <em>Oncogene</em></td>
+<td>Oct 2015; Sep 2022</td>
+<td>https://doi.org/10.1165/rcmb.2014-0318oc ; https://doi.org/10.1038/s41388-022-02452-1</td>
+<td>Expression data do not by themselves reveal molecular clients</td>
+</tr>
+<tr>
+<td>Airway / ciliary function</td>
+<td>Agr3-/- mice were viable and had morphologically normal cilia, but tracheal ciliary beat frequency (CBF) was reduced by ~20% at baseline; with ATP stimulation CBF was ~35% lower than controls. Mucociliary particle transport speed was reduced by 35%, supporting a role in mucociliary clearance rather than ciliogenesis (bonser2015theendoplasmicreticulum pages 10-13, bonser2015theendoplasmicreticulum pages 1-5)</td>
+<td>Mouse knockout; ex vivo tracheal physiology</td>
+<td>Bonser, <em>Am J Respir Cell Mol Biol</em></td>
+<td>Oct 2015</td>
+<td>https://doi.org/10.1165/rcmb.2014-0318oc</td>
+<td>Evidence is strong for airway physiology, but does not identify direct AGR3 molecular substrate(s)</td>
+</tr>
+<tr>
+<td>Calcium-linked mechanism</td>
+<td>The CBF defect in Agr3-/- airways disappeared in calcium-free solution, and intracellular Ca2+ in cultured tracheal epithelial cells was lower in Agr3-/- vs wild type (139.7 ± 98.2 nM vs 362.1 ± 55.0 nM; n=6; p&lt;0.001), implicating AGR3 in calcium-dependent regulation of ciliary activity (bonser2015theendoplasmicreticulum pages 10-13, bonser2015theendoplasmicreticulum pages 1-5)</td>
+<td>Mouse knockout; calcium imaging</td>
+<td>Bonser, <em>Am J Respir Cell Mol Biol</em></td>
+<td>Oct 2015</td>
+<td>https://doi.org/10.1165/rcmb.2014-0318oc</td>
+<td>Mechanistic link to specific calcium-handling proteins remains unresolved in provided evidence</td>
+</tr>
+<tr>
+<td>Cancer association (intracellular/expression)</td>
+<td>AGR3 was first identified in breast tumor membranes; review evidence states expression correlates with estrogen receptor status, correlates with AGR2, and is reported to promote migration/metastasis. AGR3 has also been detected at the cell membrane and extracellularly in cancer contexts (boisteau2022anteriorgradientproteins pages 6-10)</td>
+<td>Review synthesis drawing on earlier primary literature</td>
+<td>Boisteau, <em>Oncogene</em></td>
+<td>Sep 2022</td>
+<td>https://doi.org/10.1038/s41388-022-02452-1</td>
+<td>Broad cancer statements are summarized from prior literature; quantitative tumor-outcome estimates are not given in the snippet</td>
+</tr>
+<tr>
+<td>Extracellular AGR3 secretion</td>
+<td>ER-positive breast cancer cell lines MCF-7 and T-47D secrete AGR3; conditioned media contained extracellular AGR3 at nanomolar concentrations. Serum eAGR3 was reported significantly elevated in breast cancer patients versus healthy controls (obacz2019extracellularagr3regulates pages 2-4, obacz2019extracellularagr3regulates pages 6-8)</td>
+<td>Cell culture secretion assays; patient serum measurement</td>
+<td>Obacz, <em>Oncology Letters</em></td>
+<td>Sep 2019</td>
+<td>https://doi.org/10.3892/ol.2019.10849</td>
+<td>Provided snippets do not include absolute serum concentrations or fold change</td>
+</tr>
+<tr>
+<td>Extracellular AGR3 function in cancer</td>
+<td>Recombinant eAGR3 promoted breast-cancer-cell migration and increased resistance to detachment/adhesion-related phenotypes. Functional assays used 5 ng/ml eAGR3 commonly, with testing across 0.5–50 ng/ml; migration was measured in wound-healing assays and adhesion in detachment assays (obacz2019extracellularagr3regulates pages 4-6, obacz2019extracellularagr3regulates pages 2-4, obacz2019extracellularagr3regulates pages 1-2)</td>
+<td>Recombinant-protein treatment in breast cancer cell culture</td>
+<td>Obacz, <em>Oncology Letters</em></td>
+<td>Sep 2019</td>
+<td>https://doi.org/10.3892/ol.2019.10849</td>
+<td>Exact effect sizes are not present in the provided snippets</td>
+</tr>
+<tr>
+<td>Src signaling downstream of eAGR3</td>
+<td>eAGR3 increased tyrosine phosphorylation and c-Src phosphorylation. Dasatinib blocked c-Src phosphorylation and significantly reduced migration of control and eAGR3-stimulated cells; genetic interference with kinase-dead Src (K298R) abolished the migratory response to eAGR3. Dasatinib did not fully abolish migration, implying additional pathways may contribute (obacz2019extracellularagr3regulates pages 4-6, obacz2019extracellularagr3regulates pages 6-8, obacz2019extracellularagr3regulates pages 1-2)</td>
+<td>Pharmacologic inhibition and dominant-negative Src in cell culture</td>
+<td>Obacz, <em>Oncology Letters</em></td>
+<td>Sep 2019</td>
+<td>https://doi.org/10.3892/ol.2019.10849</td>
+<td>Strong evidence for Src involvement in vitro, but receptor(s) for eAGR3 and in vivo relevance remain unresolved</td>
+</tr>
+<tr>
+<td>Known gaps</td>
+<td>Across the provided evidence, no definitive AGR3-specific enzymatic substrate, direct folding client, or biochemical turnover measurement is established. Review and structure sources suggest possible roles in secretory/transmembrane protein biogenesis and possible mucin interaction by family analogy, but direct AGR3 client validation is lacking in the cited snippets (nguyen2018crystalstructureof pages 1-2, boisteau2022anteriorgradientproteins pages 1-6, boisteau2022anteriorgradientproteins pages 6-10)</td>
+<td>Cross-source synthesis</td>
+<td>Nguyen, <em>Acta Crystallogr F Struct Biol Commun</em>; Boisteau, <em>Oncogene</em></td>
+<td>Jun 2018; Sep 2022</td>
+<td>https://doi.org/10.1107/S2053230X18009093 ; https://doi.org/10.1038/s41388-022-02452-1</td>
+<td>Important limitation for functional annotation: much of AGR3 biochemistry remains inferential rather than directly measured</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the key experimentally supported properties and functions of human AGR3 (UniProt Q8TD06) from the provided evidence only. It highlights what is well supported—especially ER localization, ciliary function, and extracellular cancer signaling—and where important mechanistic gaps remain.</em></p>
+<h3 id="references-urls-and-dates">References (URLs and dates)</h3>
+<ul>
+<li>Bonser LR et al. <em>American Journal of Respiratory Cell and Molecular Biology</em> (Oct 2015). “The Endoplasmic Reticulum Resident Protein AGR3. Required for Regulation of Ciliary Beat Frequency in the Airway.” https://doi.org/10.1165/rcmb.2014-0318oc (bonser2015theendoplasmicreticulum pages 10-13, bonser2015theendoplasmicreticulum pages 5-10, bonser2015theendoplasmicreticulum pages 1-5)</li>
+<li>Nguyen VD et al. <em>Acta Crystallographica Section F: Structural Biology Communications</em> (Jun 2018). “Crystal structure of human anterior gradient protein 3.” https://doi.org/10.1107/S2053230X18009093 (nguyen2018crystalstructureof pages 1-2, nguyen2018crystalstructureof pages 3-5, nguyen2018crystalstructureof pages 5-6)</li>
+<li>Obacz J et al. <em>Oncology Letters</em> (Sep 2019). “Extracellular AGR3 regulates breast cancer cells migration via Src signaling.” https://doi.org/10.3892/ol.2019.10849 (obacz2019extracellularagr3regulates pages 4-6, obacz2019extracellularagr3regulates pages 2-4, obacz2019extracellularagr3regulates pages 6-8)</li>
+<li>Boisteau E et al. <em>Oncogene</em> (Sep 2022). “Anterior gradient proteins in gastrointestinal cancers: from cell biology to pathophysiology.” https://doi.org/10.1038/s41388-022-02452-1 (boisteau2022anteriorgradientproteins pages 6-10, boisteau2022anteriorgradientproteins pages 1-6)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(bonser2015theendoplasmicreticulum pages 1-5): Luke R. Bonser, Bradley W. Schroeder, Lisa A. Ostrin, Nathalie Baumlin, Jean L. Olson, Matthias Salathe, and David J. Erle. The endoplasmic reticulum resident protein agr3. required for regulation of ciliary beat frequency in the airway. American journal of respiratory cell and molecular biology, 53 4:536-43, Oct 2015. URL: https://doi.org/10.1165/rcmb.2014-0318oc, doi:10.1165/rcmb.2014-0318oc. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(boisteau2022anteriorgradientproteins pages 6-10): Emeric Boisteau, Céline Posseme, Federico Di Modugno, Julien Edeline, Cédric Coulouarn, Roman Hrstka, Andrea Martisova, Frédéric Delom, Xavier Treton, Leif A. Eriksson, Eric Chevet, Astrid Lièvre, and Eric Ogier-Denis. Anterior gradient proteins in gastrointestinal cancers: from cell biology to pathophysiology. Oncogene, 41:4673-4685, Sep 2022. URL: https://doi.org/10.1038/s41388-022-02452-1, doi:10.1038/s41388-022-02452-1. This article has 15 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nguyen2018crystalstructureof pages 1-2): Van Dat Nguyen, Ekaterina Biterova, Mikko Salin, Rik K. Wierenga, and Lloyd W. Ruddock. Crystal structure of human anterior gradient protein 3. Acta Crystallographica Section F Structural Biology Communications, 74:425-430, Jun 2018. URL: https://doi.org/10.1107/s2053230x18009093, doi:10.1107/s2053230x18009093. This article has 7 citations.</p>
+</li>
+<li>
+<p>(boisteau2022anteriorgradientproteins pages 1-6): Emeric Boisteau, Céline Posseme, Federico Di Modugno, Julien Edeline, Cédric Coulouarn, Roman Hrstka, Andrea Martisova, Frédéric Delom, Xavier Treton, Leif A. Eriksson, Eric Chevet, Astrid Lièvre, and Eric Ogier-Denis. Anterior gradient proteins in gastrointestinal cancers: from cell biology to pathophysiology. Oncogene, 41:4673-4685, Sep 2022. URL: https://doi.org/10.1038/s41388-022-02452-1, doi:10.1038/s41388-022-02452-1. This article has 15 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nguyen2018crystalstructureof pages 5-6): Van Dat Nguyen, Ekaterina Biterova, Mikko Salin, Rik K. Wierenga, and Lloyd W. Ruddock. Crystal structure of human anterior gradient protein 3. Acta Crystallographica Section F Structural Biology Communications, 74:425-430, Jun 2018. URL: https://doi.org/10.1107/s2053230x18009093, doi:10.1107/s2053230x18009093. This article has 7 citations.</p>
+</li>
+<li>
+<p>(nguyen2018crystalstructureof pages 3-5): Van Dat Nguyen, Ekaterina Biterova, Mikko Salin, Rik K. Wierenga, and Lloyd W. Ruddock. Crystal structure of human anterior gradient protein 3. Acta Crystallographica Section F Structural Biology Communications, 74:425-430, Jun 2018. URL: https://doi.org/10.1107/s2053230x18009093, doi:10.1107/s2053230x18009093. This article has 7 citations.</p>
+</li>
+<li>
+<p>(bonser2015theendoplasmicreticulum pages 5-10): Luke R. Bonser, Bradley W. Schroeder, Lisa A. Ostrin, Nathalie Baumlin, Jean L. Olson, Matthias Salathe, and David J. Erle. The endoplasmic reticulum resident protein agr3. required for regulation of ciliary beat frequency in the airway. American journal of respiratory cell and molecular biology, 53 4:536-43, Oct 2015. URL: https://doi.org/10.1165/rcmb.2014-0318oc, doi:10.1165/rcmb.2014-0318oc. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bonser2015theendoplasmicreticulum pages 10-13): Luke R. Bonser, Bradley W. Schroeder, Lisa A. Ostrin, Nathalie Baumlin, Jean L. Olson, Matthias Salathe, and David J. Erle. The endoplasmic reticulum resident protein agr3. required for regulation of ciliary beat frequency in the airway. American journal of respiratory cell and molecular biology, 53 4:536-43, Oct 2015. URL: https://doi.org/10.1165/rcmb.2014-0318oc, doi:10.1165/rcmb.2014-0318oc. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(obacz2019extracellularagr3regulates pages 2-4): Joanna Obacz, Lucia Sommerova, Daria Sicari, Michal Durech, Tony Avril, Filippo Iuliano, Silvia Pastorekova, Roman Hrstka, Eric Chevet, Frederic Delom, and Delphine Fessart. Extracellular agr3 regulates breast cancer cells migration via src signaling. Oncology Letters, 18:4449-4456, Sep 2019. URL: https://doi.org/10.3892/ol.2019.10849, doi:10.3892/ol.2019.10849. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(obacz2019extracellularagr3regulates pages 6-8): Joanna Obacz, Lucia Sommerova, Daria Sicari, Michal Durech, Tony Avril, Filippo Iuliano, Silvia Pastorekova, Roman Hrstka, Eric Chevet, Frederic Delom, and Delphine Fessart. Extracellular agr3 regulates breast cancer cells migration via src signaling. Oncology Letters, 18:4449-4456, Sep 2019. URL: https://doi.org/10.3892/ol.2019.10849, doi:10.3892/ol.2019.10849. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(obacz2019extracellularagr3regulates pages 4-6): Joanna Obacz, Lucia Sommerova, Daria Sicari, Michal Durech, Tony Avril, Filippo Iuliano, Silvia Pastorekova, Roman Hrstka, Eric Chevet, Frederic Delom, and Delphine Fessart. Extracellular agr3 regulates breast cancer cells migration via src signaling. Oncology Letters, 18:4449-4456, Sep 2019. URL: https://doi.org/10.3892/ol.2019.10849, doi:10.3892/ol.2019.10849. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(obaczUnknownyearinvestigationofagr3 pages 61-62): J Obacz. Investigation of agr3 protein function and mechanisms triggering its expression in cancer cell. Unknown journal, Unknown year.</p>
+</li>
+<li>
+<p>(obacz2019extracellularagr3regulates pages 1-2): Joanna Obacz, Lucia Sommerova, Daria Sicari, Michal Durech, Tony Avril, Filippo Iuliano, Silvia Pastorekova, Roman Hrstka, Eric Chevet, Frederic Delom, and Delphine Fessart. Extracellular agr3 regulates breast cancer cells migration via src signaling. Oncology Letters, 18:4449-4456, Sep 2019. URL: https://doi.org/10.3892/ol.2019.10849, doi:10.3892/ol.2019.10849. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="AGR3-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>nguyen2018crystalstructureof pages 1-2</li>
+<li>nguyen2018crystalstructureof pages 3-5</li>
+<li>bonser2015theendoplasmicreticulum pages 5-10</li>
+<li>bonser2015theendoplasmicreticulum pages 10-13</li>
+<li>boisteau2022anteriorgradientproteins pages 6-10</li>
+<li>bonser2015theendoplasmicreticulum pages 1-5</li>
+<li>boisteau2022anteriorgradientproteins pages 1-6</li>
+<li>nguyen2018crystalstructureof pages 5-6</li>
+<li>https://doi.org/10.1038/s41388-022-02452-1</li>
+<li>https://doi.org/10.1165/rcmb.2014-0318oc</li>
+<li>https://doi.org/10.1107/S2053230X18009093</li>
+<li>https://doi.org/10.3892/ol.2019.10849</li>
+<li>https://doi.org/10.1165/rcmb.2014-0318oc,</li>
+<li>https://doi.org/10.1038/s41388-022-02452-1,</li>
+<li>https://doi.org/10.1107/s2053230x18009093,</li>
+<li>https://doi.org/10.3892/ol.2019.10849,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AGR3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8TD06" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="agr3-notes">AGR3 notes</h1>
+<h2 id="2026-06-03-pn-proteostasis-review">2026-06-03 PN Proteostasis review</h2>
+<ul>
+<li>Generated inputs with <code>just fetch-gene human AGR3</code>; this created the UniProt record, GOA table, and a 10-entry review stub from 38 GOA rows. Falcon deep research completed at <code>genes/human/AGR3/AGR3-deep-research-falcon.md</code>.</li>
+<li>PN projection reviewed: <code>projects/PROTEOSTASIS/reports/pn_projection/pn_projected_annotations.tsv:219</code> proposes <code>GO:0003756 protein disulfide isomerase activity</code> for AGR3 from <code>ER proteostasis|Folding enzyme|Protein disulfide isomerases</code>.</li>
+<li>Conservative decision: do not add <code>GO:0003756</code> for AGR3. AGR3 is ER-retained and thioredoxin-like, but Falcon synthesis highlights that AGR3 lacks the canonical PDI CXXC/WCXXC motif and "is <strong>not a canonical disulfide isomerase</strong>" [file:human/AGR3/AGR3-deep-research-falcon.md "Although structurally in the PDI/thioredoxin family, AGR3's <strong>DCYQS</strong> motif (lacking the second cysteine) supports the view that AGR3 is <strong>not a canonical disulfide isomerase</strong>"]. This makes the PN projection a family/context projection rather than a safe gene-level GO addition.</li>
+<li>Strongest supported physiological function: ER-localized AGR3 is required for calcium-mediated regulation of airway ciliary beat frequency and mucociliary clearance <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" title="AGR3 deficiency had no detectable effects on ciliary beat frequency (CBF) when airways were perfused with a calcium-free solution, suggesting that AGR3 is required for calcium-mediated regulation of ciliary function. Decreased CBF was associated with impaired mucociliary clearance in AGR3-deficient airways.">PMID:25751668</a>.</li>
+<li>ER localization is supported by the KDEL-receptor/retention motif study <a href="https://pubmed.ncbi.nlm.nih.gov/18086916" title="Three of the 16 constructs, ERp18, Hag3, and GP7R, changed their localization from the ER to the Golgi when the putative ER-retention motif was not present">PMID:18086916</a> and by the airway paper's ciliated-cell ER-resident framing <a href="https://pubmed.ncbi.nlm.nih.gov/25751668" title="Here we report that AGR3, unlike its closest homolog AGR2, is restricted to ciliated cells in the airway epithelium and is not induced by ER stress.">PMID:25751668</a>.</li>
+<li>Dystroglycan binding is retained as non-core. The underlying evidence is yeast two-hybrid interaction with alpha-dystroglycan/DAG1 and C4.4a/LYPD3 in a cancer context <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" title="Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan (DAG-1) as binding partners for both hAG-2 and hAG-3">PMID:12592373</a>, with the authors noting that clinical-context confirmation was still needed <a href="https://pubmed.ncbi.nlm.nih.gov/12592373" title="Clearly, further analyses such as coimmunoprecipitation are required to confirm that these interactions occur in clinical cancers">PMID:12592373</a>.</li>
+<li>Generic <code>protein binding</code> rows from high-throughput interactome maps were marked over-annotated, except the PMID:12592373 row was modified to the more specific existing dystroglycan binding term.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8TD06
+gene_symbol: AGR3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  AGR3 encodes anterior gradient protein 3, a small secretory-pathway AGR/thioredoxin-like protein with an N-terminal signal
+  peptide and C-terminal ER retrieval motif. AGR3 is enriched in ciliated airway epithelial cells and other epithelia, and
+  loss-of-function evidence supports a role in calcium-dependent control of ciliary beat frequency and mucociliary clearance.
+  AGR3 also has reported cancer-associated extracellular interactions with alpha-dystroglycan and LYPD3/C4.4a, but its precise
+  molecular catalytic activity and physiological client proteins remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      ER localization is well supported for AGR3 by its signal peptide, QSEL retrieval motif, KDEL-receptor localization study,
+      and airway epithelial cell localization evidence.
+    action: ACCEPT
+    reason: &gt;-
+      ER residence is the best-supported compartment for AGR3 and is consistent with both phylogenetic transfer and direct
+      experimental localization evidence.
+    additional_reference_ids:
+    - PMID:18086916
+    - PMID:25751668
+    supported_by:
+    - reference_id: PMID:18086916
+      supporting_text: &gt;-
+        Three of the 16 constructs, ERp18, Hag3, and GP7R, changed their localization from the ER to the Golgi when the
+        putative ER-retention motif was not present
+      reference_section_type: RESULTS
+    - reference_id: PMID:25751668
+      supporting_text: &gt;-
+        Here we report that AGR3, unlike its closest homolog AGR2, is restricted to ciliated cells in the airway epithelium
+        and is not induced by ER stress.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0002162
+    label: dystroglycan binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      AGR3 binding to alpha-dystroglycan was reported in yeast two-hybrid screens, but the evidence is cancer/extracellular-context
+      interaction evidence rather than the main physiological airway/ER function of AGR3.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The term is specific enough to retain, and the IBA is consistent with the original AGR2/AGR3 two-hybrid evidence, but
+      it should not be treated as the core function because the paper itself called for additional clinical-context validation.
+    additional_reference_ids:
+    - PMID:12592373
+    supported_by:
+    - reference_id: PMID:12592373
+      supporting_text: &gt;-
+        Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan
+        (DAG-1) as binding partners for both hAG-2 and hAG-3
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:12592373
+      supporting_text: &gt;-
+        Clearly, further analyses such as coimmunoprecipitation are required to confirm that these interactions occur in clinical
+        cancers
+      reference_section_type: RESULTS
+- term:
+    id: GO:0002162
+    label: dystroglycan binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ARBA transfer of dystroglycan binding is consistent with direct AGR3/DAG1 yeast two-hybrid evidence, but it remains a
+      non-core cancer/extracellular interaction.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Keep the specific binding term as non-core: the interaction is reported, but the strongest physiological evidence for
+      AGR3 concerns ER-localized control of airway ciliary beat regulation.
+    additional_reference_ids:
+    - PMID:12592373
+    supported_by:
+    - reference_id: PMID:12592373
+      supporting_text: &gt;-
+        Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan
+        (DAG-1) as binding partners for both hAG-2 and hAG-3
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:12592373
+      supporting_text: &gt;-
+        Clearly, further analyses such as coimmunoprecipitation are required to confirm that these interactions occur in clinical
+        cancers
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated ER localization is consistent with experimental literature and the UniProt-recognized AGR3 ER retrieval motif.
+    action: ACCEPT
+    reason: &gt;-
+      ER is the principal supported cellular compartment for AGR3.
+    additional_reference_ids:
+    - PMID:18086916
+    - PMID:25751668
+    supported_by:
+    - reference_id: PMID:18086916
+      supporting_text: &gt;-
+        Three of the 16 constructs, ERp18, Hag3, and GP7R, changed their localization from the ER to the Golgi when the
+        putative ER-retention motif was not present
+      reference_section_type: RESULTS
+    - reference_id: PMID:25751668
+      supporting_text: &gt;-
+        Here we report that AGR3, unlike its closest homolog AGR2, is restricted to ciliated cells in the airway epithelium
+        and is not induced by ER stress.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21516116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This Stitch-seq interactome annotation reports an AGR3 binary interaction but collapses it to generic protein binding,
+      which is not informative for AGR3 functional curation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic protein binding should not be retained as a meaningful AGR3 function, especially for high-throughput interactome
+      rows without a mechanistic connection to AGR3 airway or ER biology.
+    supported_by:
+    - reference_id: PMID:21516116
+      supporting_text: &gt;-
+        We describe a massively parallel interactome-mapping pipeline, Stitch-seq, that combines PCR stitching with next-generation
+        sequencing and used it to generate a new human interactome dataset.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The proteome-scale interactome map contributes several AGR3 binary interaction rows, but the resulting GO term protein
+      binding is too broad to clarify AGR3 function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The annotation should not be treated as core AGR3 biology because it is a broad high-throughput interaction label without
+      a specific biochemical or pathway interpretation.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: &gt;-
+        Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      HuRI reports many AGR3 binary interaction partners, but generic protein binding obscures rather than explains the protein&#39;s
+      biological role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This high-throughput interaction evidence is useful as candidate-interactor context but should not be propagated as a
+      core or informative molecular function annotation.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &gt;-
+        Here we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Immunofluorescence-based ER localization is consistent with direct literature showing AGR3 as an ER-resident ciliated-airway
+      protein.
+    action: ACCEPT
+    reason: &gt;-
+      The experimental cellular-component annotation matches the best-supported localization for AGR3.
+    additional_reference_ids:
+    - PMID:18086916
+    - PMID:25751668
+    supported_by:
+    - reference_id: PMID:18086916
+      supporting_text: &gt;-
+        Three of the 16 constructs, ERp18, Hag3, and GP7R, changed their localization from the ER to the Golgi when the
+        putative ER-retention motif was not present
+      reference_section_type: RESULTS
+    - reference_id: PMID:25751668
+      supporting_text: &gt;-
+        Here we report that AGR3, unlike its closest homolog AGR2, is restricted to ciliated cells in the airway epithelium
+        and is not induced by ER stress.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:12592373
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The protein-binding annotation from PMID:12592373 reflects specific yeast-two-hybrid interactions with C4.4a/LYPD3 and
+      alpha-dystroglycan; dystroglycan binding is the more informative existing GO term.
+    action: MODIFY
+    reason: &gt;-
+      Protein binding is too generic. Replace it with the specific supported DAG1 interaction term, while noting that the LYPD3/C4.4a
+      interaction does not currently have an equivalently specific GO binding term in this review.
+    proposed_replacement_terms:
+    - id: GO:0002162
+      label: dystroglycan binding
+    supported_by:
+    - reference_id: PMID:12592373
+      supporting_text: &gt;-
+        Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan
+        (DAG-1) as binding partners for both hAG-2 and hAG-3
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:12592373
+      supporting_text: &gt;-
+        Clearly, further analyses such as coimmunoprecipitation are required to confirm that these interactions occur in clinical
+        cancers
+      reference_section_type: RESULTS
+- term:
+    id: GO:0002162
+    label: dystroglycan binding
+  evidence_type: IDA
+  original_reference_id: PMID:12592373
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct yeast-two-hybrid evidence supports AGR3 binding to alpha-dystroglycan, but this is not AGR3&#39;s main supported
+      physiological function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain the specific molecular interaction as non-core because the best functional evidence instead points to ER-localized
+      regulation of ciliary beat frequency in airway epithelium.
+    supported_by:
+    - reference_id: PMID:12592373
+      supporting_text: &gt;-
+        Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan
+        (DAG-1) as binding partners for both hAG-2 and hAG-3
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:12592373
+      supporting_text: &gt;-
+        Clearly, further analyses such as coimmunoprecipitation are required to confirm that these interactions occur in clinical
+        cancers
+      reference_section_type: RESULTS
+- term:
+    id: GO:0003351
+    label: epithelial cilium movement involved in extracellular fluid movement
+  evidence_type: ISS
+  original_reference_id: PMID:25751668
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NEW annotation. Mouse Agr3 loss reduces airway ciliary beat frequency and mucociliary transport while preserving ciliary
+      ultrastructure, supporting a conserved AGR3 role in epithelial motile-cilium function rather than ciliogenesis.
+    action: NEW
+    reason: &gt;-
+      This is the clearest biological-process annotation for AGR3&#39;s best-supported physiological role. It is proposed for
+      human AGR3 by sequence/orthology-supported inference from the mouse knockout and airway epithelial evidence.
+    supported_by:
+    - reference_id: PMID:25751668
+      supporting_text: &gt;-
+        Mice lacking AGR3 are viable and develop ciliated cells with normal-appearing cilia. However, ciliary beat frequency
+        was lower in airways from AGR3-deficient mice compared with control mice
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: PMID:25751668
+      supporting_text: &gt;-
+        Decreased CBF was associated with impaired mucociliary clearance in AGR3-deficient airways.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0019722
+    label: calcium-mediated signaling
+  evidence_type: ISS
+  original_reference_id: PMID:25751668
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NEW annotation. AGR3 deficiency affects ciliary beat frequency in a calcium-dependent manner, supporting involvement
+      in calcium-mediated control of airway ciliary function.
+    action: NEW
+    reason: &gt;-
+      This term captures the calcium-dependent mechanism reported for AGR3 more conservatively than asserting a specific
+      calcium transporter, channel, or enzymatic activity.
+    supported_by:
+    - reference_id: PMID:25751668
+      supporting_text: &gt;-
+        AGR3 deficiency had no detectable effects on ciliary beat frequency (CBF) when airways were perfused with a calcium-free
+        solution, suggesting that AGR3 is required for calcium-mediated regulation of ciliary function.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12592373
+  title: hAG-2 and hAG-3, human homologues of genes involved in differentiation, are associated with oestrogen receptor-positive breast tumours and interact with metastasis gene C4.4a and dystroglycan.
+  findings:
+  - statement: AGR3 was reported to bind C4.4a/LYPD3 and alpha-dystroglycan in yeast two-hybrid screens.
+    supporting_text: &gt;-
+      Yeast two-hybrid cloning identified metastasis-associated GPI-anchored C4.4a protein and extracellular alpha-dystroglycan
+      (DAG-1) as binding partners for both hAG-2 and hAG-3
+    reference_section_type: ABSTRACT
+- id: PMID:18086916
+  title: A molecular specificity code for the three mammalian KDEL receptors.
+  findings:
+  - statement: AGR3/hAG-3 is ER localized and loses ER localization when its C-terminal retrieval motif is removed.
+    supporting_text: &gt;-
+      Three of the 16 constructs, ERp18, Hag3, and GP7R, changed their localization from the ER to the Golgi when the
+      putative ER-retention motif was not present
+    reference_section_type: RESULTS
+- id: PMID:21516116
+  title: Next-generation sequencing to generate interactome datasets.
+  findings: []
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+- id: PMID:25751668
+  title: The Endoplasmic Reticulum Resident Protein AGR3. Required for Regulation of Ciliary Beat Frequency in the Airway.
+  findings:
+  - statement: AGR3 is required for calcium-mediated ciliary beat regulation and mucociliary clearance in airway epithelium.
+    supporting_text: &gt;-
+      AGR3 deficiency had no detectable effects on ciliary beat frequency (CBF) when airways were perfused with a calcium-free
+      solution, suggesting that AGR3 is required for calcium-mediated regulation of ciliary function. Decreased CBF was associated
+      with impaired mucociliary clearance in AGR3-deficient airways.
+    reference_section_type: ABSTRACT
+  full_text_unavailable: true
+- id: PMID:26170690
+  title: Anterior gradient protein 3 is associated with less aggressive tumors and better outcome of breast cancer patients.
+  findings:
+  - statement: AGR3 is expressed in ciliated cells of the oviduct and in several cancer contexts.
+    supporting_text: &gt;-
+      AGR3 expression was demonstrated in various cancers, including breast,7 prostate,21 ovary,19,20 and liver.18
+    reference_section_type: DISCUSSION
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: file:human/AGR3/AGR3-deep-research-falcon.md
+  title: Falcon deep research report for human AGR3.
+  findings:
+  - statement: AGR3 is not currently supported as a canonical protein disulfide isomerase despite its PDI-family/thioredoxin-like fold.
+    supporting_text: &gt;-
+      Although structurally in the PDI/thioredoxin family, AGR3&#39;s **DCYQS** motif (lacking the second cysteine) supports the
+      view that AGR3 is **not a canonical disulfide isomerase**; it likely mediates **selective protein interactions** or
+      specialized redox behavior rather than generalized thiol-disulfide exchange
+core_functions:
+- description: &gt;-
+    AGR3 is an ER-retained AGR/thioredoxin-like protein in ciliated airway epithelial cells that is required for normal
+    calcium-dependent regulation of ciliary beat frequency and mucociliary clearance. The molecular client or catalytic activity
+    remains unresolved, and current evidence does not justify a canonical protein disulfide isomerase activity annotation.
+  directly_involved_in:
+  - id: GO:0003351
+    label: epithelial cilium movement involved in extracellular fluid movement
+  - id: GO:0019722
+    label: calcium-mediated signaling
+  locations:
+  - id: GO:0005783
+    label: endoplasmic reticulum
+  supported_by:
+  - reference_id: PMID:25751668
+    supporting_text: &gt;-
+      AGR3 deficiency had no detectable effects on ciliary beat frequency (CBF) when airways were perfused with a calcium-free
+      solution, suggesting that AGR3 is required for calcium-mediated regulation of ciliary function. Decreased CBF was associated
+      with impaired mucociliary clearance in AGR3-deficient airways.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - reference_id: file:human/AGR3/AGR3-deep-research-falcon.md
+    supporting_text: &gt;-
+      AGR3 lacks the canonical PDI/thioredoxin CXXC or WCXXC motif; structure paper reports a DCYQS motif with solvent-exposed
+      Cys71 in reduced state. Because the second catalytic cysteine is absent and an adjacent acidic residue likely raises
+      cysteine pKa, AGR3 is inferred to have reduced/atypical thiol-disulfide exchange activity relative to classical PDIs
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does purified AGR3 have measurable protein disulfide isomerase or other redox/foldase activity, or should the PN PDI-family
+    projection be treated as family context only?
+- question: &gt;-
+    Which ER client protein or calcium-handling pathway links AGR3 to airway epithelial ciliary beat regulation?
+- question: &gt;-
+    Is extracellular AGR3/Src signaling a physiological epithelial function, a cancer-specific state, or a consequence of altered
+    ER retention/secretion?
+suggested_experiments:
+- description: &gt;-
+    Test purified AGR3, Cys71 mutants, and canonical PDI controls against standard disulfide isomerase/reductase substrates
+    and candidate airway epithelial client proteins.
+  experiment_type: biochemical activity assay
+- description: &gt;-
+    Rescue AGR3-deficient differentiated airway epithelial cultures with wild-type AGR3, QSEL-retention mutants, and Cys71
+    mutants while measuring ER localization, live-cell Ca2+ dynamics, ciliary beat frequency, and mucociliary transport.
+  experiment_type: structure-function rescue
+- description: &gt;-
+    Use proximity labeling or crosslinking/coimmunoprecipitation in differentiated ciliated airway epithelium to identify
+    AGR3-proximal ER proteins and distinguish physiological clients from high-throughput interactome candidates.
+  experiment_type: client discovery
+tags:
+- proteostasis-network-review
+- pn-projection-reviewed
+- ciliary-function
+- er-localized
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

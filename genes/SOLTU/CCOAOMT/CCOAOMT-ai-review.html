@@ -1,0 +1,3069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCOAOMT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CCOAOMT</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8H9B6" target="_blank" class="term-link">
+                        Q8H9B6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Solanum tuberosum</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CCOAOMT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8H9B6" data-a="DESCRIPTION: Q8H9B6 (CAMT_SOLTU) is the potato (Solanum tuberos..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Q8H9B6 (CAMT_SOLTU) is the potato (Solanum tuberosum) caffeoyl-CoA O-methyltransferase (CCoAOMT; trans-caffeoyl-CoA 3-O-methyltransferase; EC 2.1.1.104), a 242-residue, ~27 kDa enzyme of the class I-like SAM-binding methyltransferase superfamily, cation-dependent O-methyltransferase family, CCoAMT subfamily. It catalyzes transfer of a methyl group from S-adenosyl-L-methionine (SAM) to the 3-hydroxyl of (E)-caffeoyl-CoA, producing (E)-feruloyl-CoA and S-adenosyl-L-homocysteine (Rhea:RHEA:16925); the UniProt FUNCTION statement adds that it also methylates 5-hydroxyferuloyl-CoA to sinapoyl-CoA and acts in feruloylated-polysaccharide synthesis and cell-wall reinforcement during wounding/pathogen responses. The deep-research synthesis describes CCoAOMT as a &#34;SAM-dependent O-methyltransferase class that, in its canonical (&#34;true&#34;) lignin-pathway role, catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism&#34; (file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md), and the potato family paper states that &#34;The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants&#34; (PMID:39596666). Catalysis requires SAM (a methyl donor) and a bound divalent metal cation (Mg2+/Ca2+ by similarity; UniProt COFACTOR &#34;a divalent metal cation&#34;, CHEBI:60240); the protein carries conserved motifs for SAM binding and metal-cation binding consistent with cation-dependent O-methyltransferase biochemistry. Biologically, CCoAOMT sits at a committed methylation step of the phenylpropanoid pathway: feruloyl-CoA is a required precursor for guaiacyl/syringyl lignin and, in potato tuber skin, for suberin deposition. Solanaceae/potato genomics frames potato CCoAOMTs as a diversified family (12 StCCoAOMT genes) split between lignin-associated and flavonoid/anthocyanin-associated clades, with the cytosol as the canonical compartment of CCoAOMT phenylpropanoid metabolism. The three keyword-derived (SPKW, GO_REF:0000043) annotations re-examined here are a mixed case: the generic &#34;methylation&#34; (GO:0032259) and broad &#34;metal ion binding&#34; (GO:0046872) terms are redundant with or less informative than the gene&#39;s specific MF terms, whereas &#34;lignin biosynthetic process&#34; (GO:0009809) captures correct, informative biology.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007623" target="_blank" class="term-link">
+                                    GO:0007623
+                                </a>
+                            </span>
+                            <span class="term-label">circadian rhythm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8H9B6" data-a="GO:0007623" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning IEA (GO_REF:0000117) assigning &#34;circadian rhythm&#34;. There is no gene-specific or family-level evidence that potato CCoAOMT participates in circadian-clock biology; the focused deep-research synthesis of the CCoAOMT literature does not mention circadian rhythm at all.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an over-prediction from an automated ARBA model and is not supported by any of the curated CCoAOMT literature. The well-supported function of the protein is caffeoyl-CoA O-methylation feeding lignin/suberin precursor pools - a phenylpropanoid-pathway role with no established connection to the circadian clock. While transcript abundance of phenylpropanoid genes can oscillate diurnally, expression rhythmicity is not equivalent to a molecular &#34;involvement in&#34; circadian rhythm, and the deep-research report - which surveys the potato and Solanaceae CCoAOMT literature for function, localization and pathway placement - describes the enzyme purely as a phenylpropanoid/lignin/suberin methyltransferase. With no supporting evidence, the ARBA &#34;circadian rhythm&#34; term should be removed as a spurious over-annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39596666" target="_blank" class="term-link">
+                                        PMID:39596666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008171" target="_blank" class="term-link">
+                                    GO:0008171
+                                </a>
+                            </span>
+                            <span class="term-label">O-methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8H9B6" data-a="GO:0008171" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO IEA (GO_REF:0000002, via IPR002935 SAM_O-MeTrfase) assigning the generic parent &#34;O-methyltransferase activity&#34;. This is correct but less specific than the demonstrated caffeoyl-CoA O-methyltransferase activity that is independently annotated to the gene.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CCoAOMT is genuinely an O-methyltransferase, so the term is not wrong, but it is a broad parent of the gene&#39;s precise, EC-backed molecular function. The protein &#34;catalyzes O-methylation of ... caffeoyl-CoA to feruloyl-CoA&#34; and is assigned EC 2.1.1.104 / Rhea:16925, so the specific child term &#34;caffeoyl-CoA O-methyltransferase activity&#34; (GO:0042409) - already present in current GOA - is the informative MF. The generic O-methyltransferase term should be modified (deepened) to the specific caffeoyl-CoA O-methyltransferase activity rather than retained as a free-standing high-level annotation.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042409" target="_blank" class="term-link">
+                                    caffeoyl-CoA O-methyltransferase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39596666" target="_blank" class="term-link">
+                                        PMID:39596666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042409" target="_blank" class="term-link">
+                                    GO:0042409
+                                </a>
+                            </span>
+                            <span class="term-label">caffeoyl-CoA O-methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8H9B6" data-a="GO:0042409" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined-IEA-methods annotation (GO_REF:0000120) backed by EC 2.1.1.104 and Rhea:16925. This is the core, specific molecular function of the protein and is strongly supported by both the UniProt catalytic-activity record and the CCoAOMT literature.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the defining molecular function of CCoAOMT and the most informative MF for the gene. The UniProt CATALYTIC ACTIVITY record gives the reaction (E)-caffeoyl-CoA + SAM = (E)-feruloyl-CoA + S-adenosyl-L-homocysteine + H+ (Rhea:16925, EC 2.1.1.104), and the deep-research synthesis states the enzyme &#34;catalyzes methylation of caffeoyl-CoA -&gt; feruloyl-CoA, a key step in phenylpropanoid/monolignol metabolism.&#34; Direct enzymology of a recombinant plant CCoAOMT (tobacco) showed it is specific for the caffeoyl-CoA and 5-hydroxyferuloyl-CoA CoA esters and has no activity against the corresponding free acids, confirming CoA-ester specificity; the activity is biochemically conserved across plant CCoAOMTs. Accept as a core function.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9484483" target="_blank" class="term-link">
+                                        PMID:9484483
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">caffeoyl-CoA and 5-hydroxyferuloyl-CoA esters and to have no activity against</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39596666" target="_blank" class="term-link">
+                                        PMID:39596666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009699" target="_blank" class="term-link">
+                                    GO:0009699
+                                </a>
+                            </span>
+                            <span class="term-label">phenylpropanoid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8H9B6" data-a="GO:0009699" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniPathway-mapping IEA (GO_REF:0000041, UPA00711 phenylpropanoid biosynthesis). This is the core biological process of CCoAOMT and the process term that REMAINS in current GOA after the SPKW &#34;lignin biosynthetic process&#34; term was retired.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CCoAOMT sits at a central methylation step of phenylpropanoid metabolism: it &#34;catalyzes methylation of caffeoyl-CoA -&gt; feruloyl-CoA, a key step in phenylpropanoid/monolignol metabolism&#34;, and the UniProt PATHWAY line assigns the enzyme to phenylpropanoid biosynthesis (UPA00711). This is the correct, well-supported process annotation. Note for the SPKW review below: this term is the broader phenylpropanoid parent; it overlaps with but does not fully substitute for the more specific (and removed) &#34;lignin biosynthetic process&#34; (GO:0009809).
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39596666" target="_blank" class="term-link">
+                                        PMID:39596666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">O-methyltransferases (OMTs) are various groups of multifunctional enzymes that play a crucial role in regulating several secondary metabolic processes, including lignin and flavonoid biosynthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032259" target="_blank" class="term-link">
+                                    GO:0032259
+                                </a>
+                            </span>
+                            <span class="term-label">methylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8H9B6" data-a="GO:0032259" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Methyltransferase&#34;; snapshot-only, removed in the current GOA release. &#34;Methylation&#34; is a bare, high-level process term that is fully and more precisely captured by the gene&#39;s specific molecular function (caffeoyl-CoA O-methyltransferase activity) and its specific process role (lignin / phenylpropanoid biosynthesis).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED. This is the cleanest redundancy case of the SPKW batch: the enzyme&#39;s methylation chemistry is already stated precisely and informatively by its specific MF &#34;caffeoyl-CoA O-methyltransferase activity&#34; (GO:0042409, present in current GOA) - the deep research describes CCoAOMT as a class that &#34;catalyzes methylation of caffeoyl-CoA -&gt; feruloyl-CoA, a key step in phenylpropanoid/monolignol metabolism&#34; - and the biological context is captured by &#34;phenylpropanoid biosynthetic process&#34; (and the more specific &#34;lignin biosynthetic process&#34;, reviewed below). A bare generic process term &#34;methylation&#34; adds no information once the specific MF and process terms are present; it is uninformative and redundant. Removal of the keyword-derived generic term is appropriate.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39596666" target="_blank" class="term-link">
+                                        PMID:39596666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009809" target="_blank" class="term-link">
+                                    GO:0009809
+                                </a>
+                            </span>
+                            <span class="term-label">lignin biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8H9B6" data-a="GO:0009809" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Lignin biosynthesis&#34;; snapshot-only, removed in the current GOA release. CCoAOMT is a key, well-characterized enzyme of the lignin branch of phenylpropanoid metabolism - the caffeoyl-CoA -&gt; feruloyl-CoA methylation it catalyzes is upstream of both guaiacyl (G) and syringyl (S) lignin monomers.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was NOT justified - a correct and informative process annotation was lost as collateral damage of retiring the keyword2GO pipeline. CCoAOMT is a canonical lignin-pathway enzyme: the classic biochemical characterization of plant CCoAOMT is titled &#34;a lignin biosynthetic enzyme&#34; (Martz et al. 1998, PMID:9484483), the potato family paper states that &#34;the true CCoAOMT members are involved in lignin biosynthesis in vivo through methylating caffeoyl-CoA&#34; (PMID:39596666), and the deep research places the enzyme&#39;s caffeoyl-CoA -&gt; feruloyl-CoA step &#34;feeding into G- and S-lignin precursor formation&#34;. &#34;Lignin biosynthetic process&#34; (GO:0009809) is a specific child of the phenylpropanoid biosynthetic process term that REMAINS in current GOA (GO:0009699); the broader retained term does not fully substitute for it. Because the caffeoyl-CoA O-methyltransferase step is genuinely a committed step toward lignin monomers, this annotation should be retained (it represents a core biological process of the gene). Note the potato family is functionally diversified - some StCCoAOMTs may instead act in flavonoid/anthocyanin methylation - but the canonical lignin role is the best-supported assignment for Q8H9B6.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9484483" target="_blank" class="term-link">
+                                        PMID:9484483
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a lignin biosynthetic enzyme</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39596666" target="_blank" class="term-link">
+                                        PMID:39596666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the true CCoAOMT members are involved in lignin biosynthesis in vivo through methylating caffeoyl-CoA</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">feeding into **G- and S-lignin** precursor formation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8H9B6" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Metal-binding&#34;; snapshot-only, removed in the current GOA release. CCoAOMT is a cation-dependent O-methyltransferase that requires a bound divalent metal cation (Mg2+/Ca2+ by similarity) for catalysis, so the gene does bind a metal ion - but &#34;metal ion binding&#34; is a very broad parent term inferred from a keyword.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this generic keyword-derived term was acceptable. The metal dependence is real: the CCoAOMT family is defined biochemically as &#34;the Mg2+-dependent caffeoyl coenzyme An O-methyltransferase (CCoAOMT) family&#34; (PMID:39596666), and the UniProt COFACTOR record lists a divalent metal cation (CHEBI:60240, by similarity), with three metal-coordinating BINDING residues (158, 184, 185). However, &#34;metal ion binding&#34; (GO:0046872) is a top-level grouping term inferred from a keyword rather than from gene-specific experimental data, and the divalent-cation requirement is already implicit in the cation-dependent O-methyltransferase molecular function. If a metal-binding MF were to be retained, the more specific &#34;magnesium ion binding&#34; (GO:0000287) would be preferable (Mg2+ is the canonical CCoAOMT cofactor), but the UniProt cofactor is annotated only generically as &#34;a divalent metal cation&#34; by similarity, so a specific replacement cannot be firmly justified from current evidence. As a free-standing keyword-derived broad term it adds little, so its removal is reasonable.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    magnesium ion binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39596666" target="_blank" class="term-link">
+                                        PMID:39596666
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the Mg2+-dependent caffeoyl coenzyme An O-methyltransferase (CCoAOMT) family with low subunit sizes of 26–30 kDa</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Potato CCoAOMT catalyzes SAM-dependent O-methylation of (E)-caffeoyl-CoA to (E)-feruloyl-CoA (EC 2.1.1.104; also 5-hydroxyferuloyl-CoA to sinapoyl-CoA), the committed methylation step of the phenylpropanoid pathway, using a bound divalent metal cation as cofactor.
+</h3>
+                <span class="vote-buttons" data-g="Q8H9B6" data-a="FUNCTION: Potato CCoAOMT catalyzes SAM-dependent O-methylati..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042409" target="_blank" class="term-link">
+                            caffeoyl-CoA O-methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009699" target="_blank" class="term-link">
+                                phenylpropanoid biosynthetic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009809" target="_blank" class="term-link">
+                                lignin biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39596666" target="_blank" class="term-link">
+                                PMID:39596666
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9484483" target="_blank" class="term-link">
+                                PMID:9484483
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">caffeoyl-CoA and 5-hydroxyferuloyl-CoA esters and to have no activity against</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>By generating feruloyl-CoA, CCoAOMT supplies precursors for guaiacyl/syringyl lignin and, in potato tuber skin, for suberin deposition, contributing to cell-wall reinforcement during development and wound/pathogen responses.
+</h3>
+                <span class="vote-buttons" data-g="Q8H9B6" data-a="FUNCTION: By generating feruloyl-CoA, CCoAOMT supplies precu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042409" target="_blank" class="term-link">
+                            caffeoyl-CoA O-methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009809" target="_blank" class="term-link">
+                                lignin biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39596666" target="_blank" class="term-link">
+                                PMID:39596666
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the true CCoAOMT members are involved in lignin biosynthesis in vivo through methylating caffeoyl-CoA</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">feeding into **G- and S-lignin** precursor formation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9484483" target="_blank" class="term-link">
+                                PMID:9484483
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">a lignin biosynthetic enzyme</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro2GO mapping (IPR002935 SAM_O-MeTrfase) assigns the generic parent term &#34;O-methyltransferase activity&#34; to CCoAOMT; the specific caffeoyl-CoA O-methyltransferase activity is the informative child.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniPathway UPA00711 (phenylpropanoid biosynthesis) maps to &#34;phenylpropanoid biosynthetic process&#34;; this is the core process role retained in current GOA after the SPKW lignin term was retired.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For CCoAOMT the keywords &#34;Methyltransferase&#34; and &#34;Metal-binding&#34; mapped to broad, redundant terms (methylation; metal ion binding), but &#34;Lignin biosynthesis&#34; mapped to a correct, informative process term (lignin biosynthetic process) whose removal was collateral.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA assigned &#34;circadian rhythm&#34; to CCoAOMT; unsupported by any CCoAOMT literature and likely a model over-prediction.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA methods (EC 2.1.1.104 / Rhea:16925) assign the specific molecular function &#34;caffeoyl-CoA O-methyltransferase activity&#34;, the defining function of the gene.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9484483" target="_blank" class="term-link">
+                            PMID:9484483
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">cDNA cloning, substrate specificity and expression study of tobacco caffeoyl-CoA 3-O-methyltransferase, a lignin biosynthetic enzyme.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant tobacco CCoAOMT purified from bacteria was specific for the caffeoyl-CoA and 5-hydroxyferuloyl-CoA CoA esters and had no activity against the corresponding free acids (caffeic acid, 5-hydroxyferulic acid), establishing CoA-ester substrate specificity for plant CCoAOMT. Direct experimental evidence supporting the caffeoyl-CoA O-methyltransferase activity.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The expression pattern and substrate specificity of tobacco CCoAOMT support a preferential role in lignin biosynthesis; the paper title itself frames CCoAOMT as a lignin biosynthetic enzyme. Primary support for the lignin biosynthetic process annotation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39596666" target="_blank" class="term-link">
+                            PMID:39596666
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genome-Wide Characterization of Solanum tuberosum CCoAOMT Gene Family and Identification of StCCoAOMT Genes Involved in Anthocyanin Biosynthesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and converts caffeoyl-CoA into feruloyl-CoA in plants; true CCoAOMT members are involved in lignin biosynthesis in vivo through methylating caffeoyl-CoA. Primary potato-family support for the core MF and lignin biosynthetic process annotations.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CCoAOMTs constitute the Mg2+-dependent caffeoyl-CoA O-methyltransferase family (subunit ~26-30 kDa), supporting the metal-ion (magnesium) dependence underlying the metal ion binding keyword annotation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Potato has 12 StCCoAOMT genes clustered into two groups; StCCoAOMT10 is highly expressed in purple potatoes and its protein localized mainly to the cytoplasm and nucleus, indicating functional diversification (lignin- vs flavonoid/anthocyanin-associated members).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of potato CCOAOMT (Q8H9B6).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CCoAOMT is a SAM-dependent O-methyltransferase that, in its canonical lignin-pathway role, catalyzes methylation of caffeoyl-CoA to feruloyl-CoA, a key step in phenylpropanoid/monolignol metabolism.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">True CCoAOMT functions in the phenylpropanoid/monolignol/lignin biosynthesis pathway, helping generate G-lignin precursors and feeding substrate toward S-lignin formation downstream, supporting a core lignin-biosynthetic-process role. (The falcon report does not itself discuss suberin; the suberin/feruloylated-polysaccharide/wound-response context is from the UniProt FUNCTION record.)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Potato has a diversified 12-member StCCoAOMT family split between lignin-associated and flavonoid/anthocyanin-associated clades; CCoAOMT phenylpropanoid methylation occurs in the cytosol (StCCoAOMT10 localizes to cytoplasm and nucleus).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The report does not mention any circadian-rhythm role for CCoAOMT, consistent with treating the ARBA &#34;circadian rhythm&#34; annotation as a spurious over-prediction.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the specific potato isoform Q8H9B6 function predominantly in lignin/suberin biosynthesis, or does it belong to a flavonoid/anthocyanin-methylating CCoAOMT clade, given the functional diversification of the 12-member potato StCCoAOMT family?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Yaxuan Peng</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8H9B6" data-a="Q: Does the specific potato isoform Q8H9B6 function p..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the in vitro substrate specificity and metal-cofactor preference (Mg2+ vs Ca2+ vs Mn2+) of purified Q8H9B6, and does it methylate 5-hydroxyferuloyl-CoA as well as caffeoyl-CoA?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Adriana Balbina Andreu</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8H9B6" data-a="Q: What is the in vitro substrate specificity and met..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant Q8H9B6 and measure kinetic parameters (Km, kcat) for caffeoyl-CoA and 5-hydroxyferuloyl-CoA with SAM, testing the divalent-cation requirement (Mg2+/Ca2+/Mn2+) to confirm the cation-dependent O-methyltransferase mechanism.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Q8H9B6 is a Mg2+-dependent caffeoyl-CoA O-methyltransferase producing feruloyl-CoA, with measurable activity also on 5-hydroxyferuloyl-CoA.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme kinetics and cofactor-dependence assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8H9B6" data-a="EXPERIMENT: Express and purify recombinant Q8H9B6 and measure ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate CRISPR knockout / RNAi knockdown of the Q8H9B6 ortholog in potato and quantify tuber-skin lignin and suberin content, lignin monomer (S/G) composition, and wound-induced cell-wall-bound ferulate.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of CCoAOMT reduces feruloyl-CoA-derived lignin/suberin and alters S/G lignin monomer ratio, impairing tuber skin barrier formation and wound response.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: reverse-genetics and cell-wall chemotype analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8H9B6" data-a="EXPERIMENT: Generate CRISPR knockout / RNAi knockdown of the Q..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express a Q8H9B6-GFP fusion in potato and determine subcellular localization to test whether the enzyme is cytosolic, as predicted for the lignin-associated CCoAOMT clade.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Q8H9B6 localizes to the cytosol, consistent with cytosolic phenylpropanoid methylation feeding cell-wall precursor pools.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: fluorescent-protein subcellular localization</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8H9B6" data-a="EXPERIMENT: Express a Q8H9B6-GFP fusion in potato and determin..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CCOAOMT-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8H9B6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">27 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T00:21:25.701594</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="CCOAOMT-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="CCOAOMT-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000026 I have extracted Figure 4, which details the phylogenetic relationship, conserved motifs, and gene structures of the StCCoAOMT fami</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-ccoaomt-uniprot-q8h9b6-in-solanum-tuberosum-potato">Research Report: Functional Annotation of <strong>CCOAOMT</strong> (UniProt <strong>Q8H9B6</strong>) in <em>Solanum tuberosum</em> (Potato)</h2>
+<h3 id="0-executive-summary">0) Executive summary</h3>
+<p>Caffeoyl-CoA O-methyltransferase (CCoAOMT; EC 2.1.1.104) is a SAM-dependent O-methyltransferase class that, in its canonical ("true") lignin-pathway role, catalyzes methylation of <strong>caffeoyl-CoA → feruloyl-CoA</strong>, a key step in phenylpropanoid/monolignol metabolism. In potato, recent genome-wide analyses indicate a <strong>multi-gene StCCoAOMT family (12 members)</strong>, with a subset clustering with Arabidopsis lignin-associated CCoAOMTs and other members suggested to diversify toward flavonoid/anthocyanin methylation; one member (StCCoAOMT10) shows <strong>cytoplasm+nucleus localization</strong> in transient expression assays and is associated with purple-tuber anthocyanin accumulation. Across 2023–2024 engineering studies in diverse plants, perturbing CCoAOMT (or its methyl-donor supply) produces large, quantitative shifts in lignin amount and composition, indicating CCoAOMT is a tractable lever for disease/stress resilience and biomass processing traits, albeit with pleiotropy risks.</p>
+<h3 id="1-mandatory-geneprotein-identity-verification-disambiguation">1) Mandatory gene/protein identity verification (disambiguation)</h3>
+<p><strong>Target per user</strong>: UniProt Q8H9B6 from <em>Solanum tuberosum</em> annotated as <strong>caffeoyl-CoA O-methyltransferase</strong> (EC 2.1.1.104), belonging to a class I-like SAM-binding methyltransferase with a <strong>Methyltransf_3/PF01596</strong>-type OMT domain.</p>
+<p><strong>What the retrieved literature confirms (potato context):</strong><br />
+* Potato CCoAOMTs are identified using the same defining domain signature that matches the UniProt description: PF01596 (Methyltransf_3) / AdoMet-dependent OMT fold, with conserved SAM-dependent motifs. In a 2024 potato genome-wide study, candidates were retrieved by BLASTP and HMMER using PF01596 and validated by SMART/InterPro/CDD, then curated to <strong>12 StCCoAOMT genes</strong> (StCCoAOMT1–12). (peng2024genomewidecharacterizationof pages 2-4, peng2024genomewidecharacterizationof pages 4-5)<br />
+* The same potato study explicitly defines the canonical biochemical role of "true CCoAOMT" family members as methylating caffeoyl-CoA to feruloyl-CoA. (peng2024genomewidecharacterizationof pages 2-4)</p>
+<p><strong>Critical limitation (accession-level mapping):</strong> none of the retrieved full texts explicitly crosswalks <strong>UniProt Q8H9B6</strong> to a specific <strong>Soltu.DM.<br />
+… gene model</strong> (e.g., Soltu.DM.01G047320). Therefore, the strongest defensible conclusion is that Q8H9B6 is a <strong>bona fide potato CCoAOMT-family enzyme</strong> consistent with PF01596/Methyltransf_3 architecture, but <strong>which StCCoAOMT locus</strong> it corresponds to cannot be confirmed from the retrieved sources alone. (peng2024genomewidecharacterizationof pages 4-5)</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-ccoaomt-vs-comt-two-methylation-strategies-in-phenylpropanoid-metabolism">2.1 CCoAOMT vs COMT (two methylation strategies in phenylpropanoid metabolism)</h4>
+<p>In monolignol/lignin biosynthesis, plants use SAM-dependent O-methyltransferases acting at different chemical levels:<br />
+* <strong>CCoAOMT</strong> acts on <strong>CoA thioesters</strong> (e.g., caffeoyl-CoA).<br />
+* <strong>COMT</strong> (caffeic acid OMT) is more associated with methylation of <strong>free acids/aldehydes/alcohols</strong> in many contexts.</p>
+<p>A classic biochemical study in tobacco demonstrated this specificity experimentally: recombinant CCoAOMT was <strong>highly active with caffeoyl-CoA and 5-hydroxyferuloyl-CoA esters</strong> and showed <strong>no activity toward the corresponding free acids</strong> (caffeic acid, 5-hydroxyferulic acid). (martz1998cdnacloningsubstrate pages 1-2, martz1998cdnacloningsubstrate pages 2-5)</p>
+<h4 id="22-true-ccoaomts-vs-ccoaomt-likepfomt-diversification">2.2 “True CCoAOMTs” vs CCoAOMT-like/PFOMT diversification</h4>
+<p>Recent plant-family analyses emphasize that proteins carrying the PF01596/Methyltransf_3 fold can diversify.<br />
+* In the 2024 potato StCCoAOMT family analysis, the authors distinguish <strong>true CCoAOMTs</strong> (lignin-associated clade) from <strong>CCoAOMT-like/PFOMT-type</strong> members that can prefer substrates with vicinal dihydroxyl groups and participate in <strong>flavonoid/anthocyanin methylation</strong>. (peng2024genomewidecharacterizationof pages 2-4, peng2024genomewidecharacterizationof pages 10-12)</p>
+<p>This distinction is essential for Q8H9B6 functional annotation: while UniProt labels Q8H9B6 as caffeoyl-CoA O-methyltransferase (EC 2.1.1.104), the potato genome contains multiple related enzymes; therefore, <strong>family membership alone does not uniquely specify pathway role</strong> without locus mapping and/or direct enzymology.</p>
+<h3 id="3-core-biochemical-function-and-pathway-context">3) Core biochemical function and pathway context</h3>
+<h4 id="31-reaction-catalyzed-primary-enzymatic-function">3.1 Reaction catalyzed (primary enzymatic function)</h4>
+<p><strong>Canonical CCoAOMT reaction:</strong><br />
+* <strong>caffeoyl-CoA + S-adenosyl-L-methionine (SAM) → feruloyl-CoA + S-adenosyl-L-homocysteine (SAH)</strong></p>
+<p>This reaction is explicitly reiterated in the potato gene-family paper as the defining lignin-pathway role of true CCoAOMTs. (peng2024genomewidecharacterizationof pages 2-4)</p>
+<h4 id="32-substrate-specificity-best-supported-evidence">3.2 Substrate specificity (best-supported evidence)</h4>
+<p><strong>Direct enzymology (highest confidence):</strong> tobacco CCoAOMT prefers CoA esters (caffeoyl-CoA; 5-OH-feruloyl-CoA) and does not methylate the free acids under tested conditions. (martz1998cdnacloningsubstrate pages 1-2, martz1998cdnacloningsubstrate pages 2-5)</p>
+<p><strong>Inference to potato Q8H9B6:</strong> given its annotated function and matching domain family, Q8H9B6 is expected to accept caffeoyl-CoA-like phenylpropanoid CoA esters as substrates, but <strong>potato-specific kinetic parameters or substrate panels were not retrieved</strong>, so this remains an inference. (peng2024genomewidecharacterizationof pages 2-4, martz1998cdnacloningsubstrate pages 1-2)</p>
+<h4 id="33-biological-processes-and-pathways">3.3 Biological processes and pathways</h4>
+<p><strong>Phenylpropanoid / monolignol / lignin biosynthesis:</strong> CCoAOMT’s caffeoyl-CoA → feruloyl-CoA step supports production of feruloyl-CoA-derived intermediates feeding into <strong>G- and S-lignin</strong> precursor formation. (peng2024genomewidecharacterizationof pages 2-4, peng2024genomewidecharacterizationof pages 12-14)</p>
+<p><strong>Flavonoid/anthocyanin methylation (family-diversified roles):</strong> potato StCCoAOMT subgrouping and expression patterns support the hypothesis that some members participate in methylation steps influencing anthocyanin chemistry (solubility/stability) and accumulation—particularly relevant to purple-fleshed tubers. (peng2024genomewidecharacterizationof pages 12-14, peng2024genomewidecharacterizationof pages 10-12, peng2024genomewidecharacterizationof pages 1-2)</p>
+<h3 id="4-potato-specific-gene-family-context-most-recent-2024">4) Potato-specific gene-family context (most recent: 2024)</h3>
+<p>A 2024 study in <em>Genes</em> performed genome-wide identification and characterization of <strong>12 StCCoAOMT genes</strong> in potato (cultivar DM), including chromosomal positions, motif structure, promoter elements, tissue expression, and one experimental localization assay. (peng2024genomewidecharacterizationof pages 1-2, peng2024genomewidecharacterizationof pages 8-10)</p>
+<h4 id="41-potato-stccoaomt-loci-and-candidate-functional-partitioning">4.1 Potato StCCoAOMT loci and candidate functional partitioning</h4>
+<p>The authors provide <strong>gene models</strong> (examples): StCCoAOMT1 = Soltu.DM.01G047320; StCCoAOMT7 = Soltu.DM.04G025040; StCCoAOMT10 = Soltu.DM.09G025040, etc. (peng2024genomewidecharacterizationof pages 4-5)</p>
+<p><strong>Phylogenetic inference</strong>: StCCoAOMT1–5, 11, and 12 cluster with Arabidopsis AtCCoAOMT1 in a subgroup interpreted as lignin-biosynthesis associated (subgroup Ia), making these leading candidates for canonical EC 2.1.1.104-like lignin-pathway roles in potato. (peng2024genomewidecharacterizationof pages 5-8)</p>
+<h4 id="42-subcellular-localization-in-potato-ccoaomts">4.2 Subcellular localization in potato CCoAOMTs</h4>
+<p><strong>Predicted localization (family-wide):</strong> WoLF PSORT predictions place ~<strong>8/12</strong> potato StCCoAOMTs in the <strong>cytoplasm</strong>, with two predicted cytoskeleton and two chloroplast. (peng2024genomewidecharacterizationof pages 5-8, peng2024genomewidecharacterizationof pages 4-5)</p>
+<p><strong>Experimental localization:</strong> StCCoAOMT10-GFP was observed in <strong>cytoplasm and nucleus</strong> in a transient tobacco leaf assay (Agrobacterium infiltration), providing direct evidence that at least some potato CCoAOMTs function in soluble intracellular compartments consistent with cytosolic phenylpropanoid/flavonoid metabolism. (peng2024genomewidecharacterizationof pages 12-14, peng2024genomewidecharacterizationof pages 1-2)</p>
+<h4 id="43-tissue-expression-patterns-and-candidate-association-with-anthocyanins">4.3 Tissue expression patterns and candidate association with anthocyanins</h4>
+<p>Potato StCCoAOMT gene expression is tissue-diverse; the authors report StCCoAOMT10 has relatively high expression in tuber-associated contexts and highlight it as significantly expressed in purple potatoes with abundant anthocyanins, suggesting a role in anthocyanin-related methylation chemistry. (peng2024genomewidecharacterizationof pages 8-10, peng2024genomewidecharacterizationof pages 1-2)</p>
+<p>Importantly, the same paper explicitly notes that the <strong>key CCoAOMT gene(s) and precise catalytic role(s) in potato anthocyanin methylation remain to be systematically investigated</strong>, which should temper over-annotation of any single gene without direct assays. (peng2024genomewidecharacterizationof pages 8-10)</p>
+<h3 id="5-20232024-developments-and-latest-research-prioritized">5) 2023–2024 developments and latest research (prioritized)</h3>
+<h4 id="51-potato-2024-stccoaomt-family-characterization-and-experimental-localization">5.1 Potato (2024): StCCoAOMT family characterization and experimental localization</h4>
+<p>The 2024 potato genome-wide paper provides the newest potato-focused resource: family size (12), conserved motifs, gene structures, promoter cis-elements (hormone/stress/light responsiveness), and an experimental localization for StCCoAOMT10 in cytoplasm+nucleus. (peng2024genomewidecharacterizationof pages 1-2, peng2024genomewidecharacterizationof pages 8-10, peng2024genomewidecharacterizationof pages 12-14)</p>
+<h4 id="52-lignin-engineering-2023-c-lignin-production-requires-ccoaomt-suppression">5.2 Lignin engineering (2023): C-lignin production requires CCoAOMT suppression</h4>
+<p>In <em>Medicago truncatula</em> hairy roots, a systematic engineering study reported that <strong>C-lignin accumulation required strong down-regulation of CCoAOMT paired with loss of COMT function</strong>, and C-lignin reached <strong>up to ~15% of total lignin</strong> in lines with the greatest CCoAOMT reduction. This places CCoAOMT as a key constraint controlling flux away from the canonical O-methylated monolignol route. (ha2023systematicapproachesto pages 1-2)</p>
+<h4 id="53-crop-lignin-manipulation-2024-large-lignin-reduction-from-ccoaomt-perturbation">5.3 Crop lignin manipulation (2024): large lignin reduction from CCoAOMT perturbation</h4>
+<p>A cotton functional study used gene silencing (VIGS) and reported that suppression of <strong>GhCCoAOMT7</strong> produced a <strong>56% reduction in stem lignin</strong>, with reduced phloroglucinol-stained xylem area—one of the largest recent quantitative demonstrations that CCoAOMT-level control can strongly affect lignification in crops. (ma2024genomewideanalysisof pages 1-2)</p>
+<h4 id="54-systems-level-methyl-donor-engineering-2024-sam-limitation-affects-ccoaomtcomt-activity">5.4 Systems-level methyl-donor engineering (2024): SAM limitation affects CCoAOMT/COMT activity</h4>
+<p>A sorghum bioenergy engineering study reduced SAM availability via heterologous AdoMetase expression and reported: lignin reduced by <strong>18%</strong> (best line) and glucose yield after pretreatment/saccharification increased by <strong>~20%</strong>. The authors interpret this as arising from reduced activity of SAM-dependent O-methyltransferases in lignin biosynthesis (including CCoAOMT and COMT) and caution about pleiotropy/yield penalties, especially under field conditions. (tian2024engineeredreductionof pages 1-2)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-crop-improvement-stress-and-disease-outcomes-via-lignification-tuning">6.1 Crop improvement: stress and disease outcomes via lignification tuning</h4>
+<p>A 2023 horticultural review synthesizes evidence that CCoAOMT/CCoAMT1 is a key lignin biosynthesis enzyme whose modulation can contribute to stress-associated lignification (biotic/abiotic) and altered lignin levels in transgenic contexts. (wang2023moreorless pages 8-9)</p>
+<p>A 2023 tobacco CRISPR study (CCoAOMT6/6L double mutants) illustrates a functional route to modify lignin composition (higher S/G ratio) and improve resistance to pathogens, highlighting an applied disease-resistance direction using CCoAOMT perturbation. (peng2024genomewidecharacterizationof pages 12-14)</p>
+<h4 id="62-bioenergybioproduct-engineering-improving-deconstruction-and-valorization">6.2 Bioenergy/bioproduct engineering: improving deconstruction and valorization</h4>
+<p>Two contemporary approaches show practical leverage:<br />
+* <strong>Pathway rerouting toward C-lignin</strong> (more homogeneous, potentially more valorisable lignin): requires strong CCoAOMT (and COMT) suppression and can achieve measurable C-lignin fractions (~15% total lignin) in engineered lines. (ha2023systematicapproachesto pages 1-2)<br />
+* <strong>Methyl-donor (SAM) engineering</strong> to broadly reduce O-methylation reactions: can reduce lignin and increase enzymatic sugar yields, but requires careful promoter/tissue targeting to avoid yield penalties. (tian2024engineeredreductionof pages 1-2)</p>
+<h3 id="7-relevant-statistics-and-quantitative-data-recent">7) Relevant statistics and quantitative data (recent)</h3>
+<p>Key quantitative results extractable from the retrieved 2023–2024 sources include:<br />
+* <strong>56% decrease</strong> in stem lignin after silencing GhCCoAOMT7 in cotton. (ma2024genomewideanalysisof pages 1-2)<br />
+* <strong>Up to ~15% of total lignin</strong> as engineered <strong>C-lignin</strong> in <em>Medicago truncatula</em> hairy roots with strong CCoAOMT down-regulation in a COMT mutant background. (ha2023systematicapproachesto pages 1-2)<br />
+* <strong>18% lignin reduction</strong> and <strong>~20% increase in glucose yield</strong> after pretreatment/saccharification in SAM-engineered sorghum (AdoMetase), interpreted as reduced activity of SAM-dependent OMTs including CCoAOMT/COMT. (tian2024engineeredreductionof pages 1-2)</p>
+<h3 id="8-interpretation-for-functional-annotation-of-potato-uniprot-q8h9b6">8) Interpretation for functional annotation of potato UniProt Q8H9B6</h3>
+<h4 id="81-best-supported-functional-statement-what-can-be-stated-confidently">8.1 Best-supported functional statement (what can be stated confidently)</h4>
+<p>Given the UniProt description (enzyme name, EC 2.1.1.104) and the potato literature’s definition of CCoAOMTs, Q8H9B6 should be annotated as a <strong>SAM-dependent O-methyltransferase</strong> in phenylpropanoid metabolism whose canonical reaction is <strong>caffeoyl-CoA → feruloyl-CoA</strong>, consistent with the "true CCoAOMT" role in monolignol/lignin biosynthesis. (peng2024genomewidecharacterizationof pages 2-4, martz1998cdnacloningsubstrate pages 1-2)</p>
+<h4 id="82-what-cannot-be-concluded-from-retrieved-potato-literature">8.2 What cannot be concluded from retrieved potato literature</h4>
+<ul>
+<li>Which specific <strong>StCCoAOMT# (Soltu.DM.<br />
+… locus)</strong> corresponds to <strong>UniProt Q8H9B6</strong> was not established in the retrieved sources. (peng2024genomewidecharacterizationof pages 4-5)</li>
+<li>Potato-specific <strong>in vitro substrate panels/kinetics</strong> for Q8H9B6 were not retrieved; thus substrate specificity is inferred from family knowledge and classic plant CCoAOMT enzymology. (martz1998cdnacloningsubstrate pages 1-2, martz1998cdnacloningsubstrate pages 2-5)</li>
+</ul>
+<h3 id="9-evidence-map-compact">9) Evidence map (compact)</h3>
+<p>The following table compiles the core evidence needed for functional annotation (reaction, substrates, localization, potato loci, and 2023–2024 quantitative engineering studies):</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Evidence/Findings (concise)</th>
+<th>Species/Context</th>
+<th>Key citation (with DOI URL and pub month/year if available)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity/disambiguation</td>
+<td>The target matches the potato <strong>CCoAOMT</strong> family concept: a SAM-dependent class I-like O-methyltransferase with the canonical <strong>Methyltransf_3/PF01596</strong> domain and conserved motifs used to identify potato StCCoAOMTs; however, retrieved literature did <strong>not</strong> directly map <strong>UniProt Q8H9B6</strong> to a specific <strong>Soltu.DM</strong> locus, so accession-level mapping remains indirect.</td>
+<td><em>Solanum tuberosum</em>; family-level verification for Q8H9B6</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 2-4, peng2024genomewidecharacterizationof pages 4-5)</td>
+</tr>
+<tr>
+<td>Canonical reaction / EC</td>
+<td>CCoAOMT is the <strong>SAM-dependent caffeoyl-CoA O-methyltransferase (EC 2.1.1.104)</strong> that methylates <strong>caffeoyl-CoA to feruloyl-CoA</strong> in the monolignol pathway; this is the core annotation consistent with UniProt Q8H9B6.</td>
+<td>General plant CCoAOMT; potato family paper reiterates canonical reaction</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466; Martz et al., <em>Plant Mol Biol</em> (Feb 1998), https://doi.org/10.1023/A:1005969825070 (peng2024genomewidecharacterizationof pages 2-4, martz1998cdnacloningsubstrate pages 1-2)</td>
+</tr>
+<tr>
+<td>Substrate specificity (best biochemical evidence)</td>
+<td>Recombinant tobacco CCoAOMT was <strong>highly active with caffeoyl-CoA and 5-hydroxyferuloyl-CoA esters</strong>, but showed <strong>no activity toward the corresponding free acids</strong> (caffeic acid, 5-hydroxyferulic acid), supporting CoA-ester specificity.</td>
+<td>Biochemical evidence from tobacco, widely used to infer true CCoAOMT specificity</td>
+<td>Martz et al., <em>Plant Mol Biol</em> (Feb 1998), https://doi.org/10.1023/A:1005969825070 (martz1998cdnacloningsubstrate pages 1-2, martz1998cdnacloningsubstrate pages 2-5)</td>
+</tr>
+<tr>
+<td>Functional diversification within family</td>
+<td>Modern family analyses distinguish <strong>true CCoAOMTs</strong> (lignin-associated) from <strong>CCoAOMT-like/PFOMT</strong> proteins that can methylate flavonoids/anthocyanins; thus, not every StCCoAOMT family member should be assumed to share strict lignin-pathway specificity.</td>
+<td>Plant-wide interpretation applied to potato StCCoAOMT family</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 2-4, peng2024genomewidecharacterizationof pages 10-12)</td>
+</tr>
+<tr>
+<td>Pathway placement</td>
+<td>True CCoAOMT functions in the <strong>phenylpropanoid/monolignol/lignin biosynthesis pathway</strong>, helping generate G-lignin precursors and feeding substrate toward S-lignin formation downstream.</td>
+<td>General plant pathway context; relevant to potato lignification/wound-healing interpretation</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466; Liu et al., <em>Front Plant Sci</em> (Oct 2023), https://doi.org/10.3389/fpls.2023.1216702 (peng2024genomewidecharacterizationof pages 2-4, peng2024genomewidecharacterizationof pages 12-14)</td>
+</tr>
+<tr>
+<td>Potato family size and domain architecture</td>
+<td>A 2024 potato genome-wide study identified <strong>12 StCCoAOMT genes</strong>; all have a single <strong>AdoMet_Mtases</strong> superfamily domain, and <strong>motif 1</strong> is present in all 12 members.</td>
+<td><em>S. tuberosum</em> cultivar DM</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 1-2, peng2024genomewidecharacterizationof pages 8-10)</td>
+</tr>
+<tr>
+<td>Potato family loci from Peng 2024</td>
+<td>Reported loci include <strong>StCCoAOMT1 = Soltu.DM.01G047320; StCCoAOMT2 = Soltu.DM.02G028520; StCCoAOMT3 = Soltu.DM.02G028530; StCCoAOMT4 = Soltu.DM.02G028540; StCCoAOMT5 = Soltu.DM.02G028550; StCCoAOMT6 = Soltu.DM.03G003400; StCCoAOMT7 = Soltu.DM.04G025040; StCCoAOMT8 = Soltu.DM.04G025050; StCCoAOMT9 = Soltu.DM.08G001680; StCCoAOMT10 = Soltu.DM.09G025040; StCCoAOMT11 = Soltu.DM.10G014940; StCCoAOMT12 = Soltu.DM.12G013090</strong>.</td>
+<td><em>S. tuberosum</em> cultivar DM</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 4-5)</td>
+</tr>
+<tr>
+<td>Potato phylogenetic inference for lignin-linked members</td>
+<td><strong>StCCoAOMT1–5, 11, 12</strong> cluster with <strong>AtCCoAOMT1</strong> in subgroup Ia, which the authors interpret as the <strong>lignin-biosynthesis-associated clade</strong>; this makes these the strongest potato candidates for canonical EC 2.1.1.104-like function.</td>
+<td><em>S. tuberosum</em> family phylogeny</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 5-8)</td>
+</tr>
+<tr>
+<td>Potato members implicated in flavonoid/anthocyanin metabolism</td>
+<td><strong>StCCoAOMT6, 7, 8, 10</strong> fall in a different subgroup and are discussed as candidates for <strong>flavonoid/anthocyanin-related methylation</strong> rather than purely lignin-associated roles.</td>
+<td><em>S. tuberosum</em> family phylogeny/expression</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 10-12, peng2024genomewidecharacterizationof pages 1-2)</td>
+</tr>
+<tr>
+<td>Predicted subcellular localization in potato family</td>
+<td>WoLF PSORT predictions placed about <strong>66.67% (8/12)</strong> of StCCoAOMTs in the <strong>cytoplasm</strong>; <strong>StCCoAOMT4/5</strong> in the <strong>cytoskeleton</strong> and <strong>StCCoAOMT8/9</strong> in the <strong>chloroplast</strong>. Specific predictions include <strong>StCCoAOMT1,2,3,6,7,10,11,12 = cytoplasm</strong>.</td>
+<td><em>S. tuberosum</em> family-wide predictions</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 5-8, peng2024genomewidecharacterizationof pages 4-5)</td>
+</tr>
+<tr>
+<td>Experimental localization in potato</td>
+<td><strong>StCCoAOMT10-GFP</strong> localized mainly to the <strong>cytoplasm and nucleus</strong> in <em>Nicotiana benthamiana</em> transient assays; this is the strongest experimental localization evidence currently available from potato CCoAOMTs.</td>
+<td>Potato gene assayed in tobacco leaves</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 12-14, peng2024genomewidecharacterizationof pages 1-2, peng2024genomewidecharacterizationof media 1c8e3b82)</td>
+</tr>
+<tr>
+<td>Tissue expression in potato</td>
+<td>Expression is diverse by tissue: <strong>StCCoAOMT1</strong> broadly expressed; <strong>StCCoAOMT7</strong> strongly expressed in <strong>stolons</strong>; <strong>StCCoAOMT9</strong> relatively high in <strong>leaves/petals/stamens</strong>; <strong>StCCoAOMT10</strong> high in <strong>sepals, shoots, and tubers</strong>.</td>
+<td><em>S. tuberosum</em> transcript profiling</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 8-10)</td>
+</tr>
+<tr>
+<td>Potato anthocyanin-related candidate</td>
+<td><strong>StCCoAOMT10</strong> was highlighted as significantly expressed in <strong>purple potatoes</strong> with high anthocyanin content, making it a leading candidate for potato anthocyanin methylation; the authors note the exact potato catalytic roles still require direct functional confirmation.</td>
+<td>Purple-fleshed potato tubers</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 1-2, peng2024genomewidecharacterizationof pages 8-10)</td>
+</tr>
+<tr>
+<td>Expert/author interpretation for potato</td>
+<td>The 2024 potato study explicitly states that the <strong>key CCoAOMT gene(s) and precise function in anthocyanin methylation in potato have not yet been systematically elucidated</strong>, so family-member functions should be treated as candidates/inferences unless directly tested.</td>
+<td>Caveat for functional annotation in potato</td>
+<td>Peng et al., <em>Genes</em> (Nov 2024), https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 8-10)</td>
+</tr>
+<tr>
+<td>2023 engineering result: tobacco knockout</td>
+<td>CRISPR knockout of <strong>CCoAOMT6/6L</strong> in tobacco increased the <strong>S/G lignin monomer ratio</strong> and enhanced resistance to <strong>bacterial wilt</strong> and <strong>brown spot</strong>, illustrating that CCoAOMT perturbation can reprogram lignin composition and disease outcomes.</td>
+<td><em>Nicotiana tabacum</em></td>
+<td>Liu et al., <em>Front Plant Sci</em> (Oct 2023), https://doi.org/10.3389/fpls.2023.1216702 (peng2024genomewidecharacterizationof pages 12-14)</td>
+</tr>
+<tr>
+<td>2023 engineering result: C-lignin</td>
+<td>In <em>Medicago truncatula</em> hairy roots, <strong>C-lignin accumulation of up to 15% of total lignin</strong> required strong down-regulation of <strong>CCoAOMT</strong> together with <strong>COMT</strong> loss of function.</td>
+<td><em>Medicago truncatula</em> lignin engineering</td>
+<td>Ha et al., <em>Biotechnol Biofuels Bioprod</em> (Jun 2023), https://doi.org/10.1186/s13068-023-02339-7 (peng2024genomewidecharacterizationof pages 2-4)</td>
+</tr>
+<tr>
+<td>2024 engineering result: cotton</td>
+<td>Silencing <strong>GhCCoAOMT7</strong> caused a <strong>56% reduction in stem lignin</strong> and visibly reduced phloroglucinol-stained xylem area, supporting a strong positive role in lignification.</td>
+<td><em>Gossypium hirsutum</em></td>
+<td>Ma et al., <em>Plants</em> (Oct 2024), https://doi.org/10.3390/plants13212969 (ma2024genomewideanalysisof pages 1-2)</td>
+</tr>
+<tr>
+<td>2024 broader methyl-donor engineering result</td>
+<td>In sorghum, reducing <strong>S-adenosylmethionine</strong> availability (thereby impacting SAM-dependent O-methyltransferases including CCoAOMT/COMT) reduced lignin by <strong>18%</strong> in the best line and increased glucose yield after pretreatment/saccharification by <strong>~20%</strong>; this demonstrates the practical leverage of the methylation step for biomass engineering, though it is not CCoAOMT-specific.</td>
+<td><em>Sorghum bicolor</em></td>
+<td>Tian et al., <em>Biotechnol Biofuels Bioprod</em> (Oct 2024), https://doi.org/10.1186/s13068-024-02572-8 (peng2024genomewidecharacterizationof pages 1-2)</td>
+</tr>
+<tr>
+<td>Overall annotation confidence for Q8H9B6</td>
+<td>High confidence for <strong>family-level function</strong> (potato CCoAOMT, SAM-dependent O-methyltransferase in phenylpropanoid metabolism), but <strong>moderate confidence</strong> for assigning a <strong>specific StCCoAOMT locus/member</strong> to <strong>Q8H9B6</strong> from the retrieved literature because no direct accession crosswalk was recovered.</td>
+<td>UniProt-guided annotation of potato target</td>
+<td>Supported jointly by potato family study and classical biochemistry: Peng et al. (Nov 2024) https://doi.org/10.3390/genes15111466; Martz et al. (Feb 1998) https://doi.org/10.1023/A:1005969825070 (peng2024genomewidecharacterizationof pages 2-4, martz1998cdnacloningsubstrate pages 1-2, peng2024genomewidecharacterizationof pages 5-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported functional annotation points for potato CCOAOMT/Q8H9B6 and the broader StCCoAOMT family, including reaction chemistry, pathway placement, localization, potato loci, and recent quantitative engineering results from 2023-2024. It is useful as a compact evidence map separating direct biochemical evidence from potato-specific inference.</em></p>
+<h3 id="10-key-references-urls-and-publication-dates">10) Key references (URLs and publication dates)</h3>
+<ul>
+<li>Peng Y. et al. <strong>Genome-Wide Characterization of <em>Solanum tuberosum</em> CCoAOMT Gene Family…</strong> <em>Genes</em> (Nov 2024). https://doi.org/10.3390/genes15111466 (peng2024genomewidecharacterizationof pages 1-2)</li>
+<li>Martz F. et al. <strong>cDNA cloning, substrate specificity and expression study of tobacco CCoAOMT</strong> <em>Plant Molecular Biology</em> (Feb 1998). https://doi.org/10.1023/A:1005969825070 (martz1998cdnacloningsubstrate pages 1-2)</li>
+<li>Ma L. et al. <strong>Genome-wide analysis of CCoAOMT family genes… in cotton</strong> <em>Plants</em> (Oct 2024). https://doi.org/10.3390/plants13212969 (ma2024genomewideanalysisof pages 1-2)</li>
+<li>Ha C.M. et al. <strong>Systematic approaches to C-lignin engineering in <em>Medicago truncatula</em></strong> <em>Biotechnology for Biofuels and Bioproducts</em> (Jun 2023). https://doi.org/10.1186/s13068-023-02339-7 (ha2023systematicapproachesto pages 1-2)</li>
+<li>Tian Y. et al. <strong>Engineered reduction of S-adenosylmethionine alters lignin in sorghum</strong> <em>Biotechnology for Biofuels and Bioproducts</em> (Oct 2024). https://doi.org/10.1186/s13068-024-02572-8 (tian2024engineeredreductionof pages 1-2)</li>
+<li>Wang G.-L. et al. <strong>More or Less: Recent Advances in Lignin Accumulation and Regulation in Horticultural Crops</strong> <em>Agronomy</em> (Nov 2023). https://doi.org/10.3390/agronomy13112819 (wang2023moreorless pages 8-9)</li>
+</ul>
+<h3 id="appendix-visual-evidence-retrieved">Appendix: Visual evidence retrieved</h3>
+<p>A cropped figure summarizing conserved motifs/domains and gene structures for potato StCCoAOMTs was retrieved from the 2024 potato paper. (peng2024genomewidecharacterizationof media 1c8e3b82)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(peng2024genomewidecharacterizationof pages 2-4): Yaxuan Peng, Suao Sheng, Tongtong Wang, Jiafeng Song, Daijuan Wang, Yixuan Zhang, Jielan Cheng, Tingting Zheng, Zhaoyan Lv, Xiaobiao Zhu, and Hualan Hou. Genome-wide characterization of solanum tuberosum ccoaomt gene family and identification of stccoaomt genes involved in anthocyanin biosynthesis. Genes, 15:1466, Nov 2024. URL: https://doi.org/10.3390/genes15111466, doi:10.3390/genes15111466. This article has 13 citations.</p>
+</li>
+<li>
+<p>(peng2024genomewidecharacterizationof pages 4-5): Yaxuan Peng, Suao Sheng, Tongtong Wang, Jiafeng Song, Daijuan Wang, Yixuan Zhang, Jielan Cheng, Tingting Zheng, Zhaoyan Lv, Xiaobiao Zhu, and Hualan Hou. Genome-wide characterization of solanum tuberosum ccoaomt gene family and identification of stccoaomt genes involved in anthocyanin biosynthesis. Genes, 15:1466, Nov 2024. URL: https://doi.org/10.3390/genes15111466, doi:10.3390/genes15111466. This article has 13 citations.</p>
+</li>
+<li>
+<p>(martz1998cdnacloningsubstrate pages 1-2): Françoise Martz, Stéphane Maury, Gaëlle Pinçon, and Michel Legrand. Cdna cloning, substrate specificity and expression study of tobacco caffeoyl-coa 3-o-methyltransferase, a lignin biosynthetic enzyme. Plant Molecular Biology, 36:427-437, Feb 1998. URL: https://doi.org/10.1023/a:1005969825070, doi:10.1023/a:1005969825070. This article has 128 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martz1998cdnacloningsubstrate pages 2-5): Françoise Martz, Stéphane Maury, Gaëlle Pinçon, and Michel Legrand. Cdna cloning, substrate specificity and expression study of tobacco caffeoyl-coa 3-o-methyltransferase, a lignin biosynthetic enzyme. Plant Molecular Biology, 36:427-437, Feb 1998. URL: https://doi.org/10.1023/a:1005969825070, doi:10.1023/a:1005969825070. This article has 128 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(peng2024genomewidecharacterizationof pages 10-12): Yaxuan Peng, Suao Sheng, Tongtong Wang, Jiafeng Song, Daijuan Wang, Yixuan Zhang, Jielan Cheng, Tingting Zheng, Zhaoyan Lv, Xiaobiao Zhu, and Hualan Hou. Genome-wide characterization of solanum tuberosum ccoaomt gene family and identification of stccoaomt genes involved in anthocyanin biosynthesis. Genes, 15:1466, Nov 2024. URL: https://doi.org/10.3390/genes15111466, doi:10.3390/genes15111466. This article has 13 citations.</p>
+</li>
+<li>
+<p>(peng2024genomewidecharacterizationof pages 12-14): Yaxuan Peng, Suao Sheng, Tongtong Wang, Jiafeng Song, Daijuan Wang, Yixuan Zhang, Jielan Cheng, Tingting Zheng, Zhaoyan Lv, Xiaobiao Zhu, and Hualan Hou. Genome-wide characterization of solanum tuberosum ccoaomt gene family and identification of stccoaomt genes involved in anthocyanin biosynthesis. Genes, 15:1466, Nov 2024. URL: https://doi.org/10.3390/genes15111466, doi:10.3390/genes15111466. This article has 13 citations.</p>
+</li>
+<li>
+<p>(peng2024genomewidecharacterizationof pages 1-2): Yaxuan Peng, Suao Sheng, Tongtong Wang, Jiafeng Song, Daijuan Wang, Yixuan Zhang, Jielan Cheng, Tingting Zheng, Zhaoyan Lv, Xiaobiao Zhu, and Hualan Hou. Genome-wide characterization of solanum tuberosum ccoaomt gene family and identification of stccoaomt genes involved in anthocyanin biosynthesis. Genes, 15:1466, Nov 2024. URL: https://doi.org/10.3390/genes15111466, doi:10.3390/genes15111466. This article has 13 citations.</p>
+</li>
+<li>
+<p>(peng2024genomewidecharacterizationof pages 8-10): Yaxuan Peng, Suao Sheng, Tongtong Wang, Jiafeng Song, Daijuan Wang, Yixuan Zhang, Jielan Cheng, Tingting Zheng, Zhaoyan Lv, Xiaobiao Zhu, and Hualan Hou. Genome-wide characterization of solanum tuberosum ccoaomt gene family and identification of stccoaomt genes involved in anthocyanin biosynthesis. Genes, 15:1466, Nov 2024. URL: https://doi.org/10.3390/genes15111466, doi:10.3390/genes15111466. This article has 13 citations.</p>
+</li>
+<li>
+<p>(peng2024genomewidecharacterizationof pages 5-8): Yaxuan Peng, Suao Sheng, Tongtong Wang, Jiafeng Song, Daijuan Wang, Yixuan Zhang, Jielan Cheng, Tingting Zheng, Zhaoyan Lv, Xiaobiao Zhu, and Hualan Hou. Genome-wide characterization of solanum tuberosum ccoaomt gene family and identification of stccoaomt genes involved in anthocyanin biosynthesis. Genes, 15:1466, Nov 2024. URL: https://doi.org/10.3390/genes15111466, doi:10.3390/genes15111466. This article has 13 citations.</p>
+</li>
+<li>
+<p>(ha2023systematicapproachesto pages 1-2): Chan Man Ha, Luis Escamilla-Trevino, Chunliu Zhuo, Yunqiao Pu, Nathan Bryant, Arthur J. Ragauskas, Xirong Xiao, Ying Li, Fang Chen, and Richard A. Dixon. Systematic approaches to c-lignin engineering in medicago truncatula. Biotechnology for Biofuels and Bioproducts, Jun 2023. URL: https://doi.org/10.1186/s13068-023-02339-7, doi:10.1186/s13068-023-02339-7. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ma2024genomewideanalysisof pages 1-2): Lina Ma, Jin Wang, Kaikai Qiao, Yuewei Quan, Shuli Fan, and Liqiang Wu. Genome-wide analysis of caffeoyl-coa-o-methyltransferase (ccoaomt) family genes and the roles of ghccoaomt7 in lignin synthesis in cotton. Plants, 13:2969, Oct 2024. URL: https://doi.org/10.3390/plants13212969, doi:10.3390/plants13212969. This article has 7 citations.</p>
+</li>
+<li>
+<p>(tian2024engineeredreductionof pages 1-2): Yang Tian, Yu Gao, Halbay Turumtay, Emine Akyuz Turumtay, Yen Ning Chai, Hemant Choudhary, Joon-Hyun Park, Chuan-Yin Wu, Christopher M. De Ben, Jutta Dalton, Katherine B. Louie, Thomas Harwood, Dylan Chin, Khanh M. Vuu, Benjamin P. Bowen, Patrick M. Shih, Edward E. K. Baidoo, Trent R. Northen, Blake A. Simmons, Robert Hutmacher, Jackie Atim, Daniel H. Putnam, Corinne D. Scown, Jenny C. Mortimer, Henrik V. Scheller, and Aymerick Eudes. Engineered reduction of s-adenosylmethionine alters lignin in sorghum. Biotechnology for Biofuels and Bioproducts, Oct 2024. URL: https://doi.org/10.1186/s13068-024-02572-8, doi:10.1186/s13068-024-02572-8. This article has 7 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2023moreorless pages 8-9): Guang-Long Wang, Jia-Qi Wu, Yang-Yang Chen, Yu-Jie Xu, Cheng-Ling Zhou, Zhen-Zhu Hu, Xu-Qin Ren, and Ai-Sheng Xiong. More or less: recent advances in lignin accumulation and regulation in horticultural crops. Agronomy, 13:2819, Nov 2023. URL: https://doi.org/10.3390/agronomy13112819, doi:10.3390/agronomy13112819. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(peng2024genomewidecharacterizationof media 1c8e3b82): Yaxuan Peng, Suao Sheng, Tongtong Wang, Jiafeng Song, Daijuan Wang, Yixuan Zhang, Jielan Cheng, Tingting Zheng, Zhaoyan Lv, Xiaobiao Zhu, and Hualan Hou. Genome-wide characterization of solanum tuberosum ccoaomt gene family and identification of stccoaomt genes involved in anthocyanin biosynthesis. Genes, 15:1466, Nov 2024. URL: https://doi.org/10.3390/genes15111466, doi:10.3390/genes15111466. This article has 13 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CCOAOMT-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000026 I have extracted Figure 4, which details the phylogenetic relationship, conserved motifs, and gene structures of the StCCoAOMT fami" src="CCOAOMT-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>peng2024genomewidecharacterizationof pages 2-4</li>
+<li>peng2024genomewidecharacterizationof pages 4-5</li>
+<li>peng2024genomewidecharacterizationof pages 5-8</li>
+<li>peng2024genomewidecharacterizationof pages 8-10</li>
+<li>ha2023systematicapproachesto pages 1-2</li>
+<li>ma2024genomewideanalysisof pages 1-2</li>
+<li>tian2024engineeredreductionof pages 1-2</li>
+<li>wang2023moreorless pages 8-9</li>
+<li>peng2024genomewidecharacterizationof pages 12-14</li>
+<li>peng2024genomewidecharacterizationof pages 1-2</li>
+<li>martz1998cdnacloningsubstrate pages 1-2</li>
+<li>martz1998cdnacloningsubstrate pages 2-5</li>
+<li>peng2024genomewidecharacterizationof pages 10-12</li>
+<li>https://doi.org/10.3390/genes15111466</li>
+<li>https://doi.org/10.3390/genes15111466;</li>
+<li>https://doi.org/10.1023/A:1005969825070</li>
+<li>https://doi.org/10.3389/fpls.2023.1216702</li>
+<li>https://doi.org/10.1186/s13068-023-02339-7</li>
+<li>https://doi.org/10.3390/plants13212969</li>
+<li>https://doi.org/10.1186/s13068-024-02572-8</li>
+<li>https://doi.org/10.3390/agronomy13112819</li>
+<li>https://doi.org/10.3390/genes15111466,</li>
+<li>https://doi.org/10.1023/a:1005969825070,</li>
+<li>https://doi.org/10.1186/s13068-023-02339-7,</li>
+<li>https://doi.org/10.3390/plants13212969,</li>
+<li>https://doi.org/10.1186/s13068-024-02572-8,</li>
+<li>https://doi.org/10.3390/agronomy13112819,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8H9B6
+gene_symbol: CCOAOMT
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:4113
+  label: Solanum tuberosum
+description: &gt;
+  Q8H9B6 (CAMT_SOLTU) is the potato (Solanum tuberosum) caffeoyl-CoA O-methyltransferase
+  (CCoAOMT; trans-caffeoyl-CoA 3-O-methyltransferase; EC 2.1.1.104), a 242-residue, ~27 kDa
+  enzyme of the class I-like SAM-binding methyltransferase superfamily, cation-dependent
+  O-methyltransferase family, CCoAMT subfamily. It catalyzes transfer of a methyl group from
+  S-adenosyl-L-methionine (SAM) to the 3-hydroxyl of (E)-caffeoyl-CoA, producing (E)-feruloyl-CoA
+  and S-adenosyl-L-homocysteine (Rhea:RHEA:16925); the UniProt FUNCTION statement adds that it
+  also methylates 5-hydroxyferuloyl-CoA to sinapoyl-CoA and acts in feruloylated-polysaccharide
+  synthesis and cell-wall reinforcement during wounding/pathogen responses. The deep-research
+  synthesis describes CCoAOMT as a &#34;SAM-dependent O-methyltransferase class that, in its canonical
+  (&#34;true&#34;) lignin-pathway role, catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step
+  in phenylpropanoid/monolignol metabolism&#34; (file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md), and
+  the potato family paper states that &#34;The CCoAOMT family acts as a key enzyme that participates in
+  lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in
+  plants&#34; (PMID:39596666). Catalysis
+  requires SAM (a methyl donor) and a bound divalent metal cation (Mg2+/Ca2+ by similarity;
+  UniProt COFACTOR &#34;a divalent metal cation&#34;, CHEBI:60240); the protein carries conserved motifs for
+  SAM binding and metal-cation binding consistent with cation-dependent O-methyltransferase
+  biochemistry. Biologically, CCoAOMT sits at a committed methylation step of the phenylpropanoid
+  pathway: feruloyl-CoA is a required precursor for guaiacyl/syringyl lignin and, in potato tuber
+  skin, for suberin deposition. Solanaceae/potato genomics frames potato CCoAOMTs as a diversified
+  family (12 StCCoAOMT genes) split between lignin-associated and flavonoid/anthocyanin-associated
+  clades, with the cytosol as the canonical compartment of CCoAOMT phenylpropanoid metabolism. The
+  three keyword-derived (SPKW, GO_REF:0000043) annotations re-examined here are a mixed case: the
+  generic &#34;methylation&#34; (GO:0032259) and broad &#34;metal ion binding&#34; (GO:0046872) terms are redundant
+  with or less informative than the gene&#39;s specific MF terms, whereas &#34;lignin biosynthetic process&#34;
+  (GO:0009809) captures correct, informative biology.
+existing_annotations:
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0007623
+    label: circadian rhythm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      ARBA machine-learning IEA (GO_REF:0000117) assigning &#34;circadian rhythm&#34;. There is no
+      gene-specific or family-level evidence that potato CCoAOMT participates in circadian-clock
+      biology; the focused deep-research synthesis of the CCoAOMT literature does not mention
+      circadian rhythm at all.
+    action: REMOVE
+    reason: &gt;
+      This is an over-prediction from an automated ARBA model and is not supported by any of the
+      curated CCoAOMT literature. The well-supported function of the protein is caffeoyl-CoA
+      O-methylation feeding lignin/suberin precursor pools - a phenylpropanoid-pathway role with
+      no established connection to the circadian clock. While transcript abundance of
+      phenylpropanoid genes can oscillate diurnally, expression rhythmicity is not equivalent to a
+      molecular &#34;involvement in&#34; circadian rhythm, and the deep-research report - which surveys the
+      potato and Solanaceae CCoAOMT literature for function, localization and pathway placement -
+      describes the enzyme purely as a phenylpropanoid/lignin/suberin methyltransferase. With no
+      supporting evidence, the ARBA &#34;circadian rhythm&#34; term should be removed as a spurious
+      over-annotation.
+    supported_by:
+    - reference_id: file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+      supporting_text: &#34;catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism&#34;
+    - reference_id: PMID:39596666
+      supporting_text: &#34;The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants&#34;
+- term:
+    id: GO:0008171
+    label: O-methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      InterPro2GO IEA (GO_REF:0000002, via IPR002935 SAM_O-MeTrfase) assigning the generic parent
+      &#34;O-methyltransferase activity&#34;. This is correct but less specific than the demonstrated
+      caffeoyl-CoA O-methyltransferase activity that is independently annotated to the gene.
+    action: MODIFY
+    reason: &gt;
+      CCoAOMT is genuinely an O-methyltransferase, so the term is not wrong, but it is a broad
+      parent of the gene&#39;s precise, EC-backed molecular function. The protein &#34;catalyzes
+      O-methylation of ... caffeoyl-CoA to feruloyl-CoA&#34; and is assigned EC 2.1.1.104 / Rhea:16925,
+      so the specific child term &#34;caffeoyl-CoA O-methyltransferase activity&#34; (GO:0042409) - already
+      present in current GOA - is the informative MF. The generic O-methyltransferase term should be
+      modified (deepened) to the specific caffeoyl-CoA O-methyltransferase activity rather than
+      retained as a free-standing high-level annotation.
+    proposed_replacement_terms:
+    - id: GO:0042409
+      label: caffeoyl-CoA O-methyltransferase activity
+    supported_by:
+    - reference_id: file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+      supporting_text: &#34;catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism&#34;
+    - reference_id: PMID:39596666
+      supporting_text: &#34;The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants&#34;
+- term:
+    id: GO:0042409
+    label: caffeoyl-CoA O-methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;
+      Combined-IEA-methods annotation (GO_REF:0000120) backed by EC 2.1.1.104 and Rhea:16925. This
+      is the core, specific molecular function of the protein and is strongly supported by both the
+      UniProt catalytic-activity record and the CCoAOMT literature.
+    action: ACCEPT
+    reason: &gt;
+      This is the defining molecular function of CCoAOMT and the most informative MF for the gene.
+      The UniProt CATALYTIC ACTIVITY record gives the reaction (E)-caffeoyl-CoA + SAM = (E)-feruloyl-CoA
+      + S-adenosyl-L-homocysteine + H+ (Rhea:16925, EC 2.1.1.104), and the deep-research synthesis
+      states the enzyme &#34;catalyzes methylation of caffeoyl-CoA -&gt; feruloyl-CoA, a key step in
+      phenylpropanoid/monolignol metabolism.&#34; Direct enzymology of a recombinant plant CCoAOMT
+      (tobacco) showed it is specific for the caffeoyl-CoA and 5-hydroxyferuloyl-CoA CoA esters and
+      has no activity against the corresponding free acids, confirming CoA-ester specificity; the
+      activity is biochemically conserved across plant CCoAOMTs. Accept as a core function.
+    supported_by:
+    - reference_id: file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+      supporting_text: &#34;catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism&#34;
+    - reference_id: PMID:9484483
+      supporting_text: &#34;caffeoyl-CoA and 5-hydroxyferuloyl-CoA esters and to have no activity against&#34;
+    - reference_id: PMID:39596666
+      supporting_text: &#34;The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants&#34;
+- term:
+    id: GO:0009699
+    label: phenylpropanoid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      UniPathway-mapping IEA (GO_REF:0000041, UPA00711 phenylpropanoid biosynthesis). This is the
+      core biological process of CCoAOMT and the process term that REMAINS in current GOA after the
+      SPKW &#34;lignin biosynthetic process&#34; term was retired.
+    action: ACCEPT
+    reason: &gt;
+      CCoAOMT sits at a central methylation step of phenylpropanoid metabolism: it &#34;catalyzes
+      methylation of caffeoyl-CoA -&gt; feruloyl-CoA, a key step in phenylpropanoid/monolignol
+      metabolism&#34;, and the UniProt PATHWAY line assigns the enzyme to phenylpropanoid biosynthesis
+      (UPA00711). This is the correct, well-supported process annotation. Note for the SPKW review
+      below: this term is the broader phenylpropanoid parent; it overlaps with but does not fully
+      substitute for the more specific (and removed) &#34;lignin biosynthetic process&#34; (GO:0009809).
+    supported_by:
+    - reference_id: file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+      supporting_text: &#34;catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism&#34;
+    - reference_id: PMID:39596666
+      supporting_text: &#34;O-methyltransferases (OMTs) are various groups of multifunctional enzymes that play a crucial role in regulating several secondary metabolic processes, including lignin and flavonoid biosynthesis&#34;
+# --- SPKW keyword-mapping annotations (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED from the
+# current (2026) GOA release when GOA retired the keyword2GO (SwissProt keyword -&gt; GO)
+# pipeline for cellular organisms. Re-added here and reviewed retrospectively to assess
+# whether each removal was justified. Mixed case: the generic &#34;methylation&#34; and broad
+# &#34;metal ion binding&#34; removals are JUSTIFIED (redundant / over-broad), but removal of the
+# correct, informative &#34;lignin biosynthetic process&#34; term was collateral damage.
+- term:
+    id: GO:0032259
+    label: methylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Methyltransferase&#34;;
+      snapshot-only, removed in the current GOA release. &#34;Methylation&#34; is a bare, high-level
+      process term that is fully and more precisely captured by the gene&#39;s specific molecular
+      function (caffeoyl-CoA O-methyltransferase activity) and its specific process role
+      (lignin / phenylpropanoid biosynthesis).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GOA&#39;s removal of this annotation was JUSTIFIED. This is the cleanest redundancy case of the
+      SPKW batch: the enzyme&#39;s methylation chemistry is already stated precisely and informatively
+      by its specific MF &#34;caffeoyl-CoA O-methyltransferase activity&#34; (GO:0042409, present in current
+      GOA) - the deep research describes CCoAOMT as a class that &#34;catalyzes methylation of
+      caffeoyl-CoA -&gt; feruloyl-CoA, a key step in phenylpropanoid/monolignol metabolism&#34; - and the
+      biological context is captured by &#34;phenylpropanoid biosynthetic process&#34; (and the more
+      specific &#34;lignin biosynthetic process&#34;, reviewed below). A bare generic process term
+      &#34;methylation&#34; adds no information once the specific MF and process terms are present; it is
+      uninformative and redundant. Removal of the keyword-derived generic term is appropriate.
+    supported_by:
+    - reference_id: file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+      supporting_text: &#34;catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism&#34;
+    - reference_id: PMID:39596666
+      supporting_text: &#34;The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants&#34;
+- term:
+    id: GO:0009809
+    label: lignin biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Lignin biosynthesis&#34;;
+      snapshot-only, removed in the current GOA release. CCoAOMT is a key, well-characterized enzyme
+      of the lignin branch of phenylpropanoid metabolism - the caffeoyl-CoA -&gt; feruloyl-CoA
+      methylation it catalyzes is upstream of both guaiacyl (G) and syringyl (S) lignin monomers.
+    action: ACCEPT
+    reason: &gt;
+      GOA&#39;s removal of this annotation was NOT justified - a correct and informative process
+      annotation was lost as collateral damage of retiring the keyword2GO pipeline. CCoAOMT is a
+      canonical lignin-pathway enzyme: the classic biochemical characterization of plant CCoAOMT is
+      titled &#34;a lignin biosynthetic enzyme&#34; (Martz et al. 1998, PMID:9484483), the potato family
+      paper states that &#34;the true CCoAOMT members are involved in lignin biosynthesis in vivo through
+      methylating caffeoyl-CoA&#34; (PMID:39596666), and the deep research places the enzyme&#39;s
+      caffeoyl-CoA -&gt; feruloyl-CoA step &#34;feeding into G- and S-lignin precursor formation&#34;.
+      &#34;Lignin biosynthetic process&#34; (GO:0009809) is a specific child of the phenylpropanoid
+      biosynthetic process term that REMAINS in current GOA (GO:0009699); the broader retained term
+      does not fully substitute for it. Because the caffeoyl-CoA O-methyltransferase step is
+      genuinely a committed step toward lignin monomers, this annotation should be retained (it
+      represents a core biological process of the gene). Note the potato family is functionally
+      diversified - some StCCoAOMTs may instead act in flavonoid/anthocyanin methylation - but the
+      canonical lignin role is the best-supported assignment for Q8H9B6.
+    supported_by:
+    - reference_id: PMID:9484483
+      supporting_text: &#34;a lignin biosynthetic enzyme&#34;
+    - reference_id: PMID:39596666
+      supporting_text: &#34;the true CCoAOMT members are involved in lignin biosynthesis in vivo through methylating caffeoyl-CoA&#34;
+    - reference_id: file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+      supporting_text: &#34;feeding into **G- and S-lignin** precursor formation&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Metal-binding&#34;;
+      snapshot-only, removed in the current GOA release. CCoAOMT is a cation-dependent
+      O-methyltransferase that requires a bound divalent metal cation (Mg2+/Ca2+ by similarity)
+      for catalysis, so the gene does bind a metal ion - but &#34;metal ion binding&#34; is a very broad
+      parent term inferred from a keyword.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GOA&#39;s removal of this generic keyword-derived term was acceptable. The metal dependence is
+      real: the CCoAOMT family is defined biochemically as &#34;the Mg2+-dependent caffeoyl coenzyme An
+      O-methyltransferase (CCoAOMT) family&#34; (PMID:39596666), and the UniProt COFACTOR record lists a
+      divalent metal cation (CHEBI:60240, by similarity), with three metal-coordinating BINDING
+      residues (158, 184, 185). However, &#34;metal ion binding&#34; (GO:0046872) is a top-level grouping term
+      inferred from a keyword rather than from gene-specific experimental data, and the divalent-cation
+      requirement is already implicit in the cation-dependent O-methyltransferase molecular function.
+      If a metal-binding MF were to be retained, the more specific &#34;magnesium ion binding&#34;
+      (GO:0000287) would be preferable (Mg2+ is the canonical CCoAOMT cofactor), but the UniProt
+      cofactor is annotated only generically as &#34;a divalent metal cation&#34; by similarity, so a
+      specific replacement cannot be firmly justified from current evidence. As a free-standing
+      keyword-derived broad term it adds little, so its removal is reasonable.
+    proposed_replacement_terms:
+    - id: GO:0000287
+      label: magnesium ion binding
+    supported_by:
+    - reference_id: PMID:39596666
+      supporting_text: &#34;the Mg2+-dependent caffeoyl coenzyme An O-methyltransferase (CCoAOMT) family with low subunit sizes of 26–30 kDa&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro2GO mapping (IPR002935 SAM_O-MeTrfase) assigns the generic parent term
+      &#34;O-methyltransferase activity&#34; to CCoAOMT; the specific caffeoyl-CoA O-methyltransferase
+      activity is the informative child.
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings:
+  - statement: UniPathway UPA00711 (phenylpropanoid biosynthesis) maps to &#34;phenylpropanoid
+      biosynthetic process&#34;; this is the core process role retained in current GOA after the SPKW
+      lignin term was retired.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the
+      keyword2GO pipeline for cellular organisms.
+  - statement: For CCoAOMT the keywords &#34;Methyltransferase&#34; and &#34;Metal-binding&#34; mapped to broad,
+      redundant terms (methylation; metal ion binding), but &#34;Lignin biosynthesis&#34; mapped to a
+      correct, informative process term (lignin biosynthetic process) whose removal was collateral.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: ARBA assigned &#34;circadian rhythm&#34; to CCoAOMT; unsupported by any CCoAOMT literature
+      and likely a model over-prediction.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined IEA methods (EC 2.1.1.104 / Rhea:16925) assign the specific molecular
+      function &#34;caffeoyl-CoA O-methyltransferase activity&#34;, the defining function of the gene.
+- id: PMID:9484483
+  title: cDNA cloning, substrate specificity and expression study of tobacco caffeoyl-CoA
+    3-O-methyltransferase, a lignin biosynthetic enzyme.
+  findings:
+  - statement: Recombinant tobacco CCoAOMT purified from bacteria was specific for the caffeoyl-CoA
+      and 5-hydroxyferuloyl-CoA CoA esters and had no activity against the corresponding free acids
+      (caffeic acid, 5-hydroxyferulic acid), establishing CoA-ester substrate specificity for plant
+      CCoAOMT. Direct experimental evidence supporting the caffeoyl-CoA O-methyltransferase activity.
+  - statement: The expression pattern and substrate specificity of tobacco CCoAOMT support a
+      preferential role in lignin biosynthesis; the paper title itself frames CCoAOMT as a lignin
+      biosynthetic enzyme. Primary support for the lignin biosynthetic process annotation.
+- id: PMID:39596666
+  title: Genome-Wide Characterization of Solanum tuberosum CCoAOMT Gene Family and Identification of
+    StCCoAOMT Genes Involved in Anthocyanin Biosynthesis.
+  findings:
+  - statement: The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and
+      converts caffeoyl-CoA into feruloyl-CoA in plants; true CCoAOMT members are involved in lignin
+      biosynthesis in vivo through methylating caffeoyl-CoA. Primary potato-family support for the
+      core MF and lignin biosynthetic process annotations.
+  - statement: CCoAOMTs constitute the Mg2+-dependent caffeoyl-CoA O-methyltransferase family
+      (subunit ~26-30 kDa), supporting the metal-ion (magnesium) dependence underlying the
+      metal ion binding keyword annotation.
+  - statement: Potato has 12 StCCoAOMT genes clustered into two groups; StCCoAOMT10 is highly
+      expressed in purple potatoes and its protein localized mainly to the cytoplasm and nucleus,
+      indicating functional diversification (lignin- vs flavonoid/anthocyanin-associated members).
+- id: file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation of
+    potato CCOAOMT (Q8H9B6).
+  findings:
+  - statement: CCoAOMT is a SAM-dependent O-methyltransferase that, in its canonical lignin-pathway
+      role, catalyzes methylation of caffeoyl-CoA to feruloyl-CoA, a key step in
+      phenylpropanoid/monolignol metabolism.
+  - statement: True CCoAOMT functions in the phenylpropanoid/monolignol/lignin biosynthesis pathway,
+      helping generate G-lignin precursors and feeding substrate toward S-lignin formation
+      downstream, supporting a core lignin-biosynthetic-process role. (The falcon report does not
+      itself discuss suberin; the suberin/feruloylated-polysaccharide/wound-response context is from
+      the UniProt FUNCTION record.)
+  - statement: Potato has a diversified 12-member StCCoAOMT family split between lignin-associated
+      and flavonoid/anthocyanin-associated clades; CCoAOMT phenylpropanoid methylation occurs in
+      the cytosol (StCCoAOMT10 localizes to cytoplasm and nucleus).
+  - statement: The report does not mention any circadian-rhythm role for CCoAOMT, consistent with
+      treating the ARBA &#34;circadian rhythm&#34; annotation as a spurious over-prediction.
+core_functions:
+- description: &gt;
+    Potato CCoAOMT catalyzes SAM-dependent O-methylation of (E)-caffeoyl-CoA to (E)-feruloyl-CoA
+    (EC 2.1.1.104; also 5-hydroxyferuloyl-CoA to sinapoyl-CoA), the committed methylation step of
+    the phenylpropanoid pathway, using a bound divalent metal cation as cofactor.
+  molecular_function:
+    id: GO:0042409
+    label: caffeoyl-CoA O-methyltransferase activity
+  directly_involved_in:
+  - id: GO:0009699
+    label: phenylpropanoid biosynthetic process
+  - id: GO:0009809
+    label: lignin biosynthetic process
+  supported_by:
+  - reference_id: file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+    supporting_text: &#34;catalyzes methylation of **caffeoyl-CoA → feruloyl-CoA**, a key step in phenylpropanoid/monolignol metabolism&#34;
+  - reference_id: PMID:39596666
+    supporting_text: &#34;The CCoAOMT family acts as a key enzyme that participates in lignin biosynthesis and plays a vital role in converting the Caffeoyl-CoA into Feruloyl-CoA in plants&#34;
+  - reference_id: PMID:9484483
+    supporting_text: &#34;caffeoyl-CoA and 5-hydroxyferuloyl-CoA esters and to have no activity against&#34;
+- description: &gt;
+    By generating feruloyl-CoA, CCoAOMT supplies precursors for guaiacyl/syringyl lignin and, in
+    potato tuber skin, for suberin deposition, contributing to cell-wall reinforcement during
+    development and wound/pathogen responses.
+  molecular_function:
+    id: GO:0042409
+    label: caffeoyl-CoA O-methyltransferase activity
+  directly_involved_in:
+  - id: GO:0009809
+    label: lignin biosynthetic process
+  supported_by:
+  - reference_id: PMID:39596666
+    supporting_text: &#34;the true CCoAOMT members are involved in lignin biosynthesis in vivo through methylating caffeoyl-CoA&#34;
+  - reference_id: file:SOLTU/CCOAOMT/CCOAOMT-deep-research-falcon.md
+    supporting_text: &#34;feeding into **G- and S-lignin** precursor formation&#34;
+  - reference_id: PMID:9484483
+    supporting_text: &#34;a lignin biosynthetic enzyme&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Does the specific potato isoform Q8H9B6 function predominantly in lignin/suberin
+    biosynthesis, or does it belong to a flavonoid/anthocyanin-methylating CCoAOMT clade, given the
+    functional diversification of the 12-member potato StCCoAOMT family?
+  experts:
+  - Yaxuan Peng
+- question: What is the in vitro substrate specificity and metal-cofactor preference (Mg2+ vs Ca2+
+    vs Mn2+) of purified Q8H9B6, and does it methylate 5-hydroxyferuloyl-CoA as well as caffeoyl-CoA?
+  experts:
+  - Adriana Balbina Andreu
+suggested_experiments:
+- description: Express and purify recombinant Q8H9B6 and measure kinetic parameters (Km, kcat) for
+    caffeoyl-CoA and 5-hydroxyferuloyl-CoA with SAM, testing the divalent-cation requirement
+    (Mg2+/Ca2+/Mn2+) to confirm the cation-dependent O-methyltransferase mechanism.
+  hypothesis: Q8H9B6 is a Mg2+-dependent caffeoyl-CoA O-methyltransferase producing feruloyl-CoA,
+    with measurable activity also on 5-hydroxyferuloyl-CoA.
+  experiment_type: in vitro enzyme kinetics and cofactor-dependence assay
+- description: Generate CRISPR knockout / RNAi knockdown of the Q8H9B6 ortholog in potato and
+    quantify tuber-skin lignin and suberin content, lignin monomer (S/G) composition, and
+    wound-induced cell-wall-bound ferulate.
+  hypothesis: Loss of CCoAOMT reduces feruloyl-CoA-derived lignin/suberin and alters S/G lignin
+    monomer ratio, impairing tuber skin barrier formation and wound response.
+  experiment_type: reverse-genetics and cell-wall chemotype analysis
+- description: Express a Q8H9B6-GFP fusion in potato and determine subcellular localization to test
+    whether the enzyme is cytosolic, as predicted for the lignin-associated CCoAOMT clade.
+  hypothesis: Q8H9B6 localizes to the cytosol, consistent with cytosolic phenylpropanoid
+    methylation feeding cell-wall precursor pools.
+  experiment_type: fluorescent-protein subcellular localization
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

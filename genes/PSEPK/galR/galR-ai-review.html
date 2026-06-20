@@ -1,0 +1,2254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>galR - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>galR</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88JX7" target="_blank" class="term-link">
+                        Q88JX7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "galR";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88JX7" data-a="DESCRIPTION: galR encodes an HTH-type transcriptional regulator..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>galR encodes an HTH-type transcriptional regulator for the galBCD and galTAP operons of the P. putida KT2440 gallate degradation cluster.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JX7" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GalR is a DNA-binding transcription factor; falcon deep research shows it acts specifically as a transcriptional activator of the gallate (gal) catabolic cluster, so the more specific child term DNA-binding transcription activator activity is warranted.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt and InterPro support the HTH LysR-type regulator assignment, and the parent term is correct. However, the 2023 functional study shows GalR positively regulates (activates) the gal cluster promoters, supporting the more informative child GO:0001216 (DNA-binding transcription activator activity).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001216" target="_blank" class="term-link">
+                                    DNA-binding transcription activator activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/galR/galR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transcriptional regulator for the galBCD and galTAP operons</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/galR/galR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0003700	DNA-binding transcription factor activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/galR/galR-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GalR is experimentally supported to function as a **transcriptional activator** controlling expression from promoters associated with the gallic-acid utilization cluster when cultures are supplemented with gallic acid</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JX7" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol localization is reasonable for a bacterial soluble transcriptional regulator.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GalR is a soluble bacterial transcriptional regulator, and the TreeGrafter cytosol annotation is consistent with the core regulatory role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/galR/galR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005829	cytosol</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/galR/galR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">HTH-type transcriptional regulator GalR</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/galR/galR-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Because GalR is a LysR-family HTH transcription factor acting on chromosomal promoters, its functional localization is best inferred as **cytosolic/nucleoid-associated** rather than membrane or extracellular</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JX7" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Regulation of DNA-templated transcription is correct, but falcon deep research establishes the direction of regulation as positive (activation), so the positive-regulation child term is now justified.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GalR regulates the gal cluster promoters. The original review left the term at the neutral parent because direction was unspecified, but the 2023 functional study shows GalR acts as a transcriptional activator (extra galR increased reporter activation from both gal-cluster promoters), supporting GO:0045893 (positive regulation of DNA-templated transcription).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                    positive regulation of DNA-templated transcription
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/galR/galR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transcriptional regulator for the galBCD and galTAP operons</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/galR/galR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0006355	regulation of DNA-templated transcription</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/galR/galR-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In reporter constructs, providing an additional copy of **galR** increased activation, consistent with GalR acting as the positive regulator for these promoters</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LysR-type DNA-binding transcriptional activator of the gallate (gal) catabolic cluster (galA/galB/galC/galD plus transport genes galT/galP) in P. putida KT2440. GalR activates these promoters in response to the pathway intermediate 4-oxalomesaconate (4-OMA), which is generated by GalA from gallic acid, rather than to gallic acid directly.</h3>
+                <span class="vote-buttons" data-g="Q88JX7" data-a="FUNCTION: LysR-type DNA-binding transcriptional activator of..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001216" target="_blank" class="term-link">
+                            DNA-binding transcription activator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                positive regulation of DNA-templated transcription
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/galR/galR-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Transcriptional regulator for the galBCD and galTAP operons</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/galR/galR-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">GalR is experimentally supported to function as a **transcriptional activator** controlling expression from promoters associated with the gallic-acid utilization cluster when cultures are supplemented with gallic acid</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/galR/galR-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">The authors identify 4-OMA as the **primary effector required** for activation of the inducible system, and show that induction in non-native hosts requires co-introduction of **galA** to generate the effector</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro supplied DNA-binding transcription factor activity for GalR.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TreeGrafter supplied cytosol localization for GalR.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined automated GO annotation using multiple IEA methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Automated annotations supply regulation of DNA-templated transcription for GalR.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/galR/galR-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB reviewed entry for galR</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies GalR as the transcriptional regulator of the galBCD and galTAP operons.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21219457" target="_blank" class="term-link">
+                            PMID:21219457
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Unravelling the gallic acid degradation pathway in bacteria: the gal cluster from Pseudomonas putida</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The gal-cluster paper characterizes the KT2440 gallate degradation gene cluster.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/galR/galR-goa.tsv
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">QuickGO GOA annotations for galR</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the annotations reviewed for galR.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/galR/galR-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon (Edison Scientific) deep research report on P. putida KT2440 galR (Q88JX7)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GalR is experimentally supported to function as a **transcriptional activator** controlling expression from promoters associated with the gallic-acid utilization cluster when cultures are supplemented with gallic acid</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The 2023 study frames GalR regulation at the level of the **gal operon/cluster**, consisting of **galA/galB/galC/galD** (catabolic enzymes) and linked with **galT/galP** (transport functions)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The authors identify 4-OMA as the **primary effector required** for activation of the inducible system, and show that induction in non-native hosts requires co-introduction of **galA** to generate the effector</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Because GalR is a LysR-family HTH transcription factor acting on chromosomal promoters, its functional localization is best inferred as **cytosolic/nucleoid-associated** rather than membrane or extracellular</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">it explicitly notes that **GalR DNA target binding sites have not been experimentally characterized to date**</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Falcon deep research indicates GalR is an activator responding to the pathway intermediate 4-oxalomesaconate (4-OMA) rather than to gallic acid directly; can the keto versus enol form of OMA that binds GalR be resolved experimentally?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JX7" data-a="Q: Falcon deep research indicates GalR is an activato..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GalR be annotated to involvement in gallate catabolic process (GO:0019396) as a regulator, or should the review stay at transcriptional regulation until direct DNA-binding/footprinting data confirm the regulon scope?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JX7" data-a="Q: Should GalR be annotated to involvement in gallate..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use promoter reporters and GalR DNA-binding assays with gallate and pathway intermediates to determine regulatory direction and ligand response.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: transcription reporter and DNA-binding assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JX7" data-a="EXPERIMENT: Use promoter reporters and GalR DNA-binding assays..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(galR-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88JX7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">21 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-01T09:59:26.907971</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="galR-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="galR-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000009 The requested visual content has been extracted from the document: - **Figure 1A and 1B** (from Page 2) illustrates the gallic acid</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-galr-uniprot-q88jx7-gene-galr-ordered-locus-pp_2516-in-pseudomonas-putida-kt2440">Research report: functional annotation of <strong>GalR</strong> (UniProt <strong>Q88JX7</strong>; gene <strong>galR</strong>; ordered locus <strong>PP_2516</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="1-target-verification-critical-disambiguation">1) Target verification (critical disambiguation)</h3>
+<p>The symbol <strong>galR</strong> is highly ambiguous across bacteria (often used for galactose regulon regulators), so functional annotation must be tied to the specified accession/organism. UniProt <strong>Q88JX7</strong> is described as an <strong>HTH-type LysR-family transcriptional regulator</strong> annotated as “gallate degradation protein R / GalR” in <em>P. putida</em> KT2440. A recent primary study on <em>P. putida</em> KT2440 describes a <strong>LysR-family transcriptional regulator named GalR</strong> that activates the <strong>gallic acid (gallate) catabolic gene cluster</strong> (the “gal operon/cluster”) (kutraite2023developmentandapplication pages 2-3). </p>
+<p>Evidence gap: the 2023 study uses KT2440 locus tags in the <strong>PP_RS…</strong> namespace (e.g., <strong>PP_RS13155</strong> for galR), whereas UniProt Q88JX7 lists the ordered locus as <strong>PP_2516</strong>; a direct cross-reference between these locus-tag systems was not retrieved in this run, so the mapping <strong>Q88JX7/PP_2516 ↔ PP_RS13155</strong> is <strong>very likely but not formally demonstrated here</strong> (kutraite2023developmentandapplication pages 2-3).</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="lysr-type-transcriptional-regulators-lttrs">LysR-type transcriptional regulators (LTTRs)</h4>
+<p><strong>LysR-type transcriptional regulators (LTTRs)</strong> are among the most abundant bacterial transcription factors. They typically:<br />
+- bind DNA via an N-terminal <strong>helix–turn–helix (HTH)</strong> domain,<br />
+- recognize promoter-proximal motifs that often include an LTTR core (commonly described as a <strong>T–N11–A</strong> pattern),<br />
+- respond to a small-molecule <strong>effector/inducer</strong>, frequently a pathway intermediate, and<br />
+- modulate RNA polymerase engagement through promoter architecture that can involve a <strong>regulatory binding site (RBS)</strong> and <strong>activation binding site (ABS)</strong> (kutraite2023developmentandapplication pages 3-4, kutraite2023developmentandapplication pages 2-3).</p>
+<h4 id="gallategallic-acid-degradation-and-the-gal-cluster">Gallate/gallic acid degradation and the “gal” cluster</h4>
+<p>In <em>P. putida</em> KT2440, gallic acid (gallate; 3,4,5-trihydroxybenzoate) is degraded via a gene cluster/operon including <strong>galA, galB, galC, galD</strong>, with associated transport genes <strong>galT</strong> and <strong>galP</strong> (kutraite2023developmentandapplication pages 2-3, kutraite2023developmentandapplication pages 1-2, kutraite2023developmentandapplication media 003d80a5). The pathway produces the ring-cleavage intermediate <strong>4-oxalomesaconate (4-OMA)</strong>, which is central both to metabolism and regulation (kutraite2023developmentandapplication pages 1-2, kutraite2023developmentandapplication media 003d80a5).</p>
+<h3 id="3-primary-function-of-galr-molecular-function-targets-effector-mechanism">3) Primary function of GalR (molecular function, targets, effector, mechanism)</h3>
+<h4 id="31-molecular-function-transcriptional-activation-of-gallate-catabolism-genes">3.1 Molecular function: transcriptional activation of gallate catabolism genes</h4>
+<p>GalR is experimentally supported to function as a <strong>transcriptional activator</strong> controlling expression from promoters associated with the gallic-acid utilization cluster when cultures are supplemented with gallic acid (kutraite2023developmentandapplication pages 2-3). In reporter constructs, providing an additional copy of <strong>galR</strong> increased activation, consistent with GalR acting as the positive regulator for these promoters (kutraite2023developmentandapplication pages 2-3).</p>
+<h4 id="32-regulontargets-supported-at-the-operoncluster-level">3.2 Regulon/targets (supported at the operon/cluster level)</h4>
+<p>The 2023 study frames GalR regulation at the level of the <strong>gal operon/cluster</strong>, consisting of <strong>galA/galB/galC/galD</strong> (catabolic enzymes) and linked with <strong>galT/galP</strong> (transport functions) (kutraite2023developmentandapplication pages 2-3, kutraite2023developmentandapplication pages 1-2). This is reinforced by the pathway/cluster schematic (Figure 1) retrieved from the same study (kutraite2023developmentandapplication media 003d80a5).</p>
+<p>Important limitation: while the study provides promoter-level evidence and a cluster model, it explicitly notes that <strong>GalR DNA target binding sites have not been experimentally characterized to date</strong> (kutraite2023developmentandapplication pages 2-3).</p>
+<h4 id="33-effectorligand-4-oxalomesaconate-4-oma-is-the-primary-effector-required-for-activation">3.3 Effector/ligand: <strong>4-oxalomesaconate (4-OMA)</strong> is the primary effector required for activation</h4>
+<p>A key recent advance is that GalR does <strong>not</strong> appear to respond directly to extracellular gallic acid; instead, the system requires <strong>GalA activity</strong> and the pathway intermediate <strong>4-oxalomesaconate (4-OMA)</strong>. The authors identify 4-OMA as the <strong>primary effector required</strong> for activation of the inducible system, and show that induction in non-native hosts requires co-introduction of <strong>galA</strong> to generate the effector (kutraite2023developmentandapplication pages 1-2, kutraite2023developmentandapplication pages 3-4, kutraite2023developmentandapplication pages 4-6). A biosensor mechanism schematic consistent with “gallic acid uptake → GalA → 4-OMA → GalR activation” was also retrieved (kutraite2023developmentandapplication media 003d80a5).</p>
+<p>Open mechanistic question: the study highlights uncertainty about whether the <strong>keto</strong> and/or <strong>enol</strong> form of OMA is the active effector, noting the need for further work (kutraite2023developmentandapplication pages 3-4).</p>
+<h4 id="34-proposed-dna-binding-mechanism-inference-anchored-by-sequence-analysis">3.4 Proposed DNA-binding mechanism (inference anchored by sequence analysis)</h4>
+<p>Based on comparative sequence analysis of the intergenic promoter region (PP_RS13150/PP_RS13155), the authors describe conserved motifs upstream of <strong>galB</strong> consistent with canonical LTTR promoter architectures, including an extended motif consistent with a LysR-like core (e.g., <strong>CTATA–N9–TATAG</strong>) and a putative activation-site motif near the RNAP −35 region (kutraite2023developmentandapplication pages 3-4). However, these motifs are presented as <strong>predictions</strong>, not confirmed by direct binding assays (kutraite2023developmentandapplication pages 2-3).</p>
+<h3 id="4-biological-process-and-pathway-placement-what-galr-does-for-the-cell">4) Biological process and pathway placement (what GalR “does for the cell”)</h3>
+<h4 id="41-pathway-overview-gallic-acid-central-metabolism">4.1 Pathway overview (gallic acid → central metabolism)</h4>
+<p>Within the <em>P. putida</em> “gal” pathway, <strong>GalA</strong> is the initiating dioxygenase step producing <strong>4-OMA</strong>, after which downstream enzymes (GalB/GalC/GalD in the cluster model) transform intermediates toward central metabolism (kutraite2023developmentandapplication pages 1-2, kutraite2023developmentandapplication media 003d80a5). A synthetic-biology-focused thesis summarizes this pathway as producing central metabolites (reported as pyruvate and oxaloacetate) (rojas2020developmentofsynthetic pages 28-33), but this thesis is not a peer-reviewed primary characterization and should be treated as secondary synthesis.</p>
+<p>More broadly, aromatic ring cleavage and downstream assimilation of lignin-derived aromatics is a major theme in environmental/industrial microbiology; classic reviews emphasize bacterial roles in mineralization of lignin-derived low-molecular-weight aromatics and the importance of elucidating enzyme systems for carbon cycling and industrial conversion (masai2007geneticandbiochemical pages 1-3).</p>
+<h4 id="42-functional-logic-of-regulation">4.2 Functional logic of regulation</h4>
+<p>The emerging regulatory logic is:<br />
+1) transporter functions (GalP/GalT) help bring gallic acid into the cell,<br />
+2) GalA converts it to <strong>4-OMA</strong>, <br />
+3) <strong>4-OMA</strong> activates GalR, <br />
+4) GalR activates promoter(s) driving the catabolic/transport genes, reinforcing the system when substrate is present (kutraite2023developmentandapplication pages 1-2, kutraite2023developmentandapplication pages 2-3, kutraite2023developmentandapplication pages 4-6, kutraite2023developmentandapplication media 003d80a5).</p>
+<p>This “intermediate-as-effector” logic is common in bacterial catabolic regulation and helps prevent unnecessary pathway expression unless flux into the pathway is occurring.</p>
+<h3 id="5-cellular-localization-where-the-gene-product-acts">5) Cellular localization (where the gene product acts)</h3>
+<p>No direct subcellular localization experiments for GalR were retrieved. Given that GalR is a DNA-binding LTTR regulating transcription from chromosomal promoters, its functional location is best inferred as <strong>cytosolic/nucleoid-associated</strong> (i.e., acting at DNA in the cytoplasm), rather than membrane or extracellular (kutraite2023developmentandapplication pages 2-3, kutraite2023developmentandapplication pages 3-4).</p>
+<h3 id="6-recent-developments-prioritize-20232024">6) Recent developments (prioritize 2023–2024)</h3>
+<h4 id="61-2023-effector-identification-and-tool-building-around-galr">6.1 2023: effector identification and tool-building around GalR</h4>
+<p>A major 2023 development is the explicit identification of <strong>4-OMA</strong> as the <strong>primary effector</strong> for the <em>P. putida</em> GalR system and the demonstration that <strong>GalA is required</strong> to generate this effector (kutraite2023developmentandapplication pages 1-2, kutraite2023developmentandapplication pages 4-6). In addition to advancing pathway understanding, the work operationalizes the system as a <strong>tunable transcription-factor-based sensor/inducible system</strong> (kutraite2023developmentandapplication pages 4-6).</p>
+<h4 id="62-2024-gallateoma-appears-as-a-recurring-node-in-lignin-related-aromatic-metabolism">6.2 2024: gallate→OMA appears as a recurring node in lignin-related aromatic metabolism</h4>
+<p>A 2024 Nature Communications study on lignin-related aromatic metabolism in <em>Xanthomonas citri</em> references the conversion of <strong>gallate to 4-OMA</strong> as a plausible step in lignin-derived aromatic processing frameworks and uses <em>P. putida</em> KT2440 as one of the model organisms in this broader space (martim2024resolvingthemetabolism pages 3-5). While not GalR-specific, this highlights that gallate/OMA chemistry is a recognized node in contemporary aromatic-metabolism research.</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<h4 id="71-whole-cell-biosensors-for-gallic-acid-implementation-in-native-and-heterologous-hosts">7.1 Whole-cell biosensors for gallic acid (implementation in native and heterologous hosts)</h4>
+<p>The GalR-controlled promoter systems (<strong>PPP_RS13150</strong> and <strong>PPP_RS13170</strong>) have been implemented as <strong>whole-cell biosensors</strong> and inducible expression systems. In <em>P. putida</em>, both promoters are activated by exogenous gallic acid, and activation is enhanced by providing an additional copy of <strong>galR</strong> (kutraite2023developmentandapplication pages 2-3). </p>
+<p>The same study demonstrates that the system can be ported to non-native hosts, but only works robustly when the host is engineered to generate the true effector 4-OMA (i.e., requires <strong>galA</strong>, and benefits from transport such as <strong>GalT</strong>), enabling biosensing in organisms such as <em>E. coli</em> and <em>Cupriavidus necator</em> (kutraite2023developmentandapplication pages 1-2, kutraite2023developmentandapplication pages 3-4).</p>
+<h4 id="72-demonstrated-real-world-sample-measurement">7.2 Demonstrated real-world sample measurement</h4>
+<p>The <em>P. putida</em> biosensor was applied to estimate gallic acid in <strong>green tea extracts</strong>, demonstrating a practical analytical use case beyond pure lab standards (kutraite2023developmentandapplication pages 4-6).</p>
+<h3 id="8-quantitative-statistics-and-data-from-recent-studies">8) Quantitative statistics and data (from recent studies)</h3>
+<h4 id="81-promoter-and-induction-performance">8.1 Promoter and induction performance</h4>
+<p>In <em>P. putida</em> reporter assays (6 h after inducer addition), GalR-dependent systems showed strong induction, with the <strong>PpGalR/PPP_RS13150</strong> system reported as mediating <strong>~45-fold or ~248-fold</strong> induction (depending on construct/conditions) (kutraite2023developmentandapplication pages 3-4). Both <strong>PPP_RS13150</strong> and <strong>PPP_RS13170</strong> promoter regions were activated by exogenous gallic acid, with example reported inductions of approximately <strong>9.7-/2.5-fold</strong> or <strong>72.3-/45.6-fold</strong> depending on medium/construct (kutraite2023developmentandapplication pages 2-3). A promoter-only construct showed only minor induction (<strong>1.7-fold or 6.3-fold</strong>), consistent with GalR being required for robust activation (kutraite2023developmentandapplication pages 2-3).</p>
+<h4 id="82-biosensor-detection-limits-and-tunable-range">8.2 Biosensor detection limits and tunable range</h4>
+<p>Reported sensitivity metrics include:<br />
+- prior/native host system detection down to <strong>~0.5–1 µM</strong> gallic acid (as cited in the 2023 study) (kutraite2023developmentandapplication pages 2-3),<br />
+- engineered biosensor limits of detection (LOD): <strong>~9.7 µM</strong> for the <em>P. putida</em> biosensor (BS1) and <strong>~78 µM</strong> for the <em>E. coli</em> biosensor (BS2) (kutraite2023developmentandapplication pages 4-6),<br />
+- tunable response range reported at approximately <strong>0.312–1.25 mM</strong> extracellular gallic acid (kutraite2023developmentandapplication pages 4-6).</p>
+<p>Dynamic ranges (fold induction) were reported as high, including examples up to <strong>~2,138-fold</strong> (BS1) and <strong>~162-fold</strong> (BS2), with some alternate values in supplementary reporting noted by the authors (kutraite2023developmentandapplication pages 4-6).</p>
+<h3 id="9-expert-opinions-authoritative-synthesis-interpretation">9) Expert opinions / authoritative synthesis (interpretation)</h3>
+<p>A long-standing view in aromatic catabolism is that bacteria are major contributors to mineralization of lignin-derived, low-molecular-weight aromatics in soils and that elucidating pathway genes/enzymes provides tools for industrially useful bioconversion (masai2007geneticandbiochemical pages 1-3). The 2023 GalR study exemplifies this dual scientific/biotechnological value: it clarifies an unusual regulatory feature (intermediate-driven induction via 4-OMA) and immediately deploys it as a biosensing/inducible-expression platform (kutraite2023developmentandapplication pages 1-2, kutraite2023developmentandapplication pages 4-6).</p>
+<h3 id="10-comparative-notes-to-avoid-misannotation">10) Comparative notes (to avoid misannotation)</h3>
+<p>Because “galR” is used for unrelated regulators in other organisms, it is important not to generalize findings across taxa without evidence. For instance, a <em>Lactobacillus plantarum</em> LysR-family regulator (TanR) is required for gene induction in response to methyl gallate/gallic acid, illustrating convergent regulatory logic, but it is not the same gene/protein and should not be conflated with <em>Pseudomonas</em> GalR (reveron2017differentialgeneexpression pages 13-15).</p>
+<h3 id="11-consolidated-evidence-table">11) Consolidated evidence table</h3>
+<p>The table below consolidates experimentally supported claims versus inference and highlights evidence gaps.</p>
+<table>
+<thead>
+<tr>
+<th>Claim about GalR</th>
+<th>Evidence type</th>
+<th>Key details / quantitative data</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Identity is consistent with a LysR-family transcriptional regulator involved in gallate/gallic acid catabolism in <em>Pseudomonas putida</em> KT2440</strong></td>
+<td>Experimental pathway context + bioinformatic family assignment</td>
+<td>2023 study describes <strong>GalR</strong> as a <strong>LysR family TR</strong> controlling the <strong>gal operon</strong> in <em>P. putida</em> KT2440; UniProt Q88JX7 description as an HTH-type LysR regulator is consistent with this functional context. The precise <strong>PP_2516 ↔ PP_RS13155</strong> locus-tag crosswalk was not directly shown in retrieved contexts, so synonymy should be treated as probable rather than fully demonstrated here. (kutraite2023developmentandapplication pages 2-3, rojas2020developmentofsynthetic pages 28-33)</td>
+<td>Kutraite &amp; Malys, 2023, ACS Synth. Biol., DOI: 10.1021/acssynbio.2c00537, https://doi.org/10.1021/acssynbio.2c00537; Rojas, 2020, thesis/preprint, DOI: 10.11606/d.17.2020.tde-19082020-091727, https://doi.org/10.11606/d.17.2020.tde-19082020-091727</td>
+</tr>
+<tr>
+<td><strong>Primary molecular function: transcriptional activator of the gal operon</strong></td>
+<td>Experimental</td>
+<td>GalR was reported to act as a <strong>transcriptional activator</strong> of the <strong>gal operon</strong> when gallic acid is present. Extra plasmid-borne <strong>galR</strong> increased reporter activation from both tested promoters, supporting an activator role. (kutraite2023developmentandapplication pages 2-3)</td>
+<td>Kutraite &amp; Malys, 2023, https://doi.org/10.1021/acssynbio.2c00537</td>
+</tr>
+<tr>
+<td><strong>Likely regulon includes genes for gallate degradation and uptake</strong></td>
+<td>Experimental + pathway inference</td>
+<td>The <em>gal</em> operon comprises <strong>galA, galB, galC, galD</strong> (catabolic enzymes) and is linked with transport genes <strong>galT</strong> and <strong>galP</strong> that aid gallic-acid uptake. This places GalR upstream of both degradation and transport functions. (kutraite2023developmentandapplication pages 2-3, kutraite2023developmentandapplication pages 1-2, rojas2020developmentofsynthetic pages 28-33)</td>
+<td>Kutraite &amp; Malys, 2023, https://doi.org/10.1021/acssynbio.2c00537; Rojas, 2020, https://doi.org/10.11606/d.17.2020.tde-19082020-091727</td>
+</tr>
+<tr>
+<td><strong>Pathway role: GalR controls entry of gallic acid into a ring-cleavage pathway feeding central metabolism</strong></td>
+<td>Experimental pathway characterization + background review</td>
+<td>Retrieved contexts place GalR at the head of a pathway where <strong>GalA</strong> performs gallate ring cleavage to <strong>4-oxalomesaconate (4-OMA)</strong>, followed by <strong>GalD/GalB/GalC</strong> reactions that yield metabolites entering central metabolism (reported as pyruvate and oxaloacetate in the thesis summary). (kutraite2023developmentandapplication pages 1-2, rojas2020developmentofsynthetic pages 28-33)</td>
+<td>Kutraite &amp; Malys, 2023, https://doi.org/10.1021/acssynbio.2c00537; Rojas, 2020, https://doi.org/10.11606/d.17.2020.tde-19082020-091727</td>
+</tr>
+<tr>
+<td><strong>Effector is not gallic acid itself, but the pathway intermediate 4-oxalomesaconate (4-OMA)</strong></td>
+<td>Experimental</td>
+<td>2023 functional analysis showed induction requires <strong>galA</strong> activity and identified <strong>4-OMA</strong> as the <strong>primary effector</strong> interacting with GalR. In non-native hosts, gallic acid did not trigger induction unless <strong>galA</strong> was also supplied, supporting 4-OMA dependence. (kutraite2023developmentandapplication pages 1-2, kutraite2023developmentandapplication pages 3-4, kutraite2023developmentandapplication pages 4-6, kutraite2023developmentandapplication pages 2-3)</td>
+<td>Kutraite &amp; Malys, 2023, https://doi.org/10.1021/acssynbio.2c00537</td>
+</tr>
+<tr>
+<td><strong>Mechanism is consistent with canonical LysR-family activation at paired DNA sites</strong></td>
+<td>Bioinformatic inference supported by reporter experiments</td>
+<td>A conserved ~40-nt region upstream of <strong>galB</strong> contains motifs resembling LysR <strong>RBS/ABS</strong> elements, including a LysR-like <strong>T-N11-A</strong> core in an extended <strong>CTATA-N9-TATAG</strong> motif; GalR is proposed to bind regulatory and activation sites near the RNAP −35 region. However, the study explicitly notes that <strong>GalR target binding sites have not yet been experimentally characterized</strong>. (kutraite2023developmentandapplication pages 3-4, kutraite2023developmentandapplication pages 2-3)</td>
+<td>Kutraite &amp; Malys, 2023, https://doi.org/10.1021/acssynbio.2c00537</td>
+</tr>
+<tr>
+<td><strong>Promoters responsive to GalR include PPP_RS13150 and PPP_RS13170</strong></td>
+<td>Experimental</td>
+<td>Both promoter regions were activated by exogenous gallic acid in <em>P. putida</em>. Reported fold induction values included approximately <strong>45- or 248-fold</strong> for <strong>PpGalR/PPP_RS13150</strong> and approximately <strong>9.7-/2.5-fold</strong> or <strong>72.3-/45.6-fold</strong> for constructs involving <strong>PPP_RS13170</strong> depending on medium/construct configuration. A promoter-only variant showed only minor induction (<strong>1.7- or 6.3-fold</strong>), consistent with GalR dependence. (kutraite2023developmentandapplication pages 2-3, kutraite2023developmentandapplication pages 3-4, kutraite2023developmentandapplication media 003d80a5)</td>
+<td>Kutraite &amp; Malys, 2023, https://doi.org/10.1021/acssynbio.2c00537</td>
+</tr>
+<tr>
+<td><strong>Quantitative biosensor implementations confirm strong GalR-dependent responsiveness</strong></td>
+<td>Experimental / real-world implementation</td>
+<td>GalR-based biosensors were built in <em>P. putida</em> and <em>E. coli</em>. Reported engineered-system metrics include <strong>LOD ~9.7 μM</strong> for BS1 (<em>P. putida</em>) and <strong>78 μM</strong> for BS2 (<em>E. coli</em>), tunable response over about <strong>0.312–1.25 mM</strong> extracellular gallic acid, and dynamic ranges reported as up to <strong>~112- and ~2,138-fold</strong> (BS1) and <strong>~75- and ~162-fold</strong> (BS2), with some alternate values in supplementary reporting. Earlier native detection was noted as <strong>0.5–1 μM</strong>. (kutraite2023developmentandapplication pages 4-6, kutraite2023developmentandapplication pages 2-3, kutraite2023developmentandapplication media 003d80a5)</td>
+<td>Kutraite &amp; Malys, 2023, https://doi.org/10.1021/acssynbio.2c00537</td>
+</tr>
+<tr>
+<td><strong>Transport contributes to GalR system output via GalT/GalP-mediated uptake</strong></td>
+<td>Experimental + inference</td>
+<td>The 2023 study linked GalR-regulated sensing to <strong>GalA</strong>, <strong>GalT</strong>, and likely <strong>GalP</strong>. In <em>E. coli</em>, which lacks GalT homologs, adding <strong>GalT</strong> improved reporter output, supporting a role for transport in supplying substrate for conversion to the true effector 4-OMA. (kutraite2023developmentandapplication pages 3-4, kutraite2023developmentandapplication pages 4-6)</td>
+<td>Kutraite &amp; Malys, 2023, https://doi.org/10.1021/acssynbio.2c00537</td>
+</tr>
+<tr>
+<td><strong>Subcellular localization is most consistent with a cytosolic DNA-binding regulator, but this was not directly tested</strong></td>
+<td>Bioinformatic/functional inference</td>
+<td>No retrieved paper provided direct localization experiments for GalR. Because GalR is a LysR-family HTH transcription factor acting on chromosomal promoters, its functional localization is best inferred as <strong>cytosolic/nucleoid-associated</strong> rather than membrane or extracellular. This remains an inference, not direct evidence. (kutraite2023developmentandapplication pages 2-3, kutraite2023developmentandapplication pages 3-4)</td>
+<td>Kutraite &amp; Malys, 2023, https://doi.org/10.1021/acssynbio.2c00537</td>
+</tr>
+<tr>
+<td><strong>Comparative precedent supports inducer-dependent activation as a plausible regulatory logic for gallate-responsive LysR regulators</strong></td>
+<td>Comparative experimental precedent (different organism)</td>
+<td>In <em>Lactobacillus plantarum</em>, the LysR-family regulator <strong>TanR</strong> is required for gene induction in response to <strong>methyl gallate/gallic acid</strong>, and transporter <strong>GacP</strong> participates in gallate uptake/export. This does <strong>not</strong> prove the <em>P. putida</em> mechanism, but supports a broader theme of gallate-responsive LysR regulation coupled to transport/metabolism. (reveron2017differentialgeneexpression pages 13-15)</td>
+<td>Reverón et al., 2017, Appl. Environ. Microbiol., DOI: 10.1128/AEM.03387-16, https://doi.org/10.1128/AEM.03387-16</td>
+</tr>
+<tr>
+<td><strong>Broader application context: the GalR-controlled pathway is relevant to lignin-aromatic valorization and biosensing</strong></td>
+<td>Background review + direct implementation</td>
+<td>Reviews and recent aromatic-catabolism studies place gallate/4-OMA chemistry within bacterial conversion of lignin-derived aromatics. In practice, the GalR system has already been implemented as a <strong>whole-cell biosensor</strong> for gallic acid detection, including application to <strong>green tea extracts</strong>. (masai2007geneticandbiochemical pages 1-3, martim2024resolvingthemetabolism pages 3-5, kutraite2023developmentandapplication media 003d80a5)</td>
+<td>Masai et al., 2007, Biosci. Biotechnol. Biochem., DOI: 10.1271/bbb.60437, https://doi.org/10.1271/bbb.60437; Martim et al., 2024, Nat. Commun., DOI: 10.1038/s41467-024-52367-6, https://doi.org/10.1038/s41467-024-52367-6; Kutraite &amp; Malys, 2023, https://doi.org/10.1021/acssynbio.2c00537</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table consolidates the main functional-annotation claims for Pseudomonas putida KT2440 GalR, separating direct experimental support from bioinformatic inference. It highlights what is well supported for GalR (activator role, 4-OMA effector, target pathway context, biosensor performance) and where evidence gaps remain.</em></p>
+<h3 id="12-evidence-gaps-and-recommended-next-steps-for-stronger-annotation">12) Evidence gaps and recommended next steps for stronger annotation</h3>
+<p>1) <strong>Definitive identifier crosswalk</strong>: explicitly map <strong>UniProt Q88JX7 / PP_2516</strong> to the <strong>PP_RS13155</strong> identifier used in recent literature via genome annotations or UniProt/NCBI cross-references (gap noted in this run) (kutraite2023developmentandapplication pages 2-3).<br />
+2) <strong>Direct GalR–DNA interaction evidence</strong>: confirm predicted RBS/ABS sites by <strong>EMSA, DNase I footprinting, ChIP-seq</strong>, and/or promoter mutagenesis targeted to the predicted motifs (kutraite2023developmentandapplication pages 2-3, kutraite2023developmentandapplication pages 3-4).<br />
+3) <strong>Effector chemistry</strong>: resolve whether <strong>OMAketo</strong> vs <strong>OMAenol</strong> (or both) binds GalR and determine binding constants (kutraite2023developmentandapplication pages 3-4).<br />
+4) <strong>Regulon breadth</strong>: determine whether GalR regulates additional genes beyond the immediate gal cluster under relevant environmental conditions.</p>
+<h3 id="key-primary-sources-with-publication-dates-and-urls">Key primary sources (with publication dates and URLs)</h3>
+<ul>
+<li>Kutraite I, Malys N. <strong>“Development and Application of Whole-Cell Biosensors for the Detection of Gallic Acid”</strong>. <em>ACS Synthetic Biology</em> (published <strong>Feb 2023</strong>). https://doi.org/10.1021/acssynbio.2c00537 (kutraite2023developmentandapplication pages 1-2, kutraite2023developmentandapplication pages 2-3, kutraite2023developmentandapplication pages 4-6)</li>
+<li>Martim DB et al. <strong>“Resolving the metabolism of monolignols and other lignin-related aromatic compounds in Xanthomonas citri”</strong>. <em>Nature Communications</em> (published <strong>Sep 2024</strong>). https://doi.org/10.1038/s41467-024-52367-6 (martim2024resolvingthemetabolism pages 3-5)</li>
+<li>Masai E et al. <strong>“Genetic and Biochemical Investigations on Bacterial Catabolic Pathways for Lignin-Derived Aromatic Compounds”</strong>. <em>Bioscience, Biotechnology, and Biochemistry</em> (online publication <strong>Jan 7, 2007</strong>). https://doi.org/10.1271/bbb.60437 (masai2007geneticandbiochemical pages 1-3)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(kutraite2023developmentandapplication pages 2-3): Ingrida Kutraite and Naglis Malys. Development and application of whole-cell biosensors for the detection of gallic acid. ACS Synthetic Biology, 12:533-543, Feb 2023. URL: https://doi.org/10.1021/acssynbio.2c00537, doi:10.1021/acssynbio.2c00537. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kutraite2023developmentandapplication pages 3-4): Ingrida Kutraite and Naglis Malys. Development and application of whole-cell biosensors for the detection of gallic acid. ACS Synthetic Biology, 12:533-543, Feb 2023. URL: https://doi.org/10.1021/acssynbio.2c00537, doi:10.1021/acssynbio.2c00537. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kutraite2023developmentandapplication pages 1-2): Ingrida Kutraite and Naglis Malys. Development and application of whole-cell biosensors for the detection of gallic acid. ACS Synthetic Biology, 12:533-543, Feb 2023. URL: https://doi.org/10.1021/acssynbio.2c00537, doi:10.1021/acssynbio.2c00537. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kutraite2023developmentandapplication media 003d80a5): Ingrida Kutraite and Naglis Malys. Development and application of whole-cell biosensors for the detection of gallic acid. ACS Synthetic Biology, 12:533-543, Feb 2023. URL: https://doi.org/10.1021/acssynbio.2c00537, doi:10.1021/acssynbio.2c00537. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kutraite2023developmentandapplication pages 4-6): Ingrida Kutraite and Naglis Malys. Development and application of whole-cell biosensors for the detection of gallic acid. ACS Synthetic Biology, 12:533-543, Feb 2023. URL: https://doi.org/10.1021/acssynbio.2c00537, doi:10.1021/acssynbio.2c00537. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rojas2020developmentofsynthetic pages 28-33): Maria Juliana Rolon Rojas. Development of synthetic biology tools by methods in silico and in vivo applied to bacteria of biotechnology importance. ArXiv, Mar 2020. URL: https://doi.org/10.11606/d.17.2020.tde-19082020-091727, doi:10.11606/d.17.2020.tde-19082020-091727. This article has 0 citations.</p>
+</li>
+<li>
+<p>(masai2007geneticandbiochemical pages 1-3): Eiji MASAI, Yoshihiro KATAYAMA, and Masao FUKUDA. Genetic and biochemical investigations on bacterial catabolic pathways for lignin-derived aromatic compounds. Bioscience, Biotechnology, and Biochemistry, 71:1-15, Jan 2007. URL: https://doi.org/10.1271/bbb.60437, doi:10.1271/bbb.60437. This article has 635 citations.</p>
+</li>
+<li>
+<p>(martim2024resolvingthemetabolism pages 3-5): Damaris B. Martim, Anna J. V. C. Brilhante, Augusto R. Lima, Douglas A. A. Paixão, Joaquim Martins-Junior, Fernanda M. Kashiwagi, Lucia D. Wolf, Mariany S. Costa, Fabrícia F. Menezes, Rafaela Prata, Matheus C. Gazolla, Juliana A. Aricetti, Gabriela F. Persinoti, George J. M. Rocha, and Priscila O. Giuseppe. Resolving the metabolism of monolignols and other lignin-related aromatic compounds in xanthomonas citri. Nature Communications, Sep 2024. URL: https://doi.org/10.1038/s41467-024-52367-6, doi:10.1038/s41467-024-52367-6. This article has 14 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(reveron2017differentialgeneexpression pages 13-15): Inés Reverón, Natalia Jiménez, José Antonio Curiel, Elena Peñas, Félix López de Felipe, Blanca de las Rivas, and Rosario Muñoz. Differential gene expression by lactobacillus plantarum wcfs1 in response to phenolic compounds reveals new genes involved in tannin degradation. Applied and Environmental Microbiology, Apr 2017. URL: https://doi.org/10.1128/aem.03387-16, doi:10.1128/aem.03387-16. This article has 66 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="galR-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000009 The requested visual content has been extracted from the document: - **Figure 1A and 1B** (from Page 2) illustrates the gallic acid" src="galR-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kutraite2023developmentandapplication pages 2-3</li>
+<li>kutraite2023developmentandapplication pages 3-4</li>
+<li>rojas2020developmentofsynthetic pages 28-33</li>
+<li>masai2007geneticandbiochemical pages 1-3</li>
+<li>kutraite2023developmentandapplication pages 4-6</li>
+<li>martim2024resolvingthemetabolism pages 3-5</li>
+<li>reveron2017differentialgeneexpression pages 13-15</li>
+<li>kutraite2023developmentandapplication pages 1-2</li>
+<li>https://doi.org/10.1021/acssynbio.2c00537;</li>
+<li>https://doi.org/10.11606/d.17.2020.tde-19082020-091727</li>
+<li>https://doi.org/10.1021/acssynbio.2c00537</li>
+<li>https://doi.org/10.1128/AEM.03387-16</li>
+<li>https://doi.org/10.1271/bbb.60437;</li>
+<li>https://doi.org/10.1038/s41467-024-52367-6;</li>
+<li>https://doi.org/10.1038/s41467-024-52367-6</li>
+<li>https://doi.org/10.1271/bbb.60437</li>
+<li>https://doi.org/10.1021/acssynbio.2c00537,</li>
+<li>https://doi.org/10.11606/d.17.2020.tde-19082020-091727,</li>
+<li>https://doi.org/10.1271/bbb.60437,</li>
+<li>https://doi.org/10.1038/s41467-024-52367-6,</li>
+<li>https://doi.org/10.1128/aem.03387-16,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88JX7
+gene_symbol: galR
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: galR encodes an HTH-type transcriptional regulator for the galBCD and galTAP operons of the P. putida KT2440 gallate degradation cluster.
+existing_annotations:
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: GalR is a DNA-binding transcription factor; falcon deep research shows it acts
+      specifically as a transcriptional activator of the gallate (gal) catabolic cluster,
+      so the more specific child term DNA-binding transcription activator activity is warranted.
+    action: MODIFY
+    reason: UniProt and InterPro support the HTH LysR-type regulator assignment, and the parent
+      term is correct. However, the 2023 functional study shows GalR positively regulates (activates)
+      the gal cluster promoters, supporting the more informative child GO:0001216 (DNA-binding
+      transcription activator activity).
+    proposed_replacement_terms:
+    - id: GO:0001216
+      label: DNA-binding transcription activator activity
+    supported_by:
+    - reference_id: file:PSEPK/galR/galR-uniprot.txt
+      supporting_text: Transcriptional regulator for the galBCD and galTAP operons
+    - reference_id: file:PSEPK/galR/galR-goa.tsv
+      supporting_text: &#34;GO:0003700\tDNA-binding transcription factor activity&#34;
+    - reference_id: file:PSEPK/galR/galR-deep-research-falcon.md
+      supporting_text: |-
+        GalR is experimentally supported to function as a **transcriptional activator** controlling expression from promoters associated with the gallic-acid utilization cluster when cultures are supplemented with gallic acid
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: Cytosol localization is reasonable for a bacterial soluble transcriptional regulator.
+    action: ACCEPT
+    reason: GalR is a soluble bacterial transcriptional regulator, and the TreeGrafter cytosol annotation is consistent with the core regulatory role.
+    supported_by:
+    - reference_id: file:PSEPK/galR/galR-goa.tsv
+      supporting_text: &#34;GO:0005829\tcytosol&#34;
+    - reference_id: file:PSEPK/galR/galR-uniprot.txt
+      supporting_text: HTH-type transcriptional regulator GalR
+    - reference_id: file:PSEPK/galR/galR-deep-research-falcon.md
+      supporting_text: |-
+        Because GalR is a LysR-family HTH transcription factor acting on chromosomal promoters, its functional localization is best inferred as **cytosolic/nucleoid-associated** rather than membrane or extracellular
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Regulation of DNA-templated transcription is correct, but falcon deep research
+      establishes the direction of regulation as positive (activation), so the positive-regulation
+      child term is now justified.
+    action: MODIFY
+    reason: GalR regulates the gal cluster promoters. The original review left the term at the
+      neutral parent because direction was unspecified, but the 2023 functional study shows GalR
+      acts as a transcriptional activator (extra galR increased reporter activation from both
+      gal-cluster promoters), supporting GO:0045893 (positive regulation of DNA-templated transcription).
+    proposed_replacement_terms:
+    - id: GO:0045893
+      label: positive regulation of DNA-templated transcription
+    supported_by:
+    - reference_id: file:PSEPK/galR/galR-uniprot.txt
+      supporting_text: Transcriptional regulator for the galBCD and galTAP operons
+    - reference_id: file:PSEPK/galR/galR-goa.tsv
+      supporting_text: &#34;GO:0006355\tregulation of DNA-templated transcription&#34;
+    - reference_id: file:PSEPK/galR/galR-deep-research-falcon.md
+      supporting_text: |-
+        In reporter constructs, providing an additional copy of **galR** increased activation, consistent with GalR acting as the positive regulator for these promoters
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro supplied DNA-binding transcription factor activity for GalR.
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings:
+  - statement: TreeGrafter supplied cytosol localization for GalR.
+- id: GO_REF:0000120
+  title: Combined automated GO annotation using multiple IEA methods
+  findings:
+  - statement: Automated annotations supply regulation of DNA-templated transcription for GalR.
+- id: file:PSEPK/galR/galR-uniprot.txt
+  title: UniProtKB reviewed entry for galR
+  findings:
+  - statement: UniProt identifies GalR as the transcriptional regulator of the galBCD and galTAP operons.
+- id: PMID:21219457
+  title: &#39;Unravelling the gallic acid degradation pathway in bacteria: the gal cluster from Pseudomonas putida&#39;
+  findings:
+  - statement: The gal-cluster paper characterizes the KT2440 gallate degradation gene cluster.
+- id: file:PSEPK/galR/galR-goa.tsv
+  title: QuickGO GOA annotations for galR
+  findings:
+  - statement: The fetched GOA table contains the annotations reviewed for galR.
+- id: file:PSEPK/galR/galR-deep-research-falcon.md
+  title: Falcon (Edison Scientific) deep research report on P. putida KT2440 galR (Q88JX7)
+  findings:
+  - statement: |-
+      GalR is experimentally supported to function as a **transcriptional activator** controlling expression from promoters associated with the gallic-acid utilization cluster when cultures are supplemented with gallic acid
+    reference_section_type: OTHER
+  - statement: |-
+      The 2023 study frames GalR regulation at the level of the **gal operon/cluster**, consisting of **galA/galB/galC/galD** (catabolic enzymes) and linked with **galT/galP** (transport functions)
+    reference_section_type: OTHER
+  - statement: |-
+      The authors identify 4-OMA as the **primary effector required** for activation of the inducible system, and show that induction in non-native hosts requires co-introduction of **galA** to generate the effector
+    reference_section_type: OTHER
+  - statement: |-
+      Because GalR is a LysR-family HTH transcription factor acting on chromosomal promoters, its functional localization is best inferred as **cytosolic/nucleoid-associated** rather than membrane or extracellular
+    reference_section_type: OTHER
+  - statement: |-
+      it explicitly notes that **GalR DNA target binding sites have not been experimentally characterized to date**
+    reference_section_type: OTHER
+core_functions:
+- description: LysR-type DNA-binding transcriptional activator of the gallate (gal) catabolic
+    cluster (galA/galB/galC/galD plus transport genes galT/galP) in P. putida KT2440. GalR
+    activates these promoters in response to the pathway intermediate 4-oxalomesaconate (4-OMA),
+    which is generated by GalA from gallic acid, rather than to gallic acid directly.
+  molecular_function:
+    id: GO:0001216
+    label: DNA-binding transcription activator activity
+  directly_involved_in:
+  - id: GO:0045893
+    label: positive regulation of DNA-templated transcription
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PSEPK/galR/galR-uniprot.txt
+    supporting_text: Transcriptional regulator for the galBCD and galTAP operons
+  - reference_id: file:PSEPK/galR/galR-deep-research-falcon.md
+    supporting_text: |-
+      GalR is experimentally supported to function as a **transcriptional activator** controlling expression from promoters associated with the gallic-acid utilization cluster when cultures are supplemented with gallic acid
+  - reference_id: file:PSEPK/galR/galR-deep-research-falcon.md
+    supporting_text: |-
+      The authors identify 4-OMA as the **primary effector required** for activation of the inducible system, and show that induction in non-native hosts requires co-introduction of **galA** to generate the effector
+proposed_new_terms: []
+suggested_questions:
+- question: Falcon deep research indicates GalR is an activator responding to the pathway
+    intermediate 4-oxalomesaconate (4-OMA) rather than to gallic acid directly; can the keto
+    versus enol form of OMA that binds GalR be resolved experimentally?
+- question: Should GalR be annotated to involvement in gallate catabolic process (GO:0019396)
+    as a regulator, or should the review stay at transcriptional regulation until direct
+    DNA-binding/footprinting data confirm the regulon scope?
+suggested_experiments:
+- description: Use promoter reporters and GalR DNA-binding assays with gallate and pathway intermediates to determine regulatory direction and ligand response.
+  experiment_type: transcription reporter and DNA-binding assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

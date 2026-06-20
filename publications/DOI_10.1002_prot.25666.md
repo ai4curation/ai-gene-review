@@ -12,6 +12,7 @@ journal: "Proteins: Structure, Function, and Bioinformatics"
 year: '2019'
 doi: 10.1002/prot.25666
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # The Short‐chain Dehydrogenase/Reductase Engineering Database (SDRED): A classification and analysis system for a highly diverse enzyme family

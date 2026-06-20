@@ -11,3 +11,9 @@
 
 - Mitochondrial localization is experimentally observed in virus infection [PMID:27736772 TAX1BP1 Restrains Virus-Induced Apoptosis by Facilitating Itch-Mediated Degradation of the Mitochondrial Adaptor MAVS., "Virus infection promotes the mitochondrial localization of TAX1BP1 and concomitant interaction with the mitochondrial adaptor MAVS."], but the accessible local evidence here does not justify treating mitophagy as a standalone core TAX1BP1 annotation.
 - TAX1BP1 is linked to late autophagy maturation through Myosin VI [PMID:26451915 The Autophagy Receptor TAX1BP1 and the Molecular Motor Myosin VI Are Required for Clearance of Salmonella Typhimurium by Autophagy., "Our previous work demonstrated that myosin VI mediates the delivery of endocytic membranes to autophagosomes, a process that is required for autophagosome maturation and its fusion with the lysosome."], but the accessible TAX1BP1-specific evidence in this review is still indirect for a direct GO:0061909 autophagosome-lysosome fusion annotation.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described the selective-autophagy cargo adaptor/receptor role as PN-relevant.

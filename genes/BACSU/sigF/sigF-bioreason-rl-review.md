@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: sigF (B. subtilis)
 
-Source: sigF-deep-research-bioreason-rl.md
+Source: sigF-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

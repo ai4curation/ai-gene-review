@@ -18,8 +18,11 @@ import yaml
 
 DEFAULT_GENES_ROOT = Path("genes")
 DEFAULT_TEMPLATE = Path("templates/gene_hypothesis_deep_research.md")
+LOCAL_EVIDENCE_MAX_CHARS_PER_FILE = 12000
+LOCAL_EVIDENCE_MAX_CHARS_TOTAL = 24000
 FOCUS_TYPES = {
     "existing_go_annotation_decision",
+    "function_assignment",
     "proposed_go_term",
     "computational_prediction",
     "core_function",
@@ -215,6 +218,156 @@ def format_reference_context(reference_ids: Sequence[str]) -> str:
     return "\n".join(f"- {ref}" for ref in reference_ids)
 
 
+def is_bioinformatics_path(path: Path) -> bool:
+    """Return whether a local path is a bioinformatics analysis artifact."""
+    return any(
+        part == "bioinformatics" or part.endswith("-bioinformatics")
+        for part in path.parts
+    )
+
+
+def resolve_local_bioinformatics_reference(
+    reference_id: str, genes_root: Path
+) -> Path | None:
+    """Resolve file: references that point to local bioinformatics evidence."""
+    if not reference_id.startswith("file:"):
+        return None
+    raw_path = reference_id.removeprefix("file:").strip()
+    if not raw_path:
+        return None
+
+    reference_path = Path(raw_path)
+    candidates: list[Path]
+    if reference_path.is_absolute():
+        candidates = [reference_path]
+    else:
+        candidates = [genes_root / reference_path, reference_path]
+
+    for candidate in candidates:
+        if (
+            candidate.exists()
+            and candidate.is_file()
+            and is_bioinformatics_path(candidate)
+        ):
+            return candidate
+    return None
+
+
+def read_bounded_text(path: Path, max_chars: int) -> tuple[str, bool]:
+    """Read a text file with a character cap; return text and truncation flag."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if len(text) <= max_chars:
+        return text.rstrip(), False
+    return text[:max_chars].rstrip(), True
+
+
+def format_local_bioinformatics_context(
+    reference_ids: Sequence[str],
+    *,
+    genes_root: Path,
+    max_chars_per_file: int = LOCAL_EVIDENCE_MAX_CHARS_PER_FILE,
+    max_chars_total: int = LOCAL_EVIDENCE_MAX_CHARS_TOTAL,
+) -> str:
+    """Expand cited local bioinformatics reports for post-run comparison."""
+    included: list[str] = []
+    used_chars = 0
+    seen_paths: set[Path] = set()
+
+    for reference_id in reference_ids:
+        path = resolve_local_bioinformatics_reference(reference_id, genes_root)
+        if path is None:
+            continue
+        resolved = path.resolve()
+        if resolved in seen_paths:
+            continue
+        seen_paths.add(resolved)
+
+        remaining = max_chars_total - used_chars
+        if remaining <= 0:
+            break
+        limit = min(max_chars_per_file, remaining)
+        text, truncated = read_bounded_text(path, limit)
+        used_chars += len(text)
+        truncation_note = (
+            f"Included first {len(text)} characters; file was truncated for prompt size."
+            if truncated
+            else "Included full local report."
+        )
+        included.append(
+            "\n".join(
+                [
+                    f"### {reference_id}",
+                    f"- Local path: `{path}`",
+                    f"- Inclusion: {truncation_note}",
+                    "",
+                    "```markdown",
+                    text,
+                    "```",
+                ]
+            )
+        )
+
+    if not included:
+        return (
+            "No cited local bioinformatics `RESULTS.md` or analysis artifact was "
+            "available for post-run comparison."
+        )
+    return "\n\n".join(included)
+
+
+def is_local_bioinformatics_reference(reference_id: str, genes_root: Path) -> bool:
+    """Return whether a reference id points to a local bioinformatics artifact."""
+    if not reference_id.startswith("file:"):
+        return False
+    raw_path = reference_id.removeprefix("file:").strip()
+    if raw_path and is_bioinformatics_path(Path(raw_path)):
+        return True
+    return resolve_local_bioinformatics_reference(reference_id, genes_root) is not None
+
+
+def visible_reference_ids(
+    reference_ids: Sequence[str], *, genes_root: Path
+) -> list[str]:
+    """Remove local bioinformatics references from provider-visible context."""
+    return [
+        reference_id
+        for reference_id in reference_ids
+        if not is_local_bioinformatics_reference(reference_id, genes_root)
+    ]
+
+
+def redact_local_bioinformatics_context(value: Any, *, genes_root: Path) -> Any:
+    """Remove local bioinformatics references from YAML sent to providers."""
+    if isinstance(value, str):
+        return None if is_local_bioinformatics_reference(value, genes_root) else value
+    if isinstance(value, list):
+        redacted_list = []
+        for item in value:
+            if (
+                isinstance(item, Mapping)
+                and is_local_bioinformatics_reference(
+                    str(item.get("reference_id") or ""), genes_root
+                )
+            ):
+                continue
+            redacted = redact_local_bioinformatics_context(item, genes_root=genes_root)
+            if redacted is not None:
+                redacted_list.append(redacted)
+        return redacted_list
+    if isinstance(value, Mapping):
+        return {
+            key: redacted
+            for key, item in value.items()
+            if (
+                redacted := redact_local_bioinformatics_context(
+                    item, genes_root=genes_root
+                )
+            )
+            is not None
+        }
+    return value
+
+
 def format_annotation_context(annotation: Mapping[str, Any]) -> str:
     review = as_mapping(annotation.get("review"))
     term = as_mapping(annotation.get("term"))
@@ -311,6 +464,15 @@ def core_function_hypothesis(gene_symbol: str, core_function: Mapping[str, Any])
     if description:
         return f"{lead} Current rationale: {description}"
     return lead
+
+
+def function_assignment_hypothesis(
+    gene_symbol: str, annotation: Mapping[str, Any]
+) -> str:
+    term = as_mapping(annotation.get("term"))
+    negated = bool(annotation.get("negated"))
+    relation = "does not have" if negated else "has"
+    return f"{gene_symbol} {relation} {term_label(term)}."
 
 
 def proposed_term_hypothesis(
@@ -648,6 +810,51 @@ def combined_core_function_record(
     )
 
 
+def function_assignment_record(record: GeneHypothesisRecord) -> GeneHypothesisRecord:
+    """Convert an existing annotation decision into a neutral term hypothesis."""
+    if not record.source_selector.startswith("existing_annotations["):
+        raise ValueError(
+            "--as-function-hypothesis requires an existing annotation selector."
+        )
+    annotation = record.source_context
+    term = as_mapping(annotation.get("term"))
+    neutral_context: dict[str, Any] = {
+        "term": annotation.get("term"),
+        "evidence_type": annotation.get("evidence_type"),
+        "original_reference_id": annotation.get("original_reference_id"),
+    }
+    if annotation.get("negated") is not None:
+        neutral_context["negated"] = annotation.get("negated")
+    if annotation.get("isoform") is not None:
+        neutral_context["isoform"] = annotation.get("isoform")
+
+    term_context_lines = [
+        f"- Term: {term_label(term) or 'not specified'}",
+        f"- Evidence type: {annotation.get('evidence_type') or 'not specified'}",
+        f"- Original reference: {annotation.get('original_reference_id') or 'not specified'}",
+    ]
+    if annotation.get("negated"):
+        term_context_lines.append("- Existing annotation is negated: true")
+    if annotation.get("isoform"):
+        term_context_lines.append(f"- Isoform: {annotation['isoform']}")
+
+    return make_record(
+        organism=record.organism,
+        gene=record.gene,
+        gene_symbol=record.gene_symbol,
+        taxon_id=record.taxon_id,
+        taxon_label=record.taxon_label,
+        focus_type="function_assignment",
+        slug=f"function-hypothesis-{term_slug(term)}",
+        hypothesis_text=function_assignment_hypothesis(record.gene_symbol, annotation),
+        term_context="\n".join(term_context_lines),
+        reference_ids=collect_reference_ids(annotation),
+        source_file=record.source_file,
+        source_selector=f"{record.source_selector}.function_hypothesis",
+        source_context=neutral_context,
+    )
+
+
 def output_dir_for(
     record: GeneHypothesisRecord, genes_root: Path, organism: str, gene: str
 ) -> Path:
@@ -706,7 +913,13 @@ def build_provider_args(provider: str) -> list[str]:
     return ["--provider", normalized]
 
 
-def template_vars(record: GeneHypothesisRecord) -> dict[str, str]:
+def template_vars(record: GeneHypothesisRecord, *, genes_root: Path) -> dict[str, str]:
+    reference_ids = reference_ids_from_context(record.reference_context)
+    provider_reference_ids = visible_reference_ids(reference_ids, genes_root=genes_root)
+    provider_source_context = redact_local_bioinformatics_context(
+        record.source_context,
+        genes_root=genes_root,
+    )
     return {
         "organism": record.organism,
         "gene": record.gene,
@@ -717,10 +930,10 @@ def template_vars(record: GeneHypothesisRecord) -> dict[str, str]:
         "hypothesis_slug": record.slug,
         "hypothesis_text": record.hypothesis_text,
         "term_context": record.term_context,
-        "reference_context": record.reference_context,
+        "reference_context": format_reference_context(provider_reference_ids),
         "source_file": str(record.source_file or ""),
         "source_selector": record.source_selector,
-        "source_context_yaml": dump_context_yaml(record.source_context),
+        "source_context_yaml": dump_context_yaml(provider_source_context),
     }
 
 
@@ -744,7 +957,7 @@ def build_command(
         "--template",
         str(template),
     ]
-    for key, value in template_vars(record).items():
+    for key, value in template_vars(record, genes_root=genes_root).items():
         command.extend(["--var", f"{key}={value}"])
     command.extend(build_provider_args(normalized))
     command.extend(
@@ -1040,7 +1253,7 @@ def selected_or_direct_record(args: argparse.Namespace) -> GeneHypothesisRecord:
     ]
     if any(value is not None for value in selector_values):
         records = candidate_records(args.genes_root, args.organism, args.gene)
-        return select_record(
+        record = select_record(
             records,
             slug=args.record_slug,
             annotation_index=args.annotation_index,
@@ -1049,6 +1262,13 @@ def selected_or_direct_record(args: argparse.Namespace) -> GeneHypothesisRecord:
             prediction_term_id=args.prediction_term_id,
             core_function_index=args.core_function_index,
             proposed_term_index=args.proposed_term_index,
+        )
+        if args.as_function_hypothesis:
+            return function_assignment_record(record)
+        return record
+    if args.as_function_hypothesis:
+        raise ValueError(
+            "--as-function-hypothesis requires an existing annotation selector."
         )
     return direct_record_from_args(args)
 
@@ -1205,6 +1425,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--proposed-term-index",
         type=int,
         help="Select proposed_new_terms[N] from the gene review, using 1-based indexing",
+    )
+    run_parser.add_argument(
+        "--as-function-hypothesis",
+        action="store_true",
+        help=(
+            "Convert a selected existing annotation into a neutral 'gene has term' "
+            "hypothesis, withholding the prior review decision."
+        ),
     )
     run_parser.add_argument("--template", type=Path, default=DEFAULT_TEMPLATE)
     run_parser.add_argument("--dry-run", action="store_true")

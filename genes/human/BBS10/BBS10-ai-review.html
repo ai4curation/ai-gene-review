@@ -1,0 +1,2972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBS10 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>BBS10</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8TAM1" target="_blank" class="term-link">
+                        Q8TAM1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "BBS10";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8TAM1" data-a="DESCRIPTION: BBS10 is a vertebrate-specific, chaperonin-like pr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>BBS10 is a vertebrate-specific, chaperonin-like protein of the group II (TCP-1/CCT/TRiC) chaperonin family. Together with the related chaperonin-like BBS proteins MKKS (BBS6) and BBS12, the CCT/TRiC chaperonin, and BBS7, it forms the cytoplasmic BBS-chaperonin complex that mediates assembly of the BBSome, the octameric ciliary trafficking complex. BBS10 functions as an assembly factor (chaperone) rather than as a stable structural subunit of the mature BBSome: it binds BBS subunits (BBS7, BBS9, BBS12) and promotes their association with CCT chaperonins to drive ordered assembly of the BBSome core (BBS7-BBS2-BBS9). It retains the conserved Cpn60/TCP-1 nucleotide-binding domain and is predicted to bind ATP, though direct chaperonin/ATPase folding activity has not been demonstrated biochemically. Loss-of-function mutations in BBS10 impair BBSome assembly and are a major cause of Bardet-Biedl syndrome (BBS10), an autosomal recessive ciliopathy characterized by retinal degeneration, obesity, polydactyly, renal abnormalities, hypogenitalism and cognitive impairment.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051131" target="_blank" class="term-link">
+                                    GO:0051131
+                                </a>
+                            </span>
+                            <span class="term-label">chaperone-mediated protein complex assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0051131" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of the core, defining function of BBS10: acting as a chaperonin-like factor that mediates assembly of the BBSome protein complex. This is well supported by direct experimental evidence in human/mouse/zebrafish systems and is consistent with the IMP annotation to the same term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> BBS10 is one of the three chaperonin-like BBS proteins that, with CCT/TRiC, mediate BBSome assembly [PMID:20080638; PMID:22500027]. This BP term accurately captures its core role and the IBA evidence aligns with experimental data.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of ATP binding from the conserved Cpn60/TCP-1 chaperonin (InterPro IPR002423; Pfam PF00118) nucleotide-binding domain. BBS10 belongs to the TCP-1 chaperonin family and retains the equatorial nucleotide-binding domain, so ATP binding is plausible and is the molecular basis presumed for its chaperone activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Domain-based ATP-binding annotation is consistent with the conserved group II chaperonin fold (UniProt &#39;Belongs to the TCP-1 chaperonin family&#39;; FUNCTION &#39;assists the folding of proteins upon ATP hydrolysis&#39;). Retained as a molecular function, with the caveat that catalytic activity is unproven.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0005929" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular-location IEA derived from UniProt &#39;Cell projection, cilium&#39;, itself based on PMID:19190184, which localized BBS10 to the basal body of the primary cilium in differentiating preadipocytes. BBS10 acts principally as a cytoplasmic assembly chaperone; the basal body / ciliary localization is reported in a single specialized context.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The localization is supported (basal body of the primary cilium, PMID:19190184) but is not the defining feature of BBS10, whose core action is cytoplasmic chaperonin-like BBSome assembly. Keep as a non-core cellular component; the term is the parent &#39;cilium&#39; rather than a more specific basal-body term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051131" target="_blank" class="term-link">
+                                    GO:0051131
+                                </a>
+                            </span>
+                            <span class="term-label">chaperone-mediated protein complex assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0051131" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation (from the BBS10-specific InterPro entry IPR042619) to the same core assembly term that is supported experimentally (IMP, PMID:20080638) and phylogenetically (IBA).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA and IMP annotations to GO:0051131 but correct and well supported; represents the core function of BBS10.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20080638" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20080638
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    BBS6, BBS10, and BBS12 form a complex with CCT/TRiC family c...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0005515" data-r="PMID:20080638" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotations documenting direct physical interactions of BBS10 with BBSome/BBS-chaperonin subunits BBS7 (Q8IWZ6), BBS9 (Q3SYG4) and BBS12 (Q6ZW61). These interactions are real and central to BBSome assembly, but &#39;protein binding&#39; (GO:0005515) is an uninformative molecular function term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, GO:0005515 &#39;protein binding&#39; conveys no specific function. The underlying BBS7/BBS9/BBS12 interactions are better captured by the chaperone-mediated complex-assembly BP terms and by BBS-chaperonin complex membership; the bare binding term should not be treated as core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput AP-MS (BioPlex; &#39;Architecture of the human interactome&#39;) IPI annotation recording the BBS10-BBS7 (Q8IWZ6) physical interaction. Consistent with the curated BBS-chaperonin complex but uses the uninformative &#39;protein binding&#39; term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Valid large-scale interactome detection of a known interaction, but GO:0005515 &#39;protein binding&#39; is non-informative and not a core function; the BBS10-BBS7 interaction is already captured by the assembly-factor role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput AP-MS (BioPlex 3.0; &#39;Dual proteome-scale networks&#39;) IPI annotation again recording the BBS10-BBS7 (Q8IWZ6) interaction in the uninformative &#39;protein binding&#39; term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Corroborates the BBS10-BBS7 interaction but adds no functional specificity; GO:0005515 should not be treated as a core annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061629" target="_blank" class="term-link">
+                                    GO:0061629
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II-specific DNA-binding transcription factor binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22302990" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22302990
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Direct role of Bardet-Biedl syndrome proteins in transcripti...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0061629" data-r="PMID:22302990" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MGI IPI annotation (partner RNF2, UniProtKB:Q99496) derived from a study whose primary focus is a nuclear role for BBS7 and its interaction with the polycomb protein RNF2; the paper states a &#39;similar role for other BBS proteins&#39;. The link to BBS10 is peripheral, and a direct transcriptional role is not the established function of this chaperonin-like assembly factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The cached abstract (full_text_available: false) centres on BBS7, not BBS10, so I cannot fully verify the BBS10-specific evidence the curator read; per &#39;do not overrule curators&#39; I do not REMOVE the experimental IPI. However a direct RNA Pol II transcription-factor-binding role is not a core function of BBS10 and likely represents an over-broad/peripheral annotation, so it is retained only as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043254" target="_blank" class="term-link">
+                                    GO:0043254
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of protein-containing complex assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22500027" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22500027
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Intrinsic protein-protein interaction-mediated and chaperoni...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0043254" data-r="PMID:22500027" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from the study characterizing ordered, chaperonin-assisted assembly of the BBSome, in which the BBS-chaperonin complex (BBS6/BBS10/BBS12 + CCT/TRiC + BBS7) regulates BBS7 stability and assembly of the BBSome core (BBS7-BBS2-BBS9). Disruption of BBS10 perturbs formation of the complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well supported by full-text experimental evidence [PMID:22500027]: BBS10 regulates the assembly of the BBSome, a protein-containing complex. This is a faithful, somewhat more general statement of the core assembly-factor function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051131" target="_blank" class="term-link">
+                                    GO:0051131
+                                </a>
+                            </span>
+                            <span class="term-label">chaperone-mediated protein complex assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20080638" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20080638
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    BBS6, BBS10, and BBS12 form a complex with CCT/TRiC family c...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0051131" data-r="PMID:20080638" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IMP) support for the core function: BBS10, as a chaperonin-like protein, mediates BBSome assembly together with BBS6, BBS12 and CCT/TRiC chaperonins; disease mutations that disrupt BBS10 interactions impair assembly [PMID:20080638].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the central, experimentally demonstrated function of BBS10 and the single best representative of its core biological role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045494" target="_blank" class="term-link">
+                                    GO:0045494
+                                </a>
+                            </span>
+                            <span class="term-label">photoreceptor cell maintenance</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17980398" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17980398
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Retinal morphology in patients with BBS1 and BBS10 related B...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0045494" data-r="PMID:17980398" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation (BHF-UCL) derived from a clinical Fourier-domain OCT imaging study documenting disrupted photoreceptor integrity and outer-retinal changes in BBS10-mutation patients. This records a loss-of-function disease phenotype rather than a direct molecular role of BBS10 in photoreceptor maintenance; the retinal degeneration is a downstream consequence of impaired BBSome assembly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The phenotype is genuine [PMID:17980398], so the involvement is retained, but BBS10 is a cytoplasmic chaperonin-like assembly factor and its effect on photoreceptors is indirect (via the BBSome). Keep as a non-core, downstream biological-process annotation rather than a core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                    GO:1905515
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17980398" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17980398
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Retinal morphology in patients with BBS1 and BBS10 related B...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:1905515" data-r="PMID:17980398" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation (BHF-UCL) to non-motile (primary) cilium assembly from the same patient OCT imaging study. BBS10 is not a structural ciliary or IFT protein; any effect on primary cilium assembly is indirect, mediated by its role in assembling the BBSome, which in turn supports ciliary membrane trafficking.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Defensible as a downstream phenotypic consequence but not a direct molecular function of this assembly chaperone. The cited reference [PMID:17980398] is a clinical retinal imaging study and provides only indirect support for a primary-cilium-assembly role; keep as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    GO:0044183
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding chaperone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0044183" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed molecular-function annotation reflecting BBS10&#39;s role as a chaperonin-like (group II TCP-1/CCT family) protein that binds BBSome subunits to assist their folding/assembly. Not currently in the GOA; offered as a more informative MF than the redundant &#39;protein binding&#39; annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Captures BBS10&#39;s chaperone-like molecular activity within the BBS-chaperonin complex. Note that direct ATP-dependent folding (GO:0140662) is plausible but not experimentally proven, so the more general GO:0044183 is proposed. Based on UniProt &#39;Probable molecular chaperone that assists the folding of proteins upon ATP hydrolysis&#39; and TCP-1 family membership.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TAM1" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed cellular-component annotation: BBS10 acts as a cytoplasmic assembly factor, forming the BBS-chaperonin complex with CCT/TRiC and recruiting BBSome subunits prior to their delivery to the cilium.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The BBS-chaperonin complex and BBSome-core assembly occur in the cytoplasm [PMID:20080638; PMID:22500027]; the cytoplasmic location is the principal site of BBS10 action and complements the (non-core) basal-body/cilium localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Chaperonin-like assembly factor that, within the cytoplasmic BBS-chaperonin complex (with MKKS/BBS6, BBS12, CCT/TRiC and BBS7), binds BBSome subunits and mediates ordered assembly of the BBSome core complex.</h3>
+                <span class="vote-buttons" data-g="Q8TAM1" data-a="FUNCTION: Chaperonin-like assembly factor that, within the c..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                            protein folding chaperone
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051131" target="_blank" class="term-link">
+                                chaperone-mediated protein complex assembly
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043254" target="_blank" class="term-link">
+                                regulation of protein-containing complex assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20080638" target="_blank" class="term-link">
+                                PMID:20080638
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">a novel complex composed of three chaperonin-like BBS proteins (BBS6, BBS10, and BBS12) and CCT/TRiC family chaperonins mediates BBSome assembly</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20080638" target="_blank" class="term-link">
+                                PMID:20080638
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">BBS6, BBS10, and BBS12 are necessary for BBSome assembly</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22500027" target="_blank" class="term-link">
+                                PMID:22500027
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">BBS6, BBS10, and BBS12 ... interact with CCT/TRiC proteins and BBS7 to form a complex termed the BBS-chaperonin complex. This complex is required for BBSome assembly</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/BBS10/BBS10-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Component of a complex composed at least of MKKS, BBS10, BBS12, TCP1, CCT2, CCT3, CCT4, CCT5 and CCT8.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-binding group II (TCP-1/CCT) chaperonin-family protein; retains the conserved equatorial nucleotide-binding domain presumed to power its chaperone-assisted assembly activity (catalytic folding activity inferred, not biochemically demonstrated).</h3>
+                <span class="vote-buttons" data-g="Q8TAM1" data-a="FUNCTION: ATP-binding group II (TCP-1/CCT) chaperonin-family..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/BBS10/BBS10-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Probable molecular chaperone that assists the folding of proteins upon ATP hydrolysis</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/BBS10/BBS10-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Belongs to the TCP-1 chaperonin family.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17980398" target="_blank" class="term-link">
+                            PMID:17980398
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Retinal morphology in patients with BBS1 and BBS10 related Bardet-Biedl Syndrome evaluated by Fourier-domain optical coherence tomography.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20080638" target="_blank" class="term-link">
+                            PMID:20080638
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BBS6, BBS10, and BBS12 form a complex with CCT/TRiC family chaperonins and mediate BBSome assembly.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22302990" target="_blank" class="term-link">
+                            PMID:22302990
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Direct role of Bardet-Biedl syndrome proteins in transcriptional regulation.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22500027" target="_blank" class="term-link">
+                            PMID:22500027
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Intrinsic protein-protein interaction-mediated and chaperonin-assisted sequential assembly of stable bardet-biedl syndrome protein complex, the BBSome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does BBS10 possess intrinsic ATP-dependent protein-folding (chaperonin) activity, or does it act solely as a non-catalytic adaptor that recruits BBSome subunits to the CCT/TRiC chaperonin?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TAM1" data-a="Q: Does BBS10 possess intrinsic ATP-dependent protein..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is BBS10 ever a transient or substoichiometric component of the assembling BBSome, or is it strictly excluded from the mature BBSome (GO:0034464)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TAM1" data-a="Q: Is BBS10 ever a transient or substoichiometric com..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the reported interaction of BBS10 with the transcriptional regulator RNF2 (PMID:22302990) a direct, functionally meaningful interaction for BBS10, or is it primarily attributable to BBS7?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TAM1" data-a="Q: Is the reported interaction of BBS10 with the tran..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute purified BBS10 with BBS7/BBS9/BBS12 and CCT/TRiC and assay ATP-dependent folding/assembly activity (e.g. substrate refolding, ATPase rate, BBSome-core formation) to test whether BBS10 has catalytic chaperonin activity or acts as a non-catalytic adaptor.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: BBS10 binds ATP via its conserved equatorial domain but functions chiefly as a CCT/TRiC-recruiting adaptor rather than as an autonomous folding chaperonin.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro biochemistry/reconstitution</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TAM1" data-a="EXPERIMENT: Reconstitute purified BBS10 with BBS7/BBS9/BBS12 a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitative interaction mapping (mutagenesis of the nucleotide-binding site and of patient variants such as R34P, V240G, S311A, S329L, D81N) coupled to BBSome-assembly readouts to define which BBS10 surfaces drive assembly versus ATP binding.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Patient mutations impair BBSome assembly by disrupting BBS10 protein-protein interactions and/or overall fold rather than by abolishing ATP binding per se.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: structure-function mutagenesis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TAM1" data-a="EXPERIMENT: Quantitative interaction mapping (mutagenesis of t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Endogenous BBS10 affinity purification and size-fractionation (sucrose gradient) in ciliated human cells to determine whether BBS10 co-migrates with the mature BBSome or only with the transient BBS-chaperonin/assembly intermediate.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: BBS10 is present only in the BBS-chaperonin/assembly-intermediate fraction and is excluded from the mature, ciliary BBSome.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemical fractionation/proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TAM1" data-a="EXPERIMENT: Endogenous BBS10 affinity purification and size-fr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(BBS10-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8TAM1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bbs10-q8tam1-gene-review-notes">BBS10 (Q8TAM1) — Gene Review Notes</h1>
+<h2 id="summary-of-identity-and-function">Summary of identity and function</h2>
+<p>BBS10 (C12orf58; HGNC:26291) is a <strong>vertebrate-specific, chaperonin-like protein</strong> of the<br />
+group II / TCP-1 (CCT/TRiC) chaperonin family. It is one of three "chaperonin-like" BBS<br />
+proteins (with MKKS/BBS6 and BBS12). Together with the CCT/TRiC chaperonin and BBS7 these<br />
+form the <strong>BBS-chaperonin complex</strong>, which acts as an <strong>assembly factor (chaperone) for the<br />
+BBSome</strong> — it is NOT a stable structural subunit of the mature BBSome (GO:0034464).</p>
+<ul>
+<li>"BBS10 encodes a vertebrate-specific chaperonin-like protein and is a major BBS locus."<br />
+  [PMID:16582908 title]. UniProt: "Belongs to the TCP-1 chaperonin family"; RecName "BBSome<br />
+  complex assembly protein BBS10"; FUNCTION "Probable molecular chaperone that assists the<br />
+  folding of proteins upon ATP hydrolysis."</li>
+<li>The catalytic chaperonin/ATPase activity of BBS10 itself has NOT been demonstrated<br />
+  biochemically; it is inferred from the conserved Cpn60/TCP-1 (Pfam PF00118; InterPro<br />
+  IPR002423) domain. UniProt flags FUNCTION as "Probable."</li>
+</ul>
+<h2 id="bbs-chaperonin-complex-bbsome-assembly">BBS-chaperonin complex / BBSome assembly</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/20080638" title="a novel complex composed of three chaperonin-like BBS proteins (BBS6, BBS10, and BBS12) and CCT/TRiC family chaperonins mediates BBSome assembly... Chaperonin-like BBS proteins interact with a subset of BBSome subunits and promote their association with CCT chaperonins. CCT activity is essential for BBSome assembly... BBS6, BBS10, and BBS12 are necessary for BBSome assembly">PMID:20080638</a>.<br />
+- UniProt SUBUNIT: "Component of a complex composed at least of MKKS, BBS10, BBS12, TCP1,<br />
+  CCT2, CCT3, CCT4, CCT5 and CCT8" [ECO:0000269|PubMed:20080638].<br />
+- UniProt INTERACTION: BBS10 binds BBS12 (Q6ZW61), BBS7 (Q8IWZ6), BBS9 (Q3SYG4).<br />
+- Disease mutations (e.g. R34P, V240G, S311A, S329L) reduce BBS10 interaction with BBS7/BBS9<br />
+  and/or BBS12, linking assembly-factor function to pathology [PMID:20080638; PMID:16582908].<br />
+- D81N mutagenesis "Greatly decreases all interactions with BBS7, BBS9 and BBS12 indicating<br />
+  that this residue may be required for overall protein conformation" (UniProt FT MUTAGEN).</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/22500027" title="Three additional BBS genes (BBS6, BBS10, and BBS12) have homology to type II chaperonins and interact with CCT/TRiC proteins and BBS7 to form a complex termed the BBS-chaperonin complex. This complex is required for BBSome assembly... we show that the BBS-chaperonin complex plays a role in BBS7 stability.">PMID:22500027</a> — full text available. This paper<br />
+characterizes the ordered, chaperonin-assisted assembly of the BBSome core<br />
+(BBS7-BBS2-BBS9), supporting the IMP annotation to regulation of protein-containing complex<br />
+assembly (GO:0043254) and chaperone-mediated protein complex assembly (GO:0051131).</p>
+<h2 id="subcellular-location">Subcellular location</h2>
+<ul>
+<li>UniProt SUBCELLULAR LOCATION: "Cell projection, cilium"; Note "Located within the basal<br />
+  body of the primary cilium of differentiating preadipocytes" [ECO:0000269|PubMed:19190184].<br />
+  Basis for IEA GO:0005929 (cilium, UniProtKB-SubCell). BBS10 acts as a cytoplasmic assembly<br />
+  chaperone; the ciliary/basal-body localization is reported in the adipogenesis context.</li>
+</ul>
+<h2 id="transcriptional-regulation-annotation-go0061629-scrutiny">Transcriptional regulation annotation (GO:0061629) — scrutiny</h2>
+<p>[PMID:22302990 abstract] is primarily about <strong>BBS7</strong> having a nuclear role and interacting<br />
+with the PcG protein RNF2 (Q99496). "Our data supports a similar role for other BBS proteins."<br />
+The IPI annotation of BBS10 → RNA Pol II transcription factor binding (with RNF2, UniProtKB:<br />
+Q99496), assigned by MGI, is peripheral and not a core function of BBS10. Full text not in<br />
+cache (full_text_available: false) — defer rather than remove; mark as non-core /<br />
+over-annotation candidate.</p>
+<h2 id="photoreceptor-cilium-phenotype-annotations-pmid17980398-scrutiny">Photoreceptor / cilium phenotype annotations (PMID:17980398) — scrutiny</h2>
+<p>[PMID:17980398 abstract] "Retinal morphology in patients with BBS1 and BBS10 related<br />
+Bardet-Biedl Syndrome evaluated by Fourier-domain optical coherence tomography." This is a<br />
+<strong>clinical OCT imaging study</strong> describing retinal dystrophy and photoreceptor disruption in<br />
+BBS1- and BBS10-mutation patients. It documents a disease phenotype (loss-of-function -&gt;<br />
+retinal degeneration) but does NOT provide mechanistic evidence that BBS10 protein is<br />
+directly "involved in" photoreceptor cell maintenance (GO:0045494) or "non-motile cilium<br />
+assembly" (GO:1905515) at the molecular level. These BHF-UCL IMP annotations are<br />
+phenotype-derived and represent downstream/indirect consequences via impaired BBSome<br />
+assembly, not a direct molecular role. Full text available. Treat as non-core; the cilium<br />
+assembly defect is indirect (BBS10 is an assembly chaperone, not a structural ciliary/IFT<br />
+protein).</p>
+<h2 id="interactome-protein-binding-annotations">Interactome (protein binding) annotations</h2>
+<ul>
+<li>IPI GO:0005515 protein binding from PMID:20080638 (partners BBS7 Q8IWZ6, BBS9 Q3SYG4,<br />
+  BBS12 Q6ZW61) — bona fide BBS-chaperonin complex interactions.</li>
+<li>IPI GO:0005515 from PMID:28514442 (BioPlex; "Architecture of the human interactome") and<br />
+  PMID:33961781 ("Dual proteome-scale networks", BioPlex 3.0) — both with BBS7 (Q8IWZ6).<br />
+  High-throughput AP-MS; consistent with the BBS10-BBS7 interaction.<br />
+Per curation guidelines, GO:0005515 "protein binding" is uninformative and should not be<br />
+treated as core; the underlying interactions are better captured by the assembly-factor BP<br />
+terms and complex membership.</li>
+</ul>
+<h2 id="go-term-reference-notes">GO term reference notes</h2>
+<ul>
+<li>GO:0051082 "unfolded protein binding" is now an OBSOLETE term (deprecated in favor of<br />
+  protein folding chaperone activity). Do NOT propose it.</li>
+<li>GO:0044183 "protein folding chaperone": "Binding to a protein or a protein-containing<br />
+  complex to assist the protein folding process."</li>
+<li>GO:0140662 "ATP-dependent protein folding chaperone": same, "driven by ATP hydrolysis."</li>
+<li>GO:0034464 "BBSome": structural ciliary complex of the 7 core BBS proteins + BBIP10 —<br />
+  BBS10 is NOT a member (it is the assembly factor).</li>
+</ul>
+<h2 id="core-function-conclusion">Core function conclusion</h2>
+<p>BBS10's core, defining role is as an <strong>ATP-binding, chaperonin-like assembly factor</strong> that,<br />
+within the BBS-chaperonin complex (with MKKS/BBS6, BBS12, CCT/TRiC, BBS7), mediates assembly<br />
+of the BBSome core. BP: chaperone-mediated protein complex assembly (GO:0051131) and<br />
+regulation of protein-containing complex assembly (GO:0043254). MF: ATP binding<br />
+(GO:0005524), with probable protein-folding-chaperone activity (GO:0044183 / GO:0140662, not<br />
+experimentally proven). All ciliary/retinal phenotypes are downstream of impaired BBSome<br />
+assembly.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8TAM1
+gene_symbol: BBS10
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  BBS10 is a vertebrate-specific, chaperonin-like protein of the group II
+  (TCP-1/CCT/TRiC) chaperonin family. Together with the related chaperonin-like
+  BBS proteins MKKS (BBS6) and BBS12, the CCT/TRiC chaperonin, and BBS7, it forms
+  the cytoplasmic BBS-chaperonin complex that mediates assembly of the BBSome, the
+  octameric ciliary trafficking complex. BBS10 functions as an assembly factor
+  (chaperone) rather than as a stable structural subunit of the mature BBSome:
+  it binds BBS subunits (BBS7, BBS9, BBS12) and promotes their association with
+  CCT chaperonins to drive ordered assembly of the BBSome core (BBS7-BBS2-BBS9).
+  It retains the conserved Cpn60/TCP-1 nucleotide-binding domain and is predicted
+  to bind ATP, though direct chaperonin/ATPase folding activity has not been
+  demonstrated biochemically. Loss-of-function mutations in BBS10 impair BBSome
+  assembly and are a major cause of Bardet-Biedl syndrome (BBS10), an autosomal
+  recessive ciliopathy characterized by retinal degeneration, obesity,
+  polydactyly, renal abnormalities, hypogenitalism and cognitive impairment.
+existing_annotations:
+- term:
+    id: GO:0051131
+    label: chaperone-mediated protein complex assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of the core, defining function of BBS10:
+      acting as a chaperonin-like factor that mediates assembly of the BBSome
+      protein complex. This is well supported by direct experimental evidence in
+      human/mouse/zebrafish systems and is consistent with the IMP annotation to
+      the same term.
+    action: ACCEPT
+    reason: &gt;-
+      BBS10 is one of the three chaperonin-like BBS proteins that, with CCT/TRiC,
+      mediate BBSome assembly [PMID:20080638; PMID:22500027]. This BP term
+      accurately captures its core role and the IBA evidence aligns with
+      experimental data.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation of ATP binding from the conserved Cpn60/TCP-1
+      chaperonin (InterPro IPR002423; Pfam PF00118) nucleotide-binding domain.
+      BBS10 belongs to the TCP-1 chaperonin family and retains the equatorial
+      nucleotide-binding domain, so ATP binding is plausible and is the molecular
+      basis presumed for its chaperone activity.
+    action: ACCEPT
+    reason: &gt;-
+      Domain-based ATP-binding annotation is consistent with the conserved
+      group II chaperonin fold (UniProt &#39;Belongs to the TCP-1 chaperonin family&#39;;
+      FUNCTION &#39;assists the folding of proteins upon ATP hydrolysis&#39;). Retained as
+      a molecular function, with the caveat that catalytic activity is unproven.
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Subcellular-location IEA derived from UniProt &#39;Cell projection, cilium&#39;,
+      itself based on PMID:19190184, which localized BBS10 to the basal body of
+      the primary cilium in differentiating preadipocytes. BBS10 acts principally
+      as a cytoplasmic assembly chaperone; the basal body / ciliary localization
+      is reported in a single specialized context.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The localization is supported (basal body of the primary cilium,
+      PMID:19190184) but is not the defining feature of BBS10, whose core action
+      is cytoplasmic chaperonin-like BBSome assembly. Keep as a non-core cellular
+      component; the term is the parent &#39;cilium&#39; rather than a more specific
+      basal-body term.
+- term:
+    id: GO:0051131
+    label: chaperone-mediated protein complex assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation (from the BBS10-specific InterPro entry
+      IPR042619) to the same core assembly term that is supported experimentally
+      (IMP, PMID:20080638) and phylogenetically (IBA).
+    action: ACCEPT
+    reason: &gt;-
+      Redundant with the IBA and IMP annotations to GO:0051131 but correct and
+      well supported; represents the core function of BBS10.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20080638
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI annotations documenting direct physical interactions of BBS10 with
+      BBSome/BBS-chaperonin subunits BBS7 (Q8IWZ6), BBS9 (Q3SYG4) and BBS12
+      (Q6ZW61). These interactions are real and central to BBSome assembly, but
+      &#39;protein binding&#39; (GO:0005515) is an uninformative molecular function term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per curation guidelines, GO:0005515 &#39;protein binding&#39; conveys no specific
+      function. The underlying BBS7/BBS9/BBS12 interactions are better captured by
+      the chaperone-mediated complex-assembly BP terms and by BBS-chaperonin
+      complex membership; the bare binding term should not be treated as core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      High-throughput AP-MS (BioPlex; &#39;Architecture of the human interactome&#39;)
+      IPI annotation recording the BBS10-BBS7 (Q8IWZ6) physical interaction.
+      Consistent with the curated BBS-chaperonin complex but uses the
+      uninformative &#39;protein binding&#39; term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Valid large-scale interactome detection of a known interaction, but
+      GO:0005515 &#39;protein binding&#39; is non-informative and not a core function;
+      the BBS10-BBS7 interaction is already captured by the assembly-factor role.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      High-throughput AP-MS (BioPlex 3.0; &#39;Dual proteome-scale networks&#39;) IPI
+      annotation again recording the BBS10-BBS7 (Q8IWZ6) interaction in the
+      uninformative &#39;protein binding&#39; term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Corroborates the BBS10-BBS7 interaction but adds no functional specificity;
+      GO:0005515 should not be treated as a core annotation.
+- term:
+    id: GO:0061629
+    label: RNA polymerase II-specific DNA-binding transcription factor binding
+  evidence_type: IPI
+  original_reference_id: PMID:22302990
+  qualifier: enables
+  review:
+    summary: &gt;-
+      MGI IPI annotation (partner RNF2, UniProtKB:Q99496) derived from a study
+      whose primary focus is a nuclear role for BBS7 and its interaction with the
+      polycomb protein RNF2; the paper states a &#39;similar role for other BBS
+      proteins&#39;. The link to BBS10 is peripheral, and a direct transcriptional
+      role is not the established function of this chaperonin-like assembly factor.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The cached abstract (full_text_available: false) centres on BBS7, not
+      BBS10, so I cannot fully verify the BBS10-specific evidence the curator
+      read; per &#39;do not overrule curators&#39; I do not REMOVE the experimental IPI.
+      However a direct RNA Pol II transcription-factor-binding role is not a core
+      function of BBS10 and likely represents an over-broad/peripheral
+      annotation, so it is retained only as non-core.
+- term:
+    id: GO:0043254
+    label: regulation of protein-containing complex assembly
+  evidence_type: IMP
+  original_reference_id: PMID:22500027
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      IMP from the study characterizing ordered, chaperonin-assisted assembly of
+      the BBSome, in which the BBS-chaperonin complex (BBS6/BBS10/BBS12 + CCT/TRiC
+      + BBS7) regulates BBS7 stability and assembly of the BBSome core
+      (BBS7-BBS2-BBS9). Disruption of BBS10 perturbs formation of the complex.
+    action: ACCEPT
+    reason: &gt;-
+      Well supported by full-text experimental evidence [PMID:22500027]: BBS10
+      regulates the assembly of the BBSome, a protein-containing complex. This is
+      a faithful, somewhat more general statement of the core assembly-factor
+      function.
+- term:
+    id: GO:0051131
+    label: chaperone-mediated protein complex assembly
+  evidence_type: IMP
+  original_reference_id: PMID:20080638
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      Direct experimental (IMP) support for the core function: BBS10, as a
+      chaperonin-like protein, mediates BBSome assembly together with BBS6, BBS12
+      and CCT/TRiC chaperonins; disease mutations that disrupt BBS10 interactions
+      impair assembly [PMID:20080638].
+    action: ACCEPT
+    reason: &gt;-
+      This is the central, experimentally demonstrated function of BBS10 and the
+      single best representative of its core biological role.
+- term:
+    id: GO:0045494
+    label: photoreceptor cell maintenance
+  evidence_type: IMP
+  original_reference_id: PMID:17980398
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP annotation (BHF-UCL) derived from a clinical Fourier-domain OCT imaging
+      study documenting disrupted photoreceptor integrity and outer-retinal
+      changes in BBS10-mutation patients. This records a loss-of-function disease
+      phenotype rather than a direct molecular role of BBS10 in photoreceptor
+      maintenance; the retinal degeneration is a downstream consequence of
+      impaired BBSome assembly.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The phenotype is genuine [PMID:17980398], so the involvement is retained,
+      but BBS10 is a cytoplasmic chaperonin-like assembly factor and its effect on
+      photoreceptors is indirect (via the BBSome). Keep as a non-core, downstream
+      biological-process annotation rather than a core function.
+- term:
+    id: GO:1905515
+    label: non-motile cilium assembly
+  evidence_type: IMP
+  original_reference_id: PMID:17980398
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP annotation (BHF-UCL) to non-motile (primary) cilium assembly from the
+      same patient OCT imaging study. BBS10 is not a structural ciliary or IFT
+      protein; any effect on primary cilium assembly is indirect, mediated by its
+      role in assembling the BBSome, which in turn supports ciliary membrane
+      trafficking.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Defensible as a downstream phenotypic consequence but not a direct
+      molecular function of this assembly chaperone. The cited reference
+      [PMID:17980398] is a clinical retinal imaging study and provides only
+      indirect support for a primary-cilium-assembly role; keep as non-core.
+- term:
+    id: GO:0044183
+    label: protein folding chaperone
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed molecular-function annotation reflecting BBS10&#39;s role as a
+      chaperonin-like (group II TCP-1/CCT family) protein that binds BBSome
+      subunits to assist their folding/assembly. Not currently in the GOA; offered
+      as a more informative MF than the redundant &#39;protein binding&#39; annotations.
+    action: NEW
+    reason: &gt;-
+      Captures BBS10&#39;s chaperone-like molecular activity within the BBS-chaperonin
+      complex. Note that direct ATP-dependent folding (GO:0140662) is plausible but
+      not experimentally proven, so the more general GO:0044183 is proposed. Based
+      on UniProt &#39;Probable molecular chaperone that assists the folding of proteins
+      upon ATP hydrolysis&#39; and TCP-1 family membership.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proposed cellular-component annotation: BBS10 acts as a cytoplasmic assembly
+      factor, forming the BBS-chaperonin complex with CCT/TRiC and recruiting
+      BBSome subunits prior to their delivery to the cilium.
+    action: NEW
+    reason: &gt;-
+      The BBS-chaperonin complex and BBSome-core assembly occur in the cytoplasm
+      [PMID:20080638; PMID:22500027]; the cytoplasmic location is the principal site
+      of BBS10 action and complements the (non-core) basal-body/cilium localization.
+core_functions:
+  - description: &gt;-
+      Chaperonin-like assembly factor that, within the cytoplasmic
+      BBS-chaperonin complex (with MKKS/BBS6, BBS12, CCT/TRiC and BBS7), binds
+      BBSome subunits and mediates ordered assembly of the BBSome core complex.
+    molecular_function:
+      id: GO:0044183
+      label: protein folding chaperone
+    directly_involved_in:
+      - id: GO:0051131
+        label: chaperone-mediated protein complex assembly
+      - id: GO:0043254
+        label: regulation of protein-containing complex assembly
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: PMID:20080638
+        supporting_text: &gt;-
+          a novel complex composed of three chaperonin-like BBS proteins (BBS6,
+          BBS10, and BBS12) and CCT/TRiC family chaperonins mediates BBSome
+          assembly
+      - reference_id: PMID:20080638
+        supporting_text: &gt;-
+          BBS6, BBS10, and BBS12 are necessary for BBSome assembly
+      - reference_id: PMID:22500027
+        supporting_text: &gt;-
+          BBS6, BBS10, and BBS12 ... interact with CCT/TRiC proteins and BBS7 to
+          form a complex termed the BBS-chaperonin complex. This complex is
+          required for BBSome assembly
+      - reference_id: file:human/BBS10/BBS10-uniprot.txt
+        supporting_text: &gt;-
+          Component of a complex composed at least of MKKS, BBS10, BBS12, TCP1,
+          CCT2, CCT3, CCT4, CCT5 and CCT8.
+  - description: &gt;-
+      ATP-binding group II (TCP-1/CCT) chaperonin-family protein; retains the
+      conserved equatorial nucleotide-binding domain presumed to power its
+      chaperone-assisted assembly activity (catalytic folding activity inferred,
+      not biochemically demonstrated).
+    molecular_function:
+      id: GO:0005524
+      label: ATP binding
+    supported_by:
+      - reference_id: file:human/BBS10/BBS10-uniprot.txt
+        supporting_text: &gt;-
+          Probable molecular chaperone that assists the folding of proteins upon
+          ATP hydrolysis
+      - reference_id: file:human/BBS10/BBS10-uniprot.txt
+        supporting_text: Belongs to the TCP-1 chaperonin family.
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;-
+      Does BBS10 possess intrinsic ATP-dependent protein-folding (chaperonin)
+      activity, or does it act solely as a non-catalytic adaptor that recruits
+      BBSome subunits to the CCT/TRiC chaperonin?
+  - question: &gt;-
+      Is BBS10 ever a transient or substoichiometric component of the assembling
+      BBSome, or is it strictly excluded from the mature BBSome (GO:0034464)?
+  - question: &gt;-
+      Is the reported interaction of BBS10 with the transcriptional regulator
+      RNF2 (PMID:22302990) a direct, functionally meaningful interaction for
+      BBS10, or is it primarily attributable to BBS7?
+suggested_experiments:
+  - description: &gt;-
+      Reconstitute purified BBS10 with BBS7/BBS9/BBS12 and CCT/TRiC and assay
+      ATP-dependent folding/assembly activity (e.g. substrate refolding,
+      ATPase rate, BBSome-core formation) to test whether BBS10 has catalytic
+      chaperonin activity or acts as a non-catalytic adaptor.
+    experiment_type: in vitro biochemistry/reconstitution
+    hypothesis: &gt;-
+      BBS10 binds ATP via its conserved equatorial domain but functions chiefly
+      as a CCT/TRiC-recruiting adaptor rather than as an autonomous folding
+      chaperonin.
+  - description: &gt;-
+      Quantitative interaction mapping (mutagenesis of the nucleotide-binding
+      site and of patient variants such as R34P, V240G, S311A, S329L, D81N)
+      coupled to BBSome-assembly readouts to define which BBS10 surfaces drive
+      assembly versus ATP binding.
+    experiment_type: structure-function mutagenesis
+    hypothesis: &gt;-
+      Patient mutations impair BBSome assembly by disrupting BBS10 protein-protein
+      interactions and/or overall fold rather than by abolishing ATP binding per se.
+  - description: &gt;-
+      Endogenous BBS10 affinity purification and size-fractionation (sucrose
+      gradient) in ciliated human cells to determine whether BBS10 co-migrates
+      with the mature BBSome or only with the transient BBS-chaperonin/assembly
+      intermediate.
+    experiment_type: biochemical fractionation/proteomics
+    hypothesis: &gt;-
+      BBS10 is present only in the BBS-chaperonin/assembly-intermediate fraction
+      and is excluded from the mature, ciliary BBSome.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:17980398
+  title: Retinal morphology in patients with BBS1 and BBS10 related Bardet-Biedl Syndrome
+    evaluated by Fourier-domain optical coherence tomography.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified clinical OCT study of BBS1- and BBS10-mutation patients
+      showing disrupted photoreceptor integrity and outer-retinal deposits.
+      Supports a retinal/photoreceptor loss-of-function phenotype but provides
+      only indirect (phenotypic) support for the IMP photoreceptor-maintenance
+      and non-motile-cilium-assembly annotations; not direct molecular evidence.
+- id: PMID:20080638
+  title: BBS6, BBS10, and BBS12 form a complex with CCT/TRiC family chaperonins and
+    mediate BBSome assembly.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified key primary paper establishing that BBS6/BBS10/BBS12 form a
+      complex with CCT/TRiC that mediates BBSome assembly, and that BBS10 binds
+      BBS7/BBS9/BBS12. Directly establishes the core function. Abstract-only in
+      cache (full_text_available: false), but UniProt curation corroborates.
+- id: PMID:22302990
+  title: Direct role of Bardet-Biedl syndrome proteins in transcriptional regulation.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; primarily about a nuclear role for BBS7 and its interaction
+      with the polycomb protein RNF2. The BBS10-specific transcription-factor-binding
+      evidence is peripheral and the abstract is BBS7-centric (full text not in
+      cache), so the BBS10 GO:0061629 annotation is treated as non-core, not removed.
+- id: PMID:22500027
+  title: Intrinsic protein-protein interaction-mediated and chaperonin-assisted sequential
+    assembly of stable bardet-biedl syndrome protein complex, the BBSome.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified, full text available. Characterizes ordered, chaperonin-assisted
+      BBSome assembly; BBS-chaperonin complex (BBS6/BBS10/BBS12 + CCT/TRiC + BBS7)
+      is required for assembly and BBS7 stability. Supports GO:0043254 and GO:0051131.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified BioPlex high-throughput AP-MS interactome paper; supports the
+      BBS10-BBS7 physical interaction but yields only the uninformative
+      &#39;protein binding&#39; annotation.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified BioPlex 3.0 interactome paper; corroborates the BBS10-BBS7
+      interaction but contributes only the non-informative &#39;protein binding&#39; term.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

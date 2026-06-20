@@ -18,9 +18,9 @@ BioReason-Pro-RL is a pipeline for producing functional summaries of genes, alon
 - Paper: doi:10.64898/2026.03.19.712954
 
 
-We store these in:
+We store raw RL exports in:
 
- `{GENE}-deep-research-bioreason-{rl,sft}.md`
+ `{GENE}-bioreason-rl-predictions.md`
  
  We are primarily interested in the higher precision RL results rather than just Supervised Fine Tuning (SFT)
  
@@ -42,8 +42,9 @@ We are generally NOT interested in the GO terms in this report. We know in advan
 
 | File | Content |
 |------|---------|
-| `{GENE}-deep-research-bioreason-{rl,sft}.md` | Raw RL web export (provenance) |
-| `{GENE}-gogpt-leaf-predictions.yaml` | GO-GPT leaf terms as PredictionReview YAML (renamed from bioreason-rl-predictions.yaml) |
+| `{GENE}-bioreason-rl-predictions.md` | Raw RL web export (provenance) |
+| `{GENE}-deep-research-bioreason-sft.md` | Raw SFT web export when available (provenance) |
+| `{GENE}-gogpt-leaf-predictions.yaml` | GO-GPT leaf terms as PredictionReview YAML |
 | `{GENE}-bioreason-rl-review.md` | Evaluation of RL reasoning trace vs curated review |
 
 ## Reviewing a reasoning trace
@@ -53,7 +54,7 @@ Create `{GENE}-bioreason-rl-review.md` with:
 ```markdown
 # BioReason-Pro RL Review: {GENE} ({organism})
 
-Source: {GENE}-deep-research-bioreason-rl.md
+Source: {GENE}-bioreason-rl-predictions.md
 
 - **Correctness**: X/5
 - **Completeness**: X/5
@@ -82,7 +83,7 @@ Your review should quote sections of the functional summary verbatim where you w
 
 > the functional summary said "kinase that acts on ..." but in fact it is a pseudokinase...
 
-You can also look at the thinking trace and provide notes on it, but this is NOT score-driving. The main focus is the one-paragraph section "Functional Summary" in `{GENE}-deep-research-bioreason-rl.md`
+You can also look at the thinking trace and provide notes on it, but this is NOT score-driving. The main focus is the one-paragraph section "Functional Summary" in `{GENE}-bioreason-rl-predictions.md`
 
 Also perform a comparison with interpro2go GO_REF:0000002, which you will find in the ai-review.yaml. I am particularly interested in whether BioReason is just doing a fancy recapitulation of interpro2go (and whether it recapitulates the same mistakes) or if there is additional biological insight.
 
@@ -90,7 +91,7 @@ Scoring:
 - **Correctness** (1-5): Are claims accurate? 5=all supported, 3=core right with errors, 1=fundamentally wrong
 - **Completeness** (1-5): Important biology covered? 5=comprehensive, 3=basics only, 1=superficial
 
-Read BOTH the `-deep-research-bioreason-rl.md` (reasoning trace) and `-ai-review.yaml` (curated review), then compare.
+Read BOTH the `-bioreason-rl-predictions.md` (reasoning trace) and `-ai-review.yaml` (curated review), then compare.
 
 ## Project doc
 

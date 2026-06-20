@@ -1,3 +1,10 @@
+---
+title: "NLRP3 Inflammasome Assembly Project"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]
+---
+
 # NLRP3 Inflammasome Assembly Project
 
 ## Overview

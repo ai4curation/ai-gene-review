@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Egfr (mouse)
 
-Source: Egfr-deep-research-bioreason-rl.md
+Source: Egfr-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

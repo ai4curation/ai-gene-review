@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: DnaJ (E. coli)
 
-Source: DnaJ-deep-research-bioreason-rl.md
+Source: DnaJ-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

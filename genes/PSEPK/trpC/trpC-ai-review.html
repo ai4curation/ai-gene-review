@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>trpC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>trpC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QR6" target="_blank" class="term-link">
+                        Q88QR6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "trpC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QR6" data-a="DESCRIPTION: Indole-3-glycerol phosphate synthase (IGPS; TrpC; ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Indole-3-glycerol phosphate synthase (IGPS; TrpC; EC 4.1.1.48), the enzyme catalyzing the fourth step of L-tryptophan biosynthesis. It converts 1-(2-carboxyphenylamino)-1-deoxy-D-ribulose 5-phosphate (CdRP) into (1S,2R)-1-C-(indol-3-yl)glycerol 3-phosphate (indole-3-glycerol phosphate, IGP), releasing CO2 and water in an irreversible decarboxylative ring-closure reaction. This indole-ring-forming step lies downstream of anthranilate phosphoribosyltransferase (TrpD) and upstream of the tryptophan synthase subunits (TrpA/TrpB). The protein adopts a classic (beta/alpha)8 TIM-barrel (ribulose-phosphate-binding barrel) fold and acts as a soluble cytoplasmic metabolic enzyme. In Pseudomonas putida KT2440 the gene (PP_0422) lies in the trpGDC operon, and loss-of-function insertions cause tryptophan auxotrophy. The enzyme family is highly conserved across bacteria and has no human homolog.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000162" target="_blank" class="term-link">
+                                    GO:0000162
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR6" data-a="GO:0000162" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TrpC/IGPS catalyzes the fourth step of L-tryptophan biosynthesis; this process annotation is correct and represents a core function of the gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Matches the UniProt-curated pathway annotation (L-tryptophan from chorismate, step 4/5) and is supported by tryptophan-auxotrophy phenotypes of PP_0422 insertion mutants in P. putida KT2440. This is a core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004425" target="_blank" class="term-link">
+                                    GO:0004425
+                                </a>
+                            </span>
+                            <span class="term-label">indole-3-glycerol-phosphate synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR6" data-a="GO:0004425" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the canonical molecular function of TrpC, matching the UniProt RecName (Indole-3-glycerol phosphate synthase, EC 4.1.1.48) and the curated catalytic activity (CdRP to indole-3-glycerol phosphate + CO2 + H2O).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by UniProt HAMAP-Rule MF_00134, InterPro IGPS domain signatures (IPR001468/IPR013798/IPR045186), EC 4.1.1.48 and RHEA:23476. Core molecular function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004640" target="_blank" class="term-link">
+                                    GO:0004640
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoribosylanthranilate isomerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR6" data-a="GO:0004640" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phosphoribosylanthranilate isomerase (PRAI, TrpF, EC 5.3.1.24) catalyzes the third step of tryptophan biosynthesis and is a distinct activity from IGPS. This activity is NOT supported for P. putida KT2440 TrpC by UniProt, which assigns only IGPS (EC 4.1.1.48). The annotation is a TreeGrafter over-propagation arising because some bacteria (e.g. E. coli) have a bifunctional TrpC(F) protein, whereas in Pseudomonas TrpF is a separate gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt Q88QR6 (HAMAP MF_00134) annotates only the monofunctional IGPS activity (277 aa, single IGPS domain), with no PRAI/TrpF domain. The IEA TreeGrafter inference reflects the bifunctional TrpCF architecture of some lineages and is not applicable to this monofunctional Pseudomonas enzyme. This is an electronic (IEA) prediction argued against on biological/domain grounds, not the second-guessing of an experimental annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the fourth step of L-tryptophan biosynthesis, the decarboxylative ring closure of CdRP to indole-3-glycerol phosphate.</h3>
+                <span class="vote-buttons" data-g="Q88QR6" data-a="FUNCTION: Catalyzes the fourth step of L-tryptophan biosynth..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004425" target="_blank" class="term-link">
+                            indole-3-glycerol-phosphate synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000162" target="_blank" class="term-link">
+                                L-tryptophan biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">UniProt RecName Indole-3-glycerol phosphate synthase, EC 4.1.1.48; catalytic activity CdRP to (indol-3-yl)glycerol 3-phosphate + CO2 + H2O (RHEA:23476).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/trpC/trpC-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on P. putida KT2440 trpC (PP_0422)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PP_0422 (trpC) lies in the trpGDC operon; a mini-Tn5 insertion in PP_0422 yields tryptophan auxotrophy in KT2440, confirming its essential role in endogenous tryptophan biosynthesis.</div>
+                        
+                        <div class="finding-text">"Molina-Henares et al. 2009 (Microbial Biotechnology 2:91-100) operon mapping, RT-PCR cotranscription, and auxotrophy screen."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Has the IGPS activity of P. putida KT2440 TrpC (PP_0422) been biochemically characterized (kcat/KM), or is the assignment based solely on homology and the auxotrophy phenotype?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88QR6" data-a="Q: Has the IGPS activity of P. putida KT2440 TrpC (PP..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify recombinant PP_0422 and measure IGPS activity (CdRP to IGP) to confirm the monofunctional assignment and exclude any cryptic PRAI activity.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88QR6" data-a="EXPERIMENT: Purify recombinant PP_0422 and measure IGPS activi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(trpC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QR6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Functional annotation research report: **trpC (PP_0422; UniProt Q88QR6)** in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">27 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:27:32.022254</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="trpC-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="trpC-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000017 I have extracted Figure 2 and Figure 3 as requested. Figure 2 displays the detailed biosynthetic pathway for tryptophan, starting f</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-research-report-trpc-pp_0422-uniprot-q88qr6-in-pseudomonas-putida-kt2440">Functional annotation research report: <strong>trpC (PP_0422; UniProt Q88QR6)</strong> in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-scope-and-identity-verification-critical-disambiguation">0) Scope and identity verification (critical disambiguation)</h2>
+<p><strong>Target identity (confirmed):</strong> The gene symbol <strong>trpC</strong> in this report refers specifically to <strong>PP_0422</strong> from <em>Pseudomonas putida</em> strain <strong>KT2440</strong> (ATCC 47054 / DSM 6125 / etc.), annotated in UniProt as <strong>indole-3-glycerol phosphate synthase (IGPS; EC 4.1.1.48)</strong>. Multiple independent lines of KT2440-specific evidence support this assignment: PP_0422 lies in the <strong>trpGDC</strong> tryptophan-biosynthesis operon, shows high similarity to characterized <strong>TrpC from <em>E. coli</em></strong>, and <strong>loss-of-function insertions in PP_0422 yield tryptophan auxotrophy</strong>. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 1-2)</p>
+<p><strong>Why ambiguity matters:</strong> “trpC” is a widely used bacterial symbol; some taxa have <strong>fused or multifunctional proteins</strong> combining TrpC with other activities, or gene fusions in related pathways. Therefore, all organism-specific conclusions below are restricted to <strong>KT2440 PP_0422/Q88QR6</strong>. (barona‐gomez2003occurrenceofa pages 1-2, molinahenares2009functionalanalysisof pages 2-4)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-canonical-function-of-trpcigps">1.1 Canonical function of TrpC/IGPS</h3>
+<p><strong>Indole-3-glycerol phosphate synthase (IGPS; TrpC; EC 4.1.1.48)</strong> catalyzes the indole-ring-forming step of microbial tryptophan biosynthesis by converting <strong>1-(o-carboxyphenylamino)-1-deoxyribulose 5′-phosphate (CdRP)</strong> into <strong>indole-3-glycerol phosphate (IGP; also abbreviated InGP)</strong>. (esposito2022indole‐3‐glycerolphosphatesynthase pages 1-3, molinahenares2009functionalanalysisof pages 4-6)</p>
+<p>In <em>P. putida</em> KT2440, pathway mapping places <strong>TrpC</strong> downstream of <strong>TrpD</strong> (anthranilate phosphoribosyltransferase) and upstream of <strong>TrpA/TrpB</strong> (tryptophan synthase subunits), consistent with the standard chorismate→anthranilate→tryptophan route. (molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof media a5651e48)</p>
+<h3 id="12-pathway-context-in-kt2440">1.2 Pathway context in KT2440</h3>
+<p>A KT2440 genetic and biochemical reconstruction supports a <strong>single route</strong> from chorismate to tryptophan, with the <em>trp</em> genes arranged in operons and single-gene transcription units characteristic of many bacteria. (molinahenares2009functionalanalysisof pages 1-2, molinahenares2009functionalanalysisof pages 4-6)</p>
+<p><strong>Figure evidence:</strong> the tryptophan pathway and <em>trp</em> gene organization in KT2440 (including <strong>trpGDC</strong> with <strong>trpC/PP_0422</strong>) are shown in extracted figures from Molina-Henares et al. (2009). (molinahenares2009functionalanalysisof media a5651e48, molinahenares2009functionalanalysisof media 77d9c78a)</p>
+<h2 id="2-molecular-function-reaction-chemistry-substrate-specificity-and-mechanism">2) Molecular function: reaction chemistry, substrate specificity, and mechanism</h2>
+<h3 id="21-reaction-and-substrate-specificity">2.1 Reaction and substrate specificity</h3>
+<p>IGPS/TrpC is functionally defined by its specificity for the pathway intermediate <strong>CdRP</strong>, producing <strong>IGP</strong>. This is the enzyme’s core substrate/product relationship in bacteria. (esposito2022indole‐3‐glycerolphosphatesynthase pages 1-3)</p>
+<p>In KT2440, TrpC is explicitly identified as <strong>indoleglycerol phosphate synthase</strong> within the reconstructed pathway and gene cluster, supporting that PP_0422 participates in this exact chemistry rather than a divergent TrpC-like function. (molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 2-4)</p>
+<h3 id="22-enzyme-fold-and-catalytic-mechanism-authoritative-mechanistic-synthesis">2.2 Enzyme fold and catalytic mechanism (authoritative mechanistic synthesis)</h3>
+<p>A detailed minireview of bacterial IGPS (focused on <em>Mycobacterium tuberculosis</em> IGPS but comparing across homologs) describes IGPS as a <strong>(β/α)8 TIM-barrel enzyme</strong> (a classic aldolase/TIM-barrel scaffold). (esposito2022indole‐3‐glycerolphosphatesynthase pages 1-3, esposito2022indole‐3‐glycerolphosphatesynthase pages 4-6)</p>
+<p><strong>Mechanistic consensus (3-step sequence):</strong> cyclization to an intermediate, <strong>irreversible decarboxylation</strong>, and <strong>dehydration</strong> to yield IGP. (esposito2022indole‐3‐glycerolphosphatesynthase pages 3-4)</p>
+<p><strong>Catalytic residue-level insights (from structural/kinetic studies of bacterial IGPS):</strong> conserved Lys/Glu residues participate in proton transfers and dehydration; structural data identify phosphate-binding and indole-stabilizing interactions in the active site (e.g., H-bonding and π-cation interactions) as part of the conserved catalytic architecture. (esposito2022indole‐3‐glycerolphosphatesynthase pages 3-4, esposito2022indole‐3‐glycerolphosphatesynthase pages 4-6)</p>
+<p><strong>Quantitative kinetic data (example bacterial IGPS, not KT2440-specific):</strong> for MtIGPS, reported <strong>KM values vary</strong> substantially across studies (e.g., 55 μM vs. 500 μM vs. 1.13 mM) and a reported <strong>kcat ≈ 0.16 s−1 (25 °C)</strong>; pH dependence indicates apparent pKa values around ~6–6.8 for catalytic parameters. These figures illustrate that IGPS kinetics are sensitive to assay and substrate preparation, and should not be transferred quantitatively to KT2440 without direct measurement. (esposito2022indole‐3‐glycerolphosphatesynthase pages 3-4, esposito2022indole‐3‐glycerolphosphatesynthase pages 1-3)</p>
+<h2 id="3-kt2440-specific-genomic-context-regulation-and-phenotype-evidence">3) KT2440-specific genomic context, regulation, and phenotype evidence</h2>
+<h3 id="31-operon-context-and-transcriptional-organization">3.1 Operon context and transcriptional organization</h3>
+<p>In <em>P. putida</em> KT2440, <strong>trpC = PP_0422</strong> is within a compact operon <strong>trpG–trpD–trpC (trpGDC)</strong>, with very short intergenic distances (including a <strong>6-nt overlap between trpD and trpC</strong>) and <strong>RT-PCR evidence</strong> for cotranscription of trpGDC. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6)</p>
+<p>This organization supports functional coupling with upstream tryptophan-branch reactions and is consistent with tight pathway control at the transcriptional/operon level. (molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof media 77d9c78a)</p>
+<h3 id="32-loss-of-function-phenotypes-auxotrophy">3.2 Loss-of-function phenotypes (auxotrophy)</h3>
+<p>A genome-wide mini-Tn5 screen in KT2440 identified <strong>tryptophan auxotrophs</strong> with insertions in multiple <em>trp</em> genes, including a <strong>PP_0422 (trpC) insertion at the 32nd codon</strong> leading to tryptophan requirement. This is direct genetic evidence that <strong>PP_0422 is essential for endogenous tryptophan biosynthesis under the tested minimal conditions</strong>. (molinahenares2009functionalanalysisof pages 1-2, molinahenares2009functionalanalysisof pages 2-4)</p>
+<h3 id="33-conservation-across-pseudomonas">3.3 Conservation across Pseudomonas</h3>
+<p>Tryptophan-pathway enzymes in Pseudomonas were reported as <strong>highly conserved</strong> (71–97% identity range across species for pathway enzymes), supporting functional conservation of TrpC/IGPS across the genus and lending additional confidence to annotation transfer. (molinahenares2009functionalanalysisof pages 4-6)</p>
+<h2 id="4-cellular-localization">4) Cellular localization</h2>
+<p>No direct experimental subcellular localization (e.g., fractionation, microscopy, localization tags) for KT2440 TrpC (PP_0422/Q88QR6) was found in the retrieved full-text evidence. (molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 2-4)</p>
+<p>Given its role in <strong>central amino-acid biosynthesis</strong> and the fact that bacterial tryptophan-biosynthesis enzymes are generally soluble metabolic enzymes, the most parsimonious functional inference is that TrpC acts in the <strong>cytosol</strong>; however, this remains an inference rather than a demonstrated localization for KT2440 in the currently retrieved literature. (molinahenares2009functionalanalysisof pages 4-6)</p>
+<h2 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h2>
+<h3 id="51-metabolic-engineering-in-p-putida-kt2440-blocking-trpc-to-accumulate-anthranilate">5.1 Metabolic engineering in <em>P. putida</em> KT2440: blocking TrpC to accumulate anthranilate</h3>
+<p>A practical, KT2440-specific application of trpC knowledge is pathway rerouting at the chorismate→anthranilate→tryptophan node.</p>
+<p>Kuepper et al. (2015) engineered <em>P. putida</em> KT2440 for <strong>anthranilate (o-aminobenzoate; oAB) production from glucose</strong> by <strong>deleting the trpDC operon</strong>, explicitly described as encoding <strong>TrpD (anthranilate phosphoribosyltransferase)</strong> and <strong>TrpC (IGPS)</strong>. This deletion blocks anthranilate consumption toward tryptophan. (kuepper2015metabolicengineeringof pages 1-2)</p>
+<p><strong>Quantitative outcome:</strong> with additional pathway deregulation (feedback-insensitive <strong>aroG</strong> and modified <strong>trpE/trpS</strong> context as described), the best engineered strain achieved <strong>1.54 ± 0.3 g/L (11.23 mM) anthranilate</strong> in tryptophan-limited fed-batch culture. This is a direct, real-world strain-engineering use-case for trpC functional annotation in KT2440. (kuepper2015metabolicengineeringof pages 1-2)</p>
+<h2 id="6-recent-developments-and-latest-research-prioritizing-20232024">6) Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="61-2024-shikimate-pathway-rewiring-in-p-putida-enables-near-theoretical-aromatic-yields-context-for-tryptophan-branch-control">6.1 2024: Shikimate pathway rewiring in <em>P. putida</em> enables near-theoretical aromatic yields (context for tryptophan-branch control)</h3>
+<p>A 2024 preprint/report describes <strong>reprogramming <em>P. putida</em> catabolism</strong> to rely on the <strong>shikimate pathway</strong> (normally anabolic) as a primary route for growth-associated pyruvate supply (“shikimate pathway-dependent catabolism”, SDC). The study combined <strong>metabolic modeling</strong>, <strong>rational engineering</strong>, and <strong>adaptive laboratory evolution (ALE)</strong> with <strong>biosensor-based selection</strong>, achieving <strong>~89% of the pathway’s maximum theoretical yield</strong> for an aromatic product (4-hydroxybenzoate). (bruinsma2024shikimatepathwaydependentcatabolism pages 1-4, santos2024shikimatepathwaydependentcatabolism pages 1-5)</p>
+<p>This work is not a direct study of trpC, but it is highly relevant to the tryptophan branch because it demonstrates that modern strategies can drive very high flux through chorismate/shikimate-derived nodes in <em>P. putida</em>. It also highlights design constraints: deleting certain chorismate-derived reactions (e.g., anthranilate synthase routes) is infeasible because it would create auxotrophies, underscoring the physiological coupling of aromatic product formation to essential metabolites like tryptophan. (bruinsma2024shikimatepathwaydependentcatabolism pages 4-6)</p>
+<h3 id="62-2023-engineering-strategies-to-manage-anthranilatetryptophan-branch-byproducts-transferable-principles">6.2 2023: Engineering strategies to manage anthranilate/tryptophan-branch byproducts (transferable principles)</h3>
+<p>A 2023 metabolic engineering study in <em>Corynebacterium glutamicum</em> optimized shikimate-derived production and explicitly addressed <strong>anthranilate accumulation</strong> (a tryptophan-branch metabolite) by <strong>reducing anthranilate synthase activity via targeted mutagenesis</strong> while avoiding tryptophan auxotrophy; the study achieved <strong>661 mg/L (4 mM)</strong> p-coumaric acid and demonstrated co-culture conversion to <strong>31.2 mg/L</strong> resveratrol. While not in <em>P. putida</em>, these results reflect current engineering practice at the aromatic branchpoint where trp genes (including trpC) are often manipulated to tune flux. (mutz2023microbialsynthesisof pages 1-2)</p>
+<h2 id="7-expert-opinions-and-analysis-authoritative-sources">7) Expert opinions and analysis (authoritative sources)</h2>
+<h3 id="71-igps-as-a-structurally-conserved-tim-barrel-enzyme-and-potential-target">7.1 IGPS as a structurally conserved TIM-barrel enzyme and potential target</h3>
+<p>A focused minireview (ChemBioChem, 2022) frames IGPS as a <strong>highly conserved TIM-barrel enzyme</strong>, summarizes evidence for its mechanism and structural determinants, and argues that bacterial IGPS can be a <strong>useful antibacterial target</strong> because some pathogens rely on tryptophan biosynthesis during host immune pressure and because the enzyme lacks a human homolog. Although discussed in a tuberculosis context, these points represent authoritative expert synthesis of IGPS enzymology and structure–function relationships. (esposito2022indole‐3‐glycerolphosphatesynthase pages 1-3)</p>
+<h3 id="72-genome-context-mutant-phenotypes-as-strong-functional-evidence-in-kt2440">7.2 Genome-context + mutant phenotypes as strong functional evidence in KT2440</h3>
+<p>Molina-Henares et al. (2009) provide a KT2440-specific, experimentally grounded approach to functional annotation that combines <strong>operon mapping (RT-PCR)</strong>, <strong>mutant phenotypes</strong>, and pathway logic. This type of evidence is particularly strong for essential metabolic enzymes like TrpC even when purified-enzyme kinetics for the exact strain are not available. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 1-2)</p>
+<h2 id="8-evidence-map-compact-summary">8) Evidence map (compact summary)</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Key finding</th>
+<th>Best citation IDs to support it</th>
+<th>Source (author/year/doi URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enzyme name</td>
+<td><strong>trpC / PP_0422 / UniProt Q88QR6</strong> in <em>Pseudomonas putida</em> KT2440 is assigned as <strong>indole-3-glycerol phosphate synthase (IGPS)</strong> based on sequence similarity to <em>E. coli</em> TrpC and placement in the tryptophan biosynthesis locus.</td>
+<td>(molinahenares2009functionalanalysisof pages 2-4)</td>
+<td>Molina-Henares et al., 2009, <em>Microbial Biotechnology</em>, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>The gene product corresponds to <strong>EC 4.1.1.48</strong>, the canonical IGPS carboxy-lyase in tryptophan biosynthesis. This matches the functional assignment used in comparative and pathway literature.</td>
+<td>(esposito2022indole‐3‐glycerolphosphatesynthase pages 3-4, barona‐gomez2003occurrenceofa pages 1-2)</td>
+<td>Esposito et al., 2022, <em>ChemBioChem</em>, https://doi.org/10.1002/cbic.202100314; Barona-Gómez &amp; Hodgson, 2003, <em>EMBO Reports</em>, https://doi.org/10.1038/sj.embor.embor771</td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>IGPS catalyzes conversion of <strong>1-(o-carboxyphenylamino)-1-deoxyribulose-5-phosphate (CdRP)</strong> to <strong>indole-3-glycerol phosphate (IGP/InGP)</strong>, the indole-ring-forming step of the pathway.</td>
+<td>(esposito2022indole‐3‐glycerolphosphatesynthase pages 3-4, esposito2022indole‐3‐glycerolphosphatesynthase pages 1-3)</td>
+<td>Esposito et al., 2022, <em>ChemBioChem</em>, https://doi.org/10.1002/cbic.202100314</td>
+</tr>
+<tr>
+<td>Substrate/product</td>
+<td>The substrate is <strong>CdRP</strong> and the product is <strong>IGP/InGP</strong>; in the KT2440 pathway map, TrpC is explicitly positioned at the step producing indoleglycerol phosphate from the upstream anthranilate-derived intermediate.</td>
+<td>(molinahenares2009functionalanalysisof pages 4-6, esposito2022indole‐3‐glycerolphosphatesynthase pages 1-3)</td>
+<td>Molina-Henares et al., 2009, https://doi.org/10.1111/j.1751-7915.2008.00062.x; Esposito et al., 2022, https://doi.org/10.1002/cbic.202100314</td>
+</tr>
+<tr>
+<td>Pathway step</td>
+<td>TrpC functions in the <strong>tryptophan biosynthetic pathway downstream of TrpD and upstream of TrpA/TrpB</strong>, converting the anthranilate branch intermediate into IGP before terminal tryptophan synthase steps.</td>
+<td>(molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof media a5651e48)</td>
+<td>Molina-Henares et al., 2009, <em>Microbial Biotechnology</em>, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>Operon context</td>
+<td>In KT2440, <strong>trpC is part of the trpGDC operon</strong>; RT-PCR showed cotranscription of <strong>trpG-trpD-trpC</strong>, and <strong>trpD overlaps trpC by 6 nt</strong>, indicating tight transcriptional/functional coupling.</td>
+<td>(molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6)</td>
+<td>Molina-Henares et al., 2009, <em>Microbial Biotechnology</em>, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>Evidence type</td>
+<td>Functional annotation is supported by <strong>genome context, RT-PCR operon mapping, sequence similarity, pathway reconstruction, and mutant phenotype analysis</strong> rather than direct biochemical characterization of the purified KT2440 enzyme.</td>
+<td>(molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 7-8)</td>
+<td>Molina-Henares et al., 2009, <em>Microbial Biotechnology</em>, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>Phenotype</td>
+<td><strong>Loss of trpC causes tryptophan auxotrophy</strong> in KT2440: a mini-Tn5 insertion in <strong>PP_0422</strong> yielded an auxotrophic mutant in the aromatic-pathway screen.</td>
+<td>(molinahenares2009functionalanalysisof pages 1-2)</td>
+<td>Molina-Henares et al., 2009, <em>Microbial Biotechnology</em>, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>Applications / metabolic engineering</td>
+<td><strong>Deleting trpDC (including trpC)</strong> in KT2440 was used to block anthranilate consumption and redirect flux for product formation; the best engineered strain produced <strong>1.54 ± 0.3 g/L (11.23 mM) anthranilate</strong> in tryptophan-limited fed-batch culture.</td>
+<td>(kuepper2015metabolicengineeringof pages 1-2)</td>
+<td>Kuepper et al., 2015, <em>Frontiers in Microbiology</em>, https://doi.org/10.3389/fmicb.2015.01310</td>
+</tr>
+<tr>
+<td>Structure / domains</td>
+<td>TrpC/IGPS is a <strong>(β/α)8 TIM-barrel enzyme</strong> with a conserved catalytic architecture. The UniProt/domain assignment for Q88QR6 is consistent with this family-level structural model, although no KT2440-specific structure was identified here.</td>
+<td>(esposito2022indole‐3‐glycerolphosphatesynthase pages 3-4, esposito2022indole‐3‐glycerolphosphatesynthase pages 4-6, kursula2003crystallographicstudieson pages 28-30)</td>
+<td>Esposito et al., 2022, <em>ChemBioChem</em>, https://doi.org/10.1002/cbic.202100314; Kursula, 2003</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>No direct KT2440 localization experiment was found in the retrieved evidence. Given its role in central amino-acid biosynthesis and lack of membrane/export features in the discussed sources, TrpC is best inferred to function in the <strong>cytosol</strong>.</td>
+<td>(molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 2-4)</td>
+<td>Molina-Henares et al., 2009, <em>Microbial Biotechnology</em>, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>Recent 2023–2024 relevance</td>
+<td>Recent work did not directly recharacterize KT2440 TrpC, but <strong>2024 shikimate-pathway rewiring in <em>P. putida</em></strong> showed that flux through chorismate-derived aromatics can reach <strong>89% of theoretical yield</strong>, highlighting the modern engineering context in which trpC-associated branch control remains important.</td>
+<td>(santos2024shikimatepathwaydependentcatabolism pages 1-5, bruinsma2024shikimatepathwaydependentcatabolism pages 1-4)</td>
+<td>dos Santos et al., 2024, https://doi.org/10.21203/rs.3.rs-4761679/v1; Bruinsma et al., 2024, <em>bioRxiv</em>, https://doi.org/10.1101/2024.07.06.602327</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the experimentally supported functional annotation of </em>Pseudomonas putida<em> KT2440 trpC (PP_0422; UniProt Q88QR6), including pathway role, operon context, phenotype, structural inference, and engineering relevance. It is useful as a compact evidence map for gene-function annotation.</em></p>
+<h2 id="9-limitations-and-open-gaps-for-kt2440-pp_0422q88qr6">9) Limitations and open gaps for KT2440 PP_0422/Q88QR6</h2>
+<ul>
+<li><strong>Direct biochemical characterization of KT2440 TrpC</strong> (KM/kcat, substrate analog specificity, inhibition) was not located in the retrieved texts; mechanistic/kinetic details cited here derive from other bacterial IGPS homologs and should be treated as <strong>family-level inference</strong> rather than KT2440-specific parameters. (esposito2022indole‐3‐glycerolphosphatesynthase pages 3-4, esposito2022indole‐3‐glycerolphosphatesynthase pages 1-3)</li>
+<li><strong>Experimental cellular localization</strong> for KT2440 TrpC was not found; cytosolic localization is inferred from pathway role and typical bacterial metabolism, but not demonstrated here. (molinahenares2009functionalanalysisof pages 4-6)</li>
+</ul>
+<h2 id="key-sources-with-urls-and-publication-dates">Key sources (with URLs and publication dates)</h2>
+<ol>
+<li>Molina-Henares MA et al. <strong>Functional analysis of aromatic biosynthetic pathways in <em>Pseudomonas putida</em> KT2440</strong>. <em>Microbial Biotechnology</em>. <strong>Dec 2009</strong>. https://doi.org/10.1111/j.1751-7915.2008.00062.x (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof media a5651e48)</li>
+<li>Kuepper J et al. <strong>Metabolic Engineering of <em>Pseudomonas putida</em> KT2440 to Produce Anthranilate from Glucose</strong>. <em>Frontiers in Microbiology</em>. <strong>Nov 2015</strong>. https://doi.org/10.3389/fmicb.2015.01310 (kuepper2015metabolicengineeringof pages 1-2)</li>
+<li>Esposito N et al. <strong>Indole-3-Glycerol Phosphate Synthase from <em>Mycobacterium tuberculosis</em>: A Potential New Drug Target</strong>. <em>ChemBioChem</em>. <strong>Sep 2022</strong>. https://doi.org/10.1002/cbic.202100314 (esposito2022indole‐3‐glycerolphosphatesynthase pages 1-3, esposito2022indole‐3‐glycerolphosphatesynthase pages 3-4)</li>
+<li>Bruinsma L et al. <strong>Shikimate pathway-Dependent Catabolism: enabling near-to-maximum production yield of aromatics</strong>. <em>bioRxiv</em> preprint. <strong>Jul 2024</strong>. https://doi.org/10.1101/2024.07.06.602327 (bruinsma2024shikimatepathwaydependentcatabolism pages 1-4, bruinsma2024shikimatepathwaydependentcatabolism pages 4-6)</li>
+<li>dos Santos VMPM et al. <strong>Shikimate pathway-Dependent Catabolism: enabling near-to-maximum production yield of aromatics</strong>. (preprint/posted version). <strong>Aug 2024</strong>. https://doi.org/10.21203/rs.3.rs-4761679/v1 (santos2024shikimatepathwaydependentcatabolism pages 1-5)</li>
+<li>Mutz M et al. <strong>Microbial synthesis of the plant natural product precursor p-coumaric acid with <em>Corynebacterium glutamicum</em></strong>. <em>Microbial Cell Factories</em>. <strong>Oct 2023</strong>. https://doi.org/10.1186/s12934-023-02222-y (mutz2023microbialsynthesisof pages 1-2)</li>
+</ol>
+<p>References</p>
+<ol>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 2-4): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 1-2): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barona‐gomez2003occurrenceofa pages 1-2): Francisco Barona‐Gómez and David A Hodgson. Occurrence of a putative ancient‐like isomerase involved in histidine and tryptophan biosynthesis. EMBO reports, 4:296-300, Mar 2003. URL: https://doi.org/10.1038/sj.embor.embor771, doi:10.1038/sj.embor.embor771. This article has 119 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(esposito2022indole‐3‐glycerolphosphatesynthase pages 1-3): Nikolas Esposito, David W. Konas, and Nina M. Goodey. Indole‐3‐glycerol phosphate synthase from <i>mycobacterium tuberculosis</i>: a potential new drug target. Sep 2022. URL: https://doi.org/10.1002/cbic.202100314, doi:10.1002/cbic.202100314. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 4-6): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof media a5651e48): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof media 77d9c78a): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(esposito2022indole‐3‐glycerolphosphatesynthase pages 4-6): Nikolas Esposito, David W. Konas, and Nina M. Goodey. Indole‐3‐glycerol phosphate synthase from <i>mycobacterium tuberculosis</i>: a potential new drug target. Sep 2022. URL: https://doi.org/10.1002/cbic.202100314, doi:10.1002/cbic.202100314. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(esposito2022indole‐3‐glycerolphosphatesynthase pages 3-4): Nikolas Esposito, David W. Konas, and Nina M. Goodey. Indole‐3‐glycerol phosphate synthase from <i>mycobacterium tuberculosis</i>: a potential new drug target. Sep 2022. URL: https://doi.org/10.1002/cbic.202100314, doi:10.1002/cbic.202100314. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuepper2015metabolicengineeringof pages 1-2): Jannis Kuepper, Jasmin Dickler, Michael Biggel, Swantje Behnken, Gernot Jäger, Nick Wierckx, and Lars M. Blank. Metabolic engineering of pseudomonas putida kt2440 to produce anthranilate from glucose. Frontiers in Microbiology, Nov 2015. URL: https://doi.org/10.3389/fmicb.2015.01310, doi:10.3389/fmicb.2015.01310. This article has 66 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bruinsma2024shikimatepathwaydependentcatabolism pages 1-4): Lyon Bruinsma, Christos Batianis, Sara Moreno Paz, Kesi Kurnia, Job. J Dirkmaat, Alexandra Müller, Jose Juncosa Nunez, Ruud A. Weusthuis, and Vitor A. P. Martins dos Santos. Shikimate pathway-dependent catabolism: enabling near-to-maximum production yield of aromatics. BioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.06.602327, doi:10.1101/2024.07.06.602327. This article has 0 citations.</p>
+</li>
+<li>
+<p>(santos2024shikimatepathwaydependentcatabolism pages 1-5): Vitor Martins dos Santos, Lyon Bruinsma, Christos Batianis, Sara Moreno-Paz, Kesi Kurnia, Job Dirkmaat, Alexandra Müller, Jose Juncosa Nuñez, and Ruud Weusthuis. Shikimate pathway-dependent catabolism: enabling near-to-maximum production yield of aromatics. Unknown journal, Aug 2024. URL: https://doi.org/10.21203/rs.3.rs-4761679/v1, doi:10.21203/rs.3.rs-4761679/v1.</p>
+</li>
+<li>
+<p>(bruinsma2024shikimatepathwaydependentcatabolism pages 4-6): Lyon Bruinsma, Christos Batianis, Sara Moreno Paz, Kesi Kurnia, Job. J Dirkmaat, Alexandra Müller, Jose Juncosa Nunez, Ruud A. Weusthuis, and Vitor A. P. Martins dos Santos. Shikimate pathway-dependent catabolism: enabling near-to-maximum production yield of aromatics. BioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.06.602327, doi:10.1101/2024.07.06.602327. This article has 0 citations.</p>
+</li>
+<li>
+<p>(mutz2023microbialsynthesisof pages 1-2): Mario Mutz, Dominic Kösters, Benedikt Wynands, Nick Wierckx, and Jan Marienhagen. Microbial synthesis of the plant natural product precursor p-coumaric acid with corynebacterium glutamicum. Microbial Cell Factories, Oct 2023. URL: https://doi.org/10.1186/s12934-023-02222-y, doi:10.1186/s12934-023-02222-y. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 7-8): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kursula2003crystallographicstudieson pages 28-30): I Kursula. Crystallographic studies on the structure-function relationships in triosephosphate isomerase. Unknown journal, 2003.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="trpC-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000017 I have extracted Figure 2 and Figure 3 as requested. Figure 2 displays the detailed biosynthetic pathway for tryptophan, starting f" src="trpC-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>molinahenares2009functionalanalysisof pages 4-6</li>
+<li>kuepper2015metabolicengineeringof pages 1-2</li>
+<li>bruinsma2024shikimatepathwaydependentcatabolism pages 4-6</li>
+<li>mutz2023microbialsynthesisof pages 1-2</li>
+<li>molinahenares2009functionalanalysisof pages 2-4</li>
+<li>molinahenares2009functionalanalysisof pages 1-2</li>
+<li>santos2024shikimatepathwaydependentcatabolism pages 1-5</li>
+<li>bruinsma2024shikimatepathwaydependentcatabolism pages 1-4</li>
+<li>molinahenares2009functionalanalysisof pages 7-8</li>
+<li>kursula2003crystallographicstudieson pages 28-30</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x</li>
+<li>https://doi.org/10.1002/cbic.202100314;</li>
+<li>https://doi.org/10.1038/sj.embor.embor771</li>
+<li>https://doi.org/10.1002/cbic.202100314</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x;</li>
+<li>https://doi.org/10.3389/fmicb.2015.01310</li>
+<li>https://doi.org/10.21203/rs.3.rs-4761679/v1;</li>
+<li>https://doi.org/10.1101/2024.07.06.602327</li>
+<li>https://doi.org/10.21203/rs.3.rs-4761679/v1</li>
+<li>https://doi.org/10.1186/s12934-023-02222-y</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x,</li>
+<li>https://doi.org/10.1038/sj.embor.embor771,</li>
+<li>https://doi.org/10.1002/cbic.202100314,</li>
+<li>https://doi.org/10.3389/fmicb.2015.01310,</li>
+<li>https://doi.org/10.1101/2024.07.06.602327,</li>
+<li>https://doi.org/10.21203/rs.3.rs-4761679/v1,</li>
+<li>https://doi.org/10.1186/s12934-023-02222-y,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QR6
+gene_symbol: trpC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  Indole-3-glycerol phosphate synthase (IGPS; TrpC; EC 4.1.1.48), the enzyme
+  catalyzing the fourth step of L-tryptophan biosynthesis. It converts
+  1-(2-carboxyphenylamino)-1-deoxy-D-ribulose 5-phosphate (CdRP) into
+  (1S,2R)-1-C-(indol-3-yl)glycerol 3-phosphate (indole-3-glycerol phosphate, IGP),
+  releasing CO2 and water in an irreversible decarboxylative ring-closure reaction.
+  This indole-ring-forming step lies downstream of anthranilate
+  phosphoribosyltransferase (TrpD) and upstream of the tryptophan synthase subunits
+  (TrpA/TrpB). The protein adopts a classic (beta/alpha)8 TIM-barrel
+  (ribulose-phosphate-binding barrel) fold and acts as a soluble cytoplasmic
+  metabolic enzyme. In Pseudomonas putida KT2440 the gene (PP_0422) lies in the
+  trpGDC operon, and loss-of-function insertions cause tryptophan auxotrophy. The
+  enzyme family is highly conserved across bacteria and has no human homolog.
+existing_annotations:
+- term:
+    id: GO:0000162
+    label: L-tryptophan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: TrpC/IGPS catalyzes the fourth step of L-tryptophan biosynthesis; this process annotation is correct and represents a core function of the gene.
+    action: ACCEPT
+    reason: Matches the UniProt-curated pathway annotation (L-tryptophan from chorismate, step 4/5) and is supported by tryptophan-auxotrophy phenotypes of PP_0422 insertion mutants in P. putida KT2440. This is a core function.
+- term:
+    id: GO:0004425
+    label: indole-3-glycerol-phosphate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the canonical molecular function of TrpC, matching the UniProt RecName (Indole-3-glycerol phosphate synthase, EC 4.1.1.48) and the curated catalytic activity (CdRP to indole-3-glycerol phosphate + CO2 + H2O).
+    action: ACCEPT
+    reason: Directly supported by UniProt HAMAP-Rule MF_00134, InterPro IGPS domain signatures (IPR001468/IPR013798/IPR045186), EC 4.1.1.48 and RHEA:23476. Core molecular function.
+- term:
+    id: GO:0004640
+    label: phosphoribosylanthranilate isomerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Phosphoribosylanthranilate isomerase (PRAI, TrpF, EC 5.3.1.24) catalyzes the third step of tryptophan biosynthesis and is a distinct activity from IGPS. This activity is NOT supported for P. putida KT2440 TrpC by UniProt, which assigns only IGPS (EC 4.1.1.48). The annotation is a TreeGrafter over-propagation arising because some bacteria (e.g. E. coli) have a bifunctional TrpC(F) protein, whereas in Pseudomonas TrpF is a separate gene.
+    action: REMOVE
+    reason: UniProt Q88QR6 (HAMAP MF_00134) annotates only the monofunctional IGPS activity (277 aa, single IGPS domain), with no PRAI/TrpF domain. The IEA TreeGrafter inference reflects the bifunctional TrpCF architecture of some lineages and is not applicable to this monofunctional Pseudomonas enzyme. This is an electronic (IEA) prediction argued against on biological/domain grounds, not the second-guessing of an experimental annotation.
+core_functions:
+- description: Catalyzes the fourth step of L-tryptophan biosynthesis, the decarboxylative ring closure of CdRP to indole-3-glycerol phosphate.
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: UniProt RecName Indole-3-glycerol phosphate synthase, EC 4.1.1.48; catalytic activity CdRP to (indol-3-yl)glycerol 3-phosphate + CO2 + H2O (RHEA:23476).
+  molecular_function:
+    id: GO:0004425
+    label: indole-3-glycerol-phosphate synthase activity
+  directly_involved_in:
+  - id: GO:0000162
+    label: L-tryptophan biosynthetic process
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: TreeGrafter pipeline reference; correctly identifies the source of the PRAI over-propagated annotation, which is not applicable to this monofunctional enzyme.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Source of the IGPS and tryptophan-biosynthesis annotations, both consistent with UniProt HAMAP-Rule MF_00134.
+- id: file:PSEPK/trpC/trpC-deep-research-falcon.md
+  title: Deep research report on P. putida KT2440 trpC (PP_0422)
+  findings:
+  - statement: PP_0422 (trpC) lies in the trpGDC operon; a mini-Tn5 insertion in PP_0422 yields tryptophan auxotrophy in KT2440, confirming its essential role in endogenous tryptophan biosynthesis.
+    supporting_text: Molina-Henares et al. 2009 (Microbial Biotechnology 2:91-100) operon mapping, RT-PCR cotranscription, and auxotrophy screen.
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Deep-research summary citing Molina-Henares et al. 2009 (doi 10.1111/j.1751-7915.2008.00062.x) and Esposito et al. 2022 IGPS minireview. Underlying PMIDs not independently verified (PubMed lookup unavailable); conclusions are consistent with UniProt curation.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: KT2440 genome reference (Nelson et al. 2002, Environ Microbiol) establishing the locus/gene assignment.
+suggested_questions:
+- question: Has the IGPS activity of P. putida KT2440 TrpC (PP_0422) been biochemically characterized (kcat/KM), or is the assignment based solely on homology and the auxotrophy phenotype?
+suggested_experiments:
+- description: Purify recombinant PP_0422 and measure IGPS activity (CdRP to IGP) to confirm the monofunctional assignment and exclude any cryptic PRAI activity.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

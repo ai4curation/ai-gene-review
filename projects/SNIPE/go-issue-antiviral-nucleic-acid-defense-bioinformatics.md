@@ -1,3 +1,7 @@
+---
+title: "SNIPE GO Issue: Supporting Bioinformatics Note"
+---
+
 # SNIPE GO Issue: Supporting Bioinformatics Note
 
 This note contains detailed architecture-analysis support for the InterPro2GO section of:

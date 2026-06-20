@@ -1,0 +1,3240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lytN - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lytN</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A0H2XJK7" target="_blank" class="term-link">
+                        A0A0H2XJK7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Staphylococcus aureus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lytN";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="DESCRIPTION: LytN is a secreted peptidoglycan (murein) hydrolas..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LytN is a secreted peptidoglycan (murein) hydrolase of Staphylococcus aureus that acts in the cross-wall (septal) compartment during cell division and envelope assembly. Its precursor carries a YSIRK-G/S signal peptide that directs secretion to the mid-cell cross-wall; it also has a LysM peptidoglycan-binding module and a catalytic CHAP (cysteine, histidine-dependent amidohydrolase/peptidase) domain. The CHAP domain is bifunctional, acting as both an N-acetylmuramoyl-L-alanine amidase (cleaving the MurNAc-L-Ala amide bond linking the glycan strand to the stem peptide) and a D-alanyl-glycine endopeptidase (cleaving the D-Ala-Gly peptide bond); catalysis depends on the conserved CHAP residues Cys266 and His329. By hydrolyzing septal peptidoglycan, LytN promotes cross-wall splitting and the completion of daughter-cell separation. Its activity is spatially controlled (wall teichoic acid mediates its septal localization) and dosage-controlled: loss of LytN damages the cross-wall and impairs growth, while overexpression triggers cross-wall rupture and lysis. LytN also contributes to remodeling the peptidoglycan anchor of surface proteins such as protein A, removing amino sugars from the attached peptidoglycan, although it is not the determinant of overall protein A release.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LytN is a secreted protein (UniProt SubCell &#34;Secreted&#34;), so the broad extracellular-region term is not incorrect. However, LytN does not act freely in the extracellular space; it is delivered via a YSIRK-G/S signal peptide to the cross-wall (division septum) where it carries out septal peptidoglycan hydrolysis, and its function depends on this localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The SubCell-derived &#34;extracellular region&#34; is technically defensible but uninformative and partly misleading for a cross-wall enzyme. Frankel et al. showed externally added purified LytN does not complement a lytN mutant, whereas bacterially produced precursor does, demonstrating that physiological function requires cross-wall targeting rather than bulk extracellular activity (PMID:21784864). A cell septum / cell wall cellular-component term is more accurate (see NEW annotations); retaining this term as non-core/over-annotated is acceptable since the protein is genuinely secreted.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Secreted polypeptides endowed with a YSIRK-G/S signal peptide are directly delivered to the cross-wall compartment. One such YSIRK-containing protein is the murein hydrolase LytN.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The lytN phenotype can be reversed by the controlled expression of lytN but not by adding purified LytN to staphylococcal cultures.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008932" target="_blank" class="term-link">
+                                    GO:0008932
+                                </a>
+                            </span>
+                            <span class="term-label">lytic endotransglycosylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="GO:0008932" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TreeGrafter/PANTHER annotation (from subfamily PTHR33734:SF22, &#34;membrane-bound lytic murein transglycosylase D&#34;) is mechanistically incorrect for LytN. Lytic transglycosylases cleave the glycosidic MurNAc-GlcNAc bond non-hydrolytically, forming a 1,6-anhydro-MurNAc product (GO:0008932 definition). LytN has no transglycosylase domain; its catalytic module is a CHAP domain that HYDROLYZES amide and peptide bonds, acting as an N-acetylmuramoyl-L-alanine amidase and a D-alanyl-glycine endopeptidase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation arises from an over-propagated subfamily misassignment. PANTHER places LytN in PTHR33734:SF22 (a lytic transglycosylase subfamily), but LytN&#39;s experimentally characterized activities are hydrolytic amide/peptide cleavages, not the 1,6-anhydro-forming glycosidic cleavage that defines lytic endotransglycosylase activity (GO:0008932, verified via QuickGO). LytN&#39;s domain architecture (CHAP + LysM, no transglycosylase fold) and the direct product evidence (MurNAc-L-Ala and D-Ala-Gly bond cleavage, abolished by Cys266/His329 mutation) contradict transglycosylase activity (PMID:21784864). This electronic inference should be removed and replaced by the verified amidase and endopeptidase MF terms (see NEW annotations).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LytN harbors LysM and CHAP domains, the latter of which functions as both an N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="GO:0016787" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LytN is indeed a hydrolase (a peptidoglycan hydrolase / murein hydrolase), so this term is correct but uninformatively general. The specific activities are an N-acetylmuramoyl-L-alanine amidase and a peptidoglycan (D-alanyl-glycine) endopeptidase, both well supported experimentally.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016787 is a root-level hydrolase term that conveys little about LytN&#39;s function. It should be replaced by the specific catalytic activities demonstrated by Frankel et al. (PMID:21784864), namely N-acetylmuramoyl-L-alanine amidase activity (GO:0008745) and peptidoglycan endopeptidase activity (GO:0061785). Both replacement terms were verified via QuickGO.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008745" target="_blank" class="term-link">
+                                    N-acetylmuramoyl-L-alanine amidase activity
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061785" target="_blank" class="term-link">
+                                    peptidoglycan endopeptidase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LytN harbors LysM and CHAP domains, the latter of which functions as both an N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008745" target="_blank" class="term-link">
+                                    GO:0008745
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylmuramoyl-L-alanine amidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21784864
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LytN, a murein hydrolase in the cross-wall compartment of St...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="GO:0008745" data-r="PMID:21784864" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The CHAP domain of LytN cleaves the MurNAc-L-Ala amide bond, an N-acetylmuramoyl-L-alanine amidase activity demonstrated biochemically by muropeptide product analysis (MS) and Edman degradation, and abolished by the CHAP active-site mutations C266A and H329A.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence supports this specific molecular function (PMID:21784864), the verified, informative replacement for the generic hydrolase term. GO:0008745 verified via QuickGO (&#34;hydrolysis of the link between N-acetylmuramoyl residues and L-amino acid residues in bacterial cell-wall glycopeptides&#34;).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LytN harbors LysM and CHAP domains, the latter of which functions as both an N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061785" target="_blank" class="term-link">
+                                    GO:0061785
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan endopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21784864
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LytN, a murein hydrolase in the cross-wall compartment of St...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="GO:0061785" data-r="PMID:21784864" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LytN&#39;s CHAP domain also acts as a D-alanyl-glycine endopeptidase, cleaving the D-Ala-Gly peptide bond within the staphylococcal peptidoglycan stem/cross-bridge; this is a peptidoglycan endopeptidase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct biochemical evidence (product analysis and active-site mutagenesis) supports a peptidoglycan endopeptidase activity (D-Ala-Gly cleavage) for LytN (PMID:21784864), corroborated as a recognized D-Ala-Gly hydrolase (PMID:39495121). GO:0061785 verified via QuickGO (&#34;an endopeptidase activity that uses peptidoglycan as a substrate&#34;).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LytN harbors LysM and CHAP domains, the latter of which functions as both an N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39495121" target="_blank" class="term-link">
+                                        PMID:39495121
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The only other recognised D-Ala-Gly hydrolase in S. aureus is LytN.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                    GO:0009253
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21784864
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LytN, a murein hydrolase in the cross-wall compartment of St...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="GO:0009253" data-r="PMID:21784864" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> By hydrolyzing amide and peptide bonds in mature peptidoglycan, LytN participates in the breakdown/remodeling of the murein sacculus.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LytN is a murein hydrolase that cleaves bonds in mature peptidoglycan (PMID:21784864); peptidoglycan catabolic process (GO:0009253, verified via QuickGO) captures this biological process. This is the BP counterpart of the hydrolytic MF terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">One such YSIRK-containing protein is the murein hydrolase LytN.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000920" target="_blank" class="term-link">
+                                    GO:0000920
+                                </a>
+                            </span>
+                            <span class="term-label">septum digestion after cytokinesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21784864
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LytN, a murein hydrolase in the cross-wall compartment of St...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="GO:0000920" data-r="PMID:21784864" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LytN promotes cross-wall (septal peptidoglycan) splitting and the completion of daughter-cell separation; lytN mutants show structural damage to the cross-wall and impaired growth, consistent with a role in septal cell wall digestion that enables daughter-cell separation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Frankel et al. demonstrate that LytN secretion into the cross-wall promotes peptidoglycan separation and completion of the cell cycle, and that its loss damages the cross-wall (PMID:21784864). GO:0000920 &#34;septum digestion after cytokinesis&#34; (verified via QuickGO) captures the enzymatic breakdown of septal cell wall enabling daughter-cell separation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LytN secretion into the cross-wall promotes peptidoglycan separation and completion of the staphylococcal cell cycle.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">lytN mutations precipitate structural damage to the cross-wall and interfere with staphylococcal growth.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21784864
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LytN, a murein hydrolase in the cross-wall compartment of St...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="GO:0071555" data-r="PMID:21784864" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LytN contributes to staphylococcal envelope assembly and cross-wall remodeling; its loss impairs proper growth and envelope assembly. This term is also asserted as a UniProt keyword-derived annotation in the UniProt entry.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LytN remodels cell-wall peptidoglycan during division and envelope assembly (PMID:21784864); cell wall organization (GO:0071555, verified via QuickGO; also present as IEA UniProtKB-KW in the UniProt record) is an appropriate, well-supported biological process term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">is involved in proper bacterial growth and envelope assembly</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030428" target="_blank" class="term-link">
+                                    GO:0030428
+                                </a>
+                            </span>
+                            <span class="term-label">cell septum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21784864
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LytN, a murein hydrolase in the cross-wall compartment of St...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="GO:0030428" data-r="PMID:21784864" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LytN is delivered to and acts in the cross-wall / division septum compartment at mid-cell, the location where septal peptidoglycan remodeling occurs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The YSIRK-G/S signal peptide targets LytN to the cross-wall (septal) compartment, where it functions; this is a more accurate cellular-component term than the broad extracellular region (PMID:21784864; WTA-mediated septal localization in PMID:35675307). GO:0030428 &#34;cell septum&#34; verified via QuickGO.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                        PMID:21784864
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Secreted polypeptides endowed with a YSIRK-G/S signal peptide are directly delivered to the cross-wall compartment.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35675307" target="_blank" class="term-link">
+                                        PMID:35675307
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">WTA also mediates the specific binding of Sle1 and LytN to the cross-wall of the septum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>N-acetylmuramoyl-L-alanine amidase: the LytN CHAP domain hydrolyzes the MurNAc-L-Ala amide bond of staphylococcal peptidoglycan, acting in peptidoglycan catabolism/remodeling. Catalysis requires the conserved CHAP residues Cys266 and His329.</h3>
+                <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="FUNCTION: N-acetylmuramoyl-L-alanine amidase: the LytN CHAP ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008745" target="_blank" class="term-link">
+                            N-acetylmuramoyl-L-alanine amidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                peptidoglycan catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030428" target="_blank" class="term-link">
+                                cell septum
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                PMID:21784864
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">LytN harbors LysM and CHAP domains, the latter of which functions as both an N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Peptidoglycan (D-alanyl-glycine) endopeptidase: the same LytN CHAP domain also cleaves the D-Ala-Gly peptide bond of staphylococcal peptidoglycan, the second of its two bifunctional hydrolytic activities.</h3>
+                <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="FUNCTION: Peptidoglycan (D-alanyl-glycine) endopeptidase: th..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061785" target="_blank" class="term-link">
+                            peptidoglycan endopeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                peptidoglycan catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030428" target="_blank" class="term-link">
+                                cell septum
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                PMID:21784864
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">LytN harbors LysM and CHAP domains, the latter of which functions as both an N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39495121" target="_blank" class="term-link">
+                                PMID:39495121
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The only other recognised D-Ala-Gly hydrolase in S. aureus is LytN.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Septal cross-wall remodeling for daughter-cell separation: delivered to the mid-cell cross-wall via its YSIRK-G/S signal peptide, LytN digests septal peptidoglycan to promote cross-wall splitting and completion of cell division; its activity is dosage-controlled (loss damages the cross-wall; overexpression causes rupture and lysis).</h3>
+                <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="FUNCTION: Septal cross-wall remodeling for daughter-cell sep..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000920" target="_blank" class="term-link">
+                                septum digestion after cytokinesis
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                cell wall organization
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030428" target="_blank" class="term-link">
+                                cell septum
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                                PMID:21784864
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">LytN secretion into the cross-wall promotes peptidoglycan separation and completion of the staphylococcal cell cycle.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21784864" target="_blank" class="term-link">
+                            PMID:21784864
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">LytN, a murein hydrolase in the cross-wall compartment of Staphylococcus aureus, is involved in proper bacterial growth and envelope assembly.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LytN is a YSIRK-G/S-signal-peptide protein delivered to the cross-wall (septal) compartment, and its CHAP domain functions as both an N-acetylmuramoyl-L-alanine amidase and a D-alanyl-glycine endopeptidase; catalysis depends on Cys266 and His329.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">lytN mutations cause structural damage to the cross-wall and impair staphylococcal growth, while overexpression triggers cross-wall rupture; the phenotype is reversed by controlled lytN expression but not by externally added purified LytN, indicating that correct cross-wall targeting is required.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24434550" target="_blank" class="term-link">
+                            PMID:24434550
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Release of protein A from the cell wall of Staphylococcus aureus.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LytN, a cross-wall murein hydrolase, contributes to the release of protein A by removing amino sugars (MurNAc-GlcNAc) from attached peptidoglycan; however, mutants lacking cross-wall hydrolases (Atl, Sle1, or LytN) released protein A with altered peptidoglycan structures without affecting the overall release of protein A.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35675307" target="_blank" class="term-link">
+                            PMID:35675307
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Staphylococcus aureus cell wall maintenance - the multifaceted roles of peptidoglycan hydrolases in bacterial growth, fitness, and virulence.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LytN is classed among the S. aureus peptidoglycan hydrolases with both amidase and endopeptidase activities, and wall teichoic acid together with the YSIRK/GS signal peptide mediates its localization to the cross-wall of the septum.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39495121" target="_blank" class="term-link">
+                            PMID:39495121
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Reassessing the substrate specificities of the major Staphylococcus aureus peptidoglycan hydrolases lysostaphin and LytM.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LytN is cited as the only other recognised S. aureus D-Ala-Gly hydrolase; its CHAP domain cleaves both D-Ala-Gly and MurNAc-L-Ala bonds, i.e. it is a D-alanyl-glycine endopeptidase as well as an N-acetylmuramoyl-L-alanine amidase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39274911" target="_blank" class="term-link">
+                            PMID:39274911
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Agents Targeting the Bacterial Cell Wall as Tools to Combat Gram-Positive Pathogens.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Review noting CHAP as a frequent catalytic motif and LysM as a common cell-wall-binding motif in cell-wall-active enzymes; disruption of LytN causes growth and morphology defects while overexpression causes lysis and death.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are the amidase (MurNAc-L-Ala) and endopeptidase (D-Ala-Gly) activities of LytN both required in vivo for cross-wall splitting, or does one dominate the physiological function?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="Q: Are the amidase (MurNAc-L-Ala) and endopeptidase (..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is LytN activity restricted to the cross-wall and prevented from digesting peripheral wall, given that overexpression causes lethal lysis? What are the relative contributions of the YSIRK-G/S signal peptide, the LysM domain, and wall teichoic acid to this spatial control?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="Q: How is LytN activity restricted to the cross-wall ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does LytN functionally overlap or coordinate with the other S. aureus cross-wall hydrolases (Atl, Sle1, LytM) during daughter-cell separation and surface-protein anchor remodeling?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="Q: How does LytN functionally overlap or coordinate w..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Separation-of-function mutagenesis of the CHAP domain to uncouple the amidase and endopeptidase activities, followed by complementation of a lytN mutant, to determine which activity drives cross-wall splitting in vivo.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="EXPERIMENT: Separation-of-function mutagenesis of the CHAP dom..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitative super-resolution or fluorescence imaging of tagged LytN in wild-type versus WTA-deficient (e.g. tarO) backgrounds to test the requirement of wall teichoic acid for septal localization and to time LytN recruitment relative to division.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="EXPERIMENT: Quantitative super-resolution or fluorescence imag..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Defined in vitro digestion of purified staphylococcal peptidoglycan (and isolated muropeptides) with recombinant LytN and Cys266/His329 variants, with LC-MS muropeptide profiling, to map bond preferences and the dependence of amidase activity on glycan context.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A0H2XJK7" data-a="EXPERIMENT: Defined in vitro digestion of purified staphylococ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lytN-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A0H2XJK7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">25 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-16T13:29:38.675731</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="lytN-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="lytN-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000031 Figure 5, specifically panel B, reports the percentage of protein A (SpA) released into the culture medium for various strains. The</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-staphylococcus-aureus-usa300-lytn-uniprot-a0a0h2xjk7-locus-sausa300_1140-functional-annotation">Research report: <em>Staphylococcus aureus</em> USA300 <strong>lytN</strong> (UniProt <strong>A0A0H2XJK7</strong>; locus <strong>SAUSA300_1140</strong>) — functional annotation</h2>
+<h3 id="0-target-verification-critical-disambiguation">0. Target verification (critical disambiguation)</h3>
+<p>The evidence retrieved pertains to <em>Staphylococcus aureus</em> “LytN”, described as a secreted, cross-wall (septal) peptidoglycan hydrolase with a YSIRK/GS signal peptide, a LysM peptidoglycan-binding module, and a CHAP catalytic domain with cysteine/histidine-dependent activity. This matches the provided UniProt identity (A0A0H2XJK7; USA300; domains: YSIRK signal, LysM, CHAP). (frankel2011lytnamurein pages 1-2)</p>
+<h3 id="1-key-concepts-and-current-understanding">1. Key concepts and current understanding</h3>
+<h4 id="11-what-lytn-is-definition">1.1 What LytN is (definition)</h4>
+<p>LytN is an endogenous <em>S. aureus</em> peptidoglycan hydrolase (“murein hydrolase”) that localizes to the cross-wall compartment to remodel septal peptidoglycan during cell division and envelope assembly. (frankel2011lytnamurein pages 1-2)</p>
+<h4 id="12-domain-architecture-and-definitions">1.2 Domain architecture and definitions</h4>
+<ul>
+<li><strong>YSIRK/GS signal peptide</strong>: A specialized N-terminal signal peptide class in <em>S. aureus</em> that routes precursors to septal (cross-wall) secretion. LytN is explicitly reported to be secreted to the cross-wall compartment via a YSIRK/GS-type signal peptide. (frankel2011lytnamurein pages 11-12)</li>
+<li><strong>LysM domain</strong>: A common cell-wall binding module that can contribute to peptidoglycan interaction/positioning. LytN carries LysM and can bind cell wall material; some review synthesis indicates that deletion of a LysM domain did not abolish LytN function, consistent with possible partial redundancy between targeting determinants (signal peptide, WTA-dependent interactions, and/or other regions). (wang2022staphylococcusaureuscell pages 10-11, frankel2011lytnamurein pages 12-13)</li>
+<li><strong>CHAP domain</strong> (cysteine/histidine-dependent amidohydrolase/peptidase): LytN’s catalytic module, experimentally shown to mediate two distinct peptidoglycan cleavage activities (amidase and endopeptidase). (frankel2011lytnamurein pages 11-12, wang2022staphylococcusaureuscell pages 5-6)</li>
+</ul>
+<h4 id="13-primary-enzymatic-function-reactions-and-substrate-specificity">1.3 Primary enzymatic function: reactions and substrate specificity</h4>
+<p>Frankel et al. (2011; Journal of Biological Chemistry; publication date Sep 2011; https://doi.org/10.1074/jbc.M111.258863) provide direct product-level evidence that recombinant LytN cleaves <em>two</em> amide bonds in <em>S. aureus</em> peptidoglycan: (i) <strong>MurNAc–L-Ala</strong> (N-acetylmuramoyl-L-alanine amidase activity), and (ii) <strong>D-Ala–Gly</strong> (D-alanyl–glycine endopeptidase activity). (frankel2011lytnamurein pages 8-11, frankel2011lytnamurein pages 11-12)</p>
+<p>Mechanistically, activity depends on conserved CHAP residues: mutation of <strong>Cys266</strong> or <strong>His329</strong> abolishes detectable murein hydrolase activity in the assays reported. (frankel2011lytnamurein pages 11-12, frankel2011lytnamurein pages 12-13)</p>
+<h3 id="2-biological-role-localization-and-pathways">2. Biological role, localization, and pathways</h3>
+<h4 id="21-subcellular-localization-and-where-lytn-acts">2.1 Subcellular localization and where LytN acts</h4>
+<p>LytN is described as a murein hydrolase of the <strong>cross-wall compartment</strong> (septal region) and its precursor is secreted into this compartment via its YSIRK/GS signal peptide. (frankel2011lytnamurein pages 1-2, frankel2011lytnamurein pages 11-12)</p>
+<p>A key functional insight is that correct <em>spatial delivery</em> matters: lytN mutant phenotypes were complemented by controlled expression of the LytN precursor (i.e., produced by the bacterium), but not by adding purified enzyme externally, supporting a model where cross-wall targeting is required for physiological function. (frankel2011lytnamurein pages 1-2, frankel2011lytnamurein pages 11-12)</p>
+<h4 id="22-link-to-cell-division-and-envelope-assembly">2.2 Link to cell division and envelope assembly</h4>
+<p>LytN contributes to <strong>cross-wall splitting / daughter cell separation</strong>, and disruption causes cross-wall structural defects and growth impairment; conversely, overexpression causes cross-wall rupture and lysis, indicating LytN activity must be tightly controlled to avoid lethal self-digestion. (frankel2011lytnamurein pages 11-12, becker2014releaseofprotein pages 3-4)</p>
+<h4 id="23-relationship-to-wall-teichoic-acid-wta">2.3 Relationship to wall teichoic acid (WTA)</h4>
+<p>An authoritative review of <em>S. aureus</em> peptidoglycan hydrolases (Wang et al., 2022; FEMS Microbiology Reviews; publication date Jun 2022; https://doi.org/10.1093/femsre/fuac025) summarizes that <strong>WTA mediates specific binding/localization of LytN to the cross-wall</strong> and that WTA absence causes disordered localization. (wang2022staphylococcusaureuscell pages 10-11, wang2022staphylococcusaureuscell pages 8-10)</p>
+<h4 id="24-regulatory-context-transcriptional-control">2.4 Regulatory context (transcriptional control)</h4>
+<p>The same 2022 review synthesizes reported transcriptional control: lytN is repressed through the <strong>ArlRS–MgrA</strong> regulatory cascade and also through regulators such as <strong>Rot</strong>, <strong>SpoVG</strong>, and <strong>Rat</strong>, reflecting the general need to regulate autolysin activity. (wang2022staphylococcusaureuscell pages 10-11, wang2022staphylococcusaureuscell pages 8-10)</p>
+<h3 id="3-experimental-evidence-and-quantitative-data">3. Experimental evidence and quantitative data</h3>
+<h4 id="31-mass-spectrometry-and-edman-sequencing-evidence-for-bond-cleavage">3.1 Mass spectrometry and Edman sequencing evidence for bond cleavage</h4>
+<p>Frankel et al. (2011) report defined muropeptide products after LytN digestion, with diagnostic ions including <strong>m/z 724.68, 796.69, 2367.12, 2440.69</strong> and others, and use Edman degradation to show liberated peptide N-termini consistent with MurNAc–L-Ala and D-Ala–Gly cleavage. Reported Edman amounts include (example) <strong>cycle-1 Ala 7.87 pmol and Gly 6.85 pmol</strong> for one fragment, whereas a larger fragment yielded <strong>five cycles of Gly</strong> without Ala, supporting the assignment of distinct cleavage events. (frankel2011lytnamurein pages 8-11, frankel2011lytnamurein pages 11-12)</p>
+<h4 id="32-protein-a-spa-processingrelease-quantitative-phenotype">3.2 Protein A (SpA) processing/release: quantitative phenotype</h4>
+<p>Becker et al. (2014; PNAS; publication date Jan 2014; https://doi.org/10.1073/pnas.1317181111) connect LytN to processing of sortase-anchored surface proteins, specifically <strong>protein A (SpA)</strong>. They report that LytN is secreted into the cross-wall via a YSIRK-G/S signal peptide and that its CHAP domain cleaves peptidoglycan via amidase/endopeptidase activities, influencing cell separation. (becker2014releaseofprotein pages 3-4)</p>
+<p>Importantly, although LytN affects the structure of peptidoglycan-linked anchors in SpA, deletion of lytN does <strong>not</strong> substantially change the overall fraction of SpA released into culture medium: <strong>WT 15.10% ± 1.28 vs lytN mutant 16.69% ± 1.44</strong> (bar graph shown in their Figure 5B). (becker2014releaseofprotein pages 3-4, becker2014releaseofprotein media 5e522988)</p>
+<h3 id="4-recent-developments-prioritizing-20232024">4. Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="41-updated-context-on-d-alagly-hydrolase-chemistry-2024">4.1 Updated context on D-Ala–Gly hydrolase chemistry (2024)</h4>
+<p>Antenucci et al. (2024; eLife; publication date Aug 2024; https://doi.org/10.1101/2023.10.13.562287) re-assess substrate specificities among major <em>S. aureus</em> peptidoglycan hydrolases. In this context, they explicitly describe LytN as “the only other recognised D-Ala–Gly hydrolase in <em>S. aureus</em>” and reiterate the dual activity of LytN’s CHAP domain: cleavage of <strong>D-Ala–Gly</strong> and <strong>MurNAc–L-Ala</strong> bonds (citing the 2011 primary work). (antenucci2024reassessingthesubstrate pages 15-18)</p>
+<p>This 2024 perspective is relevant because it reframes <em>S. aureus</em> endopeptidase chemistry: it emphasizes that D-Ala–Gly cleavage is not unique to LytN (in the sense that LytM can also show D-Ala–Gly-related activity), but LytN remains a canonical CHAP-based dual-activity enzyme for septal remodeling. (antenucci2024reassessingthesubstrate pages 15-18)</p>
+<h4 id="42-2024-view-on-modular-hydrolases-and-enzybiotics-potential">4.2 2024 view on modular hydrolases and “enzybiotics” potential</h4>
+<p>A 2024 review on cell-wall targeting proteinaceous agents (Zhydzetski et al., 2024; Molecules; publication date Aug 2024; https://doi.org/10.3390/molecules29174065) highlights CHAP as a frequent catalytic motif and LysM as a common cell wall binding motif in bacteriophage lysins and related agents, and notes that disruption of LytN causes growth/morphology defects while overexpression causes lysis and death—consistent with essentiality of regulation and potential vulnerability of cell-wall remodeling systems. (zhydzetski2024agentstargetingthe pages 15-16, zhydzetski2024agentstargetingthe pages 14-15)</p>
+<h3 id="5-current-applications-and-real-world-implementations">5. Current applications and real-world implementations</h3>
+<h4 id="51-translational-context-cell-wall-lytic-proteins-as-antibacterials">5.1 Translational context: cell-wall lytic proteins as antibacterials</h4>
+<p>Although there is no direct evidence in the retrieved sources that <em>LytN itself</em> is deployed as a therapeutic, recent reviews emphasize the broader translational concept: cell-wall hydrolases (including CHAP-domain enzymes) can be engineered as antimicrobials (“enzybiotics”), via truncation to active catalytic domains and/or fusion with binding modules for potency and specificity. (zhydzetski2024agentstargetingthe pages 26-28, zhydzetski2024agentstargetingthe pages 21-22)</p>
+<p>The 2024 Molecules review also notes that externally applied peptidoglycan hydrolases target conserved bonds in peptidoglycan, a mechanism distinct from classical antibiotics and potentially less prone to resistance development; it further describes domain-engineering strategies that can increase activity dramatically (e.g., CBD fusion approaches in related systems). (zhydzetski2024agentstargetingthe pages 15-16)</p>
+<h4 id="52-practical-implication-for-lytn-biology">5.2 Practical implication for LytN biology</h4>
+<p>The key real-world relevance of LytN is as a <strong>cell division/envelope assembly factor</strong> and a <strong>potential vulnerability</strong> in pathways that govern cross-wall remodeling. Its tight regulation and lethal overexpression phenotype underscore why hydrolases are considered both (i) targets and (ii) components for engineered antibacterials. (frankel2011lytnamurein pages 11-12, zhydzetski2024agentstargetingthe pages 15-16)</p>
+<h3 id="6-expert-synthesis-and-interpretation-evidence-weighted">6. Expert synthesis and interpretation (evidence-weighted)</h3>
+<ol>
+<li><strong>Primary function</strong>: LytN is best supported as a <strong>bifunctional septal peptidoglycan hydrolase</strong> that catalyzes cleavage of <strong>MurNAc–L-Ala</strong> and <strong>D-Ala–Gly</strong> bonds. The strongest evidence is direct product characterization by MS and Edman sequencing and loss-of-function active-site mutagenesis (Cys266/His329). (frankel2011lytnamurein pages 8-11, frankel2011lytnamurein pages 11-12)</li>
+<li><strong>Spatial cell biology</strong>: LytN belongs to the class of YSIRK/GS-signal-peptide proteins routed to the cross-wall; complementation behavior supports that correct spatial secretion/localization is critical for its physiological role. (frankel2011lytnamurein pages 1-2, frankel2011lytnamurein pages 11-12)</li>
+<li><strong>Cell cycle role</strong>: LytN supports cross-wall splitting and envelope integrity; underactivity (mutation) impairs growth/separation, while overactivity (overexpression) leads to rupture/lysis. (frankel2011lytnamurein pages 11-12, zhydzetski2024agentstargetingthe pages 15-16)</li>
+<li><strong>Surface protein anchor remodeling</strong>: LytN modifies the peptidoglycan-linked structures of protein A (SpA) but is not the only determinant of overall SpA shedding, as quantified by similar release fractions in WT and lytN mutants. (becker2014releaseofprotein pages 3-4, becker2014releaseofprotein media 5e522988)</li>
+</ol>
+<h3 id="summary-table">Summary table</h3>
+<p>The following table consolidates the main functional annotation points (domains, reactions, localization, regulation, phenotypes, and quantitative evidence) for rapid reference.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Summary for <em>S. aureus</em> USA300 LytN (A0A0H2XJK7 / SAUSA300_1140)</th>
+<th>Key quantitative / mechanistic details</th>
+<th>Primary supporting citation IDs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target verification</td>
+<td>Literature evidence matches the specified <em>Staphylococcus aureus</em> LytN: a cross-wall murein hydrolase in <em>S. aureus</em> with YSIRK/GS signal peptide, LysM and CHAP-associated activity; no evidence here suggests confusion with a different non-<em>S. aureus</em> LytN.</td>
+<td>Core description aligns with UniProt architecture and USA300 locus naming used in <em>S. aureus</em> studies.</td>
+<td>(frankel2011lytnamurein pages 1-2)</td>
+</tr>
+<tr>
+<td>Domain architecture</td>
+<td>Secreted precursor with N-terminal YSIRK/GS-type signal peptide; peptidoglycan-binding LysM domain; catalytic CHAP domain. Some sources describe a single LysM domain; older secondary text describes a larger multidomain protein but agrees on YSIRK/GS + LysM + CHAP organization.</td>
+<td>CHAP catalytic residues identified experimentally as Cys266 and His329.</td>
+<td>(frankel2011lytnamurein pages 1-2, frankel2011lytnamurein pages 12-13, frankel2011lytnamurein pages 11-12, kent2013cellwallarchitecture pages 162-165)</td>
+</tr>
+<tr>
+<td>Primary biochemical function</td>
+<td>Peptidoglycan hydrolase involved in septal/cross-wall remodeling during daughter-cell separation and envelope assembly.</td>
+<td>Functions in cleavage of septal peptidoglycan rather than bulk wall destruction; proper spatial delivery is required for function.</td>
+<td>(frankel2011lytnamurein pages 1-2)</td>
+</tr>
+<tr>
+<td>Catalytic activities</td>
+<td>Dual CHAP-domain chemistry: N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase. Recent literature still cites LytN as the recognized <em>S. aureus</em> D-Ala–Gly hydrolase besides LytM-related work.</td>
+<td>Cleaves MurNAc–L-Ala and D-Ala–Gly bonds in mature staphylococcal peptidoglycan.</td>
+<td>(frankel2011lytnamurein pages 8-11, frankel2011lytnamurein pages 11-12, wang2022staphylococcusaureuscell pages 5-6, antenucci2024reassessingthesubstrate pages 15-18)</td>
+</tr>
+<tr>
+<td>Substrate / bond specificity</td>
+<td>Acts on staphylococcal peptidoglycan fragments including cross-linked muropeptides and releases uncross-linked wall peptides with or without MurNAc-GlcNAc.</td>
+<td>Product evidence includes MurNAc-(peptide)-GlcNAc and MurNAc-peptide species; amidase activity appears to depend on intact glycan context/reducing-end presentation.</td>
+<td>(frankel2011lytnamurein pages 8-11, frankel2011lytnamurein pages 11-12, frankel2011lytnamurein pages 12-13)</td>
+</tr>
+<tr>
+<td>Catalytic residues</td>
+<td>Conserved CHAP residues are essential for hydrolysis.</td>
+<td>C266A and H329A variants lose detectable murein hydrolase activity.</td>
+<td>(frankel2011lytnamurein pages 11-12, frankel2011lytnamurein pages 12-13)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Targeted to the cross-wall / septal compartment; exogenous recombinant protein can bind broadly to the cell wall, but physiological function depends on correct precursor secretion into the cross-wall.</td>
+<td>YSIRK/GS signal peptide directs secretion to septal membranes/cross-wall; intracellular precursor complements mutant better than externally added enzyme.</td>
+<td>(frankel2011lytnamurein pages 1-2, frankel2011lytnamurein pages 11-12)</td>
+</tr>
+<tr>
+<td>WTA dependence</td>
+<td>Cross-wall binding/localization is influenced by wall teichoic acid (WTA).</td>
+<td>WTA mediates specific septal binding of LytN; WTA loss causes disordered localization in review summaries.</td>
+<td>(wang2022staphylococcusaureuscell pages 10-11, wang2022staphylococcusaureuscell pages 8-10, kent2013cellwallarchitecture pages 162-165)</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>lytN is negatively regulated by multiple envelope/autolysis regulators.</td>
+<td>Repression reported for ArlRS–MgrA cascade, Rot, SpoVG, and Rat.</td>
+<td>(wang2022staphylococcusaureuscell pages 10-11, wang2022staphylococcusaureuscell pages 8-10)</td>
+</tr>
+<tr>
+<td>Growth/division phenotype of loss-of-function</td>
+<td>Loss of LytN impairs proper growth and envelope assembly and causes cell separation/cross-wall defects.</td>
+<td>Mutants show delayed growth, structural damage to the cross-wall, irregular wall layers/cell shapes, and inadequate splitting of septal peptidoglycan.</td>
+<td>(frankel2011lytnamurein pages 1-2, frankel2011lytnamurein pages 12-13, becker2014releaseofprotein pages 3-4)</td>
+</tr>
+<tr>
+<td>Overexpression phenotype</td>
+<td>Too much LytN is harmful, indicating tight dosage control is important.</td>
+<td>Overexpression causes cross-wall rupture, cell lysis, and cell death.</td>
+<td>(frankel2011lytnamurein pages 11-12, zhydzetski2024agentstargetingthe pages 15-16)</td>
+</tr>
+<tr>
+<td>Surface protein processing relevance</td>
+<td>LytN contributes to remodeling peptidoglycan attached to surface proteins such as protein A (SpA), but is not the sole determinant of final SpA release into medium.</td>
+<td>CHAP amidase/endopeptidase activity shapes anchor structure; released SpA from lytN mutant occurs at near-WT fraction.</td>
+<td>(becker2014releaseofprotein pages 3-4, becker2014releaseofprotein pages 1-2, frankel2011lytnamurein pages 11-12)</td>
+</tr>
+<tr>
+<td>Representative mass spectrometry evidence</td>
+<td>Specific muropeptide products support dual bond cleavage assignments.</td>
+<td>Reported ions/products include m/z 724.68, 796.69, 1204.48, 1205.08, 1276.07, 2367.12, 2440.69; CsCl exchange produced +110 m/z shift in sodiated-ion confirmation.</td>
+<td>(frankel2011lytnamurein pages 8-11, frankel2011lytnamurein pages 11-12)</td>
+</tr>
+<tr>
+<td>Representative Edman degradation evidence</td>
+<td>Sequencing of released peptide fragments confirmed liberated Ala/Gly patterns consistent with D-Ala–Gly and MurNAc–L-Ala cleavage products.</td>
+<td>Example values reported: cycle-1 Ala 7.87 pmol and Gly 6.85 pmol for one fragment; larger fragment yielded five Gly cycles without Ala.</td>
+<td>(frankel2011lytnamurein pages 8-11)</td>
+</tr>
+<tr>
+<td>Quantitative SpA release data</td>
+<td>Deleting lytN does not markedly change total fraction of protein A released to medium, despite altered local cross-wall processing.</td>
+<td>WT 15.10% ± 1.28 vs ΔlytN 16.69% ± 1.44 protein A released.</td>
+<td>(becker2014releaseofprotein pages 3-4)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the main functional annotation points for </em>S. aureus<em> USA300 LytN, including domain architecture, enzymatic activities, localization, regulation, phenotypes, and quantitative evidence. It is useful as a citation-linked reference for assessing evidence strength and mechanistic interpretation.</em></p>
+<h3 id="references-urls-and-publication-dates">References (URLs and publication dates)</h3>
+<ul>
+<li>Frankel MB et al. <strong>2011-09</strong>. “LytN, a murein hydrolase in the cross-wall compartment of <em>Staphylococcus aureus</em>, is involved in proper bacterial growth and envelope assembly.” <em>J Biol Chem</em>. https://doi.org/10.1074/jbc.M111.258863 (frankel2011lytnamurein pages 8-11, frankel2011lytnamurein pages 11-12)</li>
+<li>Becker S et al. <strong>2014-01</strong>. “Release of protein A from the cell wall of <em>Staphylococcus aureus</em>.” <em>PNAS</em>. https://doi.org/10.1073/pnas.1317181111 (becker2014releaseofprotein pages 3-4, becker2014releaseofprotein media 5e522988)</li>
+<li>Wang M et al. <strong>2022-06</strong>. “<em>Staphylococcus aureus</em> cell wall maintenance – the multifaceted roles of peptidoglycan hydrolases in bacterial growth, fitness, and virulence.” <em>FEMS Microbiology Reviews</em>. https://doi.org/10.1093/femsre/fuac025 (wang2022staphylococcusaureuscell pages 10-11, wang2022staphylococcusaureuscell pages 8-10)</li>
+<li>Antenucci L et al. <strong>2024-08</strong>. “Reassessing the substrate specificities of the major <em>Staphylococcus aureus</em> peptidoglycan hydrolases lysostaphin and LytM.” <em>eLife</em>. https://doi.org/10.1101/2023.10.13.562287 (antenucci2024reassessingthesubstrate pages 15-18)</li>
+<li>Zhydzetski A et al. <strong>2024-08</strong>. “Agents Targeting the Bacterial Cell Wall as Tools to Combat Gram-Positive Pathogens.” <em>Molecules</em>. https://doi.org/10.3390/molecules29174065 (zhydzetski2024agentstargetingthe pages 15-16)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(frankel2011lytnamurein pages 1-2): Matthew B. Frankel, Antoni P.A. Hendrickx, Dominique M. Missiakas, and Olaf Schneewind. Lytn, a murein hydrolase in the cross-wall compartment of staphylococcus aureus, is involved in proper bacterial growth and envelope assembly. Journal of Biological Chemistry, 286:32593-32605, Sep 2011. URL: https://doi.org/10.1074/jbc.m111.258863, doi:10.1074/jbc.m111.258863. This article has 100 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frankel2011lytnamurein pages 11-12): Matthew B. Frankel, Antoni P.A. Hendrickx, Dominique M. Missiakas, and Olaf Schneewind. Lytn, a murein hydrolase in the cross-wall compartment of staphylococcus aureus, is involved in proper bacterial growth and envelope assembly. Journal of Biological Chemistry, 286:32593-32605, Sep 2011. URL: https://doi.org/10.1074/jbc.m111.258863, doi:10.1074/jbc.m111.258863. This article has 100 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2022staphylococcusaureuscell pages 10-11): Min Wang, Girbe Buist, and Jan Maarten van Dijl. Staphylococcus aureus cell wall maintenance – the multifaceted roles of peptidoglycan hydrolases in bacterial growth, fitness, and virulence. FEMS Microbiology Reviews, Jun 2022. URL: https://doi.org/10.1093/femsre/fuac025, doi:10.1093/femsre/fuac025. This article has 148 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frankel2011lytnamurein pages 12-13): Matthew B. Frankel, Antoni P.A. Hendrickx, Dominique M. Missiakas, and Olaf Schneewind. Lytn, a murein hydrolase in the cross-wall compartment of staphylococcus aureus, is involved in proper bacterial growth and envelope assembly. Journal of Biological Chemistry, 286:32593-32605, Sep 2011. URL: https://doi.org/10.1074/jbc.m111.258863, doi:10.1074/jbc.m111.258863. This article has 100 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2022staphylococcusaureuscell pages 5-6): Min Wang, Girbe Buist, and Jan Maarten van Dijl. Staphylococcus aureus cell wall maintenance – the multifaceted roles of peptidoglycan hydrolases in bacterial growth, fitness, and virulence. FEMS Microbiology Reviews, Jun 2022. URL: https://doi.org/10.1093/femsre/fuac025, doi:10.1093/femsre/fuac025. This article has 148 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frankel2011lytnamurein pages 8-11): Matthew B. Frankel, Antoni P.A. Hendrickx, Dominique M. Missiakas, and Olaf Schneewind. Lytn, a murein hydrolase in the cross-wall compartment of staphylococcus aureus, is involved in proper bacterial growth and envelope assembly. Journal of Biological Chemistry, 286:32593-32605, Sep 2011. URL: https://doi.org/10.1074/jbc.m111.258863, doi:10.1074/jbc.m111.258863. This article has 100 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(becker2014releaseofprotein pages 3-4): Samuel Becker, Matthew B. Frankel, Olaf Schneewind, and Dominique Missiakas. Release of protein a from the cell wall of staphylococcus aureus. Proceedings of the National Academy of Sciences, 111:1574-1579, Jan 2014. URL: https://doi.org/10.1073/pnas.1317181111, doi:10.1073/pnas.1317181111. This article has 219 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2022staphylococcusaureuscell pages 8-10): Min Wang, Girbe Buist, and Jan Maarten van Dijl. Staphylococcus aureus cell wall maintenance – the multifaceted roles of peptidoglycan hydrolases in bacterial growth, fitness, and virulence. FEMS Microbiology Reviews, Jun 2022. URL: https://doi.org/10.1093/femsre/fuac025, doi:10.1093/femsre/fuac025. This article has 148 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(becker2014releaseofprotein media 5e522988): Samuel Becker, Matthew B. Frankel, Olaf Schneewind, and Dominique Missiakas. Release of protein a from the cell wall of staphylococcus aureus. Proceedings of the National Academy of Sciences, 111:1574-1579, Jan 2014. URL: https://doi.org/10.1073/pnas.1317181111, doi:10.1073/pnas.1317181111. This article has 219 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(antenucci2024reassessingthesubstrate pages 15-18): Lina Antenucci, Salla Virtanen, Chandan Thapa, Minne Jartti, Ilona Pitkänen, Helena Tossavainen, and Perttu Permi. Reassessing the substrate specificities of the major staphylococcus aureus peptidoglycan hydrolases lysostaphin and lytm. eLife, Aug 2024. URL: https://doi.org/10.1101/2023.10.13.562287, doi:10.1101/2023.10.13.562287. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhydzetski2024agentstargetingthe pages 15-16): Aliaksandr Zhydzetski, Zuzanna Głowacka-Grzyb, Michal Bukowski, Tomasz Żądło, Emilia Bonar, and Benedykt Władyka. Agents targeting the bacterial cell wall as tools to combat gram-positive pathogens. Molecules, 29:4065, Aug 2024. URL: https://doi.org/10.3390/molecules29174065, doi:10.3390/molecules29174065. This article has 72 citations.</p>
+</li>
+<li>
+<p>(zhydzetski2024agentstargetingthe pages 14-15): Aliaksandr Zhydzetski, Zuzanna Głowacka-Grzyb, Michal Bukowski, Tomasz Żądło, Emilia Bonar, and Benedykt Władyka. Agents targeting the bacterial cell wall as tools to combat gram-positive pathogens. Molecules, 29:4065, Aug 2024. URL: https://doi.org/10.3390/molecules29174065, doi:10.3390/molecules29174065. This article has 72 citations.</p>
+</li>
+<li>
+<p>(zhydzetski2024agentstargetingthe pages 26-28): Aliaksandr Zhydzetski, Zuzanna Głowacka-Grzyb, Michal Bukowski, Tomasz Żądło, Emilia Bonar, and Benedykt Władyka. Agents targeting the bacterial cell wall as tools to combat gram-positive pathogens. Molecules, 29:4065, Aug 2024. URL: https://doi.org/10.3390/molecules29174065, doi:10.3390/molecules29174065. This article has 72 citations.</p>
+</li>
+<li>
+<p>(zhydzetski2024agentstargetingthe pages 21-22): Aliaksandr Zhydzetski, Zuzanna Głowacka-Grzyb, Michal Bukowski, Tomasz Żądło, Emilia Bonar, and Benedykt Władyka. Agents targeting the bacterial cell wall as tools to combat gram-positive pathogens. Molecules, 29:4065, Aug 2024. URL: https://doi.org/10.3390/molecules29174065, doi:10.3390/molecules29174065. This article has 72 citations.</p>
+</li>
+<li>
+<p>(kent2013cellwallarchitecture pages 162-165): V Kent. Cell wall architecture and the role of wall teichoic acid in staphylococcus aureus. Unknown journal, 2013.</p>
+</li>
+<li>
+<p>(becker2014releaseofprotein pages 1-2): Samuel Becker, Matthew B. Frankel, Olaf Schneewind, and Dominique Missiakas. Release of protein a from the cell wall of staphylococcus aureus. Proceedings of the National Academy of Sciences, 111:1574-1579, Jan 2014. URL: https://doi.org/10.1073/pnas.1317181111, doi:10.1073/pnas.1317181111. This article has 219 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="lytN-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000031 Figure 5, specifically panel B, reports the percentage of protein A (SpA) released into the culture medium for various strains. The" src="lytN-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>frankel2011lytnamurein pages 1-2</li>
+<li>frankel2011lytnamurein pages 11-12</li>
+<li>becker2014releaseofprotein pages 3-4</li>
+<li>antenucci2024reassessingthesubstrate pages 15-18</li>
+<li>zhydzetski2024agentstargetingthe pages 15-16</li>
+<li>frankel2011lytnamurein pages 8-11</li>
+<li>wang2022staphylococcusaureuscell pages 10-11</li>
+<li>frankel2011lytnamurein pages 12-13</li>
+<li>wang2022staphylococcusaureuscell pages 5-6</li>
+<li>wang2022staphylococcusaureuscell pages 8-10</li>
+<li>zhydzetski2024agentstargetingthe pages 14-15</li>
+<li>zhydzetski2024agentstargetingthe pages 26-28</li>
+<li>zhydzetski2024agentstargetingthe pages 21-22</li>
+<li>kent2013cellwallarchitecture pages 162-165</li>
+<li>becker2014releaseofprotein pages 1-2</li>
+<li>https://doi.org/10.1074/jbc.M111.258863</li>
+<li>https://doi.org/10.1093/femsre/fuac025</li>
+<li>https://doi.org/10.1073/pnas.1317181111</li>
+<li>https://doi.org/10.1101/2023.10.13.562287</li>
+<li>https://doi.org/10.3390/molecules29174065</li>
+<li>https://doi.org/10.1074/jbc.m111.258863,</li>
+<li>https://doi.org/10.1093/femsre/fuac025,</li>
+<li>https://doi.org/10.1073/pnas.1317181111,</li>
+<li>https://doi.org/10.1101/2023.10.13.562287,</li>
+<li>https://doi.org/10.3390/molecules29174065,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A0H2XJK7
+gene_symbol: lytN
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:1280
+  label: Staphylococcus aureus
+description: &gt;-
+  LytN is a secreted peptidoglycan (murein) hydrolase of Staphylococcus aureus
+  that acts in the cross-wall (septal) compartment during cell division and
+  envelope assembly. Its precursor carries a YSIRK-G/S signal peptide that
+  directs secretion to the mid-cell cross-wall; it also has a LysM
+  peptidoglycan-binding module and a catalytic CHAP (cysteine, histidine-dependent
+  amidohydrolase/peptidase) domain. The CHAP domain is bifunctional, acting as
+  both an N-acetylmuramoyl-L-alanine amidase (cleaving the MurNAc-L-Ala amide bond
+  linking the glycan strand to the stem peptide) and a D-alanyl-glycine
+  endopeptidase (cleaving the D-Ala-Gly peptide bond); catalysis depends on the
+  conserved CHAP residues Cys266 and His329. By hydrolyzing septal peptidoglycan,
+  LytN promotes cross-wall splitting and the completion of daughter-cell
+  separation. Its activity is spatially controlled (wall teichoic acid mediates
+  its septal localization) and dosage-controlled: loss of LytN damages the
+  cross-wall and impairs growth, while overexpression triggers cross-wall rupture
+  and lysis. LytN also contributes to remodeling the peptidoglycan anchor of
+  surface proteins such as protein A, removing amino sugars from the attached
+  peptidoglycan, although it is not the determinant of overall protein A release.
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: PMID:21784864
+  title: LytN, a murein hydrolase in the cross-wall compartment of Staphylococcus
+    aureus, is involved in proper bacterial growth and envelope assembly.
+  findings:
+  - statement: &gt;-
+      LytN is a YSIRK-G/S-signal-peptide protein delivered to the cross-wall
+      (septal) compartment, and its CHAP domain functions as both an
+      N-acetylmuramoyl-L-alanine amidase and a D-alanyl-glycine endopeptidase;
+      catalysis depends on Cys266 and His329.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      lytN mutations cause structural damage to the cross-wall and impair
+      staphylococcal growth, while overexpression triggers cross-wall rupture; the
+      phenotype is reversed by controlled lytN expression but not by externally
+      added purified LytN, indicating that correct cross-wall targeting is required.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary characterization (Frankel et al. 2011, J Biol Chem).
+      Cache is abstract-only (full_text_available false), but the abstract directly
+      establishes the dual amidase/endopeptidase CHAP activity, cross-wall
+      localization, and division phenotypes.
+- id: PMID:24434550
+  title: Release of protein A from the cell wall of Staphylococcus aureus.
+  findings:
+  - statement: &gt;-
+      LytN, a cross-wall murein hydrolase, contributes to the release of protein A
+      by removing amino sugars (MurNAc-GlcNAc) from attached peptidoglycan;
+      however, mutants lacking cross-wall hydrolases (Atl, Sle1, or LytN) released
+      protein A with altered peptidoglycan structures without affecting the overall
+      release of protein A.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Becker et al. 2014, PNAS); full text available in cache.
+      Supports cross-wall murein hydrolase role and peptidoglycan-anchor remodeling
+      of protein A, but shows LytN is not the determinant of overall SpA release.
+- id: PMID:35675307
+  title: Staphylococcus aureus cell wall maintenance - the multifaceted roles of
+    peptidoglycan hydrolases in bacterial growth, fitness, and virulence.
+  findings:
+  - statement: &gt;-
+      LytN is classed among the S. aureus peptidoglycan hydrolases with both
+      amidase and endopeptidase activities, and wall teichoic acid together with the
+      YSIRK/GS signal peptide mediates its localization to the cross-wall of the
+      septum.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Authoritative review of S. aureus peptidoglycan hydrolases (Wang et al. 2022,
+      FEMS Microbiol Rev); full text in cache. Corroborates dual amidase/endopeptidase
+      activities, WTA- and YSIRK/GS-dependent cross-wall localization.
+- id: PMID:39495121
+  title: Reassessing the substrate specificities of the major Staphylococcus aureus
+    peptidoglycan hydrolases lysostaphin and LytM.
+  findings:
+  - statement: &gt;-
+      LytN is cited as the only other recognised S. aureus D-Ala-Gly hydrolase; its
+      CHAP domain cleaves both D-Ala-Gly and MurNAc-L-Ala bonds, i.e. it is a
+      D-alanyl-glycine endopeptidase as well as an N-acetylmuramoyl-L-alanine
+      amidase.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Antenucci et al. 2024 (eLife); full text in cache. Primarily about
+      lysostaphin/LytM but reiterates LytN&#39;s dual CHAP amidase/endopeptidase
+      chemistry; corroborating rather than primary for LytN.
+- id: PMID:39274911
+  title: Agents Targeting the Bacterial Cell Wall as Tools to Combat Gram-Positive
+    Pathogens.
+  findings:
+  - statement: &gt;-
+      Review noting CHAP as a frequent catalytic motif and LysM as a common
+      cell-wall-binding motif in cell-wall-active enzymes; disruption of LytN causes
+      growth and morphology defects while overexpression causes lysis and death.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Zhydzetski et al. 2024 (Molecules). Background/contextual review of
+      cell-wall-targeting agents; mentions LytN domain motifs and dosage phenotypes
+      but is not a primary source for its function.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      LytN is a secreted protein (UniProt SubCell &#34;Secreted&#34;), so the broad
+      extracellular-region term is not incorrect. However, LytN does not act freely
+      in the extracellular space; it is delivered via a YSIRK-G/S signal peptide to
+      the cross-wall (division septum) where it carries out septal peptidoglycan
+      hydrolysis, and its function depends on this localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The SubCell-derived &#34;extracellular region&#34; is technically defensible but
+      uninformative and partly misleading for a cross-wall enzyme. Frankel et al.
+      showed externally added purified LytN does not complement a lytN mutant,
+      whereas bacterially produced precursor does, demonstrating that physiological
+      function requires cross-wall targeting rather than bulk extracellular activity
+      (PMID:21784864). A cell septum / cell wall cellular-component term is more
+      accurate (see NEW annotations); retaining this term as non-core/over-annotated
+      is acceptable since the protein is genuinely secreted.
+    supported_by:
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        Secreted polypeptides endowed with a YSIRK-G/S signal peptide are directly
+        delivered to the cross-wall compartment. One such YSIRK-containing protein
+        is the murein hydrolase LytN.
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        The lytN phenotype can be reversed by the controlled expression of lytN but
+        not by adding purified LytN to staphylococcal cultures.
+- term:
+    id: GO:0008932
+    label: lytic endotransglycosylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This TreeGrafter/PANTHER annotation (from subfamily PTHR33734:SF22,
+      &#34;membrane-bound lytic murein transglycosylase D&#34;) is mechanistically incorrect
+      for LytN. Lytic transglycosylases cleave the glycosidic MurNAc-GlcNAc bond
+      non-hydrolytically, forming a 1,6-anhydro-MurNAc product (GO:0008932
+      definition). LytN has no transglycosylase domain; its catalytic module is a
+      CHAP domain that HYDROLYZES amide and peptide bonds, acting as an
+      N-acetylmuramoyl-L-alanine amidase and a D-alanyl-glycine endopeptidase.
+    action: REMOVE
+    reason: &gt;-
+      The annotation arises from an over-propagated subfamily misassignment. PANTHER
+      places LytN in PTHR33734:SF22 (a lytic transglycosylase subfamily), but LytN&#39;s
+      experimentally characterized activities are hydrolytic amide/peptide cleavages,
+      not the 1,6-anhydro-forming glycosidic cleavage that defines lytic
+      endotransglycosylase activity (GO:0008932, verified via QuickGO). LytN&#39;s domain
+      architecture (CHAP + LysM, no transglycosylase fold) and the direct product
+      evidence (MurNAc-L-Ala and D-Ala-Gly bond cleavage, abolished by Cys266/His329
+      mutation) contradict transglycosylase activity (PMID:21784864). This electronic
+      inference should be removed and replaced by the verified amidase and
+      endopeptidase MF terms (see NEW annotations).
+    supported_by:
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        LytN harbors LysM and CHAP domains, the latter of which functions as both an
+        N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      LytN is indeed a hydrolase (a peptidoglycan hydrolase / murein hydrolase), so
+      this term is correct but uninformatively general. The specific activities are
+      an N-acetylmuramoyl-L-alanine amidase and a peptidoglycan (D-alanyl-glycine)
+      endopeptidase, both well supported experimentally.
+    action: MODIFY
+    reason: &gt;-
+      GO:0016787 is a root-level hydrolase term that conveys little about LytN&#39;s
+      function. It should be replaced by the specific catalytic activities
+      demonstrated by Frankel et al. (PMID:21784864), namely
+      N-acetylmuramoyl-L-alanine amidase activity (GO:0008745) and peptidoglycan
+      endopeptidase activity (GO:0061785). Both replacement terms were verified via
+      QuickGO.
+    proposed_replacement_terms:
+    - id: GO:0008745
+      label: N-acetylmuramoyl-L-alanine amidase activity
+    - id: GO:0061785
+      label: peptidoglycan endopeptidase activity
+    supported_by:
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        LytN harbors LysM and CHAP domains, the latter of which functions as both an
+        N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.
+- term:
+    id: GO:0008745
+    label: N-acetylmuramoyl-L-alanine amidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:21784864
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The CHAP domain of LytN cleaves the MurNAc-L-Ala amide bond, an
+      N-acetylmuramoyl-L-alanine amidase activity demonstrated biochemically by
+      muropeptide product analysis (MS) and Edman degradation, and abolished by the
+      CHAP active-site mutations C266A and H329A.
+    action: NEW
+    reason: &gt;-
+      Direct experimental evidence supports this specific molecular function
+      (PMID:21784864), the verified, informative replacement for the generic
+      hydrolase term. GO:0008745 verified via QuickGO (&#34;hydrolysis of the link
+      between N-acetylmuramoyl residues and L-amino acid residues in bacterial
+      cell-wall glycopeptides&#34;).
+    supported_by:
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        LytN harbors LysM and CHAP domains, the latter of which functions as both an
+        N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.
+- term:
+    id: GO:0061785
+    label: peptidoglycan endopeptidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:21784864
+  qualifier: enables
+  review:
+    summary: &gt;-
+      LytN&#39;s CHAP domain also acts as a D-alanyl-glycine endopeptidase, cleaving the
+      D-Ala-Gly peptide bond within the staphylococcal peptidoglycan
+      stem/cross-bridge; this is a peptidoglycan endopeptidase activity.
+    action: NEW
+    reason: &gt;-
+      Direct biochemical evidence (product analysis and active-site mutagenesis)
+      supports a peptidoglycan endopeptidase activity (D-Ala-Gly cleavage) for LytN
+      (PMID:21784864), corroborated as a recognized D-Ala-Gly hydrolase
+      (PMID:39495121). GO:0061785 verified via QuickGO (&#34;an endopeptidase activity
+      that uses peptidoglycan as a substrate&#34;).
+    supported_by:
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        LytN harbors LysM and CHAP domains, the latter of which functions as both an
+        N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.
+    - reference_id: PMID:39495121
+      supporting_text: &gt;-
+        The only other recognised D-Ala-Gly hydrolase in S. aureus is LytN.
+- term:
+    id: GO:0009253
+    label: peptidoglycan catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:21784864
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      By hydrolyzing amide and peptide bonds in mature peptidoglycan, LytN
+      participates in the breakdown/remodeling of the murein sacculus.
+    action: NEW
+    reason: &gt;-
+      LytN is a murein hydrolase that cleaves bonds in mature peptidoglycan
+      (PMID:21784864); peptidoglycan catabolic process (GO:0009253, verified via
+      QuickGO) captures this biological process. This is the BP counterpart of the
+      hydrolytic MF terms.
+    supported_by:
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        One such YSIRK-containing protein is the murein hydrolase LytN.
+- term:
+    id: GO:0000920
+    label: septum digestion after cytokinesis
+  evidence_type: IMP
+  original_reference_id: PMID:21784864
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      LytN promotes cross-wall (septal peptidoglycan) splitting and the completion
+      of daughter-cell separation; lytN mutants show structural damage to the
+      cross-wall and impaired growth, consistent with a role in septal cell wall
+      digestion that enables daughter-cell separation.
+    action: NEW
+    reason: &gt;-
+      Frankel et al. demonstrate that LytN secretion into the cross-wall promotes
+      peptidoglycan separation and completion of the cell cycle, and that its loss
+      damages the cross-wall (PMID:21784864). GO:0000920 &#34;septum digestion after
+      cytokinesis&#34; (verified via QuickGO) captures the enzymatic breakdown of septal
+      cell wall enabling daughter-cell separation.
+    supported_by:
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        LytN secretion into the cross-wall promotes peptidoglycan separation and
+        completion of the staphylococcal cell cycle.
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        lytN mutations precipitate structural damage to the cross-wall and interfere
+        with staphylococcal growth.
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IMP
+  original_reference_id: PMID:21784864
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      LytN contributes to staphylococcal envelope assembly and cross-wall
+      remodeling; its loss impairs proper growth and envelope assembly. This term is
+      also asserted as a UniProt keyword-derived annotation in the UniProt entry.
+    action: NEW
+    reason: &gt;-
+      LytN remodels cell-wall peptidoglycan during division and envelope assembly
+      (PMID:21784864); cell wall organization (GO:0071555, verified via QuickGO;
+      also present as IEA UniProtKB-KW in the UniProt record) is an appropriate,
+      well-supported biological process term.
+    supported_by:
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        is involved in proper bacterial growth and envelope assembly
+- term:
+    id: GO:0030428
+    label: cell septum
+  evidence_type: IDA
+  original_reference_id: PMID:21784864
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      LytN is delivered to and acts in the cross-wall / division septum compartment
+      at mid-cell, the location where septal peptidoglycan remodeling occurs.
+    action: NEW
+    reason: &gt;-
+      The YSIRK-G/S signal peptide targets LytN to the cross-wall (septal)
+      compartment, where it functions; this is a more accurate cellular-component
+      term than the broad extracellular region (PMID:21784864; WTA-mediated septal
+      localization in PMID:35675307). GO:0030428 &#34;cell septum&#34; verified via QuickGO.
+    supported_by:
+    - reference_id: PMID:21784864
+      supporting_text: &gt;-
+        Secreted polypeptides endowed with a YSIRK-G/S signal peptide are directly
+        delivered to the cross-wall compartment.
+    - reference_id: PMID:35675307
+      supporting_text: &gt;-
+        WTA also mediates the specific binding of Sle1 and LytN to the cross-wall of
+        the septum
+core_functions:
+- description: &gt;-
+    N-acetylmuramoyl-L-alanine amidase: the LytN CHAP domain hydrolyzes the
+    MurNAc-L-Ala amide bond of staphylococcal peptidoglycan, acting in
+    peptidoglycan catabolism/remodeling. Catalysis requires the conserved CHAP
+    residues Cys266 and His329.
+  supported_by:
+  - reference_id: PMID:21784864
+    supporting_text: &gt;-
+      LytN harbors LysM and CHAP domains, the latter of which functions as both an
+      N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.
+  molecular_function:
+    id: GO:0008745
+    label: N-acetylmuramoyl-L-alanine amidase activity
+  directly_involved_in:
+  - id: GO:0009253
+    label: peptidoglycan catabolic process
+  locations:
+  - id: GO:0030428
+    label: cell septum
+- description: &gt;-
+    Peptidoglycan (D-alanyl-glycine) endopeptidase: the same LytN CHAP domain also
+    cleaves the D-Ala-Gly peptide bond of staphylococcal peptidoglycan, the second
+    of its two bifunctional hydrolytic activities.
+  supported_by:
+  - reference_id: PMID:21784864
+    supporting_text: &gt;-
+      LytN harbors LysM and CHAP domains, the latter of which functions as both an
+      N-acetylmuramoyl-L-alanine amidase and D-alanyl-glycine endopeptidase.
+  - reference_id: PMID:39495121
+    supporting_text: &gt;-
+      The only other recognised D-Ala-Gly hydrolase in S. aureus is LytN.
+  molecular_function:
+    id: GO:0061785
+    label: peptidoglycan endopeptidase activity
+  directly_involved_in:
+  - id: GO:0009253
+    label: peptidoglycan catabolic process
+  locations:
+  - id: GO:0030428
+    label: cell septum
+- description: &gt;-
+    Septal cross-wall remodeling for daughter-cell separation: delivered to the
+    mid-cell cross-wall via its YSIRK-G/S signal peptide, LytN digests septal
+    peptidoglycan to promote cross-wall splitting and completion of cell division;
+    its activity is dosage-controlled (loss damages the cross-wall; overexpression
+    causes rupture and lysis).
+  supported_by:
+  - reference_id: PMID:21784864
+    supporting_text: &gt;-
+      LytN secretion into the cross-wall promotes peptidoglycan separation and
+      completion of the staphylococcal cell cycle.
+  directly_involved_in:
+  - id: GO:0000920
+    label: septum digestion after cytokinesis
+  - id: GO:0071555
+    label: cell wall organization
+  locations:
+  - id: GO:0030428
+    label: cell septum
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Are the amidase (MurNAc-L-Ala) and endopeptidase (D-Ala-Gly) activities of LytN
+    both required in vivo for cross-wall splitting, or does one dominate the
+    physiological function?
+- question: &gt;-
+    How is LytN activity restricted to the cross-wall and prevented from digesting
+    peripheral wall, given that overexpression causes lethal lysis? What are the
+    relative contributions of the YSIRK-G/S signal peptide, the LysM domain, and
+    wall teichoic acid to this spatial control?
+- question: &gt;-
+    How does LytN functionally overlap or coordinate with the other S. aureus
+    cross-wall hydrolases (Atl, Sle1, LytM) during daughter-cell separation and
+    surface-protein anchor remodeling?
+suggested_experiments:
+- description: &gt;-
+    Separation-of-function mutagenesis of the CHAP domain to uncouple the amidase
+    and endopeptidase activities, followed by complementation of a lytN mutant, to
+    determine which activity drives cross-wall splitting in vivo.
+- description: &gt;-
+    Quantitative super-resolution or fluorescence imaging of tagged LytN in
+    wild-type versus WTA-deficient (e.g. tarO) backgrounds to test the requirement
+    of wall teichoic acid for septal localization and to time LytN recruitment
+    relative to division.
+- description: &gt;-
+    Defined in vitro digestion of purified staphylococcal peptidoglycan (and
+    isolated muropeptides) with recombinant LytN and Cys266/His329 variants, with
+    LC-MS muropeptide profiling, to map bond preferences and the dependence of
+    amidase activity on glycan context.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

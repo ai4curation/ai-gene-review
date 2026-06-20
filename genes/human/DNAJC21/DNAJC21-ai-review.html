@@ -1,0 +1,3036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNAJC21 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DNAJC21</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q5F1R6" target="_blank" class="term-link">
+                        Q5F1R6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DNAJC21";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q5F1R6" data-a="DESCRIPTION: DNAJC21 (DnaJ homolog subfamily C member 21; also ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DNAJC21 (DnaJ homolog subfamily C member 21; also DNAJA5) is a J-domain co-chaperone of the HSP70 system that functions in ribosome biogenesis, specifically in the maturation of the large (60S) ribosomal subunit. It contains an N-terminal J-domain and two C2H2 zinc fingers within an otherwise disordered C-terminal region. DNAJC21 localizes to the cytoplasm, the nucleus and especially the nucleolus, associates with precursor 45S rRNA, and works with the HSP70 chaperone HSPA8 and the cofactors PA2G4 (a 60S nuclear-export factor) and ZNF622 to drive late nucleolar rRNA biogenesis and cytoplasmic maturation/recycling of the 60S subunit. It is the human counterpart of the yeast 60S-maturation factor Jjj1/Zuo1-like J-protein. Biallelic loss-of-function variants cause a cancer-prone bone marrow failure syndrome (BMFS3, Shwachman-Diamond-like), establishing DNAJC21 as a ribosomopathy gene.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNAJC21 acts in the cytoplasm (as well as nucleus/nucleolus). Cytoplasmic localization is experimentally confirmed and consistent with its role in late cytoplasmic 60S maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence (PMID:27346687) places DNAJC21 in the cytoplasm, corroborating this phylogenetic inference; it acts there in cytoplasmic 60S subunit maturation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic nucleic-acid binding inferred from the C2H2 zinc-finger/Matrin-type domain. DNAJC21 does bind RNA (precursor 45S rRNA), so the specific RNA-binding term is more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare &#39;nucleic acid binding&#39; is uninformative and inferred only from domain architecture; the experimentally supported RNA binding (GO:0003723) captures the real activity more precisely.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27346687" target="_blank" class="term-link">
+                                        PMID:27346687
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We have shown that DNAJC21 associates with precursor 45S rRNA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization, supported experimentally. Consistent with DNAJC21&#39;s nucleolar role in rRNA biogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is directly demonstrated (PMID:27346687); the IEA from UniProt subcellular location agrees with stronger experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:27346687}. Nucleus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005730" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nucleolar localization, the primary nuclear site of DNAJC21. This is its key compartment for rRNA biogenesis and 60S maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNAJC21 localizes primarily to the nucleolus (experimentally supported), the site of late nucleolar rRNA biogenesis it participates in.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Within the nucleus, localizes primarily to the nucleolus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization (UniProt subcellular location IEA), redundant with the IBA and EXP cytoplasm annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct localization; agrees with the experimentally supported cytoplasm annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNAJC21 contains two C2H2-type zinc fingers, so zinc-ion binding is a reasonable structural molecular function inferred from sequence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The C2H2 zinc fingers support zinc-ion binding; this is a structural feature rather than the gene&#39;s core co-chaperone/ribosome-biogenesis function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">ZN_FING         314..338</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17500595" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17500595
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Huntingtin interacting proteins are genetic modifiers of neu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005515" data-r="PMID:17500595" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI interaction with huntingtin (HTT, P42858) from an interactome screen. The bare &#39;protein binding&#39; term is uninformative; HTT is not part of DNAJC21&#39;s ribosome-biogenesis function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding from a high-throughput interactome with a partner (HTT) unrelated to DNAJC21&#39;s co-chaperone/60S-maturation function; uninformative and not core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q5F1R6; P42858: HTT</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20195357" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20195357
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A comprehensive resource of interacting protein regions for ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005515" data-r="PMID:20195357" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI interaction with MTERF1 (Q99551) from an interactome screen. The bare &#39;protein binding&#39; term is uninformative and the partner is unrelated to ribosome biogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding from a high-throughput interactome with a partner (MTERF1) unrelated to DNAJC21&#39;s known function; uninformative and not core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q5F1R6; Q99551: MTERF1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005730" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence (HPA) evidence for nucleolar localization, the primary nuclear site of DNAJC21 and consistent with its rRNA-biogenesis role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IDA-supported nucleolar localization, the key compartment for DNAJC21&#39;s 60S-maturation function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Within the nucleus, localizes primarily to the nucleolus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence (HPA) evidence for cytosolic localization, consistent with the cytoplasmic pool that acts in late 60S maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IDA-supported cytosolic localization agrees with the documented cytoplasmic site of action.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27346687" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27346687
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DNAJC21 Mutations Link a Cancer-Prone Bone Marrow Failure Sy...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005634" data-r="PMID:27346687" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental evidence (Tummala et al.) for nuclear localization of DNAJC21, where it acts in nucleolar rRNA biogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental nuclear localization from the defining functional study; consistent with its nucleolar rRNA-biogenesis role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:27346687}. Nucleus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27346687" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27346687
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DNAJC21 Mutations Link a Cancer-Prone Bone Marrow Failure Sy...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005737" data-r="PMID:27346687" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental evidence (Tummala et al.) for cytoplasmic localization of DNAJC21, where it participates in late cytoplasmic 60S maturation/recycling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental cytoplasmic localization from the defining functional study; consistent with its role in cytoplasmic maturation of the 60S subunit.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22658674" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22658674
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Insights into RNA biology from an atlas of mammalian mRNA-bi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0003723" data-r="PMID:22658674" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput RNA-interactome capture identified DNAJC21 as an RNA-binding protein. This is corroborated by the demonstrated association with precursor 45S rRNA, a core part of its ribosome-biogenesis function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RNA binding is experimentally supported both by HDA RNA-interactome capture and by the targeted demonstration that DNAJC21 binds precursor 45S rRNA; it is a genuine molecular function central to its role in 60S maturation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27346687" target="_blank" class="term-link">
+                                        PMID:27346687
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We have shown that DNAJC21 associates with precursor 45S rRNA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005840" target="_blank" class="term-link">
+                                    GO:0005840
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16952052" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16952052
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pre-ribosomal-associated and ribosome-biogenesis factor stud...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0005840" data-r="PMID:16952052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNAJC21 associates with the ribosome / nascent ribosomal subunits during biogenesis. Plausible given its 60S-maturation role, though &#39;ribosome&#39; as a static location is less precise than its rRNA/60S-maturation activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Association with the ribosome is consistent with the 60S-maturation role, but the static cellular-component term is non-core relative to the rRNA-binding and biogenesis functions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27346687" target="_blank" class="term-link">
+                                        PMID:27346687
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">plays a highly conserved role in the maturation of the 60S ribosomal subunit</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16952052" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16952052
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pre-ribosomal-associated and ribosome-biogenesis factor stud...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5F1R6" data-a="GO:0006457" data-r="PMID:16952052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As an HSP70 co-chaperone (J-protein), DNAJC21 is annotated to protein folding. Its characterized biological role, however, is in ribosome biogenesis rather than general protein folding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNAJC21 is a J-domain co-chaperone that assists HSP70 rather than autonomously folding clients; protein folding is a downstream/generic process and the specific role is 60S subunit maturation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC21/DNAJC21-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">May act as a co-chaperone for HSP70.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>J-domain co-chaperone of the HSP70 chaperone HSPA8 that, together with the cofactors PA2G4 and ZNF622, drives nucleolar rRNA biogenesis and maturation of the large (60S) ribosomal subunit.</h3>
+                <span class="vote-buttons" data-g="Q5F1R6" data-a="FUNCTION: J-domain co-chaperone of the HSP70 chaperone HSPA8..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                            protein-folding chaperone binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                nucleolus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27346687" target="_blank" class="term-link">
+                                PMID:27346687
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">plays a highly conserved role in the maturation of the 60S ribosomal subunit</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/DNAJC21/DNAJC21-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Interacts with HSPA8, PA2G4 and ZNF622.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RNA-binding activity that engages precursor 45S rRNA during ribosome biogenesis, contributing to processing/maturation of the 60S subunit.</h3>
+                <span class="vote-buttons" data-g="Q5F1R6" data-a="FUNCTION: RNA-binding activity that engages precursor 45S rR..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                            RNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                nucleolus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27346687" target="_blank" class="term-link">
+                                PMID:27346687
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We have shown that DNAJC21 associates with precursor 45S rRNA.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16952052" target="_blank" class="term-link">
+                            PMID:16952052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pre-ribosomal-associated and ribosome-biogenesis factor study referencing DNAJC21.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17500595" target="_blank" class="term-link">
+                            PMID:17500595
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Huntingtin interacting proteins are genetic modifiers of neurodegeneration.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20195357" target="_blank" class="term-link">
+                            PMID:20195357
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A comprehensive resource of interacting protein regions for refining human transcription factor networks.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22658674" target="_blank" class="term-link">
+                            PMID:22658674
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Insights into RNA biology from an atlas of mammalian mRNA-binding proteins.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">mRNA/RNA-interactome capture identified DNAJC21 as an RNA-binding protein.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27346687" target="_blank" class="term-link">
+                            PMID:27346687
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DNAJC21 Mutations Link a Cancer-Prone Bone Marrow Failure Syndrome to Corruption in 60S Ribosome Subunit Maturation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DNAJC21 associates with precursor 45S rRNA and plays a highly conserved role in the maturation of the 60S ribosomal subunit; it acts with HSPA8, PA2G4 and ZNF622, and biallelic mutations cause a cancer-prone bone marrow failure syndrome.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Disease mutations impair DNAJC21 interactions with the cofactors PA2G4, HSPA8 and ZNF622 involved in 60S maturation; DNAJC21 deficiency causes cytoplasmic accumulation of the 60S subunit and aberrant ribosome profiles.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/DNAJC21/DNAJC21-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q5F1R6 (DJC21_HUMAN), DnaJ homolog subfamily C member 21</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">J-domain co-chaperone for HSP70; role in rRNA biogenesis and 60S subunit maturation; binds precursor 45S rRNA; interacts with HSPA8, PA2G4 and ZNF622; cytoplasm/nucleus/nucleolus; cause of bone marrow failure syndrome 3.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DNAJC21 stimulate the ATPase activity of HSPA8 in the context of 60S maturation, and is its J-domain activity required for ribosome biogenesis?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q5F1R6" data-a="Q: Does DNAJC21 stimulate the ATPase activity of HSPA..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise step of 60S maturation (nucleolar processing vs. cytoplasmic recycling of PA2G4) that is most sensitive to DNAJC21 loss in BMFS3 patient cells?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q5F1R6" data-a="Q: What is the precise step of 60S maturation (nucleo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute DNAJC21-HSPA8 J-domain activity in vitro (ATPase stimulation assays) using wild-type and BMFS3 (P32A) variant proteins to test whether co-chaperone activity is required for 60S maturation.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q5F1R6" data-a="EXPERIMENT: Reconstitute DNAJC21-HSPA8 J-domain activity in vi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Polysome/ribosome profiling and pre-rRNA processing analysis (Northern blot of 45S/32S/28S intermediates) in DNAJC21-depleted versus rescued cells to map the maturation step affected.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q5F1R6" data-a="EXPERIMENT: Polysome/ribosome profiling and pre-rRNA processin..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Proximity labeling (BioID/APEX) of DNAJC21 in nucleolus versus cytoplasm to define compartment-specific 60S-maturation interaction partners.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q5F1R6" data-a="EXPERIMENT: Proximity labeling (BioID/APEX) of DNAJC21 in nucl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DNAJC21-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5F1R6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dnajc21-q5f1r6-research-notes">DNAJC21 (Q5F1R6) research notes</h1>
+<p>J-domain (HSP40) co-chaperone of the HSP70 system acting in <strong>ribosome biogenesis</strong>,<br />
+specifically maturation of the large (60S) ribosomal subunit. Also named DNAJA5.</p>
+<h2 id="architecture">Architecture</h2>
+<ul>
+<li>N-terminal J-domain (HPD motif) that recruits/stimulates HSP70 ATPases.</li>
+<li>Two C2H2 zinc fingers within an otherwise disordered C-terminal region.</li>
+<li>Human counterpart of the yeast 60S-maturation J-protein Jjj1.</li>
+</ul>
+<h2 id="function-localization">Function / localization</h2>
+<ul>
+<li>Localizes to cytoplasm, nucleus and especially the <strong>nucleolus</strong>; associates with<br />
+  precursor 45S rRNA. [UniProt Q5F1R6 subcellular location]</li>
+<li>Works with the HSP70 chaperone <strong>HSPA8</strong> and cofactors <strong>PA2G4</strong> (60S nuclear-export<br />
+  factor) and <strong>ZNF622</strong> to drive late nucleolar rRNA processing and cytoplasmic<br />
+  maturation/recycling of the 60S subunit. <a href="https://pubmed.ncbi.nlm.nih.gov/27346687">PMID:27346687</a></li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Biallelic loss-of-function variants cause a cancer-prone <strong>bone marrow failure<br />
+  syndrome (BMFS3)</strong>, Shwachman–Diamond-like — establishing DNAJC21 as a ribosomopathy<br />
+  gene. <a href="https://pubmed.ncbi.nlm.nih.gov/27346687">PMID:27346687</a></li>
+</ul>
+<h2 id="curation-calls">Curation calls</h2>
+<ul>
+<li>Core MFs: HSP70 (HSPA8) co-chaperone binding (GO:0051087) driving 60S maturation;<br />
+  RNA binding (GO:0003723) to precursor rRNA.</li>
+<li>Bare high-throughput <code>protein binding</code> to HTT/MTERF1 and domain-only nucleic-acid<br />
+  binding marked over-annotated; folding terms kept non-core (co-chaperone, not foldase).</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q5F1R6
+gene_symbol: DNAJC21
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: DNAJC21 (DnaJ homolog subfamily C member 21; also DNAJA5) is a J-domain co-chaperone of the HSP70 system that functions in ribosome biogenesis, specifically in the maturation of the large (60S) ribosomal subunit. It contains an N-terminal J-domain and two C2H2 zinc fingers within an otherwise disordered C-terminal region. DNAJC21 localizes to the cytoplasm, the nucleus and especially the nucleolus, associates with precursor 45S rRNA, and works with the HSP70 chaperone HSPA8 and the cofactors PA2G4 (a 60S nuclear-export factor) and ZNF622 to drive late nucleolar rRNA biogenesis and cytoplasmic maturation/recycling of the 60S subunit. It is the human counterpart of the yeast 60S-maturation factor Jjj1/Zuo1-like J-protein. Biallelic loss-of-function variants cause a cancer-prone bone marrow failure syndrome (BMFS3, Shwachman-Diamond-like), establishing DNAJC21 as a ribosomopathy gene.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q5F1R6-1
+- name: &#39;2&#39;
+  id: Q5F1R6-2
+  sequence_note: VSP_024005
+- name: &#39;3&#39;
+  id: Q5F1R6-3
+  sequence_note: VSP_024004
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: DNAJC21 acts in the cytoplasm (as well as nucleus/nucleolus). Cytoplasmic localization is experimentally confirmed and consistent with its role in late cytoplasmic 60S maturation.
+    action: ACCEPT
+    reason: Direct experimental evidence (PMID:27346687) places DNAJC21 in the cytoplasm, corroborating this phylogenetic inference; it acts there in cytoplasmic 60S subunit maturation.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic nucleic-acid binding inferred from the C2H2 zinc-finger/Matrin-type domain. DNAJC21 does bind RNA (precursor 45S rRNA), so the specific RNA-binding term is more informative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare &#39;nucleic acid binding&#39; is uninformative and inferred only from domain architecture; the experimentally supported RNA binding (GO:0003723) captures the real activity more precisely.
+    supported_by:
+    - reference_id: PMID:27346687
+      supporting_text: We have shown that DNAJC21 associates with precursor 45S rRNA.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Nuclear localization, supported experimentally. Consistent with DNAJC21&#39;s nucleolar role in rRNA biogenesis.
+    action: ACCEPT
+    reason: Nuclear localization is directly demonstrated (PMID:27346687); the IEA from UniProt subcellular location agrees with stronger experimental evidence.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:27346687}. Nucleus&#39;
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Nucleolar localization, the primary nuclear site of DNAJC21. This is its key compartment for rRNA biogenesis and 60S maturation.
+    action: ACCEPT
+    reason: DNAJC21 localizes primarily to the nucleolus (experimentally supported), the site of late nucleolar rRNA biogenesis it participates in.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: &#39;Within the nucleus, localizes primarily to the nucleolus&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization (UniProt subcellular location IEA), redundant with the IBA and EXP cytoplasm annotations.
+    action: ACCEPT
+    reason: Correct localization; agrees with the experimentally supported cytoplasm annotations.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: DNAJC21 contains two C2H2-type zinc fingers, so zinc-ion binding is a reasonable structural molecular function inferred from sequence.
+    action: KEEP_AS_NON_CORE
+    reason: The C2H2 zinc fingers support zinc-ion binding; this is a structural feature rather than the gene&#39;s core co-chaperone/ribosome-biogenesis function.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: ZN_FING         314..338
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17500595
+  qualifier: enables
+  review:
+    summary: IPI interaction with huntingtin (HTT, P42858) from an interactome screen. The bare &#39;protein binding&#39; term is uninformative; HTT is not part of DNAJC21&#39;s ribosome-biogenesis function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding from a high-throughput interactome with a partner (HTT) unrelated to DNAJC21&#39;s co-chaperone/60S-maturation function; uninformative and not core.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: &#39;Q5F1R6; P42858: HTT&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20195357
+  qualifier: enables
+  review:
+    summary: IPI interaction with MTERF1 (Q99551) from an interactome screen. The bare &#39;protein binding&#39; term is uninformative and the partner is unrelated to ribosome biogenesis.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding from a high-throughput interactome with a partner (MTERF1) unrelated to DNAJC21&#39;s known function; uninformative and not core.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: &#39;Q5F1R6; Q99551: MTERF1&#39;
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Direct immunofluorescence (HPA) evidence for nucleolar localization, the primary nuclear site of DNAJC21 and consistent with its rRNA-biogenesis role.
+    action: ACCEPT
+    reason: IDA-supported nucleolar localization, the key compartment for DNAJC21&#39;s 60S-maturation function.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: &#39;Within the nucleus, localizes primarily to the nucleolus&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Direct immunofluorescence (HPA) evidence for cytosolic localization, consistent with the cytoplasmic pool that acts in late 60S maturation.
+    action: ACCEPT
+    reason: IDA-supported cytosolic localization agrees with the documented cytoplasmic site of action.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: EXP
+  original_reference_id: PMID:27346687
+  qualifier: located_in
+  review:
+    summary: Experimental evidence (Tummala et al.) for nuclear localization of DNAJC21, where it acts in nucleolar rRNA biogenesis.
+    action: ACCEPT
+    reason: Direct experimental nuclear localization from the defining functional study; consistent with its nucleolar rRNA-biogenesis role.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:27346687}. Nucleus&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: EXP
+  original_reference_id: PMID:27346687
+  qualifier: located_in
+  review:
+    summary: Experimental evidence (Tummala et al.) for cytoplasmic localization of DNAJC21, where it participates in late cytoplasmic 60S maturation/recycling.
+    action: ACCEPT
+    reason: Direct experimental cytoplasmic localization from the defining functional study; consistent with its role in cytoplasmic maturation of the 60S subunit.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: HDA
+  original_reference_id: PMID:22658674
+  qualifier: enables
+  review:
+    summary: High-throughput RNA-interactome capture identified DNAJC21 as an RNA-binding protein. This is corroborated by the demonstrated association with precursor 45S rRNA, a core part of its ribosome-biogenesis function.
+    action: ACCEPT
+    reason: RNA binding is experimentally supported both by HDA RNA-interactome capture and by the targeted demonstration that DNAJC21 binds precursor 45S rRNA; it is a genuine molecular function central to its role in 60S maturation.
+    supported_by:
+    - reference_id: PMID:27346687
+      supporting_text: We have shown that DNAJC21 associates with precursor 45S rRNA.
+- term:
+    id: GO:0005840
+    label: ribosome
+  evidence_type: NAS
+  original_reference_id: PMID:16952052
+  qualifier: located_in
+  review:
+    summary: DNAJC21 associates with the ribosome / nascent ribosomal subunits during biogenesis. Plausible given its 60S-maturation role, though &#39;ribosome&#39; as a static location is less precise than its rRNA/60S-maturation activity.
+    action: KEEP_AS_NON_CORE
+    reason: Association with the ribosome is consistent with the 60S-maturation role, but the static cellular-component term is non-core relative to the rRNA-binding and biogenesis functions.
+    supported_by:
+    - reference_id: PMID:27346687
+      supporting_text: &#39;plays a highly conserved role in the maturation of the 60S ribosomal subunit&#39;
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: NAS
+  original_reference_id: PMID:16952052
+  qualifier: involved_in
+  review:
+    summary: As an HSP70 co-chaperone (J-protein), DNAJC21 is annotated to protein folding. Its characterized biological role, however, is in ribosome biogenesis rather than general protein folding.
+    action: KEEP_AS_NON_CORE
+    reason: DNAJC21 is a J-domain co-chaperone that assists HSP70 rather than autonomously folding clients; protein folding is a downstream/generic process and the specific role is 60S subunit maturation.
+    supported_by:
+    - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+      supporting_text: May act as a co-chaperone for HSP70.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:16952052
+  title: Pre-ribosomal-associated and ribosome-biogenesis factor study referencing DNAJC21.
+  findings: []
+- id: PMID:17500595
+  title: Huntingtin interacting proteins are genetic modifiers of neurodegeneration.
+  findings: []
+- id: PMID:20195357
+  title: A comprehensive resource of interacting protein regions for refining human transcription factor networks.
+  findings: []
+- id: PMID:22658674
+  title: Insights into RNA biology from an atlas of mammalian mRNA-binding proteins.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &#34;Cached publication title matches the YAML title; a systematic mRNA-interactome-capture atlas (not DNAJC21-specific) that identified DNAJC21 as an RNA-binding protein, corroborating its RNA-binding molecular function consistent with the 45S rRNA-association role.&#34;
+  findings:
+  - statement: mRNA/RNA-interactome capture identified DNAJC21 as an RNA-binding protein.
+    reference_section_type: RESULTS
+- id: PMID:27346687
+  title: DNAJC21 Mutations Link a Cancer-Prone Bone Marrow Failure Syndrome to Corruption in 60S Ribosome Subunit Maturation.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;Cached publication title matches the YAML title; the text establishes that DNAJC21 associates with rRNA and has a conserved role in 60S ribosomal subunit maturation, acting via cofactors HSPA8, PA2G4 and ZNF622, with mutations causing a cancer-prone bone marrow failure syndrome. Primary reference for the core functions (chaperone binding / 60S maturation / RNA binding); cited in core_functions.supported_by.&#34;
+  findings:
+  - statement: DNAJC21 associates with precursor 45S rRNA and plays a highly conserved role in the maturation of the 60S ribosomal subunit; it acts with HSPA8, PA2G4 and ZNF622, and biallelic mutations cause a cancer-prone bone marrow failure syndrome.
+    reference_section_type: RESULTS
+  - statement: Disease mutations impair DNAJC21 interactions with the cofactors PA2G4, HSPA8 and ZNF622 involved in 60S maturation; DNAJC21 deficiency causes cytoplasmic accumulation of the 60S subunit and aberrant ribosome profiles.
+    reference_section_type: RESULTS
+- id: file:human/DNAJC21/DNAJC21-uniprot.txt
+  title: UniProt entry Q5F1R6 (DJC21_HUMAN), DnaJ homolog subfamily C member 21
+  findings:
+  - statement: J-domain co-chaperone for HSP70; role in rRNA biogenesis and 60S subunit maturation; binds precursor 45S rRNA; interacts with HSPA8, PA2G4 and ZNF622; cytoplasm/nucleus/nucleolus; cause of bone marrow failure syndrome 3.
+    reference_section_type: OTHER
+core_functions:
+- description: J-domain co-chaperone of the HSP70 chaperone HSPA8 that, together with the cofactors PA2G4 and ZNF622, drives nucleolar rRNA biogenesis and maturation of the large (60S) ribosomal subunit.
+  molecular_function:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  locations:
+  - id: GO:0005730
+    label: nucleolus
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:27346687
+    supporting_text: &#39;plays a highly conserved role in the maturation of the 60S ribosomal subunit&#39;
+  - reference_id: file:human/DNAJC21/DNAJC21-uniprot.txt
+    supporting_text: Interacts with HSPA8, PA2G4 and ZNF622.
+- description: RNA-binding activity that engages precursor 45S rRNA during ribosome biogenesis, contributing to processing/maturation of the 60S subunit.
+  molecular_function:
+    id: GO:0003723
+    label: RNA binding
+  locations:
+  - id: GO:0005730
+    label: nucleolus
+  supported_by:
+  - reference_id: PMID:27346687
+    supporting_text: We have shown that DNAJC21 associates with precursor 45S rRNA.
+proposed_new_terms: []
+suggested_questions:
+- question: Does DNAJC21 stimulate the ATPase activity of HSPA8 in the context of 60S maturation, and is its J-domain activity required for ribosome biogenesis?
+- question: What is the precise step of 60S maturation (nucleolar processing vs. cytoplasmic recycling of PA2G4) that is most sensitive to DNAJC21 loss in BMFS3 patient cells?
+suggested_experiments:
+- description: Reconstitute DNAJC21-HSPA8 J-domain activity in vitro (ATPase stimulation assays) using wild-type and BMFS3 (P32A) variant proteins to test whether co-chaperone activity is required for 60S maturation.
+- description: Polysome/ribosome profiling and pre-rRNA processing analysis (Northern blot of 45S/32S/28S intermediates) in DNAJC21-depleted versus rescued cells to map the maturation step affected.
+- description: Proximity labeling (BioID/APEX) of DNAJC21 in nucleolus versus cytoplasm to define compartment-specific 60S-maturation interaction partners.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

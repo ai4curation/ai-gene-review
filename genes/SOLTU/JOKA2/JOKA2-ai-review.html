@@ -1,0 +1,3562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOKA2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>JOKA2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/M1BJF6" target="_blank" class="term-link">
+                        M1BJF6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Solanum tuberosum</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "JOKA2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="M1BJF6" data-a="DESCRIPTION: JOKA2 (M1BJF6), also called NBR1 homolog, is the p..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>JOKA2 (M1BJF6), also called NBR1 homolog, is the potato (Solanum tuberosum) member of the plant NBR1/Joka2 family of selective-autophagy cargo receptors - the functional analogue of mammalian p62/SQSTM1 and NBR1. It has the canonical NBR1 modular architecture: an N-terminal PB1 oligomerization domain, a (degenerate) ZZ-type zinc finger, the NBR1/FW region, a C-terminal UBA ubiquitin-binding domain, and an ATG8-interacting motif (AIM/LIR; 817-WDPI-824). JOKA2 functions as an autophagy cargo adaptor that bridges cargo to the autophagosomal membrane by binding the ATG8-family protein ATG8CL through its AIM; binding is abolished by the W821A/I824A AIM mutation (Joka2-AIM) [PMID:26765567]. Through this ATG8CL-coupled selective-autophagy pathway it contributes to plant immunity: overexpression of wild-type Joka2 (but not Joka2-AIM) restricts lesions caused by the oomycete pathogen Phytophthora infestans, while silencing Joka2 increases susceptibility [PMID:26765567]. During infection, Joka2/ATG8CL-labelled defense-related autophagosomes are diverted to the perihaustorial/extrahaustorial membrane to restrict pathogen growth, and the P. infestans RXLR effector PexRD54 antagonises Joka2 by outcompeting it for ATG8CL binding [PMID:26765567, PMID:29932422]. JOKA2 localizes to cytoplasmic ATG8CL-positive autophagosomes and its cargo is ultimately delivered to the vacuole. Its core molecular function is as a selective-autophagy receptor/adaptor (ATG8-family-protein binding, ubiquitin binding via the UBA domain, autophagy cargo adaptor activity); it is NOT an enzyme or a transmembrane transporter. JOKA2 is a genuine autophagy gene, so its UniProt &#34;Autophagy&#34; keyword reflects real biology - in contrast to many SPKW &#34;autophagy&#34; over-annotations - though the most specific terms (macroautophagy / selective autophagy / autophagy cargo adaptor activity) are preferable to the broad parent terms produced by keyword mapping.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006914" target="_blank" class="term-link">
+                                    GO:0006914
+                                </a>
+                            </span>
+                            <span class="term-label">autophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0006914" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Autophagy&#34;; snapshot-only, removed from the current GOA release. JOKA2 is a genuine NBR1/p62-family selective-autophagy cargo receptor, so the autophagy keyword is biologically CORRECT, but &#34;autophagy&#34; is the broad parent of the gene&#39;s actual macroautophagy/selective-autophagy role.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Unlike the human &#34;autophagy&#34; SPKW over-annotations on unrelated proteins, this is a legitimate autophagy gene: potato Joka2 is &#34;a selective autophagy cargo receptor of Solanaceous plants that also binds ATG8 via an AIM&#34;, it physically associates with ATG8CL (lost in the Joka2-AIM mutant), and overexpression of Joka2 (but not Joka2-AIM) &#34;also activates ATG8CL-mediated selective autophagy&#34; [PMID:26765567]. The cited work explicitly states &#34;Joka2/NBR1 mediated selective autophagy pathway contributes to defense against P. infestans&#34; [PMID:29932422]. Removal therefore lost correct biology. However &#34;autophagy&#34; (GO:0006914) is over-broad; because Joka2 acts in autophagosome-mediated (macro)autophagy, the more specific child term &#34;macroautophagy&#34; (GO:0016236) is preferred, with the selective/cargo-receptor aspect captured by the NEW autophagy cargo adaptor activity MF (GO:0160247) below. MODIFY rather than ACCEPT or REMOVE.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016236" target="_blank" class="term-link">
+                                    macroautophagy
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                        PMID:26765567
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Joka2 was reported as a selective autophagy cargo receptor of Solanaceous plants that also binds ATG8 via an AIM</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                        PMID:26765567
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This indicates that Joka2 also activates ATG8CL-mediated selective autophagy.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">JOKA2 is a **selective autophagy cargo receptor** that links cargo to ATG8-positive autophagosomes, with a prominent role in **antimicrobial selective autophagy** during oomycete infection.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015031" target="_blank" class="term-link">
+                                    GO:0015031
+                                </a>
+                            </span>
+                            <span class="term-label">protein transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0015031" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keywords &#34;Protein transport&#34; / &#34;Transport&#34;; snapshot-only, removed from the current GOA release. The keyword reflects the cargo-receptor / autophagosome-delivery role of JOKA2 but maps to a generic vesicular protein-transport process that does not capture the autophagy-specific function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED. JOKA2 does deliver cargo (and itself) into ATG8-coated autophagosomes that are then carried to the vacuole - &#34;selective-autophagy employs specialized autophagy cargo receptors that bind ATG8 on autophagosome membranes, and recruit specific cargoes to autophagosomes&#34; [PMID:29932422] - so in a loose sense it participates in protein relocation. However, &#34;protein transport&#34; (GO:0015031) is a broad term most strongly associated with secretory/endomembrane and transmembrane protein trafficking; for an autophagy cargo receptor it is uninformative and potentially misleading, implying a generic transport role the protein does not have. The genuine activity is better captured by the autophagy-specific terms: the molecular function &#34;autophagy cargo adaptor activity&#34; (GO:0160247) and the process &#34;macroautophagy&#34; (GO:0016236), both added/proposed in this review. The keyword-derived parent therefore adds nothing once the specific autophagy annotations are present, and its removal is appropriate.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29932422" target="_blank" class="term-link">
+                                        PMID:29932422
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">selective-autophagy employs specialized autophagy cargo receptors that bind ATG8 on autophagosome membranes, and recruit specific cargoes to autophagosomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">JOKA2 is a **selective autophagy cargo receptor** that links cargo to ATG8-positive autophagosomes, with a prominent role in **antimicrobial selective autophagy** during oomycete infection.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031410" target="_blank" class="term-link">
+                                    GO:0031410
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0031410" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Cytoplasmic vesicle&#34;; snapshot-only, removed from the current GOA release. JOKA2 associates with cytoplasmic autophagosomes, so the essence is correct, but &#34;cytoplasmic vesicle&#34; is the broad parent of the specific compartment, the autophagosome.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is not wrong - JOKA2 localizes to cytoplasmic autophagosomes (a type of cytoplasmic vesicle): &#34;JOKA2 localizes to cytoplasmic puncta consistent with autophagosomes and associates with **ATG8CL**-labeled structures in vivo&#34;, and the protein co-localizes with GFP:ATG8CL-labelled autophagosomes [PMID:26765567]. The UniProt subcellular-location annotation lists &#34;Cytoplasmic vesicle, autophagosome&#34;, and the cell-biology data place Joka2 specifically on ATG8CL-positive autophagosomes. The broad keyword-derived parent &#34;cytoplasmic vesicle&#34; (GO:0031410) should therefore be replaced by the specific, directly supported child term &#34;autophagosome&#34; (GO:0005776), which is independently annotated in current GOA from the Swiss-Prot subcellular-location vocabulary. MODIFY (generalize -&gt; specialize) rather than MARK_AS_OVER_ANNOTATED.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005776" target="_blank" class="term-link">
+                                    autophagosome
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">JOKA2 localizes to cytoplasmic puncta consistent with autophagosomes and associates with **ATG8CL**-labeled structures in vivo</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                        PMID:26765567
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Joka2:RFP colocalizes with GFP:ATG8CL-labelled autophagosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005773" target="_blank" class="term-link">
+                                    GO:0005773
+                                </a>
+                            </span>
+                            <span class="term-label">vacuole</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0005773" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProtKB/Swiss-Prot subcellular-location vocabulary mapping (SL-0272 Vacuole). Duplicates the EXP vacuole annotation below; the autophagy pathway delivers Joka2-associated cargo to the vacuole.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally supported vacuole annotation (EXP, PMID:29932422) and with autophagy biology: autophagosomes &#34;are then carried to the vacuole for recycling&#34; [PMID:29932422]. The vacuole is the terminal degradative compartment for the selective autophagy pathway in which JOKA2 acts. The IEA duplicate of the EXP annotation is acceptable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29932422" target="_blank" class="term-link">
+                                        PMID:29932422
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">autophagosomes, which are then carried to the vacuole for recycling</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005776" target="_blank" class="term-link">
+                                    GO:0005776
+                                </a>
+                            </span>
+                            <span class="term-label">autophagosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0005776" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProtKB/Swiss-Prot subcellular-location vocabulary mapping (SL-0023 Autophagosome). This is the core, directly supported localization of JOKA2.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by direct cell-biology evidence. JOKA2 localizes to cytoplasmic ATG8CL-positive autophagosomes: &#34;Joka2:RFP colocalizes with GFP:ATG8CL-labelled autophagosomes&#34; [PMID:26765567], and &#34;JOKA2 localizes to cytoplasmic puncta consistent with autophagosomes and associates with ATG8CL-labeled structures in vivo&#34;. The autophagosome is the precise compartment where the cargo receptor docks onto ATG8 via its AIM; this annotation is also the proposed replacement for the broad retired &#34;cytoplasmic vesicle&#34; SPKW term.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                        PMID:26765567
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Joka2:RFP colocalizes with GFP:ATG8CL-labelled autophagosomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">JOKA2 localizes to cytoplasmic puncta consistent with autophagosomes and associates with **ATG8CL**-labeled structures in vivo</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR000433, ZZ-type zinc finger). JOKA2 carries a ZZ-type zinc finger (residues 442-492, with predicted Zn-coordinating residues C447/C450/C471/C474), but the domain is annotated as degenerate.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The ZZ-type zinc finger is a genuine structural feature inferred by InterPro and present in the UniProt feature table (ZN_FING 442-492, &#34;ZZ-type; degenerate&#34;; BINDING residues for Zn(2+)), so zinc binding is plausible. In NBR1-family receptors the ZZ domain participates in cargo recognition rather than catalysis. However, the domain is explicitly degenerate in JOKA2, there is no gene-specific experimental evidence for metal binding, and zinc binding is a structural/auxiliary property rather than the protein&#39;s core selective-autophagy-receptor function. Retain as a correct but non-core molecular feature.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**ZZ** zinc finger and **FW/NBR1** region (cargo-recognition functions)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005773" target="_blank" class="term-link">
+                                    GO:0005773
+                                </a>
+                            </span>
+                            <span class="term-label">vacuole</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29932422" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29932422
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Host autophagy machinery is diverted to the pathogen interfa...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0005773" data-r="PMID:29932422" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) vacuole localization from the 2018 study. The vacuole is the terminal compartment of the JOKA2/ATG8CL selective-autophagy pathway.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by the UniProt SUBCELLULAR LOCATION annotation (&#34;Vacuole {ECO:0000269|PubMed:29932422}&#34;) and consistent with autophagy biology, in which autophagosomes carrying cargo receptors are delivered to the vacuole: &#34;autophagosomes, which are then carried to the vacuole for recycling&#34; [PMID:29932422]. Accept as a core localization for the pathway endpoint.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29932422" target="_blank" class="term-link">
+                                        PMID:29932422
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">autophagosomes, which are then carried to the vacuole for recycling</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26765567
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An effector of the Irish potato famine pathogen antagonizes ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0005515" data-r="PMID:26765567" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation (with UniProtKB:M1C146, ATG8CL) for the physical Joka2-ATG8CL interaction. &#34;Protein binding&#34; is uninformative; the interaction is the defining ATG8-family-protein / autophagy-cargo-adaptor activity of the receptor.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The interaction partner M1C146 is potato ATG8CL, and the binding occurs through the JOKA2 AIM motif: &#34;potato Joka2, but not the AIM mutant, Joka2AIM, associated with ATG8CL&#34;, and &#34;Mutation of the predicted AIM in Joka2 (819-WDPI-822) to ADPA resulted in loss of ATG8CL binding&#34; [PMID:26765567]. Per curation guidelines the vague &#34;protein binding&#34; (GO:0005515) should be replaced by an informative molecular function. The most accurate term is &#34;autophagy cargo adaptor activity&#34; (GO:0160247) - the binding activity that brings cargo to the phagophore via ATG8 - capturing both the ATG8-family-protein binding and the receptor/adaptor role. This is also added as a NEW annotation below; MODIFY here to retain the IPI evidence with M1C146.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                                    autophagy cargo adaptor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                        PMID:26765567
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">potato Joka2, but not the AIM mutant, Joka2AIM, associated with ATG8CL</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                        PMID:26765567
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mutation of the predicted AIM in Joka2 (819-WDPI-822) to ADPA resulted in loss of ATG8CL binding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    GO:0050832
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to fungus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29932422" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29932422
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Host autophagy machinery is diverted to the pathogen interfa...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0050832" data-r="PMID:29932422" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for JOKA2&#39;s role in defense against the late blight pathogen. The biological conclusion (positive role in pathogen defense) is well supported, but the pathogen is Phytophthora infestans, an OOMYCETE, not a fungus, so the term is taxonomically incorrect.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The defense role is strongly supported: &#34;Overexpression of Joka2, but not Joka2AIM, significantly restricted the size of the disease lesions caused by P. infestans&#34; and &#34;virus-induced gene silencing of Joka2 resulted in increased disease lesions&#34;, leading the authors to conclude &#34;Joka2-mediated selective autophagy contributes to defense against this pathogen&#34; [PMID:26765567]; the 2018 study reiterates that &#34;Joka2/NBR1 mediated selective autophagy pathway contributes to defense against P. infestans&#34; [PMID:29932422]. However, Phytophthora infestans is an oomycete (Stramenopiles), not a true fungus, so &#34;defense response to fungus&#34; (GO:0050832) is the wrong taxonomic branch. It should be MODIFIED to &#34;defense response to oomycetes&#34; (GO:0002229), the accurate term, retaining the IDA evidence.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002229" target="_blank" class="term-link">
+                                    defense response to oomycetes
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                        PMID:26765567
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Overexpression of Joka2, but not Joka2AIM, significantly restricted the size of the disease lesions caused by P. infestans</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29932422" target="_blank" class="term-link">
+                                        PMID:29932422
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we recently showed that Joka2/NBR1 mediated selective autophagy pathway contributes to defense against P. infestans</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                                    GO:0160247
+                                </a>
+                            </span>
+                            <span class="term-label">autophagy cargo adaptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26765567
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An effector of the Irish potato famine pathogen antagonizes ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0160247" data-r="PMID:26765567" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JOKA2 is a selective-autophagy cargo receptor that bridges cargo to the autophagosomal membrane by binding the ATG8-family protein ATG8CL through its AIM motif. This precise molecular function is not represented in current GOA (only the vague &#34;protein binding&#34;).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The current/seeded MF annotation is only the uninformative &#34;protein binding&#34; (GO:0005515). The defining activity of JOKA2 is autophagy cargo adaptor activity (GO:0160247) - &#34;the binding activity of a molecule that brings together a cargo, targeted for degradation via autophagy, to a phagophore&#34;. JOKA2 &#34;binds ATG8 via an AIM&#34; and is &#34;a selective autophagy cargo receptor of Solanaceous plants&#34; [PMID:26765567]; the AIM-dependent ATG8CL interaction (lost in Joka2-AIM) is required for its function as a host autophagy cargo receptor (UniProt DOMAIN). IPI is justified by the in planta co-immunoprecipitation of Joka2 with ATG8CL (UniProtKB:M1C146) and the AIM-mutant loss of binding.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                        PMID:26765567
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Joka2 was reported as a selective autophagy cargo receptor of Solanaceous plants that also binds ATG8 via an AIM</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                        PMID:26765567
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">potato Joka2, but not the AIM mutant, Joka2AIM, associated with ATG8CL</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Joka2 binds **ATG8CL** through an **AIM**, and this binding is required for functional immune output</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043130" target="_blank" class="term-link">
+                                    GO:0043130
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="M1BJF6" data-a="GO:0043130" data-r="GO_REF:0000043" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JOKA2 has a C-terminal UBA domain (residues 811-860) characteristic of NBR1/p62-family receptors, which bind ubiquitin to recognize ubiquitinated cargo. Inferred from sequence/ domain similarity; not yet directly demonstrated for the potato protein.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NBR1/p62-family selective-autophagy receptors couple ubiquitinated cargo to ATG8 via a C-terminal UBA ubiquitin-binding domain. JOKA2 has this UBA domain (UniProt DOMAIN 811-860; Pfam PF24932 UBA_NBR1_C, PROSITE UBA), and the deep-research synthesis notes that &#34;the receptor&#39;s UBA domains strongly imply ubiquitin-binding capability, consistent with plant NBR1 family behavior&#34;. Ubiquitin binding (GO:0043130) is therefore a strongly supported family-level molecular function. Marked ISS because, although the domain is present, direct ubiquitin-binding has not been shown for potato JOKA2 specifically (it is established for the Arabidopsis/general plant NBR1 family). Provided as a NEW, conservative MF.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the receptor’s **UBA domains** strongly imply ubiquitin-binding capability, consistent with plant NBR1 family behavior</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**UBA** domain(s) (ubiquitin binding)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>JOKA2 is a selective-autophagy cargo receptor (autophagy cargo adaptor) that bridges cargo to the autophagosomal membrane by binding the ATG8-family protein ATG8CL through its C-terminal AIM/LIR motif (817-WDPI-824). The AIM-dependent ATG8CL interaction is required for receptor function and is lost in the Joka2-AIM (W821A/I824A) mutant.
+</h3>
+                <span class="vote-buttons" data-g="M1BJF6" data-a="FUNCTION: JOKA2 is a selective-autophagy cargo receptor (aut..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                            autophagy cargo adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016236" target="_blank" class="term-link">
+                                macroautophagy
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005776" target="_blank" class="term-link">
+                                autophagosome
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                PMID:26765567
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Joka2 was reported as a selective autophagy cargo receptor of Solanaceous plants that also binds ATG8 via an AIM</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                PMID:26765567
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">potato Joka2, but not the AIM mutant, Joka2AIM, associated with ATG8CL</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Through the ATG8CL-coupled selective-autophagy pathway, JOKA2 contributes to plant immunity against the oomycete pathogen Phytophthora infestans: it activates ATG8CL-mediated selective autophagy, and overexpression of Joka2 (but not Joka2-AIM) restricts disease lesions while silencing increases susceptibility. Its cargo and the receptor itself are delivered to the vacuole via autophagosomes.
+</h3>
+                <span class="vote-buttons" data-g="M1BJF6" data-a="FUNCTION: Through the ATG8CL-coupled selective-autophagy pat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                            autophagy cargo adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002229" target="_blank" class="term-link">
+                                defense response to oomycetes
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005773" target="_blank" class="term-link">
+                                vacuole
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                                PMID:26765567
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Overexpression of Joka2, but not Joka2AIM, significantly restricted the size of the disease lesions caused by P. infestans</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29932422" target="_blank" class="term-link">
+                                PMID:29932422
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">we recently showed that Joka2/NBR1 mediated selective autophagy pathway contributes to defense against P. infestans</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">JOKA2 is a **selective autophagy cargo receptor** that links cargo to ATG8-positive autophagosomes, with a prominent role in **antimicrobial selective autophagy** during oomycete infection.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro-to-GO mapping (IPR000433 ZZ-type zinc finger) assigns zinc ion binding to JOKA2; the ZZ finger in JOKA2 is degenerate.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations from keywords &#34;Autophagy&#34;, &#34;Protein transport&#34;/&#34;Transport&#34; and &#34;Cytoplasmic vesicle&#34;; present in the snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For JOKA2 the &#34;Autophagy&#34; keyword reflects genuine biology (a bona fide NBR1/p62-family selective-autophagy cargo receptor); the keyword-derived terms are simply broader than the gene&#39;s specific macroautophagy / cargo-adaptor functions.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Subcellular-location vocabulary mapping assigns vacuole (SL-0272) and autophagosome (SL-0023) to JOKA2; both are independently supported by experimental data.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26765567" target="_blank" class="term-link">
+                            PMID:26765567
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An effector of the Irish potato famine pathogen antagonizes a host autophagy cargo receptor.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Potato Joka2 is a selective-autophagy cargo receptor of Solanaceous plants that binds ATG8CL via its AIM motif (819-WDPI-822); the Joka2-AIM mutant loses ATG8CL binding.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Joka2 (but not Joka2-AIM) increases the number of GFP:ATG8CL autophagosomes and activates ATG8CL-mediated selective autophagy, and Joka2:RFP colocalizes with GFP:ATG8CL-labelled autophagosomes.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Overexpression of Joka2 (but not Joka2-AIM) restricts P. infestans lesion size and silencing increases disease lesions, so Joka2-mediated selective autophagy contributes to defense; the P. infestans effector PexRD54 outcompetes Joka2 for ATG8CL binding.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29932422" target="_blank" class="term-link">
+                            PMID:29932422
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Host autophagy machinery is diverted to the pathogen interface to mediate focal defense responses against the Irish potato famine pathogen.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Selective autophagy employs specialized autophagy cargo receptors that bind ATG8 on autophagosome membranes and recruit specific cargoes to autophagosomes; autophagosomes are carried to the vacuole for recycling.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Joka2/NBR1-mediated selective autophagy pathway contributes to defense against P. infestans; during infection Joka2/ATG8CL-labelled autophagosomes are diverted to the perihaustorial/extrahaustorial membrane to restrict pathogen growth.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">JOKA2 localizes to the vacuole (UniProt SUBCELLULAR LOCATION, ECO:0000269).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of potato JOKA2 (M1BJF6), NBR1-family selective-autophagy receptor.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesizes the Dagdas et al. 2016 (eLife, PMID:26765567) and 2018 (eLife, PMID:29932422) potato/Solanaceae studies with the broader plant NBR1 literature, concluding JOKA2 is best annotated as a selective-autophagy cargo receptor/adaptor that binds ATG8 (notably ATG8CL) via an AIM/LIR and (by domain/family inference) binds ubiquitinated cargo via its UBA domain.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Describes the canonical NBR1/Joka2 modular architecture (PB1 - ZZ - NBR1/FW - UBA - AIM - UBA), matching the UniProt M1BJF6 domain set; PB1 mediates oligomerization, ZZ+FW cargo recognition, UBA ubiquitin binding, and the AIM ATG8 binding.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Localizes JOKA2 to cytoplasmic ATG8CL-positive autophagosomes and, during infection, to perihaustorial autophagosomes at the extrahaustorial membrane; PexRD54 antagonises Joka2 by competing for ATG8CL.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Notes the 2024 Arabidopsis NBR1 mechanistic expansion (LLPS/condensates and recognition of non-ubiquitinated cargo via ZZ+FW), which by inference may also apply to potato JOKA2 but is not directly demonstrated for it.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does potato JOKA2 mediate aggrephagy (GO:0035973, selective autophagy of protein aggregates) via PB1-driven oligomerization and cargo condensation, as inferred from the plant NBR1/Joka2 family? (Both ubiquitin binding, GO:0043130, and macroautophagy/cargo-adaptor activity are already captured above; aggrephagy is the family-level process still untested in potato.)</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Yan Zhang</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="M1BJF6" data-a="Q: Does potato JOKA2 mediate aggrephagy (GO:0035973, ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the endogenous defense-related cargoes that potato JOKA2 delivers to autophagosomes during P. infestans infection, and are they ubiquitinated?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Tolga O. Bozkurt</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="M1BJF6" data-a="Q: What are the endogenous defense-related cargoes th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does potato JOKA2 recognize non-ubiquitinated cargo via its ZZ+FW region and undergo liquid-liquid phase separation, as recently shown for Arabidopsis NBR1?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Yasin F. Dagdas</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="M1BJF6" data-a="Q: Does potato JOKA2 recognize non-ubiquitinated carg..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is JOKA2&#39;s UBA domain functional for ubiquitin binding in potato, and how does ubiquitin-dependent versus ATG8-dependent recruitment partition its activity?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Sophien Kamoun</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="M1BJF6" data-a="Q: Is JOKA2&#39;s UBA domain functional for ubiquitin bin..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Identify endogenous JOKA2 cargo by affinity-purification mass spectrometry of Joka2 versus Joka2-AIM during P. infestans infection, and test ubiquitination of candidate cargoes.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: JOKA2 selectively captures ubiquitinated defense-related or pathogen-derived proteins for autophagic delivery to the vacuole.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: affinity-purification proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="M1BJF6" data-a="EXPERIMENT: Identify endogenous JOKA2 cargo by affinity-purifi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test recombinant JOKA2 UBA domain for binding to mono- and poly-ubiquitin chains in vitro (ITC/pulldown), and assess cargo recruitment in planta with a UBA-domain mutant.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The JOKA2 UBA domain binds ubiquitin and is required for recognition of ubiquitinated cargo, as in other NBR1/p62-family receptors.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro ubiquitin-binding and structure-function assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="M1BJF6" data-a="EXPERIMENT: Test recombinant JOKA2 UBA domain for binding to m..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantify P. infestans colonization and autophagic flux in joka2 loss-of-function potato lines complemented with wild-type, AIM-mutant, UBA-mutant or PB1-mutant JOKA2.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ATG8 binding (AIM), ubiquitin binding (UBA) and oligomerization (PB1) each contribute to JOKA2-mediated selective autophagy and immunity against the oomycete.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic complementation and disease-resistance assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="M1BJF6" data-a="EXPERIMENT: Quantify P. infestans colonization and autophagic ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(JOKA2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="M1BJF6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of Potato **JOKA2** (UniProt **M1BJF6**) — NBR1-family Selective Autophagy Receptor</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">36 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T10:01:19.704489</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="JOKA2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="JOKA2-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000025 The document contains the requested domain architecture schematic and images of perihaustorial autophagosomes: 1. **Joka2/NBR1 Doma</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-potato-joka2-uniprot-m1bjf6-nbr1-family-selective-autophagy-receptor">Research Report: Functional Annotation of Potato <strong>JOKA2</strong> (UniProt <strong>M1BJF6</strong>) — NBR1-family Selective Autophagy Receptor</h1>
+<h2 id="1-target-verification-geneprotein-identity">1. Target verification (gene/protein identity)</h2>
+<p>The research target here is <strong>JOKA2</strong> from <strong>Solanum tuberosum (potato)</strong>, UniProt <strong>M1BJF6</strong>, annotated as “Protein JOKA2 / Protein NBR1 homolog,” with PB1-like, NBR1/FW, and UBA domain architecture plus an Ig-like fold. The primary literature on the potato late blight pathosystem explicitly studies <strong>Joka2/NBR1</strong> as a <strong>host selective autophagy cargo receptor</strong> that binds <strong>ATG8CL</strong> through an <strong>ATG8-interacting motif (AIM/LIR)</strong> and contributes to defense against <em>Phytophthora infestans</em> (Dagdas et al., 2016; Dagdas et al., 2018). These molecular and domain features align with the UniProt domain annotations given for M1BJF6 (PB1-like; NBR1/FW; UBA). (dagdas2016aneffectorof pages 5-7, dagdas2018hostautophagymachinery pages 2-4)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-autophagy-and-selective-autophagy">2.1 Autophagy and selective autophagy</h3>
+<p><strong>Macroautophagy (autophagy)</strong> is a conserved eukaryotic pathway in which cytoplasmic material is engulfed into double-membrane autophagosomes and delivered to the vacuole/lysosome for degradation. <strong>Selective autophagy</strong> is the targeted version of this process, in which receptors/adaptors provide specificity by binding both <strong>cargo</strong> and <strong>ATG8/LC3-family proteins</strong> on nascent autophagosomal membranes. (leong2022selectiveautophagyadding pages 8-9, zhang2020broadandcomplex pages 3-5)</p>
+<h3 id="22-selective-autophagy-receptors-sars-and-atg8-interacting-motifs">2.2 Selective autophagy receptors (SARs) and ATG8-interacting motifs</h3>
+<p>Plant selective autophagy receptors commonly bind ATG8 via <strong>AIM/LIR motifs</strong>, short linear sequences that dock into ATG8. Because AIM-like patterns occur frequently by chance, contemporary work emphasizes validating <strong>functional</strong> AIMs with structural or interaction assays; recent methods use <strong>AlphaFold2-multimer</strong> to improve AIM discovery in plant proteins and pathogen effectors that target ATG8. (dagdas2016aneffectorof pages 5-7)</p>
+<h3 id="23-nbr1joka2-class-receptors">2.3 NBR1/JOKA2 class receptors</h3>
+<p><strong>NBR1</strong> in plants is a functional analog of mammalian p62/SQSTM1 and NBR1 and is considered a major receptor for <strong>aggrephagy</strong> (selective removal of protein aggregates) and immunity-related selective autophagy. Plant NBR1-family proteins typically have:<br />
+- <strong>PB1</strong> domain (oligomerization/polymerization)<br />
+- <strong>ZZ</strong> zinc finger and <strong>FW/NBR1</strong> region (cargo-recognition functions)<br />
+- <strong>UBA</strong> domain(s) (ubiquitin binding)<br />
+- <strong>AIM/LIR</strong> motif (ATG8 binding)<br />
+This modular design is consistent with JOKA2’s experimentally examined domain architecture in the Solanaceae late blight system. (dagdas2018hostautophagymachinery pages 2-4, zhang2020broadandcomplex pages 3-5)</p>
+<h2 id="3-joka2-protein-domain-architecture-mechanism-and-molecular-function">3. JOKA2 protein: domain architecture, mechanism, and molecular function</h2>
+<h3 id="31-domain-architecture-evidence">3.1 Domain architecture (evidence)</h3>
+<p>In the <em>P. infestans</em> infection context, Joka2 is shown as a modular receptor with the architecture <strong>PB1 – ZZ – NBR1/FW – UBA – AIM – UBA</strong>, matching canonical plant NBR1 receptors and supporting the UniProt-provided domain set. The perihaustorial recruitment experiments further show that domains beyond AIM are required for focal recruitment (see below). (dagdas2018hostautophagymachinery pages 2-4, dagdas2018hostautophagymachinery media f53fff51)</p>
+<h3 id="32-molecular-function-primary-function">3.2 Molecular function (primary function)</h3>
+<p><strong>Primary function:</strong> JOKA2 is a <strong>selective autophagy cargo receptor</strong> that links cargo to ATG8-positive autophagosomes, with a prominent role in <strong>antimicrobial selective autophagy</strong> during oomycete infection.</p>
+<p>Mechanistically:<br />
+- Joka2 binds <strong>ATG8CL</strong> through an <strong>AIM</strong>, and this binding is required for functional immune output (Joka2^AIM mutants lose key activities). (dagdas2016aneffectorof pages 3-5, dagdas2016aneffectorof pages 5-7)<br />
+- Joka2 activity is associated with <strong>ATG8CL-marked autophagosome</strong> dynamics, consistent with receptor-mediated recruitment to autophagosomes. (dagdas2018hostautophagymachinery pages 1-2, dagdas2016aneffectorof pages 5-7)</p>
+<h3 id="33-cargo-recognition-ubiquitin-dependent-and-potentially-ubiquitin-independent">3.3 Cargo recognition (ubiquitin-dependent and potentially ubiquitin-independent)</h3>
+<p>Direct cargo substrates of potato JOKA2 were not specified in the accessible excerpts, but the receptor’s <strong>UBA domains</strong> strongly imply ubiquitin-binding capability, consistent with plant NBR1 family behavior. (dagdas2018hostautophagymachinery pages 2-4, zhang2020broadandcomplex pages 3-5)</p>
+<p>A major 2024 mechanistic advance (in Arabidopsis NBR1) is that plant NBR1 can also recognize <strong>non-ubiquitinated substrates</strong> using <strong>ZZ + FW</strong> domains and can do so <strong>without UBA involvement</strong> for certain cargos, while still being routed to autophagosomes via ATG8 binding. This provides a plausible, domain-grounded inference that potato JOKA2 may similarly have both ubiquitin-dependent and ubiquitin-independent cargo recognition modes (although this is not yet directly shown for potato JOKA2 in the retrieved evidence). (yan2024dualrolesof pages 1-2, yan2024dualrolesof pages 6-8)</p>
+<h3 id="34-oligomerizationcondensates-and-receptor-assembly">3.4 Oligomerization/condensates and receptor assembly</h3>
+<p>Plant NBR1/Joka2 receptors can oligomerize via PB1 and contribute to receptor/cargo condensation, a key conceptual link to aggrephagy and potentially to focal recruitment during infection. In the Solanaceae late blight system, the requirement for N-terminal domains (PB1/ZZ) to recruit Joka2 to perihaustorial structures supports the view that <strong>oligomerization and/or partner interactions</strong> are essential to receptor function at pathogen interfaces. (dagdas2018hostautophagymachinery pages 2-4, leong2022selectiveautophagyadding pages 8-8)</p>
+<h2 id="4-subcellular-localization-and-biological-context">4. Subcellular localization and biological context</h2>
+<h3 id="41-basal-localization-cytoplasmic-punctaautophagosomes">4.1 Basal localization: cytoplasmic puncta/autophagosomes</h3>
+<p>JOKA2 localizes to cytoplasmic puncta consistent with autophagosomes and associates with <strong>ATG8CL</strong>-labeled structures in vivo. (dagdas2018hostautophagymachinery pages 4-6, dagdas2018hostautophagymachinery media f53fff51)</p>
+<h3 id="42-infection-induced-focal-localization-at-the-extrahaustorial-membrane-ehm">4.2 Infection-induced focal localization at the extrahaustorial membrane (EHM)</h3>
+<p>A defining feature of JOKA2/NBR1 in the <em>Phytophthora</em>–Solanaceae interaction is <strong>polarized recruitment of autophagosomes to the pathogen interface</strong>:<br />
+- Full-length Joka2:BFP labels perihaustorial puncta/EHM-associated compartments at high frequency (<strong>92%, N=50</strong> in one quantification; and Joka2-labeled perihaustorial autophagosomes scored at <strong>100%, N=140</strong>). (dagdas2018hostautophagymachinery pages 2-4, dagdas2018hostautophagymachinery pages 4-6)<br />
+- Imaging shows Joka2-positive autophagosomes at the EHM in infected cells (visual evidence). (dagdas2018hostautophagymachinery media 0199f3b8)</p>
+<p>This supports the functional annotation that potato JOKA2 acts at <strong>pathogen-contact sites</strong> (haustoria/EHM) by participating in “focal” selective autophagy compartments.</p>
+<h3 id="43-domain-requirements-for-perihaustorial-targeting-quantitative">4.3 Domain requirements for perihaustorial targeting (quantitative)</h3>
+<p>The perihaustorial recruitment phenotype is multi-domain:<br />
+- AIM mutation reduces Joka2 association with ATG8CL puncta: Joka2^AIM rarely coincides with ATG8CL puncta (<strong>19%, N=37</strong>), and perihaustorial puncta frequency decreases (<strong>74%, N=42</strong>). (dagdas2018hostautophagymachinery pages 4-6, dagdas2018hostautophagymachinery pages 2-4)<br />
+- A truncation lacking PB1/ZZ but retaining ubiquitin-binding and ATG8-interacting modules (Joka2Δ1–487) fails to accumulate at haustoria (<strong>1%, N=72</strong>, also reported as ~<strong>1.3% of haustoria</strong>). This demonstrates that ATG8/UBA functionality alone is insufficient and that <strong>PB1/ZZ-mediated oligomerization/associations are critical</strong>. (dagdas2018hostautophagymachinery pages 2-4, dagdas2018hostautophagymachinery pages 6-7)</p>
+<h2 id="5-pathways-and-interactions-joka2-in-the-late-blight-p-infestans-arms-race">5. Pathways and interactions: JOKA2 in the late blight (<em>P. infestans</em>) arms race</h2>
+<h3 id="51-joka2-and-atg8cl-define-a-defense-related-selective-autophagy-branch">5.1 JOKA2 and ATG8CL define a defense-related selective autophagy branch</h3>
+<p>In the potato late blight context, Joka2 shows preferential functional coupling to the <strong>potato ATG8CL</strong> autophagy branch (versus ATG8IL) and contributes to restricting pathogen colonization. (dagdas2016aneffectorof pages 5-7, dagdas2018hostautophagymachinery pages 1-2)</p>
+<h3 id="52-pathogen-effector-antagonism-pexrd54-competes-with-joka2-for-atg8cl">5.2 Pathogen effector antagonism: PexRD54 competes with JOKA2 for ATG8CL</h3>
+<p>A key mechanistic discovery is that <em>P. infestans</em> deploys the RXLR effector <strong>PexRD54</strong> to <strong>bind ATG8CL via its own AIM</strong> and <strong>outcompete Joka2</strong>, depleting it from ATG8CL complexes/autophagosomes. This antagonizes Joka2’s positive role in defense and reprograms autophagosome formation in a pathogen-favoring manner. (dagdas2016aneffectorof pages 1-2, dagdas2016aneffectorof pages 5-7)</p>
+<h3 id="53-expert-synthesis-2024-joka2-as-an-ehm-targeted-defense-node">5.3 Expert synthesis (2024): JOKA2 as an EHM-targeted defense node</h3>
+<p>A 2024 expert review on perihaustorial effectors highlights NBR1/Joka2 recruitment to <strong>EHM-associated autophagosomes</strong> as a focal defense feature and emphasizes the PexRD54 strategy of preventing Joka2-mediated delivery of putative antimicrobial cargoes to the interface. (king2024bordercontrolmanipulation pages 3-4)</p>
+<h2 id="6-recent-developments-and-latest-research-prioritizing-20232024">6. Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="61-2024-plant-nbr1-mechanistic-expansion-llps-and-non-ubiquitinated-cargo-recognition">6.1 2024: Plant NBR1 mechanistic expansion — LLPS and non-ubiquitinated cargo recognition</h3>
+<p>The 2024 <em>Autophagy</em> study in Arabidopsis provides a major conceptual update: plant NBR1 (in a lineage lacking SQSTM1/p62) can combine both receptor functions and <strong>liquid–liquid phase separation (LLPS)</strong> behavior. It reports that NBR1 forms droplets/condensates prior to autophagosome formation and that ZZ+FW domains can enable recognition of non-ubiquitinated substrates; receptor variants show measurable condensate dynamics (fusion events observed over ~<strong>232.20 s</strong>; FRAP recovery examined over <strong>600 s</strong>, n=4). These findings strengthen the functional inference that potato JOKA2 may participate in condensate-like assembly as part of its receptor mechanism, consistent with the PB1/ZZ dependence seen in the Solanaceae infection system. (yan2024dualrolesof pages 6-8, yan2024dualrolesof pages 8-9)</p>
+<h3 id="62-2024-hostpathogen-interface-reviews-emphasize-selective-autophagy-targeting">6.2 2024: Host–pathogen interface reviews emphasize selective autophagy targeting</h3>
+<p>The 2024 <em>MPMI</em> review frames selective autophagy (including NBR1/Joka2–ATG8CL axis) as a recurring target of perihaustorial oomycete effectors and places Joka2-mediated focal autophagy at the EHM among key interface processes. (king2024bordercontrolmanipulation pages 3-4)</p>
+<h3 id="63-2023-improved-aimlir-identification-with-alphafold2-multimer">6.3 2023: Improved AIM/LIR identification with AlphaFold2-multimer</h3>
+<p>A 2023 <em>PLOS Biology</em> paper demonstrates AlphaFold2-multimer guided prediction of functional ATG8-binding motifs in plant proteins and notes the broader utility for discovering receptor–ATG8 interactions, which is directly relevant for mapping JOKA2 interactors and confidently identifying AIMs beyond simple consensus searching. (dagdas2016aneffectorof pages 5-7)</p>
+<h2 id="7-current-applications-and-real-world-implementations">7. Current applications and real-world implementations</h2>
+<h3 id="71-crop-improvement-potential-engineering-autophagy-pathways">7.1 Crop improvement potential: engineering autophagy pathways</h3>
+<p>A 2024 multi-author review (<em>Autophagy Reports</em>) argues autophagy is a practical target for resilient crops and summarizes successful transgenic strategies in crops (e.g., ATG gene overexpression improving abiotic stress tolerance). It specifically highlights that <strong>manipulating selective autophagy receptor NBR1</strong> is promising, noting <strong>NBR1 overexpression in Populus improved salt tolerance</strong> and that NBR1 participates in stress tolerance and quality control of damaged cellular components. This provides a translational rationale for considering JOKA2/NBR1-class receptors as engineering targets in Solanaceae crops (e.g., potato) to modulate stress and immunity traits. (petersen2024autophagyinplants pages 23-26)</p>
+<h3 id="72-potential-strategies-inferred-for-potato-joka2">7.2 Potential strategies inferred for potato JOKA2</h3>
+<p>Within the late blight pathosystem, the best-defined actionable axis is <strong>protecting or enhancing JOKA2-mediated selective autophagy</strong> while reducing susceptibility to PexRD54-mediated competition at ATG8CL (e.g., modifying interaction surfaces or pathway components to reduce effector hijacking). Reviews of RxLR effector biology suggest that altering host targets to prevent effector interaction is a plausible disease-resistance strategy, conceptually consistent with the PexRD54–ATG8CL–Joka2 mechanism (though implementing this for potato requires targeted validation). (king2024bordercontrolmanipulation pages 3-4)</p>
+<h2 id="8-expert-opinions-and-authoritative-synthesis">8. Expert opinions and authoritative synthesis</h2>
+<ul>
+<li>A 2024 perihaustorial effector review places the <strong>NBR1/Joka2–ATG8CL</strong> axis at the center of focal host–pathogen interface trafficking and highlights <strong>PexRD54</strong> as a canonical example of oomycete reprogramming of host selective autophagy. (king2024bordercontrolmanipulation pages 3-4)</li>
+<li>A 2024 broad autophagy review emphasizes autophagy as an <strong>engineering lever for crop resilience</strong>, providing an applied framing for NBR1/JOKA2-mediated selectivity in stress and disease contexts. (petersen2024autophagyinplants pages 23-26)</li>
+</ul>
+<h2 id="9-key-quantitative-results-and-statistics-recentprimary">9. Key quantitative results and statistics (recent/primary)</h2>
+<p>Quantitative localization and domain-dependence (Solanaceae–<em>P. infestans</em> interface):<br />
+- Full-length Joka2 perihaustorial localization: <strong>92% (N=50)</strong>; Joka2-labelled perihaustorial autophagosomes: <strong>100% (N=140)</strong>. (dagdas2018hostautophagymachinery pages 2-4, dagdas2018hostautophagymachinery pages 4-6)<br />
+- AIM mutant shows poor coincidence with ATG8CL puncta: <strong>19% (N=37)</strong>; perihaustorial puncta reduced to <strong>74% (N=42)</strong>. (dagdas2018hostautophagymachinery pages 4-6, dagdas2018hostautophagymachinery pages 2-4)<br />
+- Joka2Δ1–487 (lacking PB1/ZZ) fails to accumulate perihaustorially: <strong>1% (N=72)</strong> (~<strong>1.3% of haustoria</strong>). (dagdas2018hostautophagymachinery pages 2-4, dagdas2018hostautophagymachinery pages 6-7)</p>
+<p>Quantitative condensate/autophagy dynamics (Arabidopsis NBR1 mechanistic update):<br />
+- Condensate fusion events observed within ~<strong>232.20 s</strong>; FRAP recovery monitored up to <strong>600 s</strong> (n=4); heat-stress survival comparisons significant with <strong><em>p &lt; 0.001</em>* and each genotype tested in </strong>&gt;10 independent trials**. (yan2024dualrolesof pages 6-8, yan2024dualrolesof pages 8-9)</p>
+<h2 id="10-summary-functional-annotation-for-uniprot-like-fields">10. Summary functional annotation (for UniProt-like fields)</h2>
+<ul>
+<li><strong>Protein name:</strong> JOKA2 (NBR1 homolog)</li>
+<li><strong>Molecular function:</strong> <strong>Selective autophagy receptor/cargo adaptor</strong> that binds ATG8 (notably ATG8CL) via an AIM/LIR motif and (inferred from domains and plant NBR1 family) binds ubiquitinated and potentially non-ubiquitinated cargos.</li>
+<li><strong>Biological processes:</strong> <strong>Selective autophagy</strong>, stress/quality control pathways; <strong>plant immunity</strong>, especially <strong>focal defense at the extrahaustorial membrane</strong> during <em>Phytophthora</em> infection.</li>
+<li><strong>Subcellular localization:</strong> Cytoplasmic puncta/autophagosomes; infection-induced localization to <strong>perihaustorial autophagosomes</strong> and the <strong>extrahaustorial membrane</strong> interface. (dagdas2018hostautophagymachinery media f53fff51, dagdas2018hostautophagymachinery media 0199f3b8)</li>
+<li><strong>Key pathway interactions:</strong> <strong>ATG8CL branch</strong>; antagonized by oomycete effector <strong>PexRD54</strong> via competition for ATG8CL.</li>
+</ul>
+<h2 id="evidence-summary-table">Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Claim/Function</th>
+<th>Evidence type (genetic/biochemical/cell biology/review)</th>
+<th>Key experimental readout or statistic (include provided percentages N=... and key motif names)</th>
+<th>System/organism</th>
+<th>Key citation (author/year/journal + URL)</th>
+<th>Notes for functional annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JOKA2 is the Solanaceae/potato homolog of plant NBR1 and functions as a selective autophagy cargo receptor</td>
+<td>Biochemical, review</td>
+<td>Potato Joka2 co-immunoprecipitates with ATG8CL; interaction requires an ATG8-interacting motif (AIM), because Joka2^AIM fails to bind; literature describes Joka2/NBR1 as a ubiquitin- and ATG8-binding selective autophagy receptor (dagdas2016aneffectorof pages 3-5, leong2022selectiveautophagyadding pages 9-10, zhang2020broadandcomplex pages 3-5)</td>
+<td>Solanum tuberosum-derived Joka2 studied in planta; broader Solanaceae/plant context</td>
+<td>Dagdas et al. 2016, <em>eLife</em> — https://doi.org/10.7554/eLife.10856; Leong et al. 2022, <em>Essays Biochem.</em> — https://doi.org/10.1042/EBC20210063</td>
+<td>Supports annotation as a <strong>selective autophagy receptor/adaptor</strong>, not an enzyme or transporter; core biochemical role is bridging cargo to ATG8-positive autophagosomes</td>
+</tr>
+<tr>
+<td>JOKA2 positively contributes to defense against <em>Phytophthora infestans</em></td>
+<td>Genetic, infection phenotyping</td>
+<td>Overexpression of Joka2, but not Joka2^AIM, reduces late blight lesion size; silencing Joka2 increases lesion size, indicating a positive defense role dependent on AIM-mediated autophagy coupling (dagdas2016aneffectorof pages 5-7)</td>
+<td><em>Nicotiana benthamiana</em> infection assays with <em>P. infestans</em> using potato/Solanaceae Joka2 constructs</td>
+<td>Dagdas et al. 2016, <em>eLife</em> — https://doi.org/10.7554/eLife.10856</td>
+<td>Primary biological process: <strong>antimicrobial selective autophagy / plant immunity</strong></td>
+</tr>
+<tr>
+<td>JOKA2 preferentially functions with the potato ATG8CL autophagy branch</td>
+<td>Biochemical, cell biology</td>
+<td>Joka2 shows preferential association with ATG8CL rather than ATG8IL; overexpression increases GFP:ATG8CL-labeled autophagosomes and ATG8CL protein accumulation; AIM is required for productive interaction (dagdas2016aneffectorof pages 3-5, dagdas2016aneffectorof pages 5-7, dagdas2018hostautophagymachinery pages 1-2)</td>
+<td>Potato/Solanaceae autophagy machinery in transient expression systems</td>
+<td>Dagdas et al. 2016, <em>eLife</em> — https://doi.org/10.7554/eLife.10856</td>
+<td>Suggests cargo routing through a specialized <strong>ATG8CL-associated selective autophagy pathway</strong></td>
+</tr>
+<tr>
+<td>JOKA2-labeled autophagosomes are redirected to the pathogen interface (haustorial region/EHM) during infection</td>
+<td>Cell biology</td>
+<td>Full-length Joka2:BFP localizes to perihaustorial puncta/EHM in <strong>92% (N=50)</strong> of observations; Joka2:BFP-labeled perihaustorial autophagosomes reported in <strong>100% (N=140)</strong> of scored haustoria; Joka2 and ATG8CL associate with the extrahaustorial membrane marker REM1.3 (dagdas2018hostautophagymachinery pages 2-4, dagdas2018hostautophagymachinery pages 4-6, dagdas2018hostautophagymachinery media f53fff51)</td>
+<td><em>N. benthamiana</em> cells infected by <em>P. infestans</em>; potato/Solanaceae Joka2</td>
+<td>Dagdas et al. 2018, <em>eLife</em> — https://doi.org/10.7554/eLife.37476</td>
+<td>Subcellular localization for annotation: <strong>cytoplasmic puncta/autophagosomes</strong>, especially <strong>perihaustorial autophagosomes at the extrahaustorial membrane</strong> during oomycete infection</td>
+</tr>
+<tr>
+<td>ATG8 binding contributes to perihaustorial recruitment, but is not sufficient by itself</td>
+<td>Cell biology, mutational analysis</td>
+<td>Joka2^AIM still forms perihaustorial puncta at reduced frequency <strong>74% (N=42)</strong>, but coincidence with ATG8CL puncta is rare <strong>19% (N=37)</strong>; thus AIM-dependent ATG8 binding is important, yet additional determinants are needed (dagdas2018hostautophagymachinery pages 4-6, dagdas2018hostautophagymachinery pages 2-4)</td>
+<td><em>P. infestans</em> haustoriated cells expressing Joka2 variants</td>
+<td>Dagdas et al. 2018, <em>eLife</em> — https://doi.org/10.7554/eLife.37476</td>
+<td>Functional motif annotation: contains a critical <strong>AIM/LIR-like motif</strong> for ATG8 engagement, but full focal recruitment requires multi-domain architecture</td>
+</tr>
+<tr>
+<td>PB1/ZZ-mediated oligomerization or partner interactions are critical for focal recruitment</td>
+<td>Cell biology, domain truncation</td>
+<td>Joka2Δ1-487, lacking PB1/ZZ but retaining ubiquitin-binding and ATG8-interacting motifs, fails to accumulate perihaustorially: <strong>1% (N=72)</strong> or <strong>1.3% of haustoria</strong>; authors conclude PB1/ZZ-mediated oligomerization/association is critical (dagdas2018hostautophagymachinery pages 2-4, dagdas2018hostautophagymachinery pages 6-7)</td>
+<td><em>N. benthamiana–P. infestans</em> pathosystem</td>
+<td>Dagdas et al. 2018, <em>eLife</em> — https://doi.org/10.7554/eLife.37476</td>
+<td>Domain-based annotation: <strong>PB1 domain</strong> likely mediates self-assembly/oligomerization; <strong>ZZ region</strong> contributes to recruitment and/or partner binding</td>
+</tr>
+<tr>
+<td>Domain architecture matches UniProt M1BJF6 and canonical plant NBR1/JOKA2 receptors</td>
+<td>Domain analysis, review, figure-based evidence</td>
+<td>Figure schematic lists <strong>PB1 – ZZ – NBR1/FW – UBA – AIM – UBA</strong>; reviews describe plant NBR1 proteins as PB1/ZZ/FW(NBR1)/AIM/UBA receptors, with ubiquitin binding mainly via C-terminal UBA and ATG8 binding via AIM/LIR (dagdas2018hostautophagymachinery pages 2-4, zhang2020broadandcomplex pages 3-5, dagdas2018hostautophagymachinery media f53fff51)</td>
+<td>Plant NBR1 family; Joka2-specific domain map from Solanaceae study</td>
+<td>Dagdas et al. 2018, <em>eLife</em> — https://doi.org/10.7554/eLife.37476; Zhang &amp; Chen 2020, <em>Cells</em> — https://doi.org/10.3390/cells9122562</td>
+<td>Strongly supports mapping to UniProt M1BJF6 domains: <strong>PB1-like, Nbr1_FW, UBA</strong>; molecular function is scaffold/receptor for selective autophagy</td>
+</tr>
+<tr>
+<td>JOKA2 likely binds ubiquitinated cargo but can also participate in aggregate/condensate-like assemblies</td>
+<td>Review, comparative mechanism</td>
+<td>Reviews assign UBA-dependent ubiquitin binding and PB1-dependent oligomerization to plant NBR1/Joka2; Joka2 forms multimeric aggregates, and plant NBR1 can concentrate cargos in condensates/aggrephagy-like structures (leong2022selectiveautophagyadding pages 8-8, zhang2020broadandcomplex pages 3-5)</td>
+<td>Plant NBR1/Joka2 family</td>
+<td>Leong et al. 2022, <em>Essays Biochem.</em> — https://doi.org/10.1042/EBC20210063; Zhang &amp; Chen 2020, <em>Cells</em> — https://doi.org/10.3390/cells9122562</td>
+<td>Functional inference for potato JOKA2: <strong>cargo receptor for ubiquitinated and possibly non-ubiquitinated aggregated substrates</strong></td>
+</tr>
+<tr>
+<td>Pathogen effector PexRD54 antagonizes JOKA2 by competing for ATG8CL</td>
+<td>Biochemical, cell biology, pathogenesis</td>
+<td><em>P. infestans</em> RXLR effector PexRD54 carries its own AIM, binds ATG8CL, stimulates ATG8CL autophagosome formation, and competitively depletes Joka2 from ATG8CL complexes/autophagosomes in a dose-dependent manner (dagdas2016aneffectorof pages 3-5, dagdas2016aneffectorof pages 1-2, dagdas2018hostautophagymachinery pages 1-2, king2024bordercontrolmanipulation pages 3-4)</td>
+<td>Potato late blight pathosystem / Solanaceae infection models</td>
+<td>Dagdas et al. 2016, <em>eLife</em> — https://doi.org/10.7554/eLife.10856; King et al. 2024, <em>MPMI</em> — https://doi.org/10.1094/MPMI-09-23-0122-FI</td>
+<td>Places JOKA2 in a defined pathway: <strong>host selective autophagy targeted by oomycete virulence effectors</strong></td>
+</tr>
+<tr>
+<td>Current 2024 understanding extends plant NBR1 biology to LLPS and non-ubiquitinated cargo recognition, informing JOKA2 functional inference</td>
+<td>Recent primary research, review</td>
+<td>Arabidopsis NBR1 uses <strong>ZZ + FW</strong> for non-ubiquitinated cargo recognition and undergoes LLPS before ATG8-mediated sequestration; PB1 is required for puncta, UBA contributes to puncta, and LIR mutant <strong>WDPI661-664AAAA</strong> blocks ATG8 recruitment (yan2024dualrolesof pages 1-2, yan2024dualrolesof pages 8-9, yan2024dualrolesof pages 6-8, yan2024dualrolesof pages 2-4)</td>
+<td>Arabidopsis; inference to conserved plant NBR1/Joka2 receptors</td>
+<td>Yan et al. 2024, <em>Autophagy</em> — https://doi.org/10.1080/15548627.2024.2391725</td>
+<td>Not potato-specific, but strengthens annotation that JOKA2 may combine <strong>cargo recognition + condensate formation + ATG8 delivery</strong></td>
+</tr>
+<tr>
+<td>Translational relevance: NBR1-mediated selective autophagy is an actionable crop-resilience pathway</td>
+<td>Review, application-oriented synthesis</td>
+<td>2024 reviews highlight NBR1 overexpression improving salt tolerance in poplar, NBR1 importance in drought/salt responses, and the broader possibility of engineering ATG/receptor pathways for stress resilience and disease resistance (petersen2024autophagyinplants pages 23-26, petersen2024autophagyinplants pages 58-60)</td>
+<td>Crop and model plant systems</td>
+<td>Petersen et al. 2024, <em>Autophagy Reports</em> — https://doi.org/10.1080/27694127.2024.2395731</td>
+<td>For annotation context, JOKA2 belongs to a receptor class with <strong>agronomic relevance</strong> in immunity and abiotic stress adaptation</td>
+</tr>
+<tr>
+<td>Expert consensus places JOKA2/NBR1 at the extrahaustorial membrane as a focal immune trafficking component</td>
+<td>Review</td>
+<td>2024 expert review states NBR1/Joka2 is recruited to the EHM in ATG8CL-positive autophagosomes to restrict <em>P. infestans</em> growth, while PexRD54 prevents Joka2-mediated antimicrobial cargo delivery (king2024bordercontrolmanipulation pages 3-4)</td>
+<td>Oomycete–plant interface review</td>
+<td>King et al. 2024, <em>MPMI</em> — https://doi.org/10.1094/MPMI-09-23-0122-FI</td>
+<td>Useful concise annotation statement: <strong>JOKA2 is a selective autophagy receptor operating at focal host–pathogen interfaces</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main experimental and review-based evidence supporting annotation of potato/Solanaceae JOKA2 as an NBR1-family selective autophagy receptor. It highlights domain architecture, localization, pathway role in late blight defense, and the strongest quantitative readouts available from the cited studies.</em></p>
+<h2 id="urls-and-publication-dates-selected-key-sources">URLs and publication dates (selected key sources)</h2>
+<ul>
+<li>Dagdas et al. <strong>2016-01</strong>. <em>eLife</em>: “An effector of the Irish potato famine pathogen antagonizes a host autophagy cargo receptor.” https://doi.org/10.7554/eLife.10856 (dagdas2016aneffectorof pages 5-7)</li>
+<li>Dagdas et al. <strong>2018-06</strong>. <em>eLife</em>: “Host autophagy machinery is diverted to the pathogen interface to mediate focal defense responses…” https://doi.org/10.7554/eLife.37476 (dagdas2018hostautophagymachinery pages 2-4)</li>
+<li>King et al. <strong>2024-03</strong>. <em>Molecular Plant-Microbe Interactions</em>: “Border Control: Manipulation of the Host–Pathogen Interface…” https://doi.org/10.1094/mpmi-09-23-0122-fi (king2024bordercontrolmanipulation pages 3-4)</li>
+<li>Yan et al. <strong>2024-08</strong>. <em>Autophagy</em>: “Dual roles of AtNBR1 … via liquid-liquid phase separation and recognition of non-ubiquitinated substrates…” https://doi.org/10.1080/15548627.2024.2391725 (yan2024dualrolesof pages 6-8)</li>
+<li>Petersen et al. <strong>2024-10</strong>. <em>Autophagy Reports</em>: “Autophagy in plants.” https://doi.org/10.1080/27694127.2024.2395731 (petersen2024autophagyinplants pages 23-26)</li>
+</ul>
+<h2 id="limitations-of-the-current-evidence-set">Limitations of the current evidence set</h2>
+<p>The retrieved excerpts provide strong mechanistic and localization evidence for JOKA2/NBR1 in Solanaceae immunity but do not include (in accessible text) explicit potato gene IDs, the UniProt accession M1BJF6 itself, or named endogenous potato cargo substrates of JOKA2. Lesion size changes are described qualitatively in the extracted text; exact numeric lesion areas and fold-changes would require direct access to the full figure/table readouts in the 2016 paper beyond the excerpted lines.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(dagdas2016aneffectorof pages 5-7): Yasin F Dagdas, Khaoula Belhaj, Abbas Maqbool, Angela Chaparro-Garcia, Pooja Pandey, Benjamin Petre, Nadra Tabassum, Neftaly Cruz-Mireles, Richard K Hughes, Jan Sklenar, Joe Win, Frank Menke, Kim Findlay, Mark J Banfield, Sophien Kamoun, and Tolga O Bozkurt. An effector of the irish potato famine pathogen antagonizes a host autophagy cargo receptor. eLife, Jan 2016. URL: https://doi.org/10.7554/elife.10856, doi:10.7554/elife.10856. This article has 255 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dagdas2018hostautophagymachinery pages 2-4): Yasin F Dagdas, Pooja Pandey, Yasin Tumtas, Nattapong Sanguankiattichai, Khaoula Belhaj, Cian Duggan, Alexandre Y Leary, Maria E Segretin, Mauricio P Contreras, Zachary Savage, Virendrasinh S Khandare, Sophien Kamoun, and Tolga O Bozkurt. Host autophagy machinery is diverted to the pathogen interface to mediate focal defense responses against the irish potato famine pathogen. eLife, Jun 2018. URL: https://doi.org/10.7554/elife.37476, doi:10.7554/elife.37476. This article has 95 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leong2022selectiveautophagyadding pages 8-9): Jia Xuan Leong, Gautier Langin, and Suayib Üstün. Selective autophagy: adding precision in plant immunity. Essays in Biochemistry, 66:189-206, Aug 2022. URL: https://doi.org/10.1042/ebc20210063, doi:10.1042/ebc20210063. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2020broadandcomplex pages 3-5): Yan Zhang and Zhixiang Chen. Broad and complex roles of nbr1-mediated selective autophagy in plant stress responses. Cells, 9:2562, Nov 2020. URL: https://doi.org/10.3390/cells9122562, doi:10.3390/cells9122562. This article has 50 citations.</p>
+</li>
+<li>
+<p>(dagdas2018hostautophagymachinery media f53fff51): Yasin F Dagdas, Pooja Pandey, Yasin Tumtas, Nattapong Sanguankiattichai, Khaoula Belhaj, Cian Duggan, Alexandre Y Leary, Maria E Segretin, Mauricio P Contreras, Zachary Savage, Virendrasinh S Khandare, Sophien Kamoun, and Tolga O Bozkurt. Host autophagy machinery is diverted to the pathogen interface to mediate focal defense responses against the irish potato famine pathogen. eLife, Jun 2018. URL: https://doi.org/10.7554/elife.37476, doi:10.7554/elife.37476. This article has 95 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dagdas2016aneffectorof pages 3-5): Yasin F Dagdas, Khaoula Belhaj, Abbas Maqbool, Angela Chaparro-Garcia, Pooja Pandey, Benjamin Petre, Nadra Tabassum, Neftaly Cruz-Mireles, Richard K Hughes, Jan Sklenar, Joe Win, Frank Menke, Kim Findlay, Mark J Banfield, Sophien Kamoun, and Tolga O Bozkurt. An effector of the irish potato famine pathogen antagonizes a host autophagy cargo receptor. eLife, Jan 2016. URL: https://doi.org/10.7554/elife.10856, doi:10.7554/elife.10856. This article has 255 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dagdas2018hostautophagymachinery pages 1-2): Yasin F Dagdas, Pooja Pandey, Yasin Tumtas, Nattapong Sanguankiattichai, Khaoula Belhaj, Cian Duggan, Alexandre Y Leary, Maria E Segretin, Mauricio P Contreras, Zachary Savage, Virendrasinh S Khandare, Sophien Kamoun, and Tolga O Bozkurt. Host autophagy machinery is diverted to the pathogen interface to mediate focal defense responses against the irish potato famine pathogen. eLife, Jun 2018. URL: https://doi.org/10.7554/elife.37476, doi:10.7554/elife.37476. This article has 95 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yan2024dualrolesof pages 1-2): He Yan, Ao Qi, Zhen Lu, Zhengtao You, Ziheng Wang, Haiying Tang, Xinghai Li, Qiao Xu, Xun Weng, Xiaojuan Du, Lifeng Zhao, and Hao Wang. Dual roles of atnbr1 in regulating selective autophagy <i>via</i> liquid-liquid phase separation and recognition of non-ubiquitinated substrates in arabidopsis. Autophagy, 20:2804-2815, Aug 2024. URL: https://doi.org/10.1080/15548627.2024.2391725, doi:10.1080/15548627.2024.2391725. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yan2024dualrolesof pages 6-8): He Yan, Ao Qi, Zhen Lu, Zhengtao You, Ziheng Wang, Haiying Tang, Xinghai Li, Qiao Xu, Xun Weng, Xiaojuan Du, Lifeng Zhao, and Hao Wang. Dual roles of atnbr1 in regulating selective autophagy <i>via</i> liquid-liquid phase separation and recognition of non-ubiquitinated substrates in arabidopsis. Autophagy, 20:2804-2815, Aug 2024. URL: https://doi.org/10.1080/15548627.2024.2391725, doi:10.1080/15548627.2024.2391725. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leong2022selectiveautophagyadding pages 8-8): Jia Xuan Leong, Gautier Langin, and Suayib Üstün. Selective autophagy: adding precision in plant immunity. Essays in Biochemistry, 66:189-206, Aug 2022. URL: https://doi.org/10.1042/ebc20210063, doi:10.1042/ebc20210063. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dagdas2018hostautophagymachinery pages 4-6): Yasin F Dagdas, Pooja Pandey, Yasin Tumtas, Nattapong Sanguankiattichai, Khaoula Belhaj, Cian Duggan, Alexandre Y Leary, Maria E Segretin, Mauricio P Contreras, Zachary Savage, Virendrasinh S Khandare, Sophien Kamoun, and Tolga O Bozkurt. Host autophagy machinery is diverted to the pathogen interface to mediate focal defense responses against the irish potato famine pathogen. eLife, Jun 2018. URL: https://doi.org/10.7554/elife.37476, doi:10.7554/elife.37476. This article has 95 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dagdas2018hostautophagymachinery media 0199f3b8): Yasin F Dagdas, Pooja Pandey, Yasin Tumtas, Nattapong Sanguankiattichai, Khaoula Belhaj, Cian Duggan, Alexandre Y Leary, Maria E Segretin, Mauricio P Contreras, Zachary Savage, Virendrasinh S Khandare, Sophien Kamoun, and Tolga O Bozkurt. Host autophagy machinery is diverted to the pathogen interface to mediate focal defense responses against the irish potato famine pathogen. eLife, Jun 2018. URL: https://doi.org/10.7554/elife.37476, doi:10.7554/elife.37476. This article has 95 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dagdas2018hostautophagymachinery pages 6-7): Yasin F Dagdas, Pooja Pandey, Yasin Tumtas, Nattapong Sanguankiattichai, Khaoula Belhaj, Cian Duggan, Alexandre Y Leary, Maria E Segretin, Mauricio P Contreras, Zachary Savage, Virendrasinh S Khandare, Sophien Kamoun, and Tolga O Bozkurt. Host autophagy machinery is diverted to the pathogen interface to mediate focal defense responses against the irish potato famine pathogen. eLife, Jun 2018. URL: https://doi.org/10.7554/elife.37476, doi:10.7554/elife.37476. This article has 95 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dagdas2016aneffectorof pages 1-2): Yasin F Dagdas, Khaoula Belhaj, Abbas Maqbool, Angela Chaparro-Garcia, Pooja Pandey, Benjamin Petre, Nadra Tabassum, Neftaly Cruz-Mireles, Richard K Hughes, Jan Sklenar, Joe Win, Frank Menke, Kim Findlay, Mark J Banfield, Sophien Kamoun, and Tolga O Bozkurt. An effector of the irish potato famine pathogen antagonizes a host autophagy cargo receptor. eLife, Jan 2016. URL: https://doi.org/10.7554/elife.10856, doi:10.7554/elife.10856. This article has 255 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(king2024bordercontrolmanipulation pages 3-4): Freddie J. King, Enoch Lok Him Yuen, and Tolga O. Bozkurt. Border control: manipulation of the host–pathogen interface by perihaustorial oomycete effectors. Molecular Plant-Microbe Interactions®, 37:220-226, Mar 2024. URL: https://doi.org/10.1094/mpmi-09-23-0122-fi, doi:10.1094/mpmi-09-23-0122-fi. This article has 10 citations.</p>
+</li>
+<li>
+<p>(yan2024dualrolesof pages 8-9): He Yan, Ao Qi, Zhen Lu, Zhengtao You, Ziheng Wang, Haiying Tang, Xinghai Li, Qiao Xu, Xun Weng, Xiaojuan Du, Lifeng Zhao, and Hao Wang. Dual roles of atnbr1 in regulating selective autophagy <i>via</i> liquid-liquid phase separation and recognition of non-ubiquitinated substrates in arabidopsis. Autophagy, 20:2804-2815, Aug 2024. URL: https://doi.org/10.1080/15548627.2024.2391725, doi:10.1080/15548627.2024.2391725. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(petersen2024autophagyinplants pages 23-26): Morten Petersen, Tamar Avin-Wittenberg, Diane C. Bassham, Yasin Dagdas, Chudi Fan, Alisdair R. Fernie, Liwen Jiang, Divya Mishra, Marisa S. Otegui, Eleazar Rodriguez, and Daniel Hofius. Autophagy in plants. Autophagy Reports, Oct 2024. URL: https://doi.org/10.1080/27694127.2024.2395731, doi:10.1080/27694127.2024.2395731. This article has 30 citations.</p>
+</li>
+<li>
+<p>(leong2022selectiveautophagyadding pages 9-10): Jia Xuan Leong, Gautier Langin, and Suayib Üstün. Selective autophagy: adding precision in plant immunity. Essays in Biochemistry, 66:189-206, Aug 2022. URL: https://doi.org/10.1042/ebc20210063, doi:10.1042/ebc20210063. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yan2024dualrolesof pages 2-4): He Yan, Ao Qi, Zhen Lu, Zhengtao You, Ziheng Wang, Haiying Tang, Xinghai Li, Qiao Xu, Xun Weng, Xiaojuan Du, Lifeng Zhao, and Hao Wang. Dual roles of atnbr1 in regulating selective autophagy <i>via</i> liquid-liquid phase separation and recognition of non-ubiquitinated substrates in arabidopsis. Autophagy, 20:2804-2815, Aug 2024. URL: https://doi.org/10.1080/15548627.2024.2391725, doi:10.1080/15548627.2024.2391725. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(petersen2024autophagyinplants pages 58-60): Morten Petersen, Tamar Avin-Wittenberg, Diane C. Bassham, Yasin Dagdas, Chudi Fan, Alisdair R. Fernie, Liwen Jiang, Divya Mishra, Marisa S. Otegui, Eleazar Rodriguez, and Daniel Hofius. Autophagy in plants. Autophagy Reports, Oct 2024. URL: https://doi.org/10.1080/27694127.2024.2395731, doi:10.1080/27694127.2024.2395731. This article has 30 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="JOKA2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000025 The document contains the requested domain architecture schematic and images of perihaustorial autophagosomes: 1. **Joka2/NBR1 Doma" src="JOKA2-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>dagdas2016aneffectorof pages 5-7</li>
+<li>king2024bordercontrolmanipulation pages 3-4</li>
+<li>petersen2024autophagyinplants pages 23-26</li>
+<li>dagdas2018hostautophagymachinery pages 2-4</li>
+<li>yan2024dualrolesof pages 6-8</li>
+<li>leong2022selectiveautophagyadding pages 8-9</li>
+<li>zhang2020broadandcomplex pages 3-5</li>
+<li>dagdas2016aneffectorof pages 3-5</li>
+<li>dagdas2018hostautophagymachinery pages 1-2</li>
+<li>yan2024dualrolesof pages 1-2</li>
+<li>leong2022selectiveautophagyadding pages 8-8</li>
+<li>dagdas2018hostautophagymachinery pages 4-6</li>
+<li>dagdas2018hostautophagymachinery pages 6-7</li>
+<li>dagdas2016aneffectorof pages 1-2</li>
+<li>yan2024dualrolesof pages 8-9</li>
+<li>leong2022selectiveautophagyadding pages 9-10</li>
+<li>yan2024dualrolesof pages 2-4</li>
+<li>petersen2024autophagyinplants pages 58-60</li>
+<li>https://doi.org/10.7554/eLife.10856;</li>
+<li>https://doi.org/10.1042/EBC20210063</li>
+<li>https://doi.org/10.7554/eLife.10856</li>
+<li>https://doi.org/10.7554/eLife.37476</li>
+<li>https://doi.org/10.7554/eLife.37476;</li>
+<li>https://doi.org/10.3390/cells9122562</li>
+<li>https://doi.org/10.1042/EBC20210063;</li>
+<li>https://doi.org/10.1094/MPMI-09-23-0122-FI</li>
+<li>https://doi.org/10.1080/15548627.2024.2391725</li>
+<li>https://doi.org/10.1080/27694127.2024.2395731</li>
+<li>https://doi.org/10.1094/mpmi-09-23-0122-fi</li>
+<li>https://doi.org/10.7554/elife.10856,</li>
+<li>https://doi.org/10.7554/elife.37476,</li>
+<li>https://doi.org/10.1042/ebc20210063,</li>
+<li>https://doi.org/10.3390/cells9122562,</li>
+<li>https://doi.org/10.1080/15548627.2024.2391725,</li>
+<li>https://doi.org/10.1094/mpmi-09-23-0122-fi,</li>
+<li>https://doi.org/10.1080/27694127.2024.2395731,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: M1BJF6
+gene_symbol: JOKA2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:4113
+  label: Solanum tuberosum
+description: &gt;
+  JOKA2 (M1BJF6), also called NBR1 homolog, is the potato (Solanum tuberosum) member
+  of the plant NBR1/Joka2 family of selective-autophagy cargo receptors - the functional
+  analogue of mammalian p62/SQSTM1 and NBR1. It has the canonical NBR1 modular architecture:
+  an N-terminal PB1 oligomerization domain, a (degenerate) ZZ-type zinc finger, the NBR1/FW
+  region, a C-terminal UBA ubiquitin-binding domain, and an ATG8-interacting motif (AIM/LIR;
+  817-WDPI-824). JOKA2 functions as an autophagy cargo adaptor that bridges cargo to the
+  autophagosomal membrane by binding the ATG8-family protein ATG8CL through its AIM; binding
+  is abolished by the W821A/I824A AIM mutation (Joka2-AIM) [PMID:26765567]. Through this
+  ATG8CL-coupled selective-autophagy pathway it contributes to plant immunity: overexpression
+  of wild-type Joka2 (but not Joka2-AIM) restricts lesions caused by the oomycete pathogen
+  Phytophthora infestans, while silencing Joka2 increases susceptibility [PMID:26765567].
+  During infection, Joka2/ATG8CL-labelled defense-related autophagosomes are diverted to the
+  perihaustorial/extrahaustorial membrane to restrict pathogen growth, and the P. infestans
+  RXLR effector PexRD54 antagonises Joka2 by outcompeting it for ATG8CL binding
+  [PMID:26765567, PMID:29932422]. JOKA2 localizes to cytoplasmic ATG8CL-positive autophagosomes
+  and its cargo is ultimately delivered to the vacuole. Its core molecular function is as a
+  selective-autophagy receptor/adaptor (ATG8-family-protein binding, ubiquitin binding via the
+  UBA domain, autophagy cargo adaptor activity); it is NOT an enzyme or a transmembrane
+  transporter. JOKA2 is a genuine autophagy gene, so its UniProt &#34;Autophagy&#34; keyword reflects
+  real biology - in contrast to many SPKW &#34;autophagy&#34; over-annotations - though the most
+  specific terms (macroautophagy / selective autophagy / autophagy cargo adaptor activity) are
+  preferable to the broad parent terms produced by keyword mapping.
+existing_annotations:
+# --- Retired SPKW keyword-mapping annotations (GO_REF:0000043) ---
+# These three annotations were derived by the UniProtKB/Swiss-Prot keyword2GO (SPKW)
+# pipeline from the keywords &#34;Autophagy&#34; (-&gt; GO:0006914), &#34;Protein transport&#34;/&#34;Transport&#34;
+# (-&gt; GO:0015031) and &#34;Cytoplasmic vesicle&#34; (-&gt; GO:0031410). They are still visible in the
+# UniProt flat file (DR GO ... :UniProtKB-KW lines) but were REMOVED from the current (2026)
+# GOA release when GOA retired the keyword2GO pipeline for cellular organisms. Re-added here
+# (retired: true) and reviewed retrospectively to assess whether removal was justified.
+# JOKA2 is a TRUE autophagy gene (a bona fide NBR1/p62-family selective-autophagy cargo
+# receptor), so - unlike most SPKW &#34;autophagy&#34; over-annotations - the autophagy keyword is
+# biologically correct; the issue is only that the keyword-derived terms are too broad.
+- term:
+    id: GO:0006914
+    label: autophagy
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Autophagy&#34;;
+      snapshot-only, removed from the current GOA release. JOKA2 is a genuine NBR1/p62-family
+      selective-autophagy cargo receptor, so the autophagy keyword is biologically CORRECT,
+      but &#34;autophagy&#34; is the broad parent of the gene&#39;s actual macroautophagy/selective-autophagy
+      role.
+    action: MODIFY
+    reason: &gt;
+      Unlike the human &#34;autophagy&#34; SPKW over-annotations on unrelated proteins, this is a
+      legitimate autophagy gene: potato Joka2 is &#34;a selective autophagy cargo receptor of
+      Solanaceous plants that also binds ATG8 via an AIM&#34;, it physically associates with
+      ATG8CL (lost in the Joka2-AIM mutant), and overexpression of Joka2 (but not Joka2-AIM)
+      &#34;also activates ATG8CL-mediated selective autophagy&#34; [PMID:26765567]. The cited work
+      explicitly states &#34;Joka2/NBR1 mediated selective autophagy pathway contributes to
+      defense against P. infestans&#34; [PMID:29932422]. Removal therefore lost correct biology.
+      However &#34;autophagy&#34; (GO:0006914) is over-broad; because Joka2 acts in autophagosome-mediated
+      (macro)autophagy, the more specific child term &#34;macroautophagy&#34; (GO:0016236) is preferred,
+      with the selective/cargo-receptor aspect captured by the NEW autophagy cargo adaptor
+      activity MF (GO:0160247) below. MODIFY rather than ACCEPT or REMOVE.
+    proposed_replacement_terms:
+    - id: GO:0016236
+      label: macroautophagy
+    supported_by:
+    - reference_id: PMID:26765567
+      supporting_text: &#34;Joka2 was reported as a selective autophagy cargo receptor of Solanaceous
+        plants that also binds ATG8 via an AIM&#34;
+    - reference_id: PMID:26765567
+      supporting_text: &#34;This indicates that Joka2 also activates ATG8CL-mediated selective autophagy.&#34;
+    - reference_id: file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+      supporting_text: &#34;JOKA2 is a **selective autophagy cargo receptor** that links cargo to
+        ATG8-positive autophagosomes, with a prominent role in **antimicrobial selective autophagy**
+        during oomycete infection.&#34;
+- term:
+    id: GO:0015031
+    label: protein transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keywords &#34;Protein transport&#34; /
+      &#34;Transport&#34;; snapshot-only, removed from the current GOA release. The keyword reflects
+      the cargo-receptor / autophagosome-delivery role of JOKA2 but maps to a generic vesicular
+      protein-transport process that does not capture the autophagy-specific function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GOA&#39;s removal of this annotation was JUSTIFIED. JOKA2 does deliver cargo (and itself) into
+      ATG8-coated autophagosomes that are then carried to the vacuole - &#34;selective-autophagy
+      employs specialized autophagy cargo receptors that bind ATG8 on autophagosome membranes,
+      and recruit specific cargoes to autophagosomes&#34; [PMID:29932422] - so in a loose sense it
+      participates in protein relocation. However, &#34;protein transport&#34; (GO:0015031) is a broad
+      term most strongly associated with secretory/endomembrane and transmembrane protein
+      trafficking; for an autophagy cargo receptor it is uninformative and potentially misleading,
+      implying a generic transport role the protein does not have. The genuine activity is better
+      captured by the autophagy-specific terms: the molecular function &#34;autophagy cargo adaptor
+      activity&#34; (GO:0160247) and the process &#34;macroautophagy&#34; (GO:0016236), both added/proposed in
+      this review. The keyword-derived parent therefore adds nothing once the specific autophagy
+      annotations are present, and its removal is appropriate.
+    supported_by:
+    - reference_id: PMID:29932422
+      supporting_text: &#34;selective-autophagy employs specialized autophagy cargo receptors that bind
+        ATG8 on autophagosome membranes, and recruit specific cargoes to autophagosomes&#34;
+    - reference_id: file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+      supporting_text: &#34;JOKA2 is a **selective autophagy cargo receptor** that links cargo to
+        ATG8-positive autophagosomes, with a prominent role in **antimicrobial selective autophagy**
+        during oomycete infection.&#34;
+- term:
+    id: GO:0031410
+    label: cytoplasmic vesicle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Cytoplasmic vesicle&#34;;
+      snapshot-only, removed from the current GOA release. JOKA2 associates with cytoplasmic
+      autophagosomes, so the essence is correct, but &#34;cytoplasmic vesicle&#34; is the broad parent
+      of the specific compartment, the autophagosome.
+    action: MODIFY
+    reason: &gt;
+      The annotation is not wrong - JOKA2 localizes to cytoplasmic autophagosomes (a type of
+      cytoplasmic vesicle): &#34;JOKA2 localizes to cytoplasmic puncta consistent with autophagosomes
+      and associates with **ATG8CL**-labeled structures in vivo&#34;, and the protein co-localizes
+      with GFP:ATG8CL-labelled autophagosomes [PMID:26765567]. The UniProt subcellular-location
+      annotation lists &#34;Cytoplasmic vesicle, autophagosome&#34;, and the cell-biology data place
+      Joka2 specifically on ATG8CL-positive autophagosomes. The broad keyword-derived parent
+      &#34;cytoplasmic vesicle&#34; (GO:0031410) should therefore be replaced by the specific, directly
+      supported child term &#34;autophagosome&#34; (GO:0005776), which is independently annotated in
+      current GOA from the Swiss-Prot subcellular-location vocabulary. MODIFY (generalize -&gt;
+      specialize) rather than MARK_AS_OVER_ANNOTATED.
+    proposed_replacement_terms:
+    - id: GO:0005776
+      label: autophagosome
+    supported_by:
+    - reference_id: file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+      supporting_text: &#34;JOKA2 localizes to cytoplasmic puncta consistent with autophagosomes and
+        associates with **ATG8CL**-labeled structures in vivo&#34;
+    - reference_id: PMID:26765567
+      supporting_text: &#34;Joka2:RFP colocalizes with GFP:ATG8CL-labelled autophagosomes&#34;
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0005773
+    label: vacuole
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProtKB/Swiss-Prot subcellular-location vocabulary mapping
+      (SL-0272 Vacuole). Duplicates the EXP vacuole annotation below; the autophagy pathway
+      delivers Joka2-associated cargo to the vacuole.
+    action: ACCEPT
+    reason: &gt;
+      Consistent with the experimentally supported vacuole annotation (EXP, PMID:29932422) and
+      with autophagy biology: autophagosomes &#34;are then carried to the vacuole for recycling&#34;
+      [PMID:29932422]. The vacuole is the terminal degradative compartment for the selective
+      autophagy pathway in which JOKA2 acts. The IEA duplicate of the EXP annotation is acceptable.
+    supported_by:
+    - reference_id: PMID:29932422
+      supporting_text: &#34;autophagosomes, which are then carried to the vacuole for recycling&#34;
+- term:
+    id: GO:0005776
+    label: autophagosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProtKB/Swiss-Prot subcellular-location vocabulary mapping
+      (SL-0023 Autophagosome). This is the core, directly supported localization of JOKA2.
+    action: ACCEPT
+    reason: &gt;
+      Strongly supported by direct cell-biology evidence. JOKA2 localizes to cytoplasmic
+      ATG8CL-positive autophagosomes: &#34;Joka2:RFP colocalizes with GFP:ATG8CL-labelled
+      autophagosomes&#34; [PMID:26765567], and &#34;JOKA2 localizes to cytoplasmic puncta consistent
+      with autophagosomes and associates with ATG8CL-labeled structures in vivo&#34;. The
+      autophagosome is the precise compartment where the cargo receptor docks onto ATG8 via its
+      AIM; this annotation is also the proposed replacement for the broad retired &#34;cytoplasmic
+      vesicle&#34; SPKW term.
+    supported_by:
+    - reference_id: PMID:26765567
+      supporting_text: &#34;Joka2:RFP colocalizes with GFP:ATG8CL-labelled autophagosomes&#34;
+    - reference_id: file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+      supporting_text: &#34;JOKA2 localizes to cytoplasmic puncta consistent with autophagosomes and
+        associates with **ATG8CL**-labeled structures in vivo&#34;
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR000433, ZZ-type zinc finger). JOKA2 carries a ZZ-type
+      zinc finger (residues 442-492, with predicted Zn-coordinating residues C447/C450/C471/C474),
+      but the domain is annotated as degenerate.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The ZZ-type zinc finger is a genuine structural feature inferred by InterPro and present in
+      the UniProt feature table (ZN_FING 442-492, &#34;ZZ-type; degenerate&#34;; BINDING residues for
+      Zn(2+)), so zinc binding is plausible. In NBR1-family receptors the ZZ domain participates
+      in cargo recognition rather than catalysis. However, the domain is explicitly degenerate in
+      JOKA2, there is no gene-specific experimental evidence for metal binding, and zinc binding is
+      a structural/auxiliary property rather than the protein&#39;s core selective-autophagy-receptor
+      function. Retain as a correct but non-core molecular feature.
+    supported_by:
+    - reference_id: file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+      supporting_text: &#34;**ZZ** zinc finger and **FW/NBR1** region (cargo-recognition functions)&#34;
+- term:
+    id: GO:0005773
+    label: vacuole
+  evidence_type: EXP
+  original_reference_id: PMID:29932422
+  qualifier: located_in
+  review:
+    summary: &gt;
+      Experimental (EXP) vacuole localization from the 2018 study. The vacuole is the terminal
+      compartment of the JOKA2/ATG8CL selective-autophagy pathway.
+    action: ACCEPT
+    reason: &gt;
+      Supported by the UniProt SUBCELLULAR LOCATION annotation (&#34;Vacuole {ECO:0000269|PubMed:29932422}&#34;)
+      and consistent with autophagy biology, in which autophagosomes carrying cargo receptors are
+      delivered to the vacuole: &#34;autophagosomes, which are then carried to the vacuole for recycling&#34;
+      [PMID:29932422]. Accept as a core localization for the pathway endpoint.
+    supported_by:
+    - reference_id: PMID:29932422
+      supporting_text: &#34;autophagosomes, which are then carried to the vacuole for recycling&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26765567
+  qualifier: enables
+  review:
+    summary: &gt;
+      IPI annotation (with UniProtKB:M1C146, ATG8CL) for the physical Joka2-ATG8CL interaction.
+      &#34;Protein binding&#34; is uninformative; the interaction is the defining ATG8-family-protein /
+      autophagy-cargo-adaptor activity of the receptor.
+    action: MODIFY
+    reason: &gt;
+      The interaction partner M1C146 is potato ATG8CL, and the binding occurs through the JOKA2
+      AIM motif: &#34;potato Joka2, but not the AIM mutant, Joka2AIM, associated with ATG8CL&#34;, and
+      &#34;Mutation of the predicted AIM in Joka2 (819-WDPI-822) to ADPA resulted in loss of ATG8CL
+      binding&#34; [PMID:26765567]. Per curation guidelines the vague &#34;protein binding&#34; (GO:0005515)
+      should be replaced by an informative molecular function. The most accurate term is &#34;autophagy
+      cargo adaptor activity&#34; (GO:0160247) - the binding activity that brings cargo to the phagophore
+      via ATG8 - capturing both the ATG8-family-protein binding and the receptor/adaptor role. This
+      is also added as a NEW annotation below; MODIFY here to retain the IPI evidence with M1C146.
+    proposed_replacement_terms:
+    - id: GO:0160247
+      label: autophagy cargo adaptor activity
+    supported_by:
+    - reference_id: PMID:26765567
+      supporting_text: &#34;potato Joka2, but not the AIM mutant, Joka2AIM, associated with ATG8CL&#34;
+    - reference_id: PMID:26765567
+      supporting_text: &#34;Mutation of the predicted AIM in Joka2 (819-WDPI-822) to ADPA resulted in
+        loss of ATG8CL binding&#34;
+- term:
+    id: GO:0050832
+    label: defense response to fungus
+  evidence_type: IDA
+  original_reference_id: PMID:29932422
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IDA annotation for JOKA2&#39;s role in defense against the late blight pathogen. The biological
+      conclusion (positive role in pathogen defense) is well supported, but the pathogen is
+      Phytophthora infestans, an OOMYCETE, not a fungus, so the term is taxonomically incorrect.
+    action: MODIFY
+    reason: &gt;
+      The defense role is strongly supported: &#34;Overexpression of Joka2, but not Joka2AIM,
+      significantly restricted the size of the disease lesions caused by P. infestans&#34; and
+      &#34;virus-induced gene silencing of Joka2 resulted in increased disease lesions&#34;, leading the
+      authors to conclude &#34;Joka2-mediated selective autophagy contributes to defense against this
+      pathogen&#34; [PMID:26765567]; the 2018 study reiterates that &#34;Joka2/NBR1 mediated selective
+      autophagy pathway contributes to defense against P. infestans&#34; [PMID:29932422]. However,
+      Phytophthora infestans is an oomycete (Stramenopiles), not a true fungus, so &#34;defense response
+      to fungus&#34; (GO:0050832) is the wrong taxonomic branch. It should be MODIFIED to &#34;defense
+      response to oomycetes&#34; (GO:0002229), the accurate term, retaining the IDA evidence.
+    proposed_replacement_terms:
+    - id: GO:0002229
+      label: defense response to oomycetes
+    supported_by:
+    - reference_id: PMID:26765567
+      supporting_text: &#34;Overexpression of Joka2, but not Joka2AIM, significantly restricted the
+        size of the disease lesions caused by P. infestans&#34;
+    - reference_id: PMID:29932422
+      supporting_text: &#34;we recently showed that Joka2/NBR1 mediated selective autophagy pathway
+        contributes to defense against P. infestans&#34;
+# --- NEW annotations proposed from the literature ---
+- term:
+    id: GO:0160247
+    label: autophagy cargo adaptor activity
+  evidence_type: IPI
+  original_reference_id: PMID:26765567
+  review:
+    summary: &gt;
+      JOKA2 is a selective-autophagy cargo receptor that bridges cargo to the autophagosomal
+      membrane by binding the ATG8-family protein ATG8CL through its AIM motif. This precise
+      molecular function is not represented in current GOA (only the vague &#34;protein binding&#34;).
+    action: NEW
+    reason: &gt;
+      The current/seeded MF annotation is only the uninformative &#34;protein binding&#34; (GO:0005515).
+      The defining activity of JOKA2 is autophagy cargo adaptor activity (GO:0160247) - &#34;the
+      binding activity of a molecule that brings together a cargo, targeted for degradation via
+      autophagy, to a phagophore&#34;. JOKA2 &#34;binds ATG8 via an AIM&#34; and is &#34;a selective autophagy
+      cargo receptor of Solanaceous plants&#34; [PMID:26765567]; the AIM-dependent ATG8CL interaction
+      (lost in Joka2-AIM) is required for its function as a host autophagy cargo receptor (UniProt
+      DOMAIN). IPI is justified by the in planta co-immunoprecipitation of Joka2 with ATG8CL
+      (UniProtKB:M1C146) and the AIM-mutant loss of binding.
+    supported_by:
+    - reference_id: PMID:26765567
+      supporting_text: &#34;Joka2 was reported as a selective autophagy cargo receptor of Solanaceous
+        plants that also binds ATG8 via an AIM&#34;
+    - reference_id: PMID:26765567
+      supporting_text: &#34;potato Joka2, but not the AIM mutant, Joka2AIM, associated with ATG8CL&#34;
+    - reference_id: file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+      supporting_text: &#34;Joka2 binds **ATG8CL** through an **AIM**, and this binding is required for
+        functional immune output&#34;
+- term:
+    id: GO:0043130
+    label: ubiquitin binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      JOKA2 has a C-terminal UBA domain (residues 811-860) characteristic of NBR1/p62-family
+      receptors, which bind ubiquitin to recognize ubiquitinated cargo. Inferred from sequence/
+      domain similarity; not yet directly demonstrated for the potato protein.
+    action: NEW
+    reason: &gt;
+      NBR1/p62-family selective-autophagy receptors couple ubiquitinated cargo to ATG8 via a
+      C-terminal UBA ubiquitin-binding domain. JOKA2 has this UBA domain (UniProt DOMAIN 811-860;
+      Pfam PF24932 UBA_NBR1_C, PROSITE UBA), and the deep-research synthesis notes that &#34;the
+      receptor&#39;s UBA domains strongly imply ubiquitin-binding capability, consistent with plant
+      NBR1 family behavior&#34;. Ubiquitin binding (GO:0043130) is therefore a strongly supported
+      family-level molecular function. Marked ISS because, although the domain is present, direct
+      ubiquitin-binding has not been shown for potato JOKA2 specifically (it is established for the
+      Arabidopsis/general plant NBR1 family). Provided as a NEW, conservative MF.
+    supported_by:
+    - reference_id: file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+      supporting_text: &#34;the receptor’s **UBA domains** strongly imply ubiquitin-binding capability,
+        consistent with plant NBR1 family behavior&#34;
+    - reference_id: file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+      supporting_text: &#34;**UBA** domain(s) (ubiquitin binding)&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro-to-GO mapping (IPR000433 ZZ-type zinc finger) assigns zinc ion binding
+      to JOKA2; the ZZ finger in JOKA2 is degenerate.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations from keywords &#34;Autophagy&#34;,
+      &#34;Protein transport&#34;/&#34;Transport&#34; and &#34;Cytoplasmic vesicle&#34;; present in the snapshot but
+      removed from the current GOA release after GOA retired the keyword2GO pipeline for
+      cellular organisms.
+  - statement: For JOKA2 the &#34;Autophagy&#34; keyword reflects genuine biology (a bona fide
+      NBR1/p62-family selective-autophagy cargo receptor); the keyword-derived terms are simply
+      broader than the gene&#39;s specific macroautophagy / cargo-adaptor functions.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+  - statement: Subcellular-location vocabulary mapping assigns vacuole (SL-0272) and autophagosome
+      (SL-0023) to JOKA2; both are independently supported by experimental data.
+- id: PMID:26765567
+  title: An effector of the Irish potato famine pathogen antagonizes a host autophagy cargo
+    receptor.
+  findings:
+  - statement: Potato Joka2 is a selective-autophagy cargo receptor of Solanaceous plants that
+      binds ATG8CL via its AIM motif (819-WDPI-822); the Joka2-AIM mutant loses ATG8CL binding.
+  - statement: Joka2 (but not Joka2-AIM) increases the number of GFP:ATG8CL autophagosomes and
+      activates ATG8CL-mediated selective autophagy, and Joka2:RFP colocalizes with
+      GFP:ATG8CL-labelled autophagosomes.
+  - statement: Overexpression of Joka2 (but not Joka2-AIM) restricts P. infestans lesion size and
+      silencing increases disease lesions, so Joka2-mediated selective autophagy contributes to
+      defense; the P. infestans effector PexRD54 outcompetes Joka2 for ATG8CL binding.
+- id: PMID:29932422
+  title: Host autophagy machinery is diverted to the pathogen interface to mediate focal defense
+    responses against the Irish potato famine pathogen.
+  findings:
+  - statement: Selective autophagy employs specialized autophagy cargo receptors that bind ATG8 on
+      autophagosome membranes and recruit specific cargoes to autophagosomes; autophagosomes are
+      carried to the vacuole for recycling.
+  - statement: The Joka2/NBR1-mediated selective autophagy pathway contributes to defense against
+      P. infestans; during infection Joka2/ATG8CL-labelled autophagosomes are diverted to the
+      perihaustorial/extrahaustorial membrane to restrict pathogen growth.
+  - statement: JOKA2 localizes to the vacuole (UniProt SUBCELLULAR LOCATION, ECO:0000269).
+- id: file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation of
+    potato JOKA2 (M1BJF6), NBR1-family selective-autophagy receptor.
+  findings:
+  - statement: Synthesizes the Dagdas et al. 2016 (eLife, PMID:26765567) and 2018 (eLife,
+      PMID:29932422) potato/Solanaceae studies with the broader plant NBR1 literature, concluding
+      JOKA2 is best annotated as a selective-autophagy cargo receptor/adaptor that binds ATG8
+      (notably ATG8CL) via an AIM/LIR and (by domain/family inference) binds ubiquitinated cargo
+      via its UBA domain.
+  - statement: Describes the canonical NBR1/Joka2 modular architecture (PB1 - ZZ - NBR1/FW - UBA -
+      AIM - UBA), matching the UniProt M1BJF6 domain set; PB1 mediates oligomerization, ZZ+FW
+      cargo recognition, UBA ubiquitin binding, and the AIM ATG8 binding.
+  - statement: Localizes JOKA2 to cytoplasmic ATG8CL-positive autophagosomes and, during infection,
+      to perihaustorial autophagosomes at the extrahaustorial membrane; PexRD54 antagonises Joka2
+      by competing for ATG8CL.
+  - statement: Notes the 2024 Arabidopsis NBR1 mechanistic expansion (LLPS/condensates and
+      recognition of non-ubiquitinated cargo via ZZ+FW), which by inference may also apply to
+      potato JOKA2 but is not directly demonstrated for it.
+core_functions:
+- description: &gt;
+    JOKA2 is a selective-autophagy cargo receptor (autophagy cargo adaptor) that bridges cargo to
+    the autophagosomal membrane by binding the ATG8-family protein ATG8CL through its C-terminal
+    AIM/LIR motif (817-WDPI-824). The AIM-dependent ATG8CL interaction is required for receptor
+    function and is lost in the Joka2-AIM (W821A/I824A) mutant.
+  molecular_function:
+    id: GO:0160247
+    label: autophagy cargo adaptor activity
+  directly_involved_in:
+  - id: GO:0016236
+    label: macroautophagy
+  locations:
+  - id: GO:0005776
+    label: autophagosome
+  supported_by:
+  - reference_id: PMID:26765567
+    supporting_text: &#34;Joka2 was reported as a selective autophagy cargo receptor of Solanaceous
+      plants that also binds ATG8 via an AIM&#34;
+  - reference_id: PMID:26765567
+    supporting_text: &#34;potato Joka2, but not the AIM mutant, Joka2AIM, associated with ATG8CL&#34;
+- description: &gt;
+    Through the ATG8CL-coupled selective-autophagy pathway, JOKA2 contributes to plant immunity
+    against the oomycete pathogen Phytophthora infestans: it activates ATG8CL-mediated selective
+    autophagy, and overexpression of Joka2 (but not Joka2-AIM) restricts disease lesions while
+    silencing increases susceptibility. Its cargo and the receptor itself are delivered to the
+    vacuole via autophagosomes.
+  molecular_function:
+    id: GO:0160247
+    label: autophagy cargo adaptor activity
+  directly_involved_in:
+  - id: GO:0002229
+    label: defense response to oomycetes
+  locations:
+  - id: GO:0005773
+    label: vacuole
+  supported_by:
+  - reference_id: PMID:26765567
+    supporting_text: &#34;Overexpression of Joka2, but not Joka2AIM, significantly restricted the size
+      of the disease lesions caused by P. infestans&#34;
+  - reference_id: PMID:29932422
+    supporting_text: &#34;we recently showed that Joka2/NBR1 mediated selective autophagy pathway
+      contributes to defense against P. infestans&#34;
+  - reference_id: file:SOLTU/JOKA2/JOKA2-deep-research-falcon.md
+    supporting_text: &#34;JOKA2 is a **selective autophagy cargo receptor** that links cargo to
+      ATG8-positive autophagosomes, with a prominent role in **antimicrobial selective autophagy**
+      during oomycete infection.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Does potato JOKA2 mediate aggrephagy (GO:0035973, selective autophagy of protein
+    aggregates) via PB1-driven oligomerization and cargo condensation, as inferred from the
+    plant NBR1/Joka2 family? (Both ubiquitin binding, GO:0043130, and macroautophagy/cargo-adaptor
+    activity are already captured above; aggrephagy is the family-level process still untested in
+    potato.)
+  experts:
+  - Yan Zhang
+- question: What are the endogenous defense-related cargoes that potato JOKA2 delivers to
+    autophagosomes during P. infestans infection, and are they ubiquitinated?
+  experts:
+  - Tolga O. Bozkurt
+- question: Does potato JOKA2 recognize non-ubiquitinated cargo via its ZZ+FW region and undergo
+    liquid-liquid phase separation, as recently shown for Arabidopsis NBR1?
+  experts:
+  - Yasin F. Dagdas
+- question: Is JOKA2&#39;s UBA domain functional for ubiquitin binding in potato, and how does
+    ubiquitin-dependent versus ATG8-dependent recruitment partition its activity?
+  experts:
+  - Sophien Kamoun
+suggested_experiments:
+- description: Identify endogenous JOKA2 cargo by affinity-purification mass spectrometry of
+    Joka2 versus Joka2-AIM during P. infestans infection, and test ubiquitination of candidate
+    cargoes.
+  hypothesis: JOKA2 selectively captures ubiquitinated defense-related or pathogen-derived
+    proteins for autophagic delivery to the vacuole.
+  experiment_type: affinity-purification proteomics
+- description: Test recombinant JOKA2 UBA domain for binding to mono- and poly-ubiquitin chains
+    in vitro (ITC/pulldown), and assess cargo recruitment in planta with a UBA-domain mutant.
+  hypothesis: The JOKA2 UBA domain binds ubiquitin and is required for recognition of
+    ubiquitinated cargo, as in other NBR1/p62-family receptors.
+  experiment_type: in vitro ubiquitin-binding and structure-function assay
+- description: Quantify P. infestans colonization and autophagic flux in joka2 loss-of-function
+    potato lines complemented with wild-type, AIM-mutant, UBA-mutant or PB1-mutant JOKA2.
+  hypothesis: ATG8 binding (AIM), ubiquitin binding (UBA) and oligomerization (PB1) each
+    contribute to JOKA2-mediated selective autophagy and immunity against the oomycete.
+  experiment_type: genetic complementation and disease-resistance assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

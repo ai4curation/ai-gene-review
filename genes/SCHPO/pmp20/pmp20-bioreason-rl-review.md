@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: pmp20 (S. pombe)
 
-Source: pmp20-deep-research-bioreason-rl.md
+Source: pmp20-bioreason-rl-predictions.md
 
 - **Correctness**: 1/5
 - **Completeness**: 2/5

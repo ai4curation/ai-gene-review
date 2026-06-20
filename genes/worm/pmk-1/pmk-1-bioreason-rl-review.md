@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: pmk-1 (C. elegans)
 
-Source: pmk-1-deep-research-bioreason-rl.md
+Source: pmk-1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 2/5

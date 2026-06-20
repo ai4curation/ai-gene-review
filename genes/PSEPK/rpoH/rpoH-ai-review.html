@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rpoH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rpoH</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q7CCA6" target="_blank" class="term-link">
+                        Q7CCA6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rpoH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q7CCA6" data-a="DESCRIPTION: RpoH (sigma-32) is the heat-shock sigma factor of ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RpoH (sigma-32) is the heat-shock sigma factor of Pseudomonas putida, a member of the sigma-70 (RpoD) family of RNA polymerase sigma factors. As a dissociable specificity subunit of RNA polymerase, it binds the core enzyme to form an alternative holoenzyme that directs transcription initiation from a distinct class of heat-shock promoters. Through region 2 it contacts core RNAP and recognizes the -10 promoter element and promotes DNA melting, and through its C-terminal region 4 helix-turn-helix motif it recognizes the -35 element. RpoH activates the regulon encoding molecular chaperones and ATP-dependent proteases (e.g. DnaK/DnaJ/GrpE, GroEL/GroES, HtpG, ClpB, Lon, FtsH, IbpA) that refold or degrade damaged proteins, thereby maintaining protein homeostasis under heat and other proteotoxic stresses (including aromatic solvent exposure and elevated pressure). Its activity and stability are themselves controlled by a chaperone- and protease-mediated negative feedback circuit. RpoH acts in the cytoplasm as part of the RNA polymerase holoenzyme on the bacterial chromosome.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7CCA6" data-a="GO:0003677" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoH binds promoter DNA (recognizing -10 and -35 elements) as part of the RNA polymerase holoenzyme; DNA binding is a genuine activity but is a general parent of the more informative sigma factor activity term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sigma factors do bind DNA sequence-specifically via region 2 (-10) and region 4 (-35, HTH motif), so the annotation is not wrong. However, it is a generic supporting molecular function; the core, more informative MF for this gene is GO:0016987 sigma factor activity. Retain as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7CCA6" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This InterPro2GO mapping assigns the general transcription factor activity term. By GO convention, bacterial sigma factors are NOT classified as DNA-binding transcription factors; they are basal/general transcription machinery and should receive GO:0016987 sigma factor activity instead.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO has an explicit convention that sigma factors are not DNA-binding transcription factors (GO:0003700) but rather are captured by GO:0016987 sigma factor activity, which is already annotated here. GO:0003700 is the wrong molecular function class for a sigma factor and is redundant/misleading. The correct MF term is present.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7CCA6" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoH acts in the cytoplasm as part of the RNA polymerase holoenzyme on the nucleoid; cytoplasmic localization is consistent with UniProt subcellular location and with its role as a soluble, non-secreted transcription factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with UniProt SUBCELLULAR LOCATION (Cytoplasm) and the known biology of sigma factors acting on the chromosome within the cytoplasm/nucleoid.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                    GO:0006352
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7CCA6" data-a="GO:0006352" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The primary biological role of RpoH is to promote sequence-specific transcription initiation by RNA polymerase at heat-shock promoters. This is a core process term for the gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly captures the central function of a sigma factor as an initiation factor (UniProt FUNCTION states sigma factors promote attachment of RNAP to initiation sites). Core biological process.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7CCA6" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As an alternative sigma factor, RpoH regulates transcription of the heat-shock regulon. The term is correct but general relative to the more specific initiation terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with sigma factor biology, but a broad regulatory term. The more specific GO:0006352 (transcription initiation) and GO:2000142 (regulation of transcription initiation) better capture the precise role; retain as non-core context.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009408" target="_blank" class="term-link">
+                                    GO:0009408
+                                </a>
+                            </span>
+                            <span class="term-label">response to heat</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7CCA6" data-a="GO:0009408" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoH (sigma-32) is the master regulator of the heat-shock response, induced after heat upshift and driving chaperone/protease expression. Response to heat is a well-supported core biological process for this gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by the canonical biology of sigma-32 and by P. putida-specific data showing rapid induction of RpoH-dependent heat-shock genes after temperature upshift (Ito et al. 2014). Core process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoH/rpoH-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In Pseudomonas putida the heat-shock response is controlled by sigma-32 (encoded by rpoH); heat-shock gene expression increases within ~10 min of temperature upshift and correlates with sigma-32 levels, and rpoH (PP_5108) is upregulated under proteotoxic stresses such as elevated pressure and aromatic solvent exposure.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                    GO:0010468
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7CCA6" data-a="GO:0010468" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A very general regulatory term; correct in essence but far less informative than the specific transcription-initiation regulation terms already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Not incorrect, but high-level and subsumed by the more specific transcription regulation/initiation terms. Retain as non-core rather than core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    GO:0016987
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7CCA6" data-a="GO:0016987" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct, specific molecular function for RpoH. It binds RNA polymerase core enzyme and confers heat-shock promoter specificity. This is the core molecular function of the gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Precisely matches the gene product&#39;s identity as a sigma-70 family RpoH sigma factor (UniProt, HAMAP MF_00961, TIGR02392). This is the preferred MF term for sigma factors per GO convention.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    GO:2000142
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7CCA6" data-a="GO:2000142" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoH regulates which genes RNA polymerase initiates transcription at, so regulation of transcription initiation accurately captures its role. Inferred from the sigma factor activity annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Logically consistent with sigma factor activity (the GOC inference is from GO:0016987) and biologically accurate for a promoter-selectivity factor.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as the heat-shock (sigma-32) specificity subunit of RNA polymerase, binding the core enzyme and directing sequence-specific transcription initiation at heat-shock promoters to activate the chaperone/protease regulon that maintains protein homeostasis under stress.</h3>
+                <span class="vote-buttons" data-g="Q7CCA6" data-a="FUNCTION: Acts as the heat-shock (sigma-32) specificity subu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25303383" target="_blank" class="term-link">
+                                PMID:25303383
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">In P. putida the heat-shock response is controlled by sigma-32 (rpoH); heat-shock gene expression increases within ~10 min of upshift and correlates with sigma-32 levels, and the regulon includes DnaK/DnaJ/GrpE, GroEL/GroES, ClpB and related proteostasis machinery.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/rpoH/rpoH-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on rpoH (Q7CCA6/PP_5108) in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">rpoH (PP_5108) encodes the sigma-32 heat-shock sigma factor that directs RNA polymerase to heat-shock promoters, activating the chaperone/protease proteostasis regulon; it is induced under heat, elevated pressure, and aromatic solvent stress in P. putida KT2440.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25303383" target="_blank" class="term-link">
+                            PMID:25303383
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic and phenotypic characterization of the heat shock response in Pseudomonas putida</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In Pseudomonas putida the heat-shock response is controlled by the sigma-32 factor encoded by rpoH; heat-shock chaperone/protease genes (DnaK/DnaJ/GrpE, GroEL/GroES, ClpB) are rapidly induced after temperature upshift, and dnaJ and clpB mutants are temperature sensitive.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpoH-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7CCA6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">32 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:35:46.472983</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="rpoH-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="rpoH-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000009 The microarray results for the fold change of PP_5108 (*rpoH*, RNA polymerase sigma-32 factor) and key heat shock genes under eleva</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-rpoh-uniprot-q7cca6-locus-pp_5108-in-pseudomonas-putida-kt2440-psepk">Research report: <strong>rpoH (UniProt Q7CCA6; locus PP_5108)</strong> in <em>Pseudomonas putida</em> KT2440 (PSEPK)</h2>
+<h3 id="0-identity-verification-mandatory">0) Identity verification (mandatory)</h3>
+<p>The literature gathered matches the UniProt target <strong>Q7CCA6</strong> because it explicitly identifies <strong>PP_5108</strong> in <em>P. putida</em> <strong>KT2440</strong> as <strong>rpoH</strong>, annotated as the <strong>RNA polymerase sigma-32 factor</strong> (σ32/RpoH), which is the canonical heat-shock sigma factor in Gram-negative bacteria. In KT2440 pressure transcriptomics, PP_5108 is labeled “RNA polymerase sigma-32 factor” with gene name <strong>rpoH</strong>, confirming the locus-to-function mapping. (follonier2013newinsightson pages 5-6)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-what-rpoh-32-is">1.1 What RpoH (σ32) is</h4>
+<p><strong>RpoH (σ32)</strong> is an <strong>alternative sigma factor</strong> in the <strong>σ70 family</strong>. Sigma factors are RNA polymerase (RNAP) specificity subunits that redirect RNAP to particular promoter classes. In Gram-negative bacteria, σ32 is the major transcriptional regulator of the <strong>heat-shock response (HSR)</strong>, activating genes that restore <strong>protein homeostasis (proteostasis)</strong>—molecular chaperones and proteases that refold or degrade damaged proteins. (potvin2008sigmafactorsin pages 3-5, ito2014geneticandphenotypic pages 2-3)</p>
+<p>In a widely cited Pseudomonas-focused review, RpoH is described as an <strong>σ70-like factor</strong> with substantial similarity to <em>E. coli</em> σ32 (noted as ~61% identity for the <em>P. aeruginosa</em> RpoH). It is responsible for the canonical heat-shock induction response and supports basal expression of multiple heat-shock proteins. (potvin2008sigmafactorsin pages 3-5)</p>
+<h4 id="12-70-family-domain-architecture-relevant-to-rpoh-function">1.2 σ70-family domain architecture relevant to RpoH function</h4>
+<p>σ70-family sigma factors share conserved regions that implement promoter recognition and RNAP interaction. In Pseudomonas, these conserved σ70-family regions are summarized as: <br />
+- <strong>Region/domain 2</strong>: most conserved; involved in <strong>core RNAP binding</strong>, <strong>DNA melting</strong>, and recognition of the <strong>−10 element</strong>.<br />
+- <strong>Region/domain 4</strong>: contains an <strong>HTH DNA-binding motif</strong> for recognition of the <strong>−35 element</strong>.<br />
+These concepts support functional inference for Q7CCA6 (RpoH subfamily) in promoter recognition and transcription initiation. (potvin2008sigmafactorsin pages 3-5)</p>
+<h4 id="13-32-regulon-size-and-promoter-consensus-reference-framework">1.3 σ32 regulon size and promoter consensus (reference framework)</h4>
+<p>While regulon membership differs across organisms, a quantitative reference point for σ32 control comes from <em>E. coli</em>: σ32 is cited as controlling <strong>~50 transcriptional units (~90 genes)</strong>, emphasizing its broad role in proteostasis. (ito2014geneticandphenotypic pages 2-3)</p>
+<p>A σ32 promoter consensus reported in the <em>P. putida</em> heat-shock genetics study (citing the <em>E. coli</em> consensus) is <strong>CTTGAA N13–17 CCCCATNT</strong>, and <em>P. putida</em> candidate σ32 promoter sequences were identified upstream of <strong>cbpA</strong>, <strong>hfq (PP4894)</strong>, and <strong>secA (PP1345)</strong>. (ito2014geneticandphenotypic pages 6-8)</p>
+<h3 id="2-primary-function-and-pathway-placement-in-p-putida-kt2440">2) Primary function and pathway placement in <em>P. putida</em> KT2440</h3>
+<h4 id="21-primary-molecular-function">2.1 Primary molecular function</h4>
+<p>RpoH is <strong>not an enzyme</strong>; its primary function is <strong>sequence-specific transcription initiation control</strong>. RpoH binds the RNAP core enzyme to form an alternative holoenzyme and drives transcription from <strong>heat-shock promoters</strong>, upregulating chaperones/proteases and related stress-repair functions. This is the central mechanistic meaning of “heat shock sigma factor.” (ito2014geneticandphenotypic pages 2-3, ito2014geneticandphenotypic pages 6-8)</p>
+<h4 id="22-biological-processes-governed-hsrproteostasis-control">2.2 Biological processes governed (HSR/proteostasis control)</h4>
+<p>In <em>Pseudomonas putida</em>, the heat-shock response is described as being controlled by σ32 (encoded by <strong>rpoH</strong>) and implemented by conserved chaperone/protease systems, notably <strong>DnaK/DnaJ/GrpE</strong> and <strong>GroEL/GroES</strong> chaperone machines and ATP-dependent proteases (including <strong>FtsH</strong>) that together establish a feedback-regulated proteostasis circuit. (ito2014geneticandphenotypic pages 1-2, ito2014geneticandphenotypic pages 2-3)</p>
+<h4 id="23-cellular-localization-of-rpoh-action">2.3 Cellular localization of RpoH action</h4>
+<p>RpoH functions where transcription occurs: it acts as part of the RNAP holoenzyme on the <strong>bacterial chromosome in the cytoplasm/nucleoid</strong> (i.e., it is not secreted and does not act in the periplasm). Its regulatory targets include cytosolic chaperones (DnaK/DnaJ/GrpE; GroEL/GroES) and proteases; regulation also involves the membrane-embedded protease <strong>FtsH</strong>, linking cytosolic σ32 levels to membrane-associated proteolysis. (ito2014geneticandphenotypic pages 1-2, ito2014geneticandphenotypic pages 2-3)</p>
+<h3 id="3-regulation-of-rpoh32-in-p-putida-mechanisms-and-experimentally-supported-phenotypes">3) Regulation of RpoH/σ32 in <em>P. putida</em>: mechanisms and experimentally supported phenotypes</h3>
+<h4 id="31-negative-feedback-control-by-chaperones-and-proteolysis">3.1 Negative feedback control by chaperones and proteolysis</h4>
+<p>A central current model is chaperone-mediated negative feedback: when proteins misfold under stress, chaperones are titrated away from σ32, freeing σ32 to activate heat-shock transcription; as chaperone levels rise, they re-bind/inactivate σ32 and promote its turnover.</p>
+<p>In <em>P. putida</em>, σ32 activity/quantity is controlled by <strong>DnaK/DnaJ/GrpE</strong> and <strong>GroEL/GroES</strong>, and σ32 is degraded by a membrane ATP-dependent protease (implicated as <strong>FtsH</strong>) with chaperone assistance. (ito2014geneticandphenotypic pages 1-2, ito2014geneticandphenotypic pages 2-3)</p>
+<h4 id="32-induction-kinetics-quantitative">3.2 Induction kinetics (quantitative)</h4>
+<p>σ32 induction after heat shock is described as <strong>transient</strong>, peaking at <strong>~5–15 minutes</strong>, and in <em>P. putida</em> heat-shock experiments increased expression of heat-shock genes occurs within <strong>~10 minutes</strong> and correlates with σ32 levels. Moreover, <strong>rpoH mRNA</strong> can continue increasing even as σ32 protein levels decline, indicating layered transcriptional/post-transcriptional regulation. (ito2014geneticandphenotypic pages 2-3, ito2014geneticandphenotypic pages 6-8)</p>
+<h4 id="33-genetic-evidence-for-the-32-centered-proteostasis-circuit">3.3 Genetic evidence for the σ32-centered proteostasis circuit</h4>
+<p>While not direct rpoH knockouts, genetic perturbations in σ32 effector systems demonstrate the pathway’s biological necessity:<br />
+- A <strong>ΔclpB</strong> mutant in <em>P. putida</em> shows normal heat-shock protein synthesis (except ClpB) but is <strong>highly temperature sensitive</strong> and cannot disaggregate thermo-induced aggregates, demonstrating that σ32-driven proteostasis requires specific disaggregation capacity for survival after heat stress. (ito2014geneticandphenotypic pages 1-2)<br />
+- A <strong>ΔdnaJ</strong> mutant is <strong>temperature sensitive</strong> and accumulates more (especially high-molecular-weight) aggregates upon heat stress; <strong>CbpA</strong> can partially substitute for DnaJ, consistent with σ32-regulated tuning of DnaK co-chaperone capacity in <em>P. putida</em>. (ito2014geneticandphenotypic pages 1-2, ito2014geneticandphenotypic pages 2-3)</p>
+<h3 id="4-stress-contexts-in-kt2440-where-rpoh32-is-implicated-omics-experimental-evidence">4) Stress contexts in KT2440 where rpoH/σ32 is implicated (omics + experimental evidence)</h3>
+<h4 id="41-elevated-pressure-bioreactor-relevant-conditions-kt2440">4.1 Elevated pressure / bioreactor-relevant conditions (KT2440)</h4>
+<p>Under elevated pressure conditions relevant to industrial-scale bioreactors, KT2440 microarrays show <strong>upregulation of rpoH (PP_5108)</strong> alongside canonical heat-shock genes. Specifically:<br />
+- <strong>rpoH (PP_5108): +1.49 fold-change</strong> (adjusted p = 3.6×10−3) under pressure; <strong>+1.57</strong> (adjusted p = 8.7×10−3) under pressure + elevated oxygen.<br />
+- Chaperone genes are co-induced: <strong>htpG +1.65/+1.92</strong>, <strong>groES +1.61/+1.77</strong>, <strong>groEL +1.78/+2.19</strong>, consistent with activation of a heat-shock-like proteostasis response. (follonier2013newinsightson pages 5-6, follonier2013newinsightson media 908730bc)</p>
+<h4 id="42-aromatic-solvent-stress-proteotoxicity-kt2440">4.2 Aromatic solvent stress / proteotoxicity (KT2440)</h4>
+<p>In a KT2440 study examining toluene and related aromatics, induced proteins are described as belonging to the <strong>RpoH regulon</strong>, including <strong>GroES, GroEL, GrpE, Lon protease, DnaK, and IbpA</strong>, linking solvent exposure to heat-shock/proteostasis activation. (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</p>
+<p>Quantitatively, large inductions were observed for multiple heat-shock/proteostasis genes upon aromatic exposure (selected examples): <strong>HslU 12.03-fold</strong> (o-xylene), <strong>DnaK 6.43-fold</strong> (o-xylene), <strong>HSP20 family protein 47.05-fold</strong> (toluene), and <strong>IbpA up to 6.46-fold</strong> (3MB), illustrating strong compound-specific activation of proteostasis pathways. (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</p>
+<h4 id="43-aromatic-bioproduct-stress-in-a-kt2440-background-strain-2023">4.3 Aromatic bioproduct stress in a KT2440-background strain (2023)</h4>
+<p>A 2023 study in <em>P. putida</em> DOT-T1E (a solvent-tolerant strain, KT2440 background) exposed to aromatics (styrene/trans-cinnamic acid) reported induction of multiple chaperones and proteostasis-related proteins including <strong>GroEL</strong>, <strong>SurA</strong>, <strong>HtpG</strong>, and GroSL, with associated oxidative-stress defenses and efflux systems; some genes were overexpressed by up to <strong>7.7-fold</strong> and ATP synthase genes induced <strong>2.2–5.2-fold</strong>, indicating substantial physiological burden and engagement of stress repair systems relevant to industrial aromatic production. (garciafranco2023insightsintothe pages 9-10, garciafranco2023insightsintothe pages 10-11)</p>
+<h3 id="5-applications-and-real-world-implementations">5) Applications and real-world implementations</h3>
+<h4 id="51-process-robustness-and-temperature-based-control">5.1 Process robustness and temperature-based control</h4>
+<p>A review of Pseudomonas stress responses emphasizes that heat-shock systems (including σ32/RpoH control and RNA thermosensors) can be leveraged for industrial applications. It highlights <strong>ROSE-type RNA thermometers</strong> in heat-shock gene regulation; in <em>P. putida</em>, a ROSE element precedes <strong>ibpA</strong> (small heat-shock protein), illustrating temperature-responsive post-transcriptional control within the broader σ32-linked heat-shock network. (craig2021leveragingpseudomonasstress pages 7-9)</p>
+<p>As a concrete process-relevant example, <em>P. putida</em> KT2440 heterologous rhamnolipid production increased by <strong>&gt;60%</strong> when temperature was raised from <strong>30°C to 37°C</strong>, supporting the concept that temperature shifts can be used as a practical control input interacting with heat-shock regulatory circuitry. (craig2021leveragingpseudomonasstress pages 7-9)</p>
+<h4 id="52-industrially-relevant-stresses-that-intersect-rpoh-biology">5.2 Industrially relevant stresses that intersect RpoH biology</h4>
+<p>The same review notes that industrial workflows expose bacteria to temperature extremes (e.g., drying and sterilization steps) and that survival relies on “chaperones, proteases, thermosensors, and alternative sigma factors.” This frames RpoH-centered proteostasis as directly relevant to strain engineering for robustness and to formulation processes (e.g., drying). (craig2021leveragingpseudomonasstress pages 5-6, craig2021leveragingpseudomonasstress pages 11-12)</p>
+<h3 id="6-recent-developments-and-latest-research-prioritizing-20232024">6) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="61-2024-systems-biology-genome-wide-mapping-of-rpoh-binding-and-sigmulons">6.1 2024 systems biology: genome-wide mapping of RpoH binding and sigmulons</h4>
+<p>A 2024 PLOS Genetics study applied genome-wide binding assays and transcriptomic systems biology to quantify sigma-factor regulatory dynamics during heat shock (in <em>Salmonella</em> as a model). While not <em>P. putida</em>, it exemplifies the <strong>current best practice</strong> for defining sigma regulons (ChIP-based occupancy + RNA-seq integration + iModulon inference) and produces quantitative benchmarks:<br />
+- Binding sites under control conditions: <strong>RpoH 181</strong>, with <strong>+40 new</strong> and <strong>−8 lost</strong> after heat shock.<br />
+- RpoH sigmulon size: <strong>151 genes (93 TUs)</strong> under control vs <strong>163 genes (98 TUs)</strong> after heat shock; <strong>43</strong> RpoH sigmulon genes changed significantly in expression.<br />
+- Overlap with housekeeping sigma RpoD: <strong>~28.7% (control)</strong> and <strong>~24.8% (heat shock)</strong>, indicating shared/competitive promoter use.<br />
+These results provide up-to-date quantitative framing for σ32 network plasticity and sigma competition, which are likely relevant principles for Pseudomonas RpoH biology even if organism-specific maps differ. (park2024unveilingthenovel pages 5-7, park2024unveilingthenovel pages 4-5)</p>
+<h4 id="62-2024-population-genomics-updated-genomic-context-for-kt2440-robustness">6.2 2024 population genomics: updated genomic context for KT2440 robustness</h4>
+<p>A 2024 FEMS Microbiology Reviews article quantifies stress-related gene inventories and regulatory capacity in the <em>P. putida</em> group, offering updated genomic context for KT2440 (noting its robustness). It reports that KT2440 encodes <strong>10 universal stress proteins</strong>, <strong>7 cold shock proteins</strong>, <strong>5 heat shock proteins</strong>, and that <strong>~10% of the genome</strong> is devoted to regulatory proteins, alongside extensive efflux capacity (e.g., <strong>14 RND efflux pumps</strong> across four subfamilies). Although RpoH is not singled out in the excerpted passage, these data contextualize σ-factor–mediated stress regulation as embedded within a large regulatory repertoire supporting environmental and industrial resilience. (udaondo2024unravelingthegenomic pages 14-16)</p>
+<h3 id="7-expert-interpretation-authoritative-synthesis">7) Expert interpretation (authoritative synthesis)</h3>
+<p>Collectively, the evidence supports functional annotation of <strong>rpoH (Q7CCA6; PP_5108)</strong> in KT2440 as a <strong>σ70-family alternative sigma factor (σ32)</strong> that orchestrates a <strong>proteostasis-centered stress response</strong>. The strongest organism-specific signals are that KT2440/KT2442 quickly induces σ32-dependent programs upon heat upshift (minutes scale), and that diverse industrially relevant stresses that cause protein damage (aromatic solvents; elevated pressure/oxygen transfer conditions) activate rpoH-linked chaperone/protease expression, reflecting that these stresses converge on the same proteostasis bottleneck. (ito2014geneticandphenotypic pages 6-8, follonier2013newinsightson pages 5-6, dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</p>
+<h3 id="8-evidence-summary-table">8) Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Claim / functional element</th>
+<th>Evidence type</th>
+<th>Key quantitative data</th>
+<th>Stress condition / context</th>
+<th>Source and URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Identity:</strong> PP_5108 in <em>P. putida</em> KT2440 is <strong>rpoH</strong>, annotated as <strong>RNA polymerase sigma-32 factor (RpoH)</strong></td>
+<td>Omics annotation + organism-specific literature</td>
+<td>Table entry explicitly maps <strong>PP_5108 = rpoH = RNA polymerase sigma-32 factor</strong>; functional studies in <em>P. putida</em> state <strong>rpoH encodes σ32</strong></td>
+<td>KT2440 transcriptome under elevated pressure; KT2442 heat-shock genetics</td>
+<td>Follonier et al. 2013 <em>Microbial Cell Factories</em> https://doi.org/10.1186/1475-2859-12-30; Ito et al. 2014 <em>MicrobiologyOpen</em> https://doi.org/10.1002/mbo3.217 (follonier2013newinsightson pages 5-6, ito2014geneticandphenotypic pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Induction kinetics:</strong> RpoH/σ32 is rapidly induced after heat shift and correlates with hsp induction</td>
+<td>Experiment</td>
+<td>σ32 induction is described as transient, <strong>peaking at ~5–15 min</strong> after heat shock; in <em>P. putida</em>, <strong>hsp gene expression increased within ~10 min</strong> and correlated with σ32 level</td>
+<td>Heat-shock response in <em>P. putida</em> KT2442</td>
+<td>Ito et al. 2014 <em>MicrobiologyOpen</em> https://doi.org/10.1002/mbo3.217 (ito2014geneticandphenotypic pages 2-3, ito2014geneticandphenotypic pages 6-8)</td>
+</tr>
+<tr>
+<td><strong>Regulon size / promoter logic:</strong> RpoH directs RNAP to heat-shock promoters; canonical σ32 promoter motif reported</td>
+<td>Experiment + comparative regulatory analysis</td>
+<td>E. coli σ32 regulon cited as <strong>~50 transcriptional units / ~90 genes</strong>; reported σ32 promoter consensus <strong>CTTGAA N13-17 CCCCATNT</strong>; candidate <em>P. putida</em> σ32-regulated genes include <strong>cbpA, hfq, secA</strong></td>
+<td>Heat-shock transcriptional regulation; inference used in <em>P. putida</em> promoter searches</td>
+<td>Ito et al. 2014 <em>MicrobiologyOpen</em> https://doi.org/10.1002/mbo3.217 (ito2014geneticandphenotypic pages 6-8)</td>
+</tr>
+<tr>
+<td><strong>Mechanistic regulation:</strong> RpoH activity and abundance are controlled by chaperones and proteolysis</td>
+<td>Review + experiment</td>
+<td><strong>DnaK/DnaJ/GrpE</strong> and <strong>GroEL/GroES</strong> bind/inactivate σ32; <strong>FtsH</strong> degrades σ32; <em>P. putida</em> <strong>dnaJ</strong> mutant is temperature sensitive and accumulates more protein aggregates, while <strong>clpB</strong> mutant is heat sensitive and defective in aggregate solubilization</td>
+<td>Heat-shock quality-control circuit in cytoplasm</td>
+<td>Ito et al. 2014 <em>MicrobiologyOpen</em> https://doi.org/10.1002/mbo3.217; Potvin et al. 2008 <em>FEMS Microbiology Reviews</em> https://doi.org/10.1111/j.1574-6976.2007.00092.x (ito2014geneticandphenotypic pages 1-2, potvin2008sigmafactorsin pages 3-5, ito2014geneticandphenotypic pages 2-3)</td>
+</tr>
+<tr>
+<td><strong>Protein family / domain context:</strong> RpoH is an alternative <strong>sigma-70 family</strong> sigma factor for heat-shock transcription</td>
+<td>Review</td>
+<td>RpoH shows <strong>61% identity</strong> to <em>E. coli</em> σ32; σ70-family architecture includes conserved <strong>domain 2</strong> (core RNAP binding, DNA melting, -10 recognition) and <strong>domain 4</strong> (HTH, -35 recognition)</td>
+<td>General bacterial transcription; relevant to Pseudomonas RpoH annotation</td>
+<td>Potvin et al. 2008 <em>FEMS Microbiology Reviews</em> https://doi.org/10.1111/j.1574-6976.2007.00092.x (potvin2008sigmafactorsin pages 3-5)</td>
+</tr>
+<tr>
+<td><strong>Pressure-associated induction in KT2440:</strong> rpoH and canonical heat-shock genes are upregulated</td>
+<td>Omics (microarray; supported by qRT-PCR for most tested genes)</td>
+<td>Under elevated pressure: <strong>rpoH +1.49</strong> (adj. P = <strong>3.6E-03</strong>); with pressure + O2: <strong>+1.57</strong> (adj. P = <strong>8.7E-03</strong>). Associated genes: <strong>htpG +1.65 / +1.92</strong>, <strong>groES +1.61 / +1.77</strong>, <strong>groEL +1.78 / +2.19</strong>, <strong>grpE +1.33</strong></td>
+<td>KT2440 under elevated pressure and elevated pressure + dissolved oxygen; bioprocess-relevant stress</td>
+<td>Follonier et al. 2013 <em>Microbial Cell Factories</em> https://doi.org/10.1186/1475-2859-12-30 (follonier2013newinsightson pages 5-6, follonier2013newinsightson media 908730bc, follonier2013newinsightson media 43885585)</td>
+</tr>
+<tr>
+<td><strong>Solvent response link:</strong> aromatic solvent stress recruits the RpoH heat-shock program</td>
+<td>Omics + experiment</td>
+<td>Toluene/o-xylene exposure induced proteins assigned to the <strong>RpoH regulon</strong>, including <strong>GroES, GroEL, GrpE, Lon, DnaK, IbpA</strong>; activation of the TOL meta operon was reported to require the contribution of <strong>σ32 and/or σ38</strong> host factors</td>
+<td>KT2440 exposed to toluene/aromatic solvents; proteotoxic stress tradeoff with metabolism</td>
+<td>Domínguez-Cuevas et al. 2006 <em>Journal of Biological Chemistry</em> https://doi.org/10.1074/jbc.m509848200 (dominguezcuevas2006transcriptionaltradeoffbetween pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles organism-specific evidence supporting the functional annotation of </em>Pseudomonas putida<em> KT2440/KT2442 rpoH (PP_5108) as the sigma-32 heat-shock sigma factor. It highlights identity, regulatory mechanism, kinetics, regulon features, and stress-responsive expression data most useful for gene-function annotation.</em></p>
+<h3 id="9-key-quantitative-evidence-highlights-selected">9) Key quantitative evidence highlights (selected)</h3>
+<ul>
+<li>KT2440 elevated pressure: <strong>rpoH +1.49 FC</strong> (adj. p 3.6×10−3), <strong>groEL +1.78 FC</strong>, <strong>groES +1.61 FC</strong>, <strong>htpG +1.65 FC</strong>. (follonier2013newinsightson pages 5-6, follonier2013newinsightson media 908730bc)</li>
+<li>KT2440 aromatic exposure: <strong>HSP20 family protein 47.05-fold</strong> (toluene), <strong>HslU 12.03-fold</strong> (o-xylene), <strong>DnaK 6.43-fold</strong> (o-xylene), <strong>IbpA up to 6.46-fold</strong> (3MB). (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</li>
+<li>σ32 induction timing: <strong>peak ~5–15 min</strong>, hsp induction within <strong>~10 min</strong>. (ito2014geneticandphenotypic pages 2-3, ito2014geneticandphenotypic pages 6-8)</li>
+<li>2024 genome-wide sigma mapping (model organism): RpoH binding sites <strong>181</strong> baseline, <strong>+40/−8</strong> remodeling; sigmulon <strong>151→163 genes</strong> under heat shock. (park2024unveilingthenovel pages 5-7, park2024unveilingthenovel pages 4-5)</li>
+<li>2024 KT2440-group genomics: <strong>10 universal stress proteins</strong>, <strong>7 cold shock proteins</strong>, <strong>5 heat shock proteins</strong>, <strong>~10%</strong> genome regulatory proteins, <strong>14 RND efflux pumps</strong>. (udaondo2024unravelingthegenomic pages 14-16)</li>
+</ul>
+<h3 id="10-urls-and-publication-dates-most-cited-sources-used-here">10) URLs and publication dates (most-cited sources used here)</h3>
+<ul>
+<li>Ito et al. <strong>2014-10</strong>. <em>MicrobiologyOpen</em>. “Genetic and phenotypic characterization of the heat shock response in <em>Pseudomonas putida</em>.” https://doi.org/10.1002/mbo3.217 (ito2014geneticandphenotypic pages 2-3, ito2014geneticandphenotypic pages 6-8)</li>
+<li>Follonier et al. <strong>2013-03</strong>. <em>Microbial Cell Factories</em>. “New insights on the reorganization of gene transcription in <em>P. putida</em> KT2440 at elevated pressure.” https://doi.org/10.1186/1475-2859-12-30 (follonier2013newinsightson pages 5-6, follonier2013newinsightson media 908730bc)</li>
+<li>Domínguez-Cuevas et al. <strong>2006-04</strong>. <em>Journal of Biological Chemistry</em>. “Transcriptional tradeoff between metabolic and stress-response programs in <em>P. putida</em> KT2440 exposed to toluene.” https://doi.org/10.1074/jbc.m509848200 (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</li>
+<li>García-Franco et al. <strong>2023-02</strong>. <em>Microbial Cell Factories</em>. “Susceptibility of <em>P. putida</em> to industrial aromatic hydrocarbons.” https://doi.org/10.1186/s12934-023-02028-y (garciafranco2023insightsintothe pages 9-10)</li>
+<li>Park et al. <strong>2024-10</strong>. <em>PLOS Genetics</em>. Sigma-factor systems biology mapping under heat shock. https://doi.org/10.1371/journal.pgen.1011464 (park2024unveilingthenovel pages 5-7, park2024unveilingthenovel pages 4-5)</li>
+<li>Udaondo et al. <strong>2024-10</strong>. <em>FEMS Microbiology Reviews</em>. Population genomics of the <em>P. putida</em> group. https://doi.org/10.1093/femsre/fuae025 (udaondo2024unravelingthegenomic pages 14-16)</li>
+</ul>
+<h3 id="11-notes-on-limitations-scope-and-organism-specificity">11) Notes on limitations (scope and organism specificity)</h3>
+<p>A complete, experimentally defined <strong>KT2440-specific RpoH regulon map</strong> (e.g., ChIP-seq/ChIP-exo of RpoH in KT2440) was not available in the retrieved corpus. Therefore, regulon membership is supported here by (i) direct KT2440 stress transcriptomics, (ii) KT2442 heat-shock genetics and promoter motif searches, and (iii) solvent-stress gene induction patterns explicitly labeled as RpoH regulon members by the authors. (ito2014geneticandphenotypic pages 6-8, dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(follonier2013newinsightson pages 5-6): Stéphanie Follonier, Isabel F Escapa, Pilar M Fonseca, Bernhard Henes, Sven Panke, Manfred Zinn, and María Auxiliadora Prieto. New insights on the reorganization of gene transcription in pseudomonas putida kt2440 at elevated pressure. Microbial Cell Factories, 12:30-30, Mar 2013. URL: https://doi.org/10.1186/1475-2859-12-30, doi:10.1186/1475-2859-12-30. This article has 46 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(potvin2008sigmafactorsin pages 3-5): Eric Potvin, François Sanschagrin, and Roger C. Levesque. Sigma factors in pseudomonas aeruginosa. FEMS microbiology reviews, 32 1:38-55, Jan 2008. URL: https://doi.org/10.1111/j.1574-6976.2007.00092.x, doi:10.1111/j.1574-6976.2007.00092.x. This article has 427 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ito2014geneticandphenotypic pages 2-3): Fumihiro Ito, Takayuki Tamiya, Iwao Ohtsu, Makoto Fujimura, and Fumiyasu Fukumori. Genetic and phenotypic characterization of the heat shock response in pseudomonas putida. MicrobiologyOpen, 3:922-936, Oct 2014. URL: https://doi.org/10.1002/mbo3.217, doi:10.1002/mbo3.217. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ito2014geneticandphenotypic pages 6-8): Fumihiro Ito, Takayuki Tamiya, Iwao Ohtsu, Makoto Fujimura, and Fumiyasu Fukumori. Genetic and phenotypic characterization of the heat shock response in pseudomonas putida. MicrobiologyOpen, 3:922-936, Oct 2014. URL: https://doi.org/10.1002/mbo3.217, doi:10.1002/mbo3.217. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ito2014geneticandphenotypic pages 1-2): Fumihiro Ito, Takayuki Tamiya, Iwao Ohtsu, Makoto Fujimura, and Fumiyasu Fukumori. Genetic and phenotypic characterization of the heat shock response in pseudomonas putida. MicrobiologyOpen, 3:922-936, Oct 2014. URL: https://doi.org/10.1002/mbo3.217, doi:10.1002/mbo3.217. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(follonier2013newinsightson media 908730bc): Stéphanie Follonier, Isabel F Escapa, Pilar M Fonseca, Bernhard Henes, Sven Panke, Manfred Zinn, and María Auxiliadora Prieto. New insights on the reorganization of gene transcription in pseudomonas putida kt2440 at elevated pressure. Microbial Cell Factories, 12:30-30, Mar 2013. URL: https://doi.org/10.1186/1475-2859-12-30, doi:10.1186/1475-2859-12-30. This article has 46 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8): Patricia Domínguez-Cuevas, José-Eduardo González-Pastor, Silvia Marqués, Juan-Luis Ramos, and Víctor de Lorenzo. Transcriptional tradeoff between metabolic and stress-response programs in pseudomonas putida kt2440 cells exposed to toluene*. Journal of Biological Chemistry, 281:11981-11991, Apr 2006. URL: https://doi.org/10.1074/jbc.m509848200, doi:10.1074/jbc.m509848200. This article has 269 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(garciafranco2023insightsintothe pages 9-10): Ana García-Franco, Patricia Godoy, Estrella Duque, and Juan Luis Ramos. Insights into the susceptibility of pseudomonas putida to industrially relevant aromatic hydrocarbons that it can synthesize from sugars. Microbial Cell Factories, Feb 2023. URL: https://doi.org/10.1186/s12934-023-02028-y, doi:10.1186/s12934-023-02028-y. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(garciafranco2023insightsintothe pages 10-11): Ana García-Franco, Patricia Godoy, Estrella Duque, and Juan Luis Ramos. Insights into the susceptibility of pseudomonas putida to industrially relevant aromatic hydrocarbons that it can synthesize from sugars. Microbial Cell Factories, Feb 2023. URL: https://doi.org/10.1186/s12934-023-02028-y, doi:10.1186/s12934-023-02028-y. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(craig2021leveragingpseudomonasstress pages 7-9): Kelly Craig, Brant R. Johnson, and Amy Grunden. Leveraging pseudomonas stress response mechanisms for industrial applications. Frontiers in Microbiology, May 2021. URL: https://doi.org/10.3389/fmicb.2021.660134, doi:10.3389/fmicb.2021.660134. This article has 67 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(craig2021leveragingpseudomonasstress pages 5-6): Kelly Craig, Brant R. Johnson, and Amy Grunden. Leveraging pseudomonas stress response mechanisms for industrial applications. Frontiers in Microbiology, May 2021. URL: https://doi.org/10.3389/fmicb.2021.660134, doi:10.3389/fmicb.2021.660134. This article has 67 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(craig2021leveragingpseudomonasstress pages 11-12): Kelly Craig, Brant R. Johnson, and Amy Grunden. Leveraging pseudomonas stress response mechanisms for industrial applications. Frontiers in Microbiology, May 2021. URL: https://doi.org/10.3389/fmicb.2021.660134, doi:10.3389/fmicb.2021.660134. This article has 67 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(park2024unveilingthenovel pages 5-7): Joon Young Park, Minchang Jang, Sang-Mok Lee, Jihoon Woo, Eun-Jin Lee, and Donghyuk Kim. Unveiling the novel regulatory roles of rpod-family sigma factors in salmonella typhimurium heat shock response through systems biology approaches. Oct 2024. URL: https://doi.org/10.1371/journal.pgen.1011464, doi:10.1371/journal.pgen.1011464. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(park2024unveilingthenovel pages 4-5): Joon Young Park, Minchang Jang, Sang-Mok Lee, Jihoon Woo, Eun-Jin Lee, and Donghyuk Kim. Unveiling the novel regulatory roles of rpod-family sigma factors in salmonella typhimurium heat shock response through systems biology approaches. Oct 2024. URL: https://doi.org/10.1371/journal.pgen.1011464, doi:10.1371/journal.pgen.1011464. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(udaondo2024unravelingthegenomic pages 14-16): Zulema Udaondo, Juan-Luis Ramos, and Kaleb Z. Abram. Unraveling the genomic diversity of the pseudomonas putida group: exploring taxonomy, core pangenome, and antibiotic resistance mechanisms. FEMS Microbiology Reviews, Oct 2024. URL: https://doi.org/10.1093/femsre/fuae025, doi:10.1093/femsre/fuae025. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(follonier2013newinsightson media 43885585): Stéphanie Follonier, Isabel F Escapa, Pilar M Fonseca, Bernhard Henes, Sven Panke, Manfred Zinn, and María Auxiliadora Prieto. New insights on the reorganization of gene transcription in pseudomonas putida kt2440 at elevated pressure. Microbial Cell Factories, 12:30-30, Mar 2013. URL: https://doi.org/10.1186/1475-2859-12-30, doi:10.1186/1475-2859-12-30. This article has 46 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dominguezcuevas2006transcriptionaltradeoffbetween pages 1-2): Patricia Domínguez-Cuevas, José-Eduardo González-Pastor, Silvia Marqués, Juan-Luis Ramos, and Víctor de Lorenzo. Transcriptional tradeoff between metabolic and stress-response programs in pseudomonas putida kt2440 cells exposed to toluene*. Journal of Biological Chemistry, 281:11981-11991, Apr 2006. URL: https://doi.org/10.1074/jbc.m509848200, doi:10.1074/jbc.m509848200. This article has 269 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rpoH-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000009 The microarray results for the fold change of PP_5108 (*rpoH*, RNA polymerase sigma-32 factor) and key heat shock genes under eleva" src="rpoH-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>follonier2013newinsightson pages 5-6</li>
+<li>potvin2008sigmafactorsin pages 3-5</li>
+<li>ito2014geneticandphenotypic pages 2-3</li>
+<li>ito2014geneticandphenotypic pages 6-8</li>
+<li>ito2014geneticandphenotypic pages 1-2</li>
+<li>dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8</li>
+<li>craig2021leveragingpseudomonasstress pages 7-9</li>
+<li>udaondo2024unravelingthegenomic pages 14-16</li>
+<li>dominguezcuevas2006transcriptionaltradeoffbetween pages 1-2</li>
+<li>garciafranco2023insightsintothe pages 9-10</li>
+<li>garciafranco2023insightsintothe pages 10-11</li>
+<li>craig2021leveragingpseudomonasstress pages 5-6</li>
+<li>craig2021leveragingpseudomonasstress pages 11-12</li>
+<li>park2024unveilingthenovel pages 5-7</li>
+<li>park2024unveilingthenovel pages 4-5</li>
+<li>https://doi.org/10.1186/1475-2859-12-30;</li>
+<li>https://doi.org/10.1002/mbo3.217</li>
+<li>https://doi.org/10.1002/mbo3.217;</li>
+<li>https://doi.org/10.1111/j.1574-6976.2007.00092.x</li>
+<li>https://doi.org/10.1186/1475-2859-12-30</li>
+<li>https://doi.org/10.1074/jbc.m509848200</li>
+<li>https://doi.org/10.1186/s12934-023-02028-y</li>
+<li>https://doi.org/10.1371/journal.pgen.1011464</li>
+<li>https://doi.org/10.1093/femsre/fuae025</li>
+<li>https://doi.org/10.1186/1475-2859-12-30,</li>
+<li>https://doi.org/10.1111/j.1574-6976.2007.00092.x,</li>
+<li>https://doi.org/10.1002/mbo3.217,</li>
+<li>https://doi.org/10.1074/jbc.m509848200,</li>
+<li>https://doi.org/10.1186/s12934-023-02028-y,</li>
+<li>https://doi.org/10.3389/fmicb.2021.660134,</li>
+<li>https://doi.org/10.1371/journal.pgen.1011464,</li>
+<li>https://doi.org/10.1093/femsre/fuae025,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q7CCA6
+gene_symbol: rpoH
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: RpoH (sigma-32) is the heat-shock sigma factor of Pseudomonas putida, a member of the sigma-70 (RpoD) family of RNA polymerase sigma factors. As a dissociable specificity subunit of RNA polymerase, it binds the core enzyme to form an alternative holoenzyme that directs transcription initiation from a distinct class of heat-shock promoters. Through region 2 it contacts core RNAP and recognizes the -10 promoter element and promotes DNA melting, and through its C-terminal region 4 helix-turn-helix motif it recognizes the -35 element. RpoH activates the regulon encoding molecular chaperones and ATP-dependent proteases (e.g. DnaK/DnaJ/GrpE, GroEL/GroES, HtpG, ClpB, Lon, FtsH, IbpA) that refold or degrade damaged proteins, thereby maintaining protein homeostasis under heat and other proteotoxic stresses (including aromatic solvent exposure and elevated pressure). Its activity and stability are themselves controlled by a chaperone- and protease-mediated negative feedback circuit. RpoH acts in the cytoplasm as part of the RNA polymerase holoenzyme on the bacterial chromosome.
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: RpoH binds promoter DNA (recognizing -10 and -35 elements) as part of the RNA polymerase holoenzyme; DNA binding is a genuine activity but is a general parent of the more informative sigma factor activity term.
+    action: KEEP_AS_NON_CORE
+    reason: Sigma factors do bind DNA sequence-specifically via region 2 (-10) and region 4 (-35, HTH motif), so the annotation is not wrong. However, it is a generic supporting molecular function; the core, more informative MF for this gene is GO:0016987 sigma factor activity. Retain as non-core.
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This InterPro2GO mapping assigns the general transcription factor activity term. By GO convention, bacterial sigma factors are NOT classified as DNA-binding transcription factors; they are basal/general transcription machinery and should receive GO:0016987 sigma factor activity instead.
+    action: REMOVE
+    reason: GO has an explicit convention that sigma factors are not DNA-binding transcription factors (GO:0003700) but rather are captured by GO:0016987 sigma factor activity, which is already annotated here. GO:0003700 is the wrong molecular function class for a sigma factor and is redundant/misleading. The correct MF term is present.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: RpoH acts in the cytoplasm as part of the RNA polymerase holoenzyme on the nucleoid; cytoplasmic localization is consistent with UniProt subcellular location and with its role as a soluble, non-secreted transcription factor.
+    action: ACCEPT
+    reason: Consistent with UniProt SUBCELLULAR LOCATION (Cytoplasm) and the known biology of sigma factors acting on the chromosome within the cytoplasm/nucleoid.
+- term:
+    id: GO:0006352
+    label: DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: The primary biological role of RpoH is to promote sequence-specific transcription initiation by RNA polymerase at heat-shock promoters. This is a core process term for the gene.
+    action: ACCEPT
+    reason: Directly captures the central function of a sigma factor as an initiation factor (UniProt FUNCTION states sigma factors promote attachment of RNAP to initiation sites). Core biological process.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: As an alternative sigma factor, RpoH regulates transcription of the heat-shock regulon. The term is correct but general relative to the more specific initiation terms.
+    action: KEEP_AS_NON_CORE
+    reason: Correct and consistent with sigma factor biology, but a broad regulatory term. The more specific GO:0006352 (transcription initiation) and GO:2000142 (regulation of transcription initiation) better capture the precise role; retain as non-core context.
+- term:
+    id: GO:0009408
+    label: response to heat
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: RpoH (sigma-32) is the master regulator of the heat-shock response, induced after heat upshift and driving chaperone/protease expression. Response to heat is a well-supported core biological process for this gene.
+    action: ACCEPT
+    reason: Strongly supported by the canonical biology of sigma-32 and by P. putida-specific data showing rapid induction of RpoH-dependent heat-shock genes after temperature upshift (Ito et al. 2014). Core process.
+    supported_by:
+    - reference_id: file:PSEPK/rpoH/rpoH-deep-research-falcon.md
+      supporting_text: In Pseudomonas putida the heat-shock response is controlled by sigma-32 (encoded by rpoH); heat-shock gene expression increases within ~10 min of temperature upshift and correlates with sigma-32 levels, and rpoH (PP_5108) is upregulated under proteotoxic stresses such as elevated pressure and aromatic solvent exposure.
+- term:
+    id: GO:0010468
+    label: regulation of gene expression
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: A very general regulatory term; correct in essence but far less informative than the specific transcription-initiation regulation terms already annotated.
+    action: KEEP_AS_NON_CORE
+    reason: Not incorrect, but high-level and subsumed by the more specific transcription regulation/initiation terms. Retain as non-core rather than core.
+- term:
+    id: GO:0016987
+    label: sigma factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the correct, specific molecular function for RpoH. It binds RNA polymerase core enzyme and confers heat-shock promoter specificity. This is the core molecular function of the gene.
+    action: ACCEPT
+    reason: Precisely matches the gene product&#39;s identity as a sigma-70 family RpoH sigma factor (UniProt, HAMAP MF_00961, TIGR02392). This is the preferred MF term for sigma factors per GO convention.
+- term:
+    id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: RpoH regulates which genes RNA polymerase initiates transcription at, so regulation of transcription initiation accurately captures its role. Inferred from the sigma factor activity annotation.
+    action: ACCEPT
+    reason: Logically consistent with sigma factor activity (the GOC inference is from GO:0016987) and biologically accurate for a promoter-selectivity factor.
+core_functions:
+- description: Acts as the heat-shock (sigma-32) specificity subunit of RNA polymerase, binding the core enzyme and directing sequence-specific transcription initiation at heat-shock promoters to activate the chaperone/protease regulon that maintains protein homeostasis under stress.
+  supported_by:
+  - reference_id: PMID:25303383
+    full_text_unavailable: true
+    supporting_text: In P. putida the heat-shock response is controlled by sigma-32 (rpoH); heat-shock gene expression increases within ~10 min of upshift and correlates with sigma-32 levels, and the regulon includes DnaK/DnaJ/GrpE, GroEL/GroES, ClpB and related proteostasis machinery.
+  molecular_function:
+    id: GO:0016987
+    label: sigma factor activity
+  directly_involved_in:
+  - id: GO:0006352
+    label: DNA-templated transcription initiation
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/rpoH/rpoH-deep-research-falcon.md
+  title: Deep research report on rpoH (Q7CCA6/PP_5108) in Pseudomonas putida KT2440
+  findings:
+  - statement: rpoH (PP_5108) encodes the sigma-32 heat-shock sigma factor that directs RNA polymerase to heat-shock promoters, activating the chaperone/protease proteostasis regulon; it is induced under heat, elevated pressure, and aromatic solvent stress in P. putida KT2440.
+    reference_section_type: RESULTS
+- id: PMID:25303383
+  title: Genetic and phenotypic characterization of the heat shock response in Pseudomonas putida
+  findings:
+  - statement: In Pseudomonas putida the heat-shock response is controlled by the sigma-32 factor encoded by rpoH; heat-shock chaperone/protease genes (DnaK/DnaJ/GrpE, GroEL/GroES, ClpB) are rapidly induced after temperature upshift, and dnaJ and clpB mutants are temperature sensitive.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified (PMID:25303383, MicrobiologyOpen 3:922-936, doi:10.1002/mbo3.217; Ito et al. 2014). Organism-specific (P. putida) characterization of the sigma-32 (rpoH) heat-shock response and its chaperone/protease regulon. Note the falcon deep-research report cited an incorrect PMID; the verified identifier is used here.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

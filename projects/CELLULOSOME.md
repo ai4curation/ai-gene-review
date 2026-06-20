@@ -1,3 +1,9 @@
+---
+title: "Cellulosome Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+---
+
 # Cellulosome Project
 
 ## Overview

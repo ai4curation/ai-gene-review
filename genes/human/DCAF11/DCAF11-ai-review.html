@@ -1,0 +1,4087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DCAF11 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DCAF11</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8TEB1" target="_blank" class="term-link">
+                        Q8TEB1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DCAF11";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8TEB1" data-a="DESCRIPTION: DCAF11 (DDB1- and CUL4-associated factor 11; also ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DCAF11 (DDB1- and CUL4-associated factor 11; also called WD repeat-containing protein 23, WDR23) is a WD40-repeat protein that serves as a substrate-recognition receptor of the CRL4 (DDB1-CUL4-RBX1) cullin-RING E3 ubiquitin ligase. Through a conserved WDXR motif it docks onto the DDB1 adaptor of CUL4A- and CUL4B-based complexes and uses its C-terminal WD40 beta-propeller to present specific substrates for polyubiquitination and proteasomal degradation. Characterized substrates include the NRF2/NFE2L2 transcription factor (via the DIDLID sequence of its Neh2 domain), which links DCAF11 to the cellular antioxidant/oxidative-stress response, and the centromeric histone variant CENP-A, whose phospho-Ser68-primed degradation DCAF11 mediates to maintain centromere identity. The protein localizes predominantly to the nucleoplasm, consistent with its nuclear substrates. The orthologous receptor in C. elegans (WDR-23) controls the NRF/Nrf2 ortholog SKN-1, and DCAF11 has also been exploited as a recruited ligase in covalent molecular-glue targeted protein degradation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043161" target="_blank" class="term-link">
+                                    GO:0043161
+                                </a>
+                            </span>
+                            <span class="term-label">proteasome-mediated ubiquitin-dependent protein catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0043161" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DCAF11 is the substrate receptor of the CRL4(DCAF11) E3 ligase and targets substrates (NRF2, CENP-A) for proteasomal degradation. This IBA term correctly captures the core role in ubiquitin-dependent proteolysis and is supported by direct experimental data on substrate degradation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process; supported phylogenetically and by direct degradation studies of NRF2 and CENP-A.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34758320" target="_blank" class="term-link">
+                                        PMID:34758320
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deletion of DCAF11 hampers CENP-A degradation and causes its mislocalization.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31586112" target="_blank" class="term-link">
+                                        PMID:31586112
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DCAF11 and DDB1-Cul4/Roc1 bind to the DIDLID sequence of the Neh2 domain of Nrf2 to mediate its degradation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080008" target="_blank" class="term-link">
+                                    GO:0080008
+                                </a>
+                            </span>
+                            <span class="term-label">Cul4-RING E3 ubiquitin ligase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0080008" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DCAF11 is an established component of the CRL4 (DDB1-CUL4) E3 ubiquitin ligase complex, acting as the DDB1-bound substrate receptor. This is the primary, well-supported complex membership annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core complex membership; supported by IBA, by direct IDA in PMID:16949367, and by ComplexPortal entries CPX-2403/CPX-2404.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link">
+                                        PMID:16949367
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we identify 18 Ddb1- and Cul4-associated factors (DCAFs), including 14 containing WD40 repeats. DCAFs interact with multiple surfaces on Ddb1.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19109893" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19109893
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis of UV DNA-damage recognition by the DDB1-DD...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005515" data-r="PMID:19109893" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein-binding annotation from an interactome dataset with DDB1 (Q16531). The specific, informative function (DDB1-docked substrate receptor) is captured better by other terms; bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding (GO:0005515) is uninformative; the meaningful DDB1 interaction is captured by the substrate-receptor MF and complex terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19109893" target="_blank" class="term-link">
+                                        PMID:19109893
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Structural basis of UV DNA-damage recognition by the DDB1-DDB2 complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22190034" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22190034
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global landscape of HIV-human protein complexes.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005515" data-r="PMID:22190034" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with HIV-1 Vif (P12504) from a viral-host interactome screen. Represents viral hijacking of CRL machinery, not an endogenous DCAF11 function; the bare protein-binding term is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Xeno viral-host interactome hit; bare protein binding does not inform endogenous gene function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22190034" target="_blank" class="term-link">
+                                        PMID:22190034
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Global landscape of HIV-human protein complexes.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein-binding annotation with DDB1 (Q16531) from a large-scale interactome map. Uninformative as a bare term; the DDB1 interaction is already captured by complex/substrate-receptor terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding from high-throughput interactome; not specifically informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                                        PMID:28514442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Architecture of the human interactome defines protein communities and disease networks.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein-binding annotation from a binary (Y2H) interactome map with high-throughput partners (AGR2, TNNI1, TNNI2, RCN1, GPSM1) lacking functional follow-up. Bare protein binding is uninformative and these are likely non-physiological screen hits.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput binary interactome partners without functional validation; bare protein binding uninformative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A reference map of the human binary protein interactome.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein-binding annotation with DDB1 (Q16531) from a proteome-scale interactome dataset. Uninformative bare term; DDB1 interaction already represented by complex/substrate-receptor annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding from large-scale interactome; not specifically informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35271311
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OpenCell: Endogenous tagging for the cartography of human ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005515" data-r="PMID:35271311" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein-binding annotation with DDB1 (Q16531) from the OpenCell endogenous-tagging interactome. Uninformative as bare protein binding; the DDB1 interaction is captured by the substrate-receptor and complex terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding from high-throughput interactome; not specifically informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                                        PMID:35271311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016567" target="_blank" class="term-link">
+                                    GO:0016567
+                                </a>
+                            </span>
+                            <span class="term-label">protein ubiquitination</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0016567" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DCAF11 functions in protein ubiquitination as the substrate receptor of the CRL4(DCAF11) ligase. This UniPathway-derived IEA term is consistent with direct evidence that DCAF11 mediates substrate ubiquitination.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct process annotation, supported by experimental substrate ubiquitination data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34758320" target="_blank" class="term-link">
+                                        PMID:34758320
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DCAF11 (DDB1 and CUL4 associated factor 11/WDR23) is the E3 ligase that specifically mediates the observed polyubiquitination.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031464" target="_blank" class="term-link">
+                                    GO:0031464
+                                </a>
+                            </span>
+                            <span class="term-label">Cul4A-RING E3 ubiquitin ligase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16949367
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A family of diverse Cul4-Ddb1-interacting proteins includes ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0031464" data-r="PMID:16949367" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DCAF11 assembles into the CUL4A variant of the CRL4 complex (ComplexPortal CPX-2403). This more specific child of GO:0080008 is supported; keep as a valid but non-core specialization, with GO:0080008 as the core term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Valid CUL4A-variant complex membership (ComplexPortal CPX-2403); more specific than the core GO:0080008 annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link">
+                                        PMID:16949367
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DCAFs interact with multiple surfaces on Ddb1, and the interaction of WD40-containing DCAFs with Ddb1 requires a conserved WDXR motif.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031465" target="_blank" class="term-link">
+                                    GO:0031465
+                                </a>
+                            </span>
+                            <span class="term-label">Cul4B-RING E3 ubiquitin ligase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16949367
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A family of diverse Cul4-Ddb1-interacting proteins includes ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0031465" data-r="PMID:16949367" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DCAF11 assembles into the CUL4B variant of the CRL4 complex (ComplexPortal CPX-2404). This more specific child of GO:0080008 is supported; keep as a valid but non-core specialization, with GO:0080008 as the core term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Valid CUL4B-variant complex membership (ComplexPortal CPX-2404); more specific than the core GO:0080008 annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link">
+                                        PMID:16949367
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DCAFs interact with multiple surfaces on Ddb1, and the interaction of WD40-containing DCAFs with Ddb1 requires a conserved WDXR motif.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080135" target="_blank" class="term-link">
+                                    GO:0080135
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cellular response to stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31586112" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31586112
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TFEB activates Nrf2 by repressing its E3 ubiquitin ligase DC...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0080135" data-r="PMID:31586112" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> By targeting NRF2 for degradation, DCAF11 modulates the NRF2-driven antioxidant/oxidative-stress response. This regulatory process annotation is supported but is a downstream/indirect consequence of the core ligase function rather than a core activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported via the NRF2/oxidative-stress axis but downstream of the core ubiquitin-ligase substrate-receptor function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31586112" target="_blank" class="term-link">
+                                        PMID:31586112
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DCAF11 and DDB1-Cul4/Roc1 bind to the DIDLID sequence of the Neh2 domain of Nrf2 to mediate its degradation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902412" target="_blank" class="term-link">
+                                    GO:1902412
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of mitotic cytokinesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34758320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34758320
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylation at Ser68 facilitates DCAF11-mediated ubiquit...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:1902412" data-r="PMID:34758320" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cited paper shows DCAF11 mediates phospho-Ser68 CENP-A degradation to maintain centromere identity and prevent ectopic CENP-A localization during the cell cycle; it does not demonstrate a role in cytokinesis. This label over-reaches the evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The publication concerns CENP-A/centromere homeostasis, not mitotic cytokinesis; the term is an imprecise over-interpretation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34758320" target="_blank" class="term-link">
+                                        PMID:34758320
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the Ser68 phosphorylation plays an important role in regulating cellular CENP-A homeostasis via DCAF11-mediated degradation to prevent ectopic localization of CENP-A during the cell cycle.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence (HPA) localizes DCAF11 to the nucleoplasm, consistent with its nuclear substrates (NRF2, CENP-A) and with the nuclear CRL4 cycle.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct immunofluorescence localization, consistent with nuclear substrate biology.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DCAF11/DCAF11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO; GO:0005654; C:nucleoplasm; IDA:HPA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16949367
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A family of diverse Cul4-Ddb1-interacting proteins includes ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005515" data-r="PMID:16949367" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IPI captures the functionally meaningful interactions with DDB1 and the cullins (Q16531/Q13619/Q13620) that constitute CRL4(DCAF11) assembly. The specific, informative function is the DDB1-docked substrate-receptor activity rather than bare protein binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The interaction with DDB1/CUL4 reflects the substrate-receptor adaptor role; replace uninformative protein binding with the specific MF term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990756" target="_blank" class="term-link">
+                                    ubiquitin-like ligase-substrate adaptor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link">
+                                        PMID:16949367
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we identify 18 Ddb1- and Cul4-associated factors (DCAFs), including 14 containing WD40 repeats. DCAFs interact with multiple surfaces on Ddb1.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27018634" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27018634
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative Mass Spectrometry Identifies Novel Host Binding...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005515" data-r="PMID:27018634" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with an E. coli type III secretion system effector (Q8XB62) from a pathogen-effector screen. Not an endogenous DCAF11 function; the bare protein-binding term is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Pathogen effector interactome hit; bare protein binding does not inform endogenous gene function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27018634" target="_blank" class="term-link">
+                                        PMID:27018634
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Quantitative Mass Spectrometry Identifies Novel Host Binding Partners for Pathogenic Escherichia coli Type III Secretion System Effectors.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8952638
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005654" data-r="Reactome:R-HSA-8952638" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places the CRL4 complex (here DCAF11) in the nucleoplasm during the neddylation/deneddylation regulatory cycle. Consistent with the IDA nucleoplasm localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasm localization corroborated by independent IDA evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DCAF11/DCAF11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO; GO:0005654; C:nucleoplasm; IDA:HPA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8952639
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005654" data-r="Reactome:R-HSA-8952639" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places the CRL4 complex (here DCAF11) in the nucleoplasm during the neddylation regulatory cycle. Consistent with the IDA nucleoplasm localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasm localization corroborated by independent IDA evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DCAF11/DCAF11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO; GO:0005654; C:nucleoplasm; IDA:HPA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8955245
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005654" data-r="Reactome:R-HSA-8955245" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places the CRL4 complex (here DCAF11) in the nucleoplasm during the CAND1 exchange cycle. Consistent with the IDA nucleoplasm localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasm localization corroborated by independent IDA evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DCAF11/DCAF11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO; GO:0005654; C:nucleoplasm; IDA:HPA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8955285
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005654" data-r="Reactome:R-HSA-8955285" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places the CRL4 complex (here DCAF11) in the nucleoplasm during COMMD-mediated CAND1 displacement. Consistent with the IDA nucleoplasm localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasm localization corroborated by independent IDA evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DCAF11/DCAF11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO; GO:0005654; C:nucleoplasm; IDA:HPA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8956045
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0005654" data-r="Reactome:R-HSA-8956045" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places the CRL4 complex (here DCAF11) in the nucleoplasm during COP9 signalosome-mediated deneddylation. Consistent with the IDA nucleoplasm localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasm localization corroborated by independent IDA evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DCAF11/DCAF11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO; GO:0005654; C:nucleoplasm; IDA:HPA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080008" target="_blank" class="term-link">
+                                    GO:0080008
+                                </a>
+                            </span>
+                            <span class="term-label">Cul4-RING E3 ubiquitin ligase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16949367
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A family of diverse Cul4-Ddb1-interacting proteins includes ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8TEB1" data-a="GO:0080008" data-r="PMID:16949367" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct identification of DCAF11 in DDB1-CUL4A complexes by tandem-affinity purification and mass spectrometry establishes CRL4 complex membership. This is the core, experimentally grounded complex annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core complex membership directly demonstrated by affinity purification/MS.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link">
+                                        PMID:16949367
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we identify 18 Ddb1- and Cul4-associated factors (DCAFs), including 14 containing WD40 repeats.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Substrate-recognition receptor of the CRL4(DCAF11) cullin-RING E3 ubiquitin ligase; uses its WD40 beta-propeller to bind substrates and a WDXR motif to dock on the DDB1 adaptor of CUL4A/CUL4B complexes, presenting substrates for polyubiquitination and proteasomal degradation.</h3>
+                <span class="vote-buttons" data-g="Q8TEB1" data-a="FUNCTION: Substrate-recognition receptor of the CRL4(DCAF11)..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990756" target="_blank" class="term-link">
+                            ubiquitin-like ligase-substrate adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043161" target="_blank" class="term-link">
+                                proteasome-mediated ubiquitin-dependent protein catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080008" target="_blank" class="term-link">
+                                Cul4-RING E3 ubiquitin ligase complex
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link">
+                                PMID:16949367
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">we identify 18 Ddb1- and Cul4-associated factors (DCAFs), including 14 containing WD40 repeats. DCAFs interact with multiple surfaces on Ddb1, and the interaction of WD40-containing DCAFs with Ddb1 requires a conserved WDXR motif.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Targets the NRF2/NFE2L2 transcription factor for ubiquitin-dependent degradation by binding the DIDLID sequence of its Neh2 domain, thereby tuning the NRF2-driven antioxidant/oxidative-stress transcriptional program.</h3>
+                <span class="vote-buttons" data-g="Q8TEB1" data-a="FUNCTION: Targets the NRF2/NFE2L2 transcription factor for u..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31586112" target="_blank" class="term-link">
+                                PMID:31586112
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">DCAF11 and DDB1-Cul4/Roc1 bind to the DIDLID sequence of the Neh2 domain of Nrf2 to mediate its degradation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31586112" target="_blank" class="term-link">
+                                PMID:31586112
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">indicating that DCAF11 is a functional E3-ubiquitin ligase for Nrf2.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mediates phospho-Ser68-primed ubiquitination and degradation of the centromeric histone variant CENP-A to maintain centromere identity and prevent ectopic CENP-A localization during the cell cycle.</h3>
+                <span class="vote-buttons" data-g="Q8TEB1" data-a="FUNCTION: Mediates phospho-Ser68-primed ubiquitination and d..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34758320" target="_blank" class="term-link">
+                                PMID:34758320
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">DCAF11 (DDB1 and CUL4 associated factor 11/WDR23) is the E3 ligase that specifically mediates the observed polyubiquitination.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34758320" target="_blank" class="term-link">
+                                PMID:34758320
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Deletion of DCAF11 hampers CENP-A degradation and causes its mislocalization.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" target="_blank" class="term-link">
+                            PMID:16949367
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A family of diverse Cul4-Ddb1-interacting proteins includes Cdt2, which is required for S phase destruction of the replication factor Cdt1.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DCAF11 is one of 18 DDB1- and CUL4-associated factors (DCAFs) that serve as substrate receptors, docking on DDB1 via a conserved WDXR motif.</div>
+                        
+                        <div class="finding-text">"we identify 18 Ddb1- and Cul4-associated factors (DCAFs), including 14 containing WD40 repeats. DCAFs interact with multiple surfaces on Ddb1, and the interaction of WD40-containing DCAFs with Ddb1 requires a conserved WDXR motif."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16964240" target="_blank" class="term-link">
+                            PMID:16964240
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular architecture and assembly of the DDB1-CUL4A ubiquitin ligase machinery.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">WD40-repeat DCAFs dock on the DDB1 double-beta-propeller of the DDB1-CUL4A-ROC1 ligase to present substrates for ubiquitination.</div>
+                        
+                        <div class="finding-text">"DDB1 uses one beta-propeller domain for cullin scaffold binding and a variably attached separate double-beta-propeller fold for substrate presentation."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19109893" target="_blank" class="term-link">
+                            PMID:19109893
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural basis of UV DNA-damage recognition by the DDB1-DDB2 complex.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22190034" target="_blank" class="term-link">
+                            PMID:22190034
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Global landscape of HIV-human protein complexes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27018634" target="_blank" class="term-link">
+                            PMID:27018634
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative Mass Spectrometry Identifies Novel Host Binding Partners for Pathogenic Escherichia coli Type III Secretion System Effectors.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31586112" target="_blank" class="term-link">
+                            PMID:31586112
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TFEB activates Nrf2 by repressing its E3 ubiquitin ligase DCAF11 and promoting phosphorylation of p62.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DCAF11 is a functional E3 ubiquitin ligase substrate receptor for NRF2, binding the DIDLID sequence of the Neh2 domain to mediate its degradation; TFEB transcriptionally represses DCAF11 to stabilize NRF2.</div>
+                        
+                        <div class="finding-text">"DCAF11 and DDB1-Cul4/Roc1 bind to the DIDLID sequence of the Neh2 domain of Nrf2 to mediate its degradation."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34758320" target="_blank" class="term-link">
+                            PMID:34758320
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Phosphorylation at Ser68 facilitates DCAF11-mediated ubiquitination and degradation of CENP-A during the cell cycle.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DCAF11 is the E3 ligase that specifically mediates phospho-Ser68-primed polyubiquitination and degradation of CENP-A; its deletion impairs CENP-A degradation and causes mislocalization.</div>
+                        
+                        <div class="finding-text">"DCAF11 (DDB1 and CUL4 associated factor 11/WDR23) is the E3 ligase that specifically mediates the observed polyubiquitination. Deletion of DCAF11 hampers CENP-A degradation and causes its mislocalization."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                            PMID:35271311
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8952638
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">AcM-UBE2M transfers NEDD8 to CRL4 E3 ubiquitin ligase complex</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8952639
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">NEDD8:AcM-UBE2M binds CRL4 E3 ubiquitin ligase complex</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8955245
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CAND1 binds CRL4 E3 ubiquitin ligase in the nucleus</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8955285
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">COMMDs displace CAND1 from CRL4 E3 ubiquitin ligase complex</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8956045
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">COP9 signalosome deneddylates nuclear CRL4 E3 ubiquitin ligase complex</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the full repertoire of endogenous CRL4(DCAF11) substrates, and which degrons/recognition motifs does the DCAF11 WD40 propeller read?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TEB1" data-a="Q: What is the full repertoire of endogenous CRL4(DCA..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DCAF11 preferentially partner with CUL4A versus CUL4B in specific cellular contexts, and is there substrate specialization between the two variants?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TEB1" data-a="Q: Does DCAF11 preferentially partner with CUL4A vers..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is CRL4(DCAF11) activity itself regulated (neddylation/CAND1 exchange, expression control such as TFEB repression) under oxidative and proteotoxic stress?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TEB1" data-a="Q: How is CRL4(DCAF11) activity itself regulated (ned..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Define the CRL4(DCAF11) substrate landscape using global protein-stability profiling (e.g., quantitative diGly ubiquitinome and degradation/half-life proteomics) comparing DCAF11-knockout versus wild-type cells.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TEB1" data-a="EXPERIMENT: Define the CRL4(DCAF11) substrate landscape using ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine a cryo-EM or crystal structure of DCAF11 bound to DDB1 and to a substrate degron peptide (e.g., NRF2 Neh2 DIDLID or phospho-CENP-A) to map the recognition surface.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TEB1" data-a="EXPERIMENT: Determine a cryo-EM or crystal structure of DCAF11..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test for genetic separation of function between CUL4A- and CUL4B-based CRL4(DCAF11) complexes by selective depletion and substrate-stabilization readouts.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8TEB1" data-a="EXPERIMENT: Test for genetic separation of function between CU..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DCAF11-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8TEB1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dcaf11-q8teb1-review-notes">DCAF11 (Q8TEB1) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>DCAF11 = DDB1- and CUL4-associated factor 11; AltName WD repeat-containing protein 23 (WDR23). HGNC:20258. 546 aa, 7 WD40 repeats (UniProt Q8TEB1).</li>
+<li>Member of the DCAF family that serve as substrate-recognition receptors for the CRL4 (DDB1-CUL4-RBX1) cullin-RING E3 ubiquitin ligase.</li>
+</ul>
+<h2 id="core-function-crl4dcaf11-substrate-receptor">Core function: CRL4(DCAF11) substrate receptor</h2>
+<ul>
+<li>Identified as a Ddb1- and Cul4-associated factor (DCAF). "we identify 18 Ddb1- and Cul4-associated factors (DCAFs), including 14 containing WD40 repeats. DCAFs interact with multiple surfaces on Ddb1, and the interaction of WD40-containing DCAFs with Ddb1 requires a conserved 'WDXR' motif." <a href="https://pubmed.ncbi.nlm.nih.gov/16949367" title="we identify 18 Ddb1- and Cul4-associated factors (DCAFs), including 14 containing WD40 repeats">PMID:16949367</a>. DCAF11 co-purified with DDB1 and CUL4A by mass spectrometry; UniProt: "May function as a substrate receptor for CUL4-DDB1 E3 ubiquitin-protein ligase complex" and "Interacts with DDB1 and CUL4A" (ECO:0000269|PubMed:16949367).</li>
+<li>Molecular architecture of DDB1-CUL4A E3 machinery, in which WD40 DCAFs dock on DDB1 as substrate receptors <a href="https://pubmed.ncbi.nlm.nih.gov/16964240" title="Molecular architecture and assembly of the DDB1-CUL4A ubiquitin ligase machinery">PMID:16964240</a>.</li>
+<li>ComplexPortal: CRL4-DCAF11 E3 ubiquitin ligase complex, CUL4A variant (CPX-2403) and CUL4B variant (CPX-2404) (UniProt DR lines).</li>
+</ul>
+<h2 id="substrates-biological-roles">Substrates / biological roles</h2>
+<ul>
+<li>NRF2/NFE2L2 degradation: "DCAF11 and DDB1-Cul4/Roc1 bind to the DIDLID sequence of the Neh2 domain of Nrf2 to mediate its degradation." DCAF11-specific siRNA increases Nrf2 protein, "indicating that DCAF11 is a functional E3-ubiquitin ligase for Nrf2." TFEB transcriptionally represses DCAF11 (CLEAR element in 5'-UTR), stabilizing Nrf2 <a href="https://pubmed.ncbi.nlm.nih.gov/31586112">PMID:31586112</a>. (ComplexPortal annotates this paper to GO:0080135 regulation of cellular response to stress.)</li>
+<li>CENP-A degradation: "DCAF11 ... is the E3 ligase that specifically mediates the observed polyubiquitination" of phospho-Ser68 CENP-A; "Deletion of DCAF11 hampers CENP-A degradation and causes its mislocalization" during the cell cycle <a href="https://pubmed.ncbi.nlm.nih.gov/34758320">PMID:34758320</a>. ComplexPortal links this to GO:1902412 regulation of mitotic cytokinesis (indirect; the paper is about CENP-A centromere homeostasis, not cytokinesis per se).</li>
+<li>p21/CDKN1A is reported in the broader literature as a CRL4(DCAF11) substrate (biological hint); not directly in the cached publications here.</li>
+<li>In C. elegans, the ortholog WDR-23 is the substrate receptor controlling the Nrf ortholog SKN-1 (background; the IBA transfer derives from WB:WBGene00008419 = wdr-23).</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Nucleoplasm: IDA by HPA immunofluorescence (GO_REF:0000052) and Reactome TAS annotations placing the CRL4 complex (neddylation/CAND1/CSN cycle reactions) in nucleoplasm. Consistent with nuclear substrates (NRF2, CENP-A).</li>
+</ul>
+<h2 id="protein-binding-ipi-annotations-mostly-generic-go0005515">Protein-binding (IPI) annotations — mostly generic GO:0005515</h2>
+<ul>
+<li>PMID:16949367 IPI WITH DDB1/CUL4A/CUL4B (Q16531/Q13619/Q13620): the meaningful, specific interaction (CRL4 assembly). Captures DDB1/cullin binding (substrate-receptor docking).</li>
+<li>PMID:19109893, PMID:28514442, PMID:33961781, PMID:35271311 IPI WITH DDB1 (Q16531): large-scale interactome / structural studies; reduce to DDB1 binding, generic GO:0005515 over-annotated.</li>
+<li>PMID:22190034 WITH HIV vif (P12504, Xeno): viral hijack interactome screen, not endogenous function.</li>
+<li>PMID:27018634 WITH E. coli T3SS effector (Q8XB62): pathogen effector screen, not endogenous function.</li>
+<li>PMID:32296183 binary interactome: WITH AGR2, TNNI1, TNNI2, RCN1, GPSM1 — high-throughput Y2H partners, no functional follow-up; over-annotated.</li>
+</ul>
+<h2 id="annotation-assessment-summary">Annotation assessment summary</h2>
+<ul>
+<li>ACCEPT: Cul4-RING E3 ubiquitin ligase complex (GO:0080008, IDA PMID:16949367 and IBA); proteasome-mediated ubiquitin-dependent protein catabolic process (GO:0043161, IBA) as core ubiquitin-dependent degradation role; protein ubiquitination (GO:0016567).</li>
+<li>KEEP_AS_NON_CORE / accept: nucleoplasm localization (IDA HPA, Reactome TAS).</li>
+<li>MODIFY: bare protein binding for the DDB1/CUL4 interaction (PMID:16949367) -&gt; ubiquitin-like ligase-substrate adaptor activity (GO:1990756), the informative MF capturing DCAF substrate-receptor role.</li>
+<li>MARK_AS_OVER_ANNOTATED: generic GO:0005515 from large-scale/viral/pathogen interactome screens.</li>
+<li>Cul4A-RING (GO:0031464) and Cul4B-RING (GO:0031465): ComplexPortal NAS, both supported (CPX-2403/2404); ACCEPT/KEEP as the complex exists in both CUL4A and CUL4B variants. Use the parent GO:0080008 as core.</li>
+<li>GO:0080135 regulation of cellular response to stress (NAS PMID:31586112): supported via NRF2/oxidative-stress axis; keep as non-core (downstream/indirect).</li>
+<li>GO:1902412 regulation of mitotic cytokinesis (NAS PMID:34758320): the paper concerns CENP-A centromere homeostasis, not cytokinesis directly; this is an imprecise/over-reaching label -&gt; MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8TEB1
+gene_symbol: DCAF11
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: DCAF11 (DDB1- and CUL4-associated factor 11; also called WD repeat-containing
+  protein 23, WDR23) is a WD40-repeat protein that serves as a substrate-recognition
+  receptor of the CRL4 (DDB1-CUL4-RBX1) cullin-RING E3 ubiquitin ligase. Through a
+  conserved WDXR motif it docks onto the DDB1 adaptor of CUL4A- and CUL4B-based
+  complexes and uses its C-terminal WD40 beta-propeller to present specific substrates
+  for polyubiquitination and proteasomal degradation. Characterized substrates include
+  the NRF2/NFE2L2 transcription factor (via the DIDLID sequence of its Neh2 domain),
+  which links DCAF11 to the cellular antioxidant/oxidative-stress response, and the
+  centromeric histone variant CENP-A, whose phospho-Ser68-primed degradation DCAF11
+  mediates to maintain centromere identity. The protein localizes predominantly to
+  the nucleoplasm, consistent with its nuclear substrates. The orthologous receptor
+  in C. elegans (WDR-23) controls the NRF/Nrf2 ortholog SKN-1, and DCAF11 has also
+  been exploited as a recruited ligase in covalent molecular-glue targeted protein
+  degradation.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q8TEB1-1
+- name: &#39;2&#39;
+  id: Q8TEB1-2
+  sequence_note: VSP_008424
+- name: &#39;3&#39;
+  id: Q8TEB1-3
+  sequence_note: VSP_008423
+existing_annotations:
+- term:
+    id: GO:0043161
+    label: proteasome-mediated ubiquitin-dependent protein catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: DCAF11 is the substrate receptor of the CRL4(DCAF11) E3 ligase and
+      targets substrates (NRF2, CENP-A) for proteasomal degradation. This IBA term
+      correctly captures the core role in ubiquitin-dependent proteolysis and is
+      supported by direct experimental data on substrate degradation.
+    action: ACCEPT
+    reason: Core biological process; supported phylogenetically and by direct
+      degradation studies of NRF2 and CENP-A.
+    supported_by:
+    - reference_id: PMID:34758320
+      supporting_text: Deletion of DCAF11 hampers CENP-A degradation and causes its
+        mislocalization.
+    - reference_id: PMID:31586112
+      supporting_text: DCAF11 and DDB1-Cul4/Roc1 bind to the DIDLID sequence of the
+        Neh2 domain of Nrf2 to mediate its degradation.
+- term:
+    id: GO:0080008
+    label: Cul4-RING E3 ubiquitin ligase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: DCAF11 is an established component of the CRL4 (DDB1-CUL4) E3 ubiquitin
+      ligase complex, acting as the DDB1-bound substrate receptor. This is the
+      primary, well-supported complex membership annotation.
+    action: ACCEPT
+    reason: Core complex membership; supported by IBA, by direct IDA in PMID:16949367,
+      and by ComplexPortal entries CPX-2403/CPX-2404.
+    supported_by:
+    - reference_id: PMID:16949367
+      supporting_text: we identify 18 Ddb1- and Cul4-associated factors (DCAFs),
+        including 14 containing WD40 repeats. DCAFs interact with multiple surfaces
+        on Ddb1.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19109893
+  qualifier: enables
+  review:
+    summary: Generic protein-binding annotation from an interactome dataset with
+      DDB1 (Q16531). The specific, informative function (DDB1-docked substrate
+      receptor) is captured better by other terms; bare protein binding is
+      uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare protein binding (GO:0005515) is uninformative; the meaningful
+      DDB1 interaction is captured by the substrate-receptor MF and complex terms.
+    supported_by:
+    - reference_id: PMID:19109893
+      supporting_text: Structural basis of UV DNA-damage recognition by the DDB1-DDB2
+        complex.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22190034
+  qualifier: enables
+  review:
+    summary: Interaction with HIV-1 Vif (P12504) from a viral-host interactome
+      screen. Represents viral hijacking of CRL machinery, not an endogenous
+      DCAF11 function; the bare protein-binding term is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Xeno viral-host interactome hit; bare protein binding does not inform
+      endogenous gene function.
+    supported_by:
+    - reference_id: PMID:22190034
+      supporting_text: Global landscape of HIV-human protein complexes.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: Generic protein-binding annotation with DDB1 (Q16531) from a large-scale
+      interactome map. Uninformative as a bare term; the DDB1 interaction is already
+      captured by complex/substrate-receptor terms.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare protein binding from high-throughput interactome; not specifically
+      informative.
+    supported_by:
+    - reference_id: PMID:28514442
+      supporting_text: Architecture of the human interactome defines protein
+        communities and disease networks.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Generic protein-binding annotation from a binary (Y2H) interactome map
+      with high-throughput partners (AGR2, TNNI1, TNNI2, RCN1, GPSM1) lacking
+      functional follow-up. Bare protein binding is uninformative and these are
+      likely non-physiological screen hits.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: High-throughput binary interactome partners without functional validation;
+      bare protein binding uninformative.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: A reference map of the human binary protein interactome.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: Generic protein-binding annotation with DDB1 (Q16531) from a
+      proteome-scale interactome dataset. Uninformative bare term; DDB1 interaction
+      already represented by complex/substrate-receptor annotations.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare protein binding from large-scale interactome; not specifically
+      informative.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: Dual proteome-scale networks reveal cell-specific remodeling
+        of the human interactome.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35271311
+  qualifier: enables
+  review:
+    summary: Generic protein-binding annotation with DDB1 (Q16531) from the OpenCell
+      endogenous-tagging interactome. Uninformative as bare protein binding; the
+      DDB1 interaction is captured by the substrate-receptor and complex terms.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare protein binding from high-throughput interactome; not specifically
+      informative.
+    supported_by:
+    - reference_id: PMID:35271311
+      supporting_text: &#39;OpenCell: Endogenous tagging for the cartography of human
+        cellular organization.&#39;
+- term:
+    id: GO:0016567
+    label: protein ubiquitination
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: DCAF11 functions in protein ubiquitination as the substrate receptor of
+      the CRL4(DCAF11) ligase. This UniPathway-derived IEA term is consistent with
+      direct evidence that DCAF11 mediates substrate ubiquitination.
+    action: ACCEPT
+    reason: Correct process annotation, supported by experimental substrate
+      ubiquitination data.
+    supported_by:
+    - reference_id: PMID:34758320
+      supporting_text: DCAF11 (DDB1 and CUL4 associated factor 11/WDR23) is the E3
+        ligase that specifically mediates the observed polyubiquitination.
+- term:
+    id: GO:0031464
+    label: Cul4A-RING E3 ubiquitin ligase complex
+  evidence_type: NAS
+  original_reference_id: PMID:16949367
+  qualifier: part_of
+  review:
+    summary: DCAF11 assembles into the CUL4A variant of the CRL4 complex
+      (ComplexPortal CPX-2403). This more specific child of GO:0080008 is supported;
+      keep as a valid but non-core specialization, with GO:0080008 as the core term.
+    action: KEEP_AS_NON_CORE
+    reason: Valid CUL4A-variant complex membership (ComplexPortal CPX-2403); more
+      specific than the core GO:0080008 annotation.
+    supported_by:
+    - reference_id: PMID:16949367
+      supporting_text: DCAFs interact with multiple surfaces on Ddb1, and the
+        interaction of WD40-containing DCAFs with Ddb1 requires a conserved WDXR
+        motif.
+- term:
+    id: GO:0031465
+    label: Cul4B-RING E3 ubiquitin ligase complex
+  evidence_type: NAS
+  original_reference_id: PMID:16949367
+  qualifier: part_of
+  review:
+    summary: DCAF11 assembles into the CUL4B variant of the CRL4 complex
+      (ComplexPortal CPX-2404). This more specific child of GO:0080008 is supported;
+      keep as a valid but non-core specialization, with GO:0080008 as the core term.
+    action: KEEP_AS_NON_CORE
+    reason: Valid CUL4B-variant complex membership (ComplexPortal CPX-2404); more
+      specific than the core GO:0080008 annotation.
+    supported_by:
+    - reference_id: PMID:16949367
+      supporting_text: DCAFs interact with multiple surfaces on Ddb1, and the
+        interaction of WD40-containing DCAFs with Ddb1 requires a conserved WDXR
+        motif.
+- term:
+    id: GO:0080135
+    label: regulation of cellular response to stress
+  evidence_type: NAS
+  original_reference_id: PMID:31586112
+  qualifier: involved_in
+  review:
+    summary: By targeting NRF2 for degradation, DCAF11 modulates the NRF2-driven
+      antioxidant/oxidative-stress response. This regulatory process annotation is
+      supported but is a downstream/indirect consequence of the core ligase
+      function rather than a core activity.
+    action: KEEP_AS_NON_CORE
+    reason: Supported via the NRF2/oxidative-stress axis but downstream of the core
+      ubiquitin-ligase substrate-receptor function.
+    supported_by:
+    - reference_id: PMID:31586112
+      supporting_text: DCAF11 and DDB1-Cul4/Roc1 bind to the DIDLID sequence of the
+        Neh2 domain of Nrf2 to mediate its degradation.
+- term:
+    id: GO:1902412
+    label: regulation of mitotic cytokinesis
+  evidence_type: NAS
+  original_reference_id: PMID:34758320
+  qualifier: involved_in
+  review:
+    summary: The cited paper shows DCAF11 mediates phospho-Ser68 CENP-A degradation
+      to maintain centromere identity and prevent ectopic CENP-A localization during
+      the cell cycle; it does not demonstrate a role in cytokinesis. This label
+      over-reaches the evidence.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The publication concerns CENP-A/centromere homeostasis, not mitotic
+      cytokinesis; the term is an imprecise over-interpretation.
+    supported_by:
+    - reference_id: PMID:34758320
+      supporting_text: the Ser68 phosphorylation plays an important role in
+        regulating cellular CENP-A homeostasis via DCAF11-mediated degradation to
+        prevent ectopic localization of CENP-A during the cell cycle.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Immunofluorescence (HPA) localizes DCAF11 to the nucleoplasm, consistent
+      with its nuclear substrates (NRF2, CENP-A) and with the nuclear CRL4 cycle.
+    action: ACCEPT
+    reason: Direct immunofluorescence localization, consistent with nuclear substrate
+      biology.
+    supported_by:
+    - reference_id: file:human/DCAF11/DCAF11-uniprot.txt
+      supporting_text: &#39;GO; GO:0005654; C:nucleoplasm; IDA:HPA.&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16949367
+  qualifier: enables
+  review:
+    summary: This IPI captures the functionally meaningful interactions with DDB1
+      and the cullins (Q16531/Q13619/Q13620) that constitute CRL4(DCAF11) assembly.
+      The specific, informative function is the DDB1-docked substrate-receptor
+      activity rather than bare protein binding.
+    action: MODIFY
+    reason: The interaction with DDB1/CUL4 reflects the substrate-receptor adaptor
+      role; replace uninformative protein binding with the specific MF term.
+    proposed_replacement_terms:
+    - id: GO:1990756
+      label: ubiquitin-like ligase-substrate adaptor activity
+    supported_by:
+    - reference_id: PMID:16949367
+      supporting_text: we identify 18 Ddb1- and Cul4-associated factors (DCAFs),
+        including 14 containing WD40 repeats. DCAFs interact with multiple surfaces
+        on Ddb1.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27018634
+  qualifier: enables
+  review:
+    summary: Interaction with an E. coli type III secretion system effector (Q8XB62)
+      from a pathogen-effector screen. Not an endogenous DCAF11 function; the bare
+      protein-binding term is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Pathogen effector interactome hit; bare protein binding does not inform
+      endogenous gene function.
+    supported_by:
+    - reference_id: PMID:27018634
+      supporting_text: Quantitative Mass Spectrometry Identifies Novel Host Binding
+        Partners for Pathogenic Escherichia coli Type III Secretion System Effectors.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8952638
+  qualifier: located_in
+  review:
+    summary: Reactome places the CRL4 complex (here DCAF11) in the nucleoplasm during
+      the neddylation/deneddylation regulatory cycle. Consistent with the IDA
+      nucleoplasm localization.
+    action: ACCEPT
+    reason: Nucleoplasm localization corroborated by independent IDA evidence.
+    supported_by:
+    - reference_id: file:human/DCAF11/DCAF11-uniprot.txt
+      supporting_text: &#39;GO; GO:0005654; C:nucleoplasm; IDA:HPA.&#39;
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8952639
+  qualifier: located_in
+  review:
+    summary: Reactome places the CRL4 complex (here DCAF11) in the nucleoplasm during
+      the neddylation regulatory cycle. Consistent with the IDA nucleoplasm
+      localization.
+    action: ACCEPT
+    reason: Nucleoplasm localization corroborated by independent IDA evidence.
+    supported_by:
+    - reference_id: file:human/DCAF11/DCAF11-uniprot.txt
+      supporting_text: &#39;GO; GO:0005654; C:nucleoplasm; IDA:HPA.&#39;
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8955245
+  qualifier: located_in
+  review:
+    summary: Reactome places the CRL4 complex (here DCAF11) in the nucleoplasm during
+      the CAND1 exchange cycle. Consistent with the IDA nucleoplasm localization.
+    action: ACCEPT
+    reason: Nucleoplasm localization corroborated by independent IDA evidence.
+    supported_by:
+    - reference_id: file:human/DCAF11/DCAF11-uniprot.txt
+      supporting_text: &#39;GO; GO:0005654; C:nucleoplasm; IDA:HPA.&#39;
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8955285
+  qualifier: located_in
+  review:
+    summary: Reactome places the CRL4 complex (here DCAF11) in the nucleoplasm during
+      COMMD-mediated CAND1 displacement. Consistent with the IDA nucleoplasm
+      localization.
+    action: ACCEPT
+    reason: Nucleoplasm localization corroborated by independent IDA evidence.
+    supported_by:
+    - reference_id: file:human/DCAF11/DCAF11-uniprot.txt
+      supporting_text: &#39;GO; GO:0005654; C:nucleoplasm; IDA:HPA.&#39;
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8956045
+  qualifier: located_in
+  review:
+    summary: Reactome places the CRL4 complex (here DCAF11) in the nucleoplasm during
+      COP9 signalosome-mediated deneddylation. Consistent with the IDA nucleoplasm
+      localization.
+    action: ACCEPT
+    reason: Nucleoplasm localization corroborated by independent IDA evidence.
+    supported_by:
+    - reference_id: file:human/DCAF11/DCAF11-uniprot.txt
+      supporting_text: &#39;GO; GO:0005654; C:nucleoplasm; IDA:HPA.&#39;
+- term:
+    id: GO:0080008
+    label: Cul4-RING E3 ubiquitin ligase complex
+  evidence_type: IDA
+  original_reference_id: PMID:16949367
+  qualifier: part_of
+  review:
+    summary: Direct identification of DCAF11 in DDB1-CUL4A complexes by tandem-affinity
+      purification and mass spectrometry establishes CRL4 complex membership. This is
+      the core, experimentally grounded complex annotation.
+    action: ACCEPT
+    reason: Core complex membership directly demonstrated by affinity purification/MS.
+    supported_by:
+    - reference_id: PMID:16949367
+      supporting_text: we identify 18 Ddb1- and Cul4-associated factors (DCAFs),
+        including 14 containing WD40 repeats.
+core_functions:
+- description: Substrate-recognition receptor of the CRL4(DCAF11) cullin-RING E3
+    ubiquitin ligase; uses its WD40 beta-propeller to bind substrates and a WDXR motif
+    to dock on the DDB1 adaptor of CUL4A/CUL4B complexes, presenting substrates for
+    polyubiquitination and proteasomal degradation.
+  supported_by:
+  - reference_id: PMID:16949367
+    supporting_text: we identify 18 Ddb1- and Cul4-associated factors (DCAFs),
+      including 14 containing WD40 repeats. DCAFs interact with multiple surfaces on
+      Ddb1, and the interaction of WD40-containing DCAFs with Ddb1 requires a
+      conserved WDXR motif.
+  molecular_function:
+    id: GO:1990756
+    label: ubiquitin-like ligase-substrate adaptor activity
+  directly_involved_in:
+  - id: GO:0043161
+    label: proteasome-mediated ubiquitin-dependent protein catabolic process
+  locations:
+  - id: GO:0080008
+    label: Cul4-RING E3 ubiquitin ligase complex
+- description: Targets the NRF2/NFE2L2 transcription factor for ubiquitin-dependent
+    degradation by binding the DIDLID sequence of its Neh2 domain, thereby tuning the
+    NRF2-driven antioxidant/oxidative-stress transcriptional program.
+  supported_by:
+  - reference_id: PMID:31586112
+    supporting_text: DCAF11 and DDB1-Cul4/Roc1 bind to the DIDLID sequence of the
+      Neh2 domain of Nrf2 to mediate its degradation.
+  - reference_id: PMID:31586112
+    supporting_text: indicating that DCAF11 is a functional E3-ubiquitin ligase for
+      Nrf2.
+- description: Mediates phospho-Ser68-primed ubiquitination and degradation of the
+    centromeric histone variant CENP-A to maintain centromere identity and prevent
+    ectopic CENP-A localization during the cell cycle.
+  supported_by:
+  - reference_id: PMID:34758320
+    supporting_text: DCAF11 (DDB1 and CUL4 associated factor 11/WDR23) is the E3
+      ligase that specifically mediates the observed polyubiquitination.
+  - reference_id: PMID:34758320
+    supporting_text: Deletion of DCAF11 hampers CENP-A degradation and causes its
+      mislocalization.
+proposed_new_terms: []
+suggested_questions:
+- question: What is the full repertoire of endogenous CRL4(DCAF11) substrates, and which degrons/recognition motifs does the DCAF11 WD40 propeller read?
+- question: Does DCAF11 preferentially partner with CUL4A versus CUL4B in specific cellular contexts, and is there substrate specialization between the two variants?
+- question: How is CRL4(DCAF11) activity itself regulated (neddylation/CAND1 exchange, expression control such as TFEB repression) under oxidative and proteotoxic stress?
+suggested_experiments:
+- description: Define the CRL4(DCAF11) substrate landscape using global protein-stability profiling (e.g., quantitative diGly ubiquitinome and degradation/half-life proteomics) comparing DCAF11-knockout versus wild-type cells.
+- description: Determine a cryo-EM or crystal structure of DCAF11 bound to DDB1 and to a substrate degron peptide (e.g., NRF2 Neh2 DIDLID or phospho-CENP-A) to map the recognition surface.
+- description: Test for genetic separation of function between CUL4A- and CUL4B-based CRL4(DCAF11) complexes by selective depletion and substrate-stabilization readouts.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:16949367
+  title: A family of diverse Cul4-Ddb1-interacting proteins includes Cdt2, which is
+    required for S phase destruction of the replication factor Cdt1.
+  findings:
+  - statement: DCAF11 is one of 18 DDB1- and CUL4-associated factors (DCAFs) that
+      serve as substrate receptors, docking on DDB1 via a conserved WDXR motif.
+    supporting_text: we identify 18 Ddb1- and Cul4-associated factors (DCAFs),
+      including 14 containing WD40 repeats. DCAFs interact with multiple surfaces on
+      Ddb1, and the interaction of WD40-containing DCAFs with Ddb1 requires a
+      conserved WDXR motif.
+- id: PMID:16964240
+  title: Molecular architecture and assembly of the DDB1-CUL4A ubiquitin ligase machinery.
+  findings:
+  - statement: WD40-repeat DCAFs dock on the DDB1 double-beta-propeller of the
+      DDB1-CUL4A-ROC1 ligase to present substrates for ubiquitination.
+    supporting_text: DDB1 uses one beta-propeller domain for cullin scaffold binding
+      and a variably attached separate double-beta-propeller fold for substrate
+      presentation.
+- id: PMID:19109893
+  title: Structural basis of UV DNA-damage recognition by the DDB1-DDB2 complex.
+  findings: []
+- id: PMID:22190034
+  title: Global landscape of HIV-human protein complexes.
+  findings: []
+- id: PMID:27018634
+  title: Quantitative Mass Spectrometry Identifies Novel Host Binding Partners for
+    Pathogenic Escherichia coli Type III Secretion System Effectors.
+  findings: []
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+- id: PMID:31586112
+  title: TFEB activates Nrf2 by repressing its E3 ubiquitin ligase DCAF11 and promoting
+    phosphorylation of p62.
+  findings:
+  - statement: DCAF11 is a functional E3 ubiquitin ligase substrate receptor for NRF2,
+      binding the DIDLID sequence of the Neh2 domain to mediate its degradation; TFEB
+      transcriptionally represses DCAF11 to stabilize NRF2.
+    supporting_text: DCAF11 and DDB1-Cul4/Roc1 bind to the DIDLID sequence of the
+      Neh2 domain of Nrf2 to mediate its degradation.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+- id: PMID:34758320
+  title: Phosphorylation at Ser68 facilitates DCAF11-mediated ubiquitination and degradation
+    of CENP-A during the cell cycle.
+  findings:
+  - statement: DCAF11 is the E3 ligase that specifically mediates phospho-Ser68-primed
+      polyubiquitination and degradation of CENP-A; its deletion impairs CENP-A
+      degradation and causes mislocalization.
+    supporting_text: DCAF11 (DDB1 and CUL4 associated factor 11/WDR23) is the E3
+      ligase that specifically mediates the observed polyubiquitination. Deletion of
+      DCAF11 hampers CENP-A degradation and causes its mislocalization.
+- id: PMID:35271311
+  title: &#39;OpenCell: Endogenous tagging for the cartography of human cellular organization.&#39;
+  findings: []
+- id: Reactome:R-HSA-8952638
+  title: AcM-UBE2M transfers NEDD8 to CRL4 E3 ubiquitin ligase complex
+  findings: []
+- id: Reactome:R-HSA-8952639
+  title: NEDD8:AcM-UBE2M binds CRL4 E3 ubiquitin ligase complex
+  findings: []
+- id: Reactome:R-HSA-8955245
+  title: CAND1 binds CRL4 E3 ubiquitin ligase in the nucleus
+  findings: []
+- id: Reactome:R-HSA-8955285
+  title: COMMDs displace CAND1 from CRL4 E3 ubiquitin ligase complex
+  findings: []
+- id: Reactome:R-HSA-8956045
+  title: COP9 signalosome deneddylates nuclear CRL4 E3 ubiquitin ligase complex
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

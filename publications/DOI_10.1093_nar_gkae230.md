@@ -15,6 +15,7 @@ journal: Nucleic Acids Research
 year: '2024'
 doi: 10.1093/nar/gkae230
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Structure-functional characterization of <i>Lactococcus</i> AbiA phage defense system

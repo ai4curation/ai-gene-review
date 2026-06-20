@@ -1,0 +1,1945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aroB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aroB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CV2" target="_blank" class="term-link">
+                        Q88CV2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aroB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CV2" data-a="DESCRIPTION: aroB (PP_5078) encodes 3-dehydroquinate synthase (..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>aroB (PP_5078) encodes 3-dehydroquinate synthase (DHQS; EC 4.2.3.4), a cytoplasmic enzyme that catalyzes the second step of the shikimate pathway. It converts 3-deoxy-D-arabino-heptulosonate 7-phosphate (DAHP) into 3-dehydroquinate (DHQ), the first carbocyclic intermediate of the pathway, with release of inorganic phosphate. Catalysis requires a tightly bound NAD(+) used catalytically (transiently reduced and reoxidized) and a divalent metal cation (Co2+ or Zn2+) per subunit, driving a multi-step cascade of alcohol oxidation, phosphate elimination, carbonyl reduction, ring opening, and intramolecular aldol cyclization within a single active site. The shikimate pathway proceeds through chorismate, the branch-point precursor for the aromatic amino acids (phenylalanine, tyrosine, tryptophan) and other aromatic metabolites such as folate and ubiquinone. The pathway is present in bacteria, fungi, algae, and plants but absent in animals. The protein belongs to the sugar phosphate cyclases superfamily, dehydroquinate synthase family.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003856" target="_blank" class="term-link">
+                                    GO:0003856
+                                </a>
+                            </span>
+                            <span class="term-label">3-dehydroquinate synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV2" data-a="GO:0003856" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. aroB/PP_5078 is the 3-dehydroquinate synthase of P. putida KT2440 (EC 4.2.3.4, RHEA:21968), supported by UniProt/HAMAP rule MF_00110, conserved domain architecture (TIGR01357 aroB, Pfam PF01761), and KT2440 literature mapping the locus to this activity.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV2" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DHQS acts on soluble cytosolic metabolites (DAHP, NAD+, divalent cation) and is a soluble intracellular enzyme of central metabolism. Consistent with UniProt subcellular location (cytoplasm) and the general architecture of the bacterial shikimate pathway. No experimental KT2440 localization assay exists, but the inference is well supported.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009073" target="_blank" class="term-link">
+                                    GO:0009073
+                                </a>
+                            </span>
+                            <span class="term-label">aromatic amino acid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV2" data-a="GO:0009073" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DHQS provides the second step of the shikimate pathway that supplies chorismate, the precursor of phenylalanine, tyrosine, and tryptophan. This biological process annotation is correct and represents a core role of the gene.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                    GO:0009423
+                                </a>
+                            </span>
+                            <span class="term-label">chorismate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV2" data-a="GO:0009423" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DHQS catalyzes step 2 of 7 in chorismate biosynthesis from D-erythrose 4-phosphate and phosphoenolpyruvate (UniPathway UPA00053). This is the most precise biological-process term for the gene and is well supported.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016838" target="_blank" class="term-link">
+                                    GO:0016838
+                                </a>
+                            </span>
+                            <span class="term-label">carbon-oxygen lyase activity, acting on phosphates</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV2" data-a="GO:0016838" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO-derived MF term that is a more general parent of the specific 3-dehydroquinate synthase activity (GO:0003856) already annotated. DHQS is classified under EC 4.2.3.- (carbon-oxygen lyases acting on phosphates), so the term is not wrong, but it is redundant with and less informative than the specific child term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The precise activity is already captured by GO:0003856. This broad lyase grouping term adds no information beyond the specific annotation and is a less informative restatement of the same molecular function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>3-dehydroquinate synthase catalyzing the second step of the shikimate pathway, converting DAHP to 3-dehydroquinate with release of phosphate, using catalytic NAD(+) and a divalent metal cofactor</h3>
+                <span class="vote-buttons" data-g="Q88CV2" data-a="FUNCTION: 3-dehydroquinate synthase catalyzing the second st..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003856" target="_blank" class="term-link">
+                            3-dehydroquinate synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                chorismate biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:58394" target="_blank" class="term-link">
+                                7-phospho-2-dehydro-3-deoxy-D-arabino-heptonate (DAHP)
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">aroB/PP_5078 annotated as 3-dehydroquinate synthase activity (GO:0003856) via UniRule UR000001254 / HAMAP MF_00110, EC 4.2.3.4, RHEA:21968.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                                PMID:12534463
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">KT2440 genome annotation assigns PP_5078 (aroB) as 3-dehydroquinate synthase; deep research (aroB-deep-research-falcon.md) corroborates the PP_5078 to aroB / DHQS mapping and the DAHP to DHQ reaction.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequence of P. putida KT2440 in which the aroB/PP_5078 locus (Q88CV2) is annotated as 3-dehydroquinate synthase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aroB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CV2" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">33 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T20:48:04.491466</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="aroB-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-arob-uniprot-q88cv2-locus-pp_5078-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>aroB</strong> (UniProt Q88CV2; locus <strong>PP_5078</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-target-verification-mandatory">0) Target verification (mandatory)</h3>
+<p>The target protein is correctly identified as <strong>3-dehydroquinate synthase (DHQS)</strong> encoded by <strong>aroB</strong> in <em>Pseudomonas putida</em> KT2440. A KT2440 transcriptomics study explicitly maps the locus tag <strong>PP_5078</strong> to <strong>aroB</strong> and describes it as <strong>3-dehydroquinate synthase</strong> (“3-dehydroquinate synthase (aroB) (PP_5078)”). (lopezlara2020influenceofrehydration pages 2-4). Independent KT2440 metabolic-engineering literature also refers to <strong>aroB</strong> as encoding the native <strong>3-dehydroquinate synthase</strong> in the shikimate pathway. (ling2022muconicacidproduction pages 1-2). Authoritative pathway reviews define <strong>AroB/DHQS</strong> as <strong>EC 4.2.3.4</strong> and place it within the <strong>sugar phosphate cyclase superfamily</strong>, consistent with the UniProt-provided family/domain context. (derrer2013theshikimatepathway pages 3-4, derrer2013theshikimatepathway pages 4-5).</p>
+<h3 id="1-key-concepts-and-current-understanding">1) Key concepts and current understanding</h3>
+<h4 id="11-the-shikimate-pathway-and-the-role-of-arobdhqs">1.1 The shikimate pathway and the role of AroB/DHQS</h4>
+<p>The <strong>shikimate pathway</strong> is a conserved biosynthetic route (present in bacteria, fungi, algae, and plants but absent in animals) that converts central-carbon precursors into <strong>chorismate</strong>, the branch-point precursor for aromatic amino acids and many specialized metabolites. (shende2024theshikimatepathway pages 3-4). </p>
+<p><strong>AroB/DHQS (3-dehydroquinate synthase)</strong> catalyzes the <strong>second step</strong> of the pathway: conversion of <strong>3-deoxy-D-arabino-heptulosonate 7-phosphate (DAHP)</strong> into <strong>3-dehydroquinate (DHQ)</strong>, which is the <strong>first carbocyclic product</strong> (and a key intermediate) of the shikimate pathway. (derrer2013theshikimatepathway pages 3-4, shende2024theshikimatepathway pages 3-4, maeda2012theshikimatepathway pages 7-8).</p>
+<h4 id="12-enzymatic-reaction-substrate-specificity-and-products">1.2 Enzymatic reaction, substrate specificity, and products</h4>
+<p>Across authoritative reviews, DHQS is described as catalyzing:<br />
+- <strong>Substrate:</strong> DAHP (a sugar phosphate; often described as the pyranose form)<br />
+- <strong>Product:</strong> <strong>3-dehydroquinate (DHQ)</strong> (carbocyclic intermediate)<br />
+- <strong>Phosphate:</strong> phosphate chemistry is integral; phosphate is eliminated during the mechanism and inorganic phosphate is discussed as a product/activator in mechanistic descriptions. (dev2012structureandfunction pages 2-4, derrer2013theshikimatepathway pages 3-4).</p>
+<p>The enzyme’s functional specificity is therefore primarily for <strong>DAHP</strong> within the shikimate pathway (i.e., it is not a broad-spectrum cyclase in this context but a dedicated shikimate-pathway enzyme). (derrer2013theshikimatepathway pages 3-4, shende2024theshikimatepathway pages 3-4).</p>
+<h4 id="13-cofactors-and-mechanistic-steps">1.3 Cofactors and mechanistic steps</h4>
+<p>DHQS is widely characterized as an enzyme with an unusually complex, multi-step catalytic cascade occurring in a single active site:<br />
+- It uses <strong>NAD+</strong> catalytically (transient reduction to NADH and reoxidation back to NAD+), and requires a <strong>divalent metal ion</strong>, typically described as <strong>Co2+ or Zn2+</strong>. (derrer2013theshikimatepathway pages 3-4, dev2012structureandfunction pages 2-4, maeda2012theshikimatepathway pages 7-8, derrer2013theshikimatepathway pages 4-5).<br />
+- Mechanistic steps described in reviews include an ordered sequence of <strong>alcohol oxidation</strong>, <strong>phosphate elimination</strong>, <strong>carbonyl reduction</strong>, <strong>ring opening</strong>, and <strong>intramolecular aldol condensation/cyclization</strong> to yield DHQ. (dev2012structureandfunction pages 2-4, derrer2013theshikimatepathway pages 3-4, shende2024theshikimatepathway pages 3-4).</p>
+<p>A high-level mechanistic consensus is that the enzyme initiates a redox-triggered cascade that yields the carbocycle while suppressing side reactions (“shunt” reactions). (shende2024theshikimatepathway pages 3-4).</p>
+<h4 id="14-quantitative-enzymology-comparative-conserved-bacterial-dhqs">1.4 Quantitative enzymology (comparative, conserved bacterial DHQS)</h4>
+<p>While not specific to <em>P. putida</em> KT2440, bacterial DHQS enzymes share conserved chemistry and cofactor usage; thus kinetic data from well-studied bacterial homologs provide useful bounds on expected catalytic behavior. For <em>Mycobacterium tuberculosis</em> DHQS, a review summarizes reported values <strong>KM(DAHP) = 6.3 µM</strong>, <strong>KM(NAD+) = 70 µM</strong>, and <strong>kcat ≈ 0.63 s−1</strong>, and also notes EDTA sensitivity with best restoration by <strong>Co2+</strong> (and partial support by other divalent cations, with Zn often present). (nunes2020mycobacteriumtuberculosisshikimate pages 10-12).</p>
+<h3 id="2-arob-pp_5078-functional-annotation-in-p-putida-kt2440">2) aroB (PP_5078) functional annotation in <em>P. putida</em> KT2440</h3>
+<h4 id="21-biological-function-and-pathway-placement">2.1 Biological function and pathway placement</h4>
+<p>Given the direct PP_5078→aroB mapping and the conserved reaction, <strong>aroB (PP_5078)</strong> in KT2440 is best annotated as a <strong>cytosolic metabolic enzyme of the shikimate pathway</strong> catalyzing <strong>DAHP → DHQ</strong>. (lopezlara2020influenceofrehydration pages 2-4, derrer2013theshikimatepathway pages 3-4, shende2024theshikimatepathway pages 3-4).</p>
+<p>In bacteria, the shikimate pathway supplies <strong>chorismate</strong>, which supports aromatic amino acid biosynthesis and numerous downstream aromatic metabolites. (shende2024theshikimatepathway pages 3-4). In <em>P. putida</em>, this central role underpins why aroB is frequently targeted in metabolic engineering to raise flux to aromatic products. (ling2022muconicacidproduction pages 1-2, camposmagana2024combinatorialengineeringreveals pages 1-4).</p>
+<h4 id="22-cellular-localization-and-site-of-action">2.2 Cellular localization and site of action</h4>
+<p>No retrieved source provided a direct experimental subcellular localization assay for KT2440 AroB (e.g., fractionation, microscopy tagging). However, the enzyme acts on soluble cytosolic metabolites (DAHP, NAD+, divalent cations), and DHQS is treated in the literature as a <strong>soluble, intracellular (cytosolic) enzyme</strong> of central metabolism. This inference is consistent with the enzyme’s chemistry and its use in intracellular pathway engineering. (derrer2013theshikimatepathway pages 3-4, dev2012structureandfunction pages 2-4, ling2022muconicacidproduction pages 1-2).</p>
+<h4 id="23-expression-and-physiological-context-in-kt2440">2.3 Expression and physiological context in KT2440</h4>
+<p>In a KT2440 desiccation/rehydration transcriptome study, <strong>aroB (PP_5078)</strong> is reported among genes in an overrepresented amino-acid biosynthesis functional group and is described as <strong>upregulated</strong> during resuscitation after desiccation. (lopezlara2020influenceofrehydration pages 2-4). The same excerpt links this group to aromatic amino acid biosynthesis (phenylalanine/tyrosine), consistent with increased demand for shikimate-pathway flux during recovery. (lopezlara2020influenceofrehydration pages 2-4).</p>
+<h3 id="3-recent-developments-and-latest-research-prioritizing-20232024">3) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="31-2024-mechanisticstructural-synthesis-of-dhqs-and-pathway-context">3.1 2024 mechanistic/structural synthesis of DHQS and pathway context</h4>
+<p>A 2024 <em>Natural Product Reports</em> review (“The shikimate pathway: gateway to metabolic diversity”) explicitly highlights that mechanistic proposals for DHQS are informed by <strong>high-resolution crystal structures</strong> of DHQS in complex with <strong>metals, nicotinamide cofactors, and substrate-based inhibitors</strong>, and summarizes DHQS as a multi-step enzyme stabilizing intermediates and minimizing off-pathway reactions. (shende2024theshikimatepathway pages 3-4). This consolidates the current understanding that DHQS is not merely a simple cyclase but a tightly choreographed redox-enabled cyclization catalyst.</p>
+<h4 id="32-20242025-systems-metabolic-engineering-in-p-putida-arob-emerges-as-a-bottleneck">3.2 2024–2025 systems metabolic engineering in <em>P. putida</em>: aroB emerges as a bottleneck</h4>
+<p>A 2024 bioRxiv preprint applying combinatorial Design-of-Experiments (DoE) to <em>P. putida</em> shikimate and pABA pathways identifies <strong>aroB expression</strong> as a <strong>significant limiting factor</strong> for <strong>para-aminobenzoic acid (pABA)</strong> production. (camposmagana2024combinatorialengineeringreveals pages 1-4). Quantitatively, from 14 representative strains spanning a theoretical 512-combination design space, the authors report <strong>2–186.2 mg/L</strong> pABA in the initial screen and <strong>232.1 mg/L</strong> after a second engineering round guided by modeling. (camposmagana2024combinatorialengineeringreveals pages 1-4). A peer-reviewed continuation (2025) reports the same workflow and titers and again identifies <strong>aroB</strong> as a critical bottleneck (included here for completeness beyond the user’s 2024 window). (camposmagana2025combinatorialengineeringpinpoints pages 1-2).</p>
+<p>This line of work supports an expert interpretation that, in <em>P. putida</em>, DHQS capacity can constrain carbon throughput through the shikimate node when production goals demand high chorismate-derived flux.</p>
+<h4 id="33-2024-microbial-production-other-hosts-reinforces-arob-as-a-common-engineering-lever">3.3 2024 microbial production (other hosts) reinforces aroB as a common engineering lever</h4>
+<p>In 2024, <em>Corynebacterium crenatum</em> was engineered for L-tyrosine production by, among other interventions, overexpressing <strong>aroB/aroD/aroE</strong>. Reported titers reached <strong>6.42 g/L</strong> in shake flasks and <strong>34.6 g/L</strong> in fed-batch fermentation, with the mixed carbon-source strategy giving <strong>16.9% higher</strong> L-tyrosine than glucose alone in flask conditions. (yang2024metabolicengineeringof pages 1-3). While not <em>P. putida</em>, this is relevant as a recent demonstration of real-world pathway design where increasing flux through the DAHP→DHQ→shikimate segment (including DHQS) is part of achieving industrially relevant aromatic amino acid titers.</p>
+<h3 id="4-current-applications-and-real-world-implementations">4) Current applications and real-world implementations</h3>
+<h4 id="41-p-putida-kt2440-as-a-chassis-for-shikimate-derived-bioproducts">4.1 <em>P. putida</em> KT2440 as a chassis for shikimate-derived bioproducts</h4>
+<p>A prominent implementation is muconic acid production in engineered <em>P. putida</em> KT2440. In this Nature Communications study (published Aug 2022; still actively cited as an implementation benchmark), the authors state that <strong>overexpression of aroB encoding the native 3-dehydroquinate synthase</strong> enabled efficient muconic acid production from mixed sugars. (ling2022muconicacidproduction pages 1-2). They report <strong>33.7 g/L muconate</strong>, <strong>0.18 g/L/h productivity</strong>, and <strong>46% molar yield</strong> (reported as <strong>92% of maximum theoretical yield</strong>). (ling2022muconicacidproduction pages 1-2). These data demonstrate industrially relevant titers/productivities and position aroB as a concrete intervention point in deployed strain designs.</p>
+<h4 id="42-paba-as-an-industrial-intermediate">4.2 pABA as an industrial intermediate</h4>
+<p>pABA is described as a widely used industrial intermediate, and the 2024 DoE study in <em>P. putida</em> provides a quantitative example showing that systematic tuning of shikimate-pathway gene expression can move pABA titers across two orders of magnitude, with aroB identified as a key bottleneck. (camposmagana2024combinatorialengineeringreveals pages 1-4).</p>
+<h3 id="5-expert-opinions-and-analysis-authoritative-synthesis">5) Expert opinions and analysis (authoritative synthesis)</h3>
+<p>Authoritative reviews emphasize two main reasons DHQS/AroB is strategically important:<br />
+1. <strong>Pathway control point:</strong> DHQS forms the <strong>first carbocyclic intermediate</strong> and sits early in the pathway, so it can become rate-limiting when high flux is required for aromatic amino acids or downstream specialized metabolites. (shende2024theshikimatepathway pages 3-4, camposmagana2024combinatorialengineeringreveals pages 1-4).<br />
+2. <strong>Mechanistic complexity enabling inhibitor design:</strong> DHQS has well-defined cofactor and metal requirements and multi-step chemistry; high-resolution structures with cofactors/inhibitors have informed mechanistic models, making DHQS a tractable enzyme for mechanistic interrogation and (in broader contexts) inhibitor development. (shende2024theshikimatepathway pages 3-4, derrer2013theshikimatepathway pages 4-5).</p>
+<p>A practical interpretation consistent with recent <em>P. putida</em> engineering results is that <strong>aroB expression/capacity often needs explicit optimization</strong> in overproduction settings (e.g., pABA), and can be part of high-performing strain architectures (e.g., muconate). (camposmagana2024combinatorialengineeringreveals pages 1-4, ling2022muconicacidproduction pages 1-2).</p>
+<h3 id="6-key-statistics-and-quantitative-data-from-studies-selected">6) Key statistics and quantitative data from studies (selected)</h3>
+<ul>
+<li><strong>Muconate production in engineered <em>P. putida</em> KT2440</strong> with aroB overexpression in the design: <strong>33.7 g/L</strong>, <strong>0.18 g/L/h</strong>, <strong>46% molar yield (92% of theoretical maximum)</strong>. Publication date: Aug 2022. URL: https://doi.org/10.1038/s41467-022-32296-y (ling2022muconicacidproduction pages 1-2).</li>
+<li><strong>pABA production in <em>P. putida</em></strong> DoE study: initial titers <strong>2–186.2 mg/L</strong>, improved to <strong>232.1 mg/L</strong> after a second engineering round; <strong>aroB identified as bottleneck</strong>. Preprint posted Jun 17, 2024. URL: https://doi.org/10.1101/2024.06.17.599342 (camposmagana2024combinatorialengineeringreveals pages 1-4).</li>
+<li><strong>Comparative bacterial DHQS kinetics (M. tuberculosis):</strong> <strong>KM(DAHP) 6.3 µM</strong>, <strong>KM(NAD+) 70 µM</strong>, <strong>kcat ~0.63 s−1</strong>; metal dependence with best restoration by Co2+. Publication date: Mar 2020. URL: https://doi.org/10.3390/molecules25061259 (nunes2020mycobacteriumtuberculosisshikimate pages 10-12).</li>
+</ul>
+<h3 id="7-summary-of-functional-annotation-for-database-style-use">7) Summary of functional annotation (for database-style use)</h3>
+<ul>
+<li><strong>Gene / locus / accession:</strong> aroB / PP_5078 / UniProt Q88CV2 (verified in KT2440 context). (lopezlara2020influenceofrehydration pages 2-4)</li>
+<li><strong>Enzyme name / EC:</strong> 3-dehydroquinate synthase (DHQS) / <strong>EC 4.2.3.4</strong>. (derrer2013theshikimatepathway pages 3-4, maeda2012theshikimatepathway pages 7-8)</li>
+<li><strong>Primary reaction:</strong> <strong>DAHP → 3-dehydroquinate (DHQ)</strong> (second shikimate step; first carbocyclic product). (derrer2013theshikimatepathway pages 3-4, shende2024theshikimatepathway pages 3-4)</li>
+<li><strong>Cofactors:</strong> catalytic <strong>NAD+</strong> and a <strong>divalent metal</strong> (commonly Co2+ or Zn2+). (dev2012structureandfunction pages 2-4, derrer2013theshikimatepathway pages 4-5)</li>
+<li><strong>Pathway:</strong> shikimate pathway → chorismate → aromatic amino acids and diverse aromatic metabolites. (shende2024theshikimatepathway pages 3-4)</li>
+<li><strong>Cellular location (best-supported):</strong> intracellular/cytosolic enzyme acting on soluble metabolites; direct KT2440 localization experiment not found in retrieved sources. (derrer2013theshikimatepathway pages 3-4, ling2022muconicacidproduction pages 1-2)</li>
+</ul>
+<h3 id="8-evidence-table-compiled">8) Evidence table (compiled)</h3>
+<table>
+<thead>
+<tr>
+<th>Evidence type</th>
+<th>Organism/system</th>
+<th>Key finding</th>
+<th>Quantitative data (if any)</th>
+<th>Publication (authors, year)</th>
+<th>URL/DOI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>identity</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>PP_5078 is explicitly annotated as <strong>aroB</strong>, encoding <strong>3-dehydroquinate synthase</strong>; reported as upregulated during recovery from desiccation/rehydration, supporting the locus-to-function mapping for the target gene/protein (lopezlara2020influenceofrehydration pages 2-4)</td>
+<td>Microarray study with triplicate analyses; numeric fold-change not given in excerpt (lopezlara2020influenceofrehydration pages 2-4)</td>
+<td>López-Lara et al., 2020</td>
+<td>https://doi.org/10.1186/s13213-020-01596-3</td>
+</tr>
+<tr>
+<td>identity/pathway role</td>
+<td><em>Pseudomonas putida</em> KT2440 engineered for muconate production</td>
+<td>The native <strong>aroB</strong> in <em>P. putida</em> KT2440 is identified as encoding <strong>3-dehydroquinate synthase</strong>; overexpression improved flux to shikimate-pathway-derived muconic acid (ling2022muconicacidproduction pages 1-2)</td>
+<td>Muconate production reached <strong>33.7 g/L</strong>, <strong>0.18 g/L/h</strong>, <strong>46% molar yield</strong> (<strong>92% of theoretical maximum</strong>) in engineered strains that included aroB overexpression (ling2022muconicacidproduction pages 1-2)</td>
+<td>Ling et al., 2022</td>
+<td>https://doi.org/10.1038/s41467-022-32296-y</td>
+</tr>
+<tr>
+<td>mechanism</td>
+<td>Bacterial DHQS/AroB (reviewed across taxa)</td>
+<td>DHQS/AroB (EC 4.2.3.4) catalyzes conversion of <strong>DAHP to 3-dehydroquinate (DHQ)</strong>, the second step of the shikimate pathway and first carbocyclic intermediate-forming reaction; belongs to the <strong>sugar phosphate cyclase superfamily</strong> (derrer2013theshikimatepathway pages 3-4, shende2024theshikimatepathway pages 3-4)</td>
+<td>Reaction-level annotation; no organism-specific kinetic value in these excerpts (derrer2013theshikimatepathway pages 3-4, shende2024theshikimatepathway pages 3-4)</td>
+<td>Derrer et al., 2013; Shende et al., 2024</td>
+<td>https://doi.org/10.2741/4155; https://doi.org/10.1039/d3np00037k</td>
+</tr>
+<tr>
+<td>mechanism/cofactors</td>
+<td>Bacterial DHQS/AroB (reviewed across taxa)</td>
+<td>Catalysis requires <strong>NAD+</strong> and a <strong>divalent metal ion</strong>; <strong>Co2+</strong> and <strong>Zn2+</strong> are the principal reported cofactors. Mechanism proceeds through oxidation, phosphate elimination, reduction, ring opening, and intramolecular aldol cyclization (derrer2013theshikimatepathway pages 3-4, dev2012structureandfunction pages 2-4, maeda2012theshikimatepathway pages 7-8, derrer2013theshikimatepathway pages 4-5)</td>
+<td>Mechanistic sequence of ~5 chemical steps in one active site; catalytic NAD+ use noted (dev2012structureandfunction pages 2-4)</td>
+<td>Dev et al., 2012; Derrer et al., 2013; Maeda &amp; Dudareva, 2012</td>
+<td>https://doi.org/10.2174/157489312803900983; https://doi.org/10.2741/4155; https://doi.org/10.1146/annurev-arplant-042811-105439</td>
+</tr>
+<tr>
+<td>mechanism/kinetics</td>
+<td><em>Mycobacterium tuberculosis</em> DHQS (comparative authoritative source for conserved AroB chemistry)</td>
+<td>AroB/DHQS performs multiple transformations in one active site; kinetics and metal dependence support the conserved bacterial mechanism for DHQS enzymes (nunes2020mycobacteriumtuberculosisshikimate pages 10-12)</td>
+<td><strong>KM(DAHP) = 6.3 µM</strong>, <strong>KM(NAD+) = 70 µM</strong>, <strong>kcat ≈ 0.63 s⁻¹</strong>; activity abolished by EDTA and best restored by <strong>Co2+</strong> (nunes2020mycobacteriumtuberculosisshikimate pages 10-12)</td>
+<td>Nunes et al., 2020</td>
+<td>https://doi.org/10.3390/molecules25061259</td>
+</tr>
+<tr>
+<td>application</td>
+<td><em>Pseudomonas putida</em> pABA pathway engineering</td>
+<td>Combinatorial engineering identified <strong>aroB</strong> expression as a <strong>significant limiting factor / bottleneck</strong> for para-aminobenzoic acid production in <em>P. putida</em>, making DHQS a practical intervention point in strain design (camposmagana2024combinatorialengineeringreveals pages 1-4, camposmagana2024combinatorialengineeringreveals pages 11-14)</td>
+<td>Initial strain set produced <strong>2–186.2 mg/L</strong> pABA; second round reached <strong>232.1 mg/L</strong> (reported in related preprint/peer-reviewed continuation) (camposmagana2024combinatorialengineeringreveals pages 1-4, camposmagana2025combinatorialengineeringpinpoints pages 1-2)</td>
+<td>Campos-Magaña et al., 2024; Campos-Magaña et al., 2025</td>
+<td>https://doi.org/10.1101/2024.06.17.599342; https://doi.org/10.1186/s13036-025-00553-5</td>
+</tr>
+<tr>
+<td>application</td>
+<td><em>Corynebacterium crenatum</em> metabolic engineering</td>
+<td>Overexpression of <strong>aroB</strong> with <strong>aroD/aroE</strong> was part of a successful aromatic amino acid engineering strategy, showing broader real-world use of DHQS tuning in microbial biomanufacturing (yang2024metabolicengineeringof pages 1-3)</td>
+<td><strong>6.42 g/L</strong> L-tyrosine in shake flask; <strong>34.6 g/L</strong> in fed-batch; <strong>16.9%</strong> higher at 3:1 glucose:mannitol vs glucose alone (yang2024metabolicengineeringof pages 1-3)</td>
+<td>Yang et al., 2024</td>
+<td>https://doi.org/10.1186/s12934-024-02564-1</td>
+</tr>
+<tr>
+<td>omics</td>
+<td><em>Pseudomonas putida</em> KT2440 under desiccation/rehydration</td>
+<td><strong>aroB/PP_5078</strong> was included among genes in an overrepresented amino-acid biosynthesis response, consistent with its role in aromatic amino acid precursor supply through the shikimate pathway (lopezlara2020influenceofrehydration pages 2-4)</td>
+<td>Upregulation reported after <strong>18 days desiccation</strong> followed by <strong>20 min</strong> or <strong>24 h</strong> rehydration sampling; no fold-change in excerpt (lopezlara2020influenceofrehydration pages 2-4)</td>
+<td>López-Lara et al., 2020</td>
+<td>https://doi.org/10.1186/s13213-020-01596-3</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles key evidence verifying that Pseudomonas putida KT2440 PP_5078 is aroB encoding 3-dehydroquinate synthase, and summarizes its conserved reaction chemistry, cofactors, pathway role, omics support, and quantitative metabolic-engineering applications.</em></p>
+<h3 id="9-limitations-of-the-current-evidence-set">9) Limitations of the current evidence set</h3>
+<ul>
+<li><strong>Direct subcellular localization</strong> (e.g., experimental cytosolic fractionation or fluorescent tagging in KT2440) was not identified in the retrieved texts; localization here is inferred from biochemical role and general bacterial shikimate pathway architecture. (derrer2013theshikimatepathway pages 3-4, ling2022muconicacidproduction pages 1-2)</li>
+<li><strong>Domain architecture / InterPro/Pfam features</strong> for Q88CV2 were not directly extracted from primary literature in this run; however, the enzyme’s superfamily placement (sugar phosphate cyclase) and conserved mechanistic features are strongly supported by authoritative reviews. (derrer2013theshikimatepathway pages 3-4, derrer2013theshikimatepathway pages 4-5)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(lopezlara2020influenceofrehydration pages 2-4): Lilia I. López-Lara, Laura A. Pazos-Rojas, Lesther E. López-Cruz, Yolanda E. Morales-García, Verónica Quintero-Hernández, Jesús de la Torre, Pieter van Dillewijn, Jesús Muñoz-Rojas, and Antonino Baez. Influence of rehydration on transcriptome during resuscitation of desiccated pseudomonas putida kt2440. Annals of Microbiology, Sep 2020. URL: https://doi.org/10.1186/s13213-020-01596-3, doi:10.1186/s13213-020-01596-3. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ling2022muconicacidproduction pages 1-2): Chen Ling, George L. Peabody, Davinia Salvachúa, Young-Mo Kim, Colin M. Kneucker, Christopher H. Calvey, Michela A. Monninger, Nathalie Munoz Munoz, Brenton C. Poirier, Kelsey J. Ramirez, Peter C. St. John, Sean P. Woodworth, Jon K. Magnuson, Kristin E. Burnum-Johnson, Adam M. Guss, Christopher W. Johnson, and Gregg T. Beckham. Muconic acid production from glucose and xylose in pseudomonas putida via evolution and metabolic engineering. Nature Communications, Aug 2022. URL: https://doi.org/10.1038/s41467-022-32296-y, doi:10.1038/s41467-022-32296-y. This article has 141 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(derrer2013theshikimatepathway pages 3-4): Bianca Derrer, P. Macheroux, and B. Kappes. The shikimate pathway in apicomplexan parasites: implications for drug development. Frontiers in bioscience, 18:944-69, Jun 2013. URL: https://doi.org/10.2741/4155, doi:10.2741/4155. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(derrer2013theshikimatepathway pages 4-5): Bianca Derrer, P. Macheroux, and B. Kappes. The shikimate pathway in apicomplexan parasites: implications for drug development. Frontiers in bioscience, 18:944-69, Jun 2013. URL: https://doi.org/10.2741/4155, doi:10.2741/4155. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shende2024theshikimatepathway pages 3-4): Vikram V. Shende, Katherine D. Bauman, and Bradley S. Moore. The shikimate pathway: gateway to metabolic diversity. Natural product reports, 41:604-648, Jan 2024. URL: https://doi.org/10.1039/d3np00037k, doi:10.1039/d3np00037k. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maeda2012theshikimatepathway pages 7-8): Hiroshi Maeda and Natalia Dudareva. The shikimate pathway and aromatic amino acid biosynthesis in plants. Jun 2012. URL: https://doi.org/10.1146/annurev-arplant-042811-105439, doi:10.1146/annurev-arplant-042811-105439. This article has 1905 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dev2012structureandfunction pages 2-4): Aditya Dev, Satya Tapas, Shivendra Pratap, and Pravindra Kumar. Structure and function of enzymes of shikimate pathway. Current Bioinformatics, 7:374-391, Nov 2012. URL: https://doi.org/10.2174/157489312803900983, doi:10.2174/157489312803900983. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nunes2020mycobacteriumtuberculosisshikimate pages 10-12): José E. S. Nunes, Mario A. Duque, Talita F. de Freitas, Luiza Galina, Luis F. S. M. Timmers, Cristiano V. Bizarro, Pablo Machado, Luiz A. Basso, and Rodrigo G. Ducati. Mycobacterium tuberculosis shikimate pathway enzymes as targets for the rational design of anti-tuberculosis drugs. Molecules, 25:1259, Mar 2020. URL: https://doi.org/10.3390/molecules25061259, doi:10.3390/molecules25061259. This article has 74 citations.</p>
+</li>
+<li>
+<p>(camposmagana2024combinatorialengineeringreveals pages 1-4): Marco A Campos-Magaña, Sara Moreno-Paz, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.17.599342, doi:10.1101/2024.06.17.599342. This article has 0 citations.</p>
+</li>
+<li>
+<p>(camposmagana2025combinatorialengineeringpinpoints pages 1-2): Marco A Campos-Magaña, Sara Moreno-Paz, Maria Martin-Pascual, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering pinpoints shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. Journal of Biological Engineering, Sep 2025. URL: https://doi.org/10.1186/s13036-025-00553-5, doi:10.1186/s13036-025-00553-5. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2024metabolicengineeringof pages 1-3): Gang Yang, Sicheng Xiong, Mingzhu Huang, Bin Liu, Yanna Shao, and Xuelan Chen. Metabolic engineering of corynebacterium crenatum for enhanced l-tyrosine production from mannitol and glucose. Microbial Cell Factories, Oct 2024. URL: https://doi.org/10.1186/s12934-024-02564-1, doi:10.1186/s12934-024-02564-1. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(camposmagana2024combinatorialengineeringreveals pages 11-14): Marco A Campos-Magaña, Sara Moreno-Paz, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.17.599342, doi:10.1101/2024.06.17.599342. This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="aroB-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lopezlara2020influenceofrehydration pages 2-4</li>
+<li>ling2022muconicacidproduction pages 1-2</li>
+<li>shende2024theshikimatepathway pages 3-4</li>
+<li>nunes2020mycobacteriumtuberculosisshikimate pages 10-12</li>
+<li>camposmagana2024combinatorialengineeringreveals pages 1-4</li>
+<li>camposmagana2025combinatorialengineeringpinpoints pages 1-2</li>
+<li>yang2024metabolicengineeringof pages 1-3</li>
+<li>dev2012structureandfunction pages 2-4</li>
+<li>derrer2013theshikimatepathway pages 3-4</li>
+<li>derrer2013theshikimatepathway pages 4-5</li>
+<li>maeda2012theshikimatepathway pages 7-8</li>
+<li>camposmagana2024combinatorialengineeringreveals pages 11-14</li>
+<li>https://doi.org/10.1038/s41467-022-32296-y</li>
+<li>https://doi.org/10.1101/2024.06.17.599342</li>
+<li>https://doi.org/10.3390/molecules25061259</li>
+<li>https://doi.org/10.1186/s13213-020-01596-3</li>
+<li>https://doi.org/10.2741/4155;</li>
+<li>https://doi.org/10.1039/d3np00037k</li>
+<li>https://doi.org/10.2174/157489312803900983;</li>
+<li>https://doi.org/10.1146/annurev-arplant-042811-105439</li>
+<li>https://doi.org/10.1101/2024.06.17.599342;</li>
+<li>https://doi.org/10.1186/s13036-025-00553-5</li>
+<li>https://doi.org/10.1186/s12934-024-02564-1</li>
+<li>https://doi.org/10.1186/s13213-020-01596-3,</li>
+<li>https://doi.org/10.1038/s41467-022-32296-y,</li>
+<li>https://doi.org/10.2741/4155,</li>
+<li>https://doi.org/10.1039/d3np00037k,</li>
+<li>https://doi.org/10.1146/annurev-arplant-042811-105439,</li>
+<li>https://doi.org/10.2174/157489312803900983,</li>
+<li>https://doi.org/10.3390/molecules25061259,</li>
+<li>https://doi.org/10.1101/2024.06.17.599342,</li>
+<li>https://doi.org/10.1186/s13036-025-00553-5,</li>
+<li>https://doi.org/10.1186/s12934-024-02564-1,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CV2
+gene_symbol: aroB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: aroB (PP_5078) encodes 3-dehydroquinate synthase (DHQS; EC 4.2.3.4), a cytoplasmic enzyme that catalyzes the second step of the shikimate pathway. It converts 3-deoxy-D-arabino-heptulosonate 7-phosphate (DAHP) into 3-dehydroquinate (DHQ), the first carbocyclic intermediate of the pathway, with release of inorganic phosphate. Catalysis requires a tightly bound NAD(+) used catalytically (transiently reduced and reoxidized) and a divalent metal cation (Co2+ or Zn2+) per subunit, driving a multi-step cascade of alcohol oxidation, phosphate elimination, carbonyl reduction, ring opening, and intramolecular aldol cyclization within a single active site. The shikimate pathway proceeds through chorismate, the branch-point precursor for the aromatic amino acids (phenylalanine, tyrosine, tryptophan) and other aromatic metabolites such as folate and ubiquinone. The pathway is present in bacteria, fungi, algae, and plants but absent in animals. The protein belongs to the sugar phosphate cyclases superfamily, dehydroquinate synthase family.
+existing_annotations:
+- term:
+    id: GO:0003856
+    label: 3-dehydroquinate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function. aroB/PP_5078 is the 3-dehydroquinate synthase of P. putida KT2440 (EC 4.2.3.4, RHEA:21968), supported by UniProt/HAMAP rule MF_00110, conserved domain architecture (TIGR01357 aroB, Pfam PF01761), and KT2440 literature mapping the locus to this activity.
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: DHQS acts on soluble cytosolic metabolites (DAHP, NAD+, divalent cation) and is a soluble intracellular enzyme of central metabolism. Consistent with UniProt subcellular location (cytoplasm) and the general architecture of the bacterial shikimate pathway. No experimental KT2440 localization assay exists, but the inference is well supported.
+    action: ACCEPT
+- term:
+    id: GO:0009073
+    label: aromatic amino acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: DHQS provides the second step of the shikimate pathway that supplies chorismate, the precursor of phenylalanine, tyrosine, and tryptophan. This biological process annotation is correct and represents a core role of the gene.
+    action: ACCEPT
+- term:
+    id: GO:0009423
+    label: chorismate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: DHQS catalyzes step 2 of 7 in chorismate biosynthesis from D-erythrose 4-phosphate and phosphoenolpyruvate (UniPathway UPA00053). This is the most precise biological-process term for the gene and is well supported.
+    action: ACCEPT
+- term:
+    id: GO:0016838
+    label: carbon-oxygen lyase activity, acting on phosphates
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro2GO-derived MF term that is a more general parent of the specific 3-dehydroquinate synthase activity (GO:0003856) already annotated. DHQS is classified under EC 4.2.3.- (carbon-oxygen lyases acting on phosphates), so the term is not wrong, but it is redundant with and less informative than the specific child term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The precise activity is already captured by GO:0003856. This broad lyase grouping term adds no information beyond the specific annotation and is a less informative restatement of the same molecular function.
+core_functions:
+- description: 3-dehydroquinate synthase catalyzing the second step of the shikimate pathway, converting DAHP to 3-dehydroquinate with release of phosphate, using catalytic NAD(+) and a divalent metal cofactor
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: aroB/PP_5078 annotated as 3-dehydroquinate synthase activity (GO:0003856) via UniRule UR000001254 / HAMAP MF_00110, EC 4.2.3.4, RHEA:21968.
+    full_text_unavailable: true
+  - reference_id: PMID:12534463
+    supporting_text: KT2440 genome annotation assigns PP_5078 (aroB) as 3-dehydroquinate synthase; deep research (aroB-deep-research-falcon.md) corroborates the PP_5078 to aroB / DHQS mapping and the DAHP to DHQ reaction.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0003856
+    label: 3-dehydroquinate synthase activity
+  directly_involved_in:
+  - id: GO:0009423
+    label: chorismate biosynthetic process
+  in_complex:
+  substrates:
+  - id: CHEBI:58394
+    label: 7-phospho-2-dehydro-3-deoxy-D-arabino-heptonate (DAHP)
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.
+  findings:
+  - statement: Genome sequence of P. putida KT2440 in which the aroB/PP_5078 locus (Q88CV2) is annotated as 3-dehydroquinate synthase.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PubMed-verified KT2440 genome paper; the source of the locus tag and gene assignment. Supports identity, not detailed enzymology.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

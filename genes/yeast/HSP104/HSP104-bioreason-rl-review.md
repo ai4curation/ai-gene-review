@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: HSP104 (S. cerevisiae)
 
-Source: HSP104-deep-research-bioreason-rl.md
+Source: HSP104-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

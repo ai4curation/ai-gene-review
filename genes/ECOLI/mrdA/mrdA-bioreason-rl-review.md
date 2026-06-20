@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: mrdA (E. coli)
 
-Source: mrdA-deep-research-bioreason-rl.md
+Source: mrdA-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

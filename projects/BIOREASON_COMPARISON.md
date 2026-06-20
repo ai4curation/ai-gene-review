@@ -1,13 +1,28 @@
 ---
+title: "BioReason-Pro Comparison Project"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
 species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE]
 sidecars:
   genes: BIOREASON_COMPARISON/genes.csv
+  argo139_species_counts: BIOREASON_COMPARISON/argo139-species-counts.csv
+  argo139_curation_context_counts: BIOREASON_COMPARISON/argo139-curation-context-counts.csv
+  benchmark_cohorts: BIOREASON_COMPARISON/benchmark-cohorts.csv
+  benchmark_genes: BIOREASON_COMPARISON/benchmark-genes.csv
 ---
 # BioReason-Pro Comparison Project
 
 Systematic evaluation of BioReason-Pro functional summaries and reasoning traces (Fallahpour et al. 2026, [doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) against expert-curated AIGR gene reviews.
 
-**Paper drafts** based on this project live in [`BIOREASON_COMPARISON/article/`](BIOREASON_COMPARISON/article/): see [`manuscript.md`](BIOREASON_COMPARISON/article/manuscript.md) for the full manuscript draft (intended for ISMB 2026 Function-COSI), plus [`abstract.md`](BIOREASON_COMPARISON/article/abstract.md) (long-form) and [`short-abstract.md`](BIOREASON_COMPARISON/article/short-abstract.md) (250 words).
+**Paper drafts** based on this project live in [`BIOREASON_COMPARISON/article/`](BIOREASON_COMPARISON/article/): see [`manuscript.tex`](BIOREASON_COMPARISON/article/manuscript.tex) for the canonical full manuscript source (intended for ISMB 2026 Function-COSI), with PDF built locally via `cd projects/BIOREASON_COMPARISON && just pdf`; [`manuscript.md`](BIOREASON_COMPARISON/article/manuscript.md) is only a website bridge. Also see [`abstract.md`](BIOREASON_COMPARISON/article/abstract.md) (long-form) and [`short-abstract.md`](BIOREASON_COMPARISON/article/short-abstract.md) (250 words).
+
+**Slide deck** (ISMB 2026 Function-COSI talk): [`slides.md`](BIOREASON_COMPARISON/article/slides.md) (Marp source) / [`slides.html`](BIOREASON_COMPARISON/article/slides.html) (rendered). Regenerate with `npx @marp-team/marp-cli@latest slides.md --html --allow-local-files` (add `--pdf` or `--pptx` on a machine with a browser).
+
+**Reproducible stats notebooks** (`uv`-managed): [`notebooks/`](BIOREASON_COMPARISON/notebooks/) recomputes the summary statistics below directly from the committed per-gene files (no hard-coded numbers). [`01_narrative_scores.ipynb`](BIOREASON_COMPARISON/notebooks/01_narrative_scores.ipynb) reproduces the ARGO139 RL narrative means, score distribution, per-organism means, and top/bottom performers; [`02_prediction_assessments.ipynb`](BIOREASON_COMPARISON/notebooks/02_prediction_assessments.ipynb) audits ARGO95 SFT per-term de Crécy-Lagard assessments. See the [notebooks README](BIOREASON_COMPARISON/notebooks/README.md).
+
+**Benchmark membership:** [`genes.csv`](BIOREASON_COMPARISON/genes.csv) is **ARGO139** (Annotation Review GO), the fixed 139-gene BioReason-Pro benchmark used for RL narrative review in the manuscript. **ARGO95** is the 95-gene ARGO139 subset with HuggingFace `wanglab/protein_catalogue` SFT GO-term predictions and is used for the primary SFT term review. ARGO139 composition is summarized in [`argo139-species-counts.csv`](BIOREASON_COMPARISON/argo139-species-counts.csv) and [`argo139-curation-context-counts.csv`](BIOREASON_COMPARISON/argo139-curation-context-counts.csv). Source provenance is enumerated in [`benchmark-cohorts.csv`](BIOREASON_COMPARISON/benchmark-cohorts.csv) and [`benchmark-genes.csv`](BIOREASON_COMPARISON/benchmark-genes.csv); mixed-source SFT availability and GO-GPT audit views are isolated in the [benchmark supplement](BIOREASON_COMPARISON/article/supplemental-benchmark-details.md).
+
+**Expert Synthetic Review recap:** [`recapitulation-experiment/claude-expt-1/`](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/) is **ESR-ECOLI-DET-Mini**, a 7-gene quick-check recap of the de Crécy-Lagard expert review of DeepECTransformer predictions. Dataset ID: [`10.5281/zenodo.20751016`](https://doi.org/10.5281/zenodo.20751016). Use `ESR-ECOLI-DET-Mini` as the canonical benchmark name; `ESR-ECOLI-DET-7` is a count-explicit alias. A future full `ESR-ECOLI-DET` benchmark should be extracted from the complete de Crécy-Lagard paper.
 
 ## Methods
 
@@ -54,9 +69,10 @@ Per gene, the following files are available (example: [ECOLI/SlyD](https://githu
 
 | File | Description |
 |------|-------------|
-| `{GENE}-deep-research-bioreason-rl.md` | Raw BioReason-Pro RL web export (reasoning trace, functional summary, InterPro, GO-GPT terms) |
+| `{GENE}-bioreason-rl-predictions.md` | Raw BioReason-Pro RL web export (reasoning trace, functional summary, InterPro, GO-GPT terms) |
 | `{GENE}-bioreason-rl-review.md` | Evaluation of reasoning trace vs curated review (correctness/completeness scores + interpro2go comparison) |
 | `{GENE}-gogpt-leaf-predictions.yaml` | GO-GPT leaf terms as PredictionReview YAML |
+| `{GENE}-sft-predictions.yaml` | BioReason-Pro SFT GO terms as PredictionReview YAML |
 | `{GENE}-ai-review.yaml` | Expert-curated AIGR review (ground truth for comparison) |
 
 ## Evaluation rubric
@@ -291,10 +307,10 @@ The HF catalogue's structured GO section (at the end of the `generation` column)
 
 We compared GO terms for SlyD across three sources to understand the relationship between them:
 
-**Website SFT scrape** (`SlyD-deep-research-bioreason.md`, 9 terms -- leaf-pruned):
+**Legacy website SFT scrape** (deleted unsuffixed raw export; 9 terms -- leaf-pruned):
 GO:0003755 (PPIase activity), GO:0016859, GO:0140096, GO:0016853, GO:0003824, GO:0006457, GO:0005737, GO:0005829, GO:0005622
 
-**Website RL scrape** (`SlyD-deep-research-bioreason-rl.md`, 58 terms -- full GO-GPT with all ancestors):
+**Website RL scrape** (`SlyD-bioreason-rl-predictions.md`, 58 terms -- full GO-GPT with all ancestors):
 Includes the above plus metal binding (GO:0008270, GO:0005507, GO:0016151, GO:0050897), unfolded protein binding (GO:0051082), heat response (GO:0009408), refolding (GO:0042026), stabilization (GO:0050821), and all ancestor terms up to root.
 
 **HF SFT catalogue** (structured section, 13 terms):

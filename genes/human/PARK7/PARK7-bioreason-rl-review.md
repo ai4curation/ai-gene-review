@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: PARK7 (human)
 
-Source: PARK7-deep-research-bioreason-rl.md
+Source: PARK7-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

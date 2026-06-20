@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Prkaa2 (rat)
 
-Source: Prkaa2-deep-research-bioreason-rl.md
+Source: Prkaa2-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

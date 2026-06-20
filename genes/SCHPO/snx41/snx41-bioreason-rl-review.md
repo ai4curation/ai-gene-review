@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: snx41 (S. pombe)
 
-Source: snx41-deep-research-bioreason-rl.md
+Source: snx41-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

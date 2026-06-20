@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: ftsY (P. putida)
 
-Source: ftsY-deep-research-bioreason-rl.md
+Source: ftsY-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

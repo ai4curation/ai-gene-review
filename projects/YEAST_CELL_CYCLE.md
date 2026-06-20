@@ -1,3 +1,10 @@
+---
+title: "Yeast Cell Cycle & Translation Control"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [yeast]
+---
+
 # Yeast Cell Cycle & Translation Control
 
 ## Overview

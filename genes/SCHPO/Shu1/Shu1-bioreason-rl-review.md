@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Shu1 (S. pombe)
 
-Source: Shu1-deep-research-bioreason-rl.md
+Source: Shu1-bioreason-rl-predictions.md
 
 - **Correctness**: 1/5
 - **Completeness**: 1/5

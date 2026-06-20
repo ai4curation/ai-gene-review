@@ -92,6 +92,46 @@ def is_deep_research_markdown(path: Path) -> bool:
     )
 
 
+def is_hypothesis_research_markdown(path: Path, gene_dir: Path) -> bool:
+    """Return True for generated hypothesis-research report Markdown files."""
+    if path.suffix != ".md" or path.name.endswith(".citations.md"):
+        return False
+    if path.name.endswith("-citations.md"):
+        return False
+    hypothesis_root = gene_dir / f"{gene_dir.name}-hypotheses"
+    try:
+        relative = path.relative_to(hypothesis_root)
+    except ValueError:
+        return False
+    return len(relative.parts) == 2
+
+
+def iter_research_report_markdown(gene_dir: Path) -> List[Path]:
+    """Return top-level deep-research and nested hypothesis-research reports."""
+    reports = [
+        md_path
+        for md_path in gene_dir.glob("*-deep-research*.md")
+        if md_path.is_file() and is_deep_research_markdown(md_path)
+    ]
+    hypothesis_root = gene_dir / f"{gene_dir.name}-hypotheses"
+    if hypothesis_root.is_dir():
+        reports.extend(
+            md_path
+            for md_path in hypothesis_root.glob("*/*.md")
+            if md_path.is_file()
+            and is_hypothesis_research_markdown(md_path, gene_dir)
+        )
+    return sorted(reports)
+
+
+def report_filename_for_display(md_path: Path, gene_dir: Path) -> str:
+    """Return a report filename that disambiguates nested hypothesis reports."""
+    try:
+        return md_path.relative_to(gene_dir).as_posix()
+    except ValueError:
+        return md_path.name
+
+
 def normalize_embedded_markdown(text: str) -> str:
     """Remove wrapper indentation commonly found in embedded agent transcripts."""
     normalized = text.strip("\n")
@@ -468,13 +508,10 @@ def collect_deep_research_sections(
     gene_dir: Path,
     output_dir: Optional[Path] = None,
 ) -> List[Dict[str, Any]]:
-    """Collect deep-research reports for a gene directory and render them."""
+    """Collect deep-research and hypothesis-research reports for a gene."""
     sections: List[Dict[str, Any]] = []
 
-    for md_path in sorted(gene_dir.glob("*-deep-research*.md")):
-        if not md_path.is_file() or not is_deep_research_markdown(md_path):
-            continue
-
+    for md_path in iter_research_report_markdown(gene_dir):
         try:
             text = md_path.read_text(encoding="utf-8")
         except OSError as e:
@@ -521,7 +558,7 @@ def collect_deep_research_sections(
             {
                 "title": title,
                 "subtitle": subtitle,
-                "filename": md_path.name,
+                "filename": report_filename_for_display(md_path, gene_dir),
                 "content": html_content,
                 "provider": provider,
                 "provider_label": provider_label,

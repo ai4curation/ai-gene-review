@@ -5,3 +5,9 @@
 - KEGG contradicts the specific iaaM call for the same locus and instead labels PP_4983 as putative amine oxidase with orthology K00274 monoamine oxidase [EC:1.4.3.4]. [KEGG ppu:PP_4983 "NAME        (GenBank) putative amine oxidase"; "ORTHOLOGY   K00274  monoamine oxidase [EC:1.4.3.4]"]
 - KT2440 already contains another amino oxidase family member, PP_4155, also labeled putative amine oxidase, and a distinct lysine-pathway enzyme davB / PP_0383 assigned K00468 lysine 2-monooxygenase [EC:1.13.12.2]. [KEGG ppu:PP_4155 "NAME        (GenBank) putative amine oxidase"] [KEGG ppu:PP_0383 "SYMBOL      davB"; "NAME        (GenBank) Lysine 2-monooxygenase"; "ORTHOLOGY   K00468  lysine 2-monooxygenase [EC:1.13.12.2]"]
 - The safest current synthesis is amine oxidase / monoamine oxidase-like flavoprotein rather than confirmed tryptophan 2-monooxygenase in auxin biosynthesis.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: this review handles PP_4983 under the alias iaaM because UniProt/GO automation assigns tryptophan 2-monooxygenase activity and auxin biosynthesis to the locus, but that interpretation is weak.

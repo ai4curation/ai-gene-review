@@ -1,0 +1,2792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dinB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dinB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88NK4" target="_blank" class="term-link">
+                        Q88NK4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">dinP</span>
+                    
+                    <span class="badge">PP_1203</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dinB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88NK4" data-a="DESCRIPTION: DinB (DNA polymerase IV, Pol IV) is a Y-family tra..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DinB (DNA polymerase IV, Pol IV) is a Y-family translesion DNA polymerase that performs template-directed, error-prone DNA synthesis. It is a poorly processive, low-fidelity nucleotidyltransferase (EC 2.7.7.7) that lacks 3&#39;-5&#39; exonuclease proofreading activity and uses a two-metal-ion mechanism dependent on Mg(2+). Pol IV extends primers at stalled replication forks, including mismatched or misaligned primer ends, and can bypass DNA lesions in conjunction with the beta clamp of DNA polymerase III, contributing to translesion synthesis and untargeted mutagenesis. It acts in the cytoplasm as a monomer and is part of the cellular response to DNA damage, with homologs across bacteria induced as part of the SOS regulon. It belongs to the DNA polymerase type-Y (UmuC/DinB) family.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mg(2+) is the catalytic cofactor of Pol IV, bound via a two-metal-ion mechanism. This is supportable but a generic cofactor-binding term that is non-core relative to the polymerase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Magnesium ion binding is a general cofactor-binding term. While accurate (Pol IV binds 2 Mg(2+) per subunit), the informative molecular function is the DNA-directed DNA polymerase activity, so this should not be treated as a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 2 magnesium ions per subunit.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0003677" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pol IV binds DNA (template/primer), but DNA binding is a broad parent of the more informative damaged DNA binding term that is also annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNA binding is correct but uninformative given that the specific damaged DNA binding term (GO:0003684) is present and better captures the lesion-bypass function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">May be involved in translesional synthesis, in conjunction with the beta clamp from PolIII.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003684" target="_blank" class="term-link">
+                                    GO:0003684
+                                </a>
+                            </span>
+                            <span class="term-label">damaged DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0003684" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. As a Y-family translesion polymerase, Pol IV binds damaged/lesion-containing DNA templates to perform lesion bypass.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Damaged DNA binding accurately reflects the lesion-bypass role of Pol IV and is consistent with its UmuC/DinB Y-family domain architecture.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">May be involved in translesional synthesis, in conjunction with the beta clamp from PolIII.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003887" target="_blank" class="term-link">
+                                    GO:0003887
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed DNA polymerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0003887" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. Pol IV is a template-directed (DNA-directed) DNA polymerase, EC 2.7.7.7, catalyzing primer extension by addition of dNTPs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the central catalytic activity of Pol IV, directly supported by the UniProt FUNCTION and CATALYTIC ACTIVITY (EC 2.7.7.7) records.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Poorly processive, error-prone DNA polymerase involved in untargeted mutagenesis.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTHR11076:SF33; DNA POLYMERASE KAPPA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Consistent with the UniProt subcellular location. Pol IV acts on the bacterial chromosome in the cytoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt records cytoplasmic localization, appropriate for a bacterial DNA polymerase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter equivalent of the cytoplasmic localization. Acceptable but redundant with the cytoplasm annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytosol is consistent with the documented cytoplasmic location but is a more specific compartment term inferred electronically; it is redundant given the cytoplasm annotation and not independently supported for this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006259" target="_blank" class="term-link">
+                                    GO:0006259
+                                </a>
+                            </span>
+                            <span class="term-label">DNA metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0006259" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very broad parent term. Pol IV participates in DNA metabolism, but more specific terms (DNA repair, translesion synthesis) are present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNA metabolic process is a high-level parent of the specific DNA repair and translesion synthesis terms already annotated, so it adds no informative content.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">May be involved in translesional synthesis, in conjunction with the beta clamp from PolIII.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006261" target="_blank" class="term-link">
+                                    GO:0006261
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated DNA replication</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0006261" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pol IV is not a replicative polymerase; its biological role is lesion bypass and untargeted mutagenesis at stalled forks, not bulk genome replication.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is derived electronically from the generic polymerase reaction. Pol IV is a translesion polymerase that extends misaligned/mismatched primers and bypasses lesions rather than carrying out chromosomal replication; DNA repair and translesion synthesis are the biologically accurate process terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Copies undamaged DNA at stalled replication forks, which arise in vivo from mismatched or misaligned primer ends.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0006281" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. Pol IV contributes to DNA repair through translesion synthesis as part of the DNA damage response.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNA repair accurately reflects the role of Pol IV in lesion tolerance/bypass, consistent with HAMAP-Rule annotation and Y-family polymerase function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">May be involved in translesional synthesis, in conjunction with the beta clamp from PolIII.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009432" target="_blank" class="term-link">
+                                    GO:0009432
+                                </a>
+                            </span>
+                            <span class="term-label">SOS response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0009432" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> dinB is a classic SOS regulon member; Pol IV is induced as part of the bacterial SOS response to DNA damage. Accepted as a core damage-response process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The dinB gene (formerly dinP, DNA-damage-inducible) is part of the SOS response in bacteria, and this term is well supported by the conserved family annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Poorly processive, error-prone DNA polymerase involved in untargeted mutagenesis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034061" target="_blank" class="term-link">
+                                    GO:0034061
+                                </a>
+                            </span>
+                            <span class="term-label">DNA polymerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000116
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0034061" data-r="GO_REF:0000116" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad parent of DNA-directed DNA polymerase activity (GO:0003887), which is also annotated and more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNA polymerase activity is the parent term; the specific DNA-directed DNA polymerase activity (GO:0003887) is present and should be used as the core molecular function instead.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Poorly processive, error-prone DNA polymerase involved in untargeted mutagenesis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042276" target="_blank" class="term-link">
+                                    GO:0042276
+                                </a>
+                            </span>
+                            <span class="term-label">error-prone translesion synthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NK4" data-a="GO:0042276" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. Pol IV performs error-prone translesion synthesis, bypassing lesions with low fidelity and contributing to untargeted mutagenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Error-prone translesion synthesis is the most specific and accurate process term for Pol IV, directly matching its error-prone, untargeted-mutagenesis role and lack of proofreading.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/dinB/dinB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Exhibits no 3&#39;-5&#39; exonuclease (proofreading) activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Template-directed, error-prone DNA polymerase (EC 2.7.7.7) that extends DNA primers using a Mg(2+)-dependent two-metal-ion mechanism and lacks 3&#39;-5&#39; exonuclease proofreading activity.</h3>
+                <span class="vote-buttons" data-g="Q88NK4" data-a="FUNCTION: Template-directed, error-prone DNA polymerase (EC ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003887" target="_blank" class="term-link">
+                            DNA-directed DNA polymerase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042276" target="_blank" class="term-link">
+                                error-prone translesion synthesis
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                DNA repair
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/dinB/dinB-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Poorly processive, error-prone DNA polymerase involved in untargeted mutagenesis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/dinB/dinB-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Exhibits no 3&#39;-5&#39; exonuclease (proofreading) activity.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Y-family translesion polymerase that binds damaged DNA and bypasses lesions at stalled replication forks in conjunction with the DNA polymerase III beta clamp, as part of the DNA damage/SOS response.</h3>
+                <span class="vote-buttons" data-g="Q88NK4" data-a="FUNCTION: Y-family translesion polymerase that binds damaged..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003684" target="_blank" class="term-link">
+                            damaged DNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                DNA repair
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009432" target="_blank" class="term-link">
+                                SOS response
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/dinB/dinB-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">May be involved in translesional synthesis, in conjunction with the beta clamp from PolIII.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:interpro/panther/PTHR11076/PTHR11076-metadata.yaml
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PANTHER family PTHR11076 (DNA repair polymerase UmuC / Y-family DNA polymerase) and subfamily PTHR11076:SF33 (DNA polymerase kappa)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">dinB (Pol IV) is classified in PANTHER family PTHR11076, the UmuC/DinB Y-family of translesion DNA polymerases, and within subfamily PTHR11076:SF33, supporting its core function as an error-prone translesion DNA polymerase.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The PTHR11076:SF33 subfamily name &#34;DNA polymerase kappa&#34; reflects the eukaryotic ortholog of bacterial DinB (pol kappa is the eukaryotic DinB homolog), consistent with a conserved Y-family role in translesion synthesis.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes the genome of P. putida KT2440 in which dinB (PP_1203) is annotated; no Pol IV-specific functional characterization is reported.</div>
+                        
+                        <div class="finding-text">"Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does P. putida KT2440 Pol IV contribute to stress-induced (adaptive) mutagenesis and antibiotic resistance acquisition under environmental stress, and is its expression LexA/SOS-regulated in this organism?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NK4" data-a="Q: Does P. putida KT2440 Pol IV contribute to stress-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What spectrum of DNA lesions (e.g., N2-dG adducts, oxidative lesions) does P. putida Pol IV bypass most efficiently, and how does this shape the mutational signature in this environmentally important bacterium?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NK4" data-a="Q: What spectrum of DNA lesions (e.g., N2-dG adducts,..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a dinB (PP_1203) deletion and overexpression strain and measure spontaneous and DNA-damage-induced mutation frequencies (e.g., rifampicin-resistance rates) to quantify Pol IV&#39;s contribution to mutagenesis in P. putida.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Genetic mutagenesis assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NK4" data-a="EXPERIMENT: Construct a dinB (PP_1203) deletion and overexpres..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify recombinant Pol IV and assay template-directed polymerase activity, fidelity, Mg(2+) dependence, and lesion-bypass efficiency on defined lesion-containing primer/template substrates, with and without the beta clamp.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: In vitro biochemical characterization</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NK4" data-a="EXPERIMENT: Purify recombinant Pol IV and assay template-direc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Monitor dinB induction following DNA-damaging treatments (e.g., UV, mitomycin C) and in a lexA background to confirm SOS regulation of Pol IV in P. putida KT2440.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Transcriptional reporter / RT-qPCR</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NK4" data-a="EXPERIMENT: Monitor dinB induction following DNA-damaging trea..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dinB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88NK4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dinb-dna-polymerase-iv-pol-iv-pseudomonas-putida-kt2440">dinB (DNA polymerase IV / Pol IV) — Pseudomonas putida KT2440</h1>
+<p>UniProt: Q88NK4 (DPO4_PSEPK), gene <code>dinB</code> (synonym <code>dinP</code>), locus PP_1203, 354 aa.<br />
+Evidence level PE 3 (Inferred from homology). Annotation governed by HAMAP-Rule MF_01113 (DNApol_IV).</p>
+<h2 id="function">FUNCTION</h2>
+<p>DinB is the Y-family translesion DNA polymerase Pol IV.</p>
+<p>[UniProt "Poorly processive, error-prone DNA polymerase involved in untargeted mutagenesis."]<br />
+[UniProt "Copies undamaged DNA at stalled replication forks, which arise in vivo from mismatched or misaligned primer ends."]<br />
+[UniProt "These misaligned primers can be extended by PolIV."]<br />
+[UniProt "Exhibits no 3'-5' exonuclease (proofreading) activity."]<br />
+[UniProt "May be involved in translesional synthesis, in conjunction with the beta clamp from PolIII."]</p>
+<h2 id="catalytic-activity">CATALYTIC ACTIVITY</h2>
+<p>[UniProt "Reaction=DNA(n) + a 2'-deoxyribonucleoside 5'-triphosphate = DNA(n+1) + diphosphate"]<br />
+EC 2.7.7.7 (DNA-directed DNA polymerase). Template-directed, primer-extending nucleotidyltransferase.<br />
+Catalytic active site residue: ACT_SITE 106. Substrate discrimination residue: SITE 15.</p>
+<h2 id="cofactor">COFACTOR</h2>
+<p>[UniProt "Name=Mg(2+); Xref=ChEBI:CHEBI:18420"]<br />
+[UniProt "Binds 2 magnesium ions per subunit."]<br />
+Mg2+ binding residues: BINDING 10 and BINDING 105 (two-metal-ion mechanism).</p>
+<h2 id="subunit-localization">SUBUNIT / LOCALIZATION</h2>
+<p>[UniProt "Monomer."]<br />
+[UniProt "Cytoplasm"]</p>
+<h2 id="family-domains">FAMILY / DOMAINS</h2>
+<p>[UniProt "Belongs to the DNA polymerase type-Y family."]<br />
+UmuC domain (residues 6..187); InterPro IPR001126 (UmuC), IPR022880 (DNApol_IV),<br />
+IPR050116 (DNA_polymerase-Y), little-finger domain (IPR017961/IPR036775).<br />
+eggNOG COG0389; PANTHER PTHR11076 (UmuC/DinB family).</p>
+<h2 id="annotation-interpretation-notes">Annotation interpretation notes</h2>
+<ul>
+<li>Core MF: DNA-directed DNA polymerase activity (GO:0003887, EC 2.7.7.7); damaged DNA binding (GO:0003684).</li>
+<li>Core BP: DNA repair (GO:0006281); error-prone translesion synthesis (GO:0042276); SOS response (GO:0009432).</li>
+<li>Broad/parent terms present alongside specific terms:</li>
+<li>GO:0034061 DNA polymerase activity is the parent of GO:0003887 DNA-directed DNA polymerase activity (specific present -&gt; over-annotated).</li>
+<li>GO:0000287 magnesium ion binding and GO:0003677 DNA binding are generic cofactor/binding terms; damaged DNA binding (GO:0003684) and the polymerase activity already capture the informative function. Mg2+ is the catalytic cofactor (two-metal mechanism) so magnesium ion binding is supportable but non-core relative to the polymerase activity.</li>
+<li>GO:0006259 DNA metabolic process is a broad parent of DNA repair / DNA replication.</li>
+<li>GO:0006261 DNA-templated DNA replication: Pol IV is not a replicative polymerase; its role is lesion bypass/untargeted mutagenesis at stalled forks rather than bulk genome replication. The UniRule electronic mapping derives this from the generic polymerase reaction, but DNA repair / translesion synthesis are the biologically accurate BP terms. Treated as over-annotation/non-core.</li>
+<li>Localization: cytoplasm (GO:0005737) per UniProt SUBCELLULAR LOCATION; cytosol (GO:0005829) is the TreeGrafter equivalent. Both consistent.</li>
+</ul>
+<h2 id="provenance">Provenance</h2>
+<p>All molecular details from <code>file:PSEPK/dinB/dinB-uniprot.txt</code> (HAMAP-Rule MF_01113 propagated annotations).<br />
+Genome reference: PMID:12534463 (Nelson et al. 2002, complete genome of P. putida KT2440) — establishes the gene locus only, no Pol IV functional characterization.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88NK4
+gene_symbol: dinB
+aliases:
+- dinP
+- PP_1203
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: DinB (DNA polymerase IV, Pol IV) is a Y-family translesion DNA polymerase
+  that performs template-directed, error-prone DNA synthesis. It is a poorly processive,
+  low-fidelity nucleotidyltransferase (EC 2.7.7.7) that lacks 3&#39;-5&#39; exonuclease proofreading
+  activity and uses a two-metal-ion mechanism dependent on Mg(2+). Pol IV extends
+  primers at stalled replication forks, including mismatched or misaligned primer
+  ends, and can bypass DNA lesions in conjunction with the beta clamp of DNA polymerase
+  III, contributing to translesion synthesis and untargeted mutagenesis. It acts in
+  the cytoplasm as a monomer and is part of the cellular response to DNA damage, with
+  homologs across bacteria induced as part of the SOS regulon. It belongs to the DNA
+  polymerase type-Y (UmuC/DinB) family.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Mg(2+) is the catalytic cofactor of Pol IV, bound via a two-metal-ion
+      mechanism. This is supportable but a generic cofactor-binding term that is non-core
+      relative to the polymerase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Magnesium ion binding is a general cofactor-binding term. While accurate
+      (Pol IV binds 2 Mg(2+) per subunit), the informative molecular function is the
+      DNA-directed DNA polymerase activity, so this should not be treated as a core
+      function.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: Binds 2 magnesium ions per subunit.
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Pol IV binds DNA (template/primer), but DNA binding is a broad parent
+      of the more informative damaged DNA binding term that is also annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: DNA binding is correct but uninformative given that the specific damaged
+      DNA binding term (GO:0003684) is present and better captures the lesion-bypass
+      function.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: May be involved in translesional synthesis, in conjunction
+        with the beta clamp from PolIII.
+- term:
+    id: GO:0003684
+    label: damaged DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Core molecular function. As a Y-family translesion polymerase, Pol IV
+      binds damaged/lesion-containing DNA templates to perform lesion bypass.
+    action: ACCEPT
+    reason: Damaged DNA binding accurately reflects the lesion-bypass role of Pol
+      IV and is consistent with its UmuC/DinB Y-family domain architecture.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: May be involved in translesional synthesis, in conjunction
+        with the beta clamp from PolIII.
+- term:
+    id: GO:0003887
+    label: DNA-directed DNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function. Pol IV is a template-directed (DNA-directed)
+      DNA polymerase, EC 2.7.7.7, catalyzing primer extension by addition of dNTPs.
+    action: ACCEPT
+    reason: This is the central catalytic activity of Pol IV, directly supported by
+      the UniProt FUNCTION and CATALYTIC ACTIVITY (EC 2.7.7.7) records.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: Poorly processive, error-prone DNA polymerase involved in untargeted
+        mutagenesis.
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: PTHR11076:SF33; DNA POLYMERASE KAPPA
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Consistent with the UniProt subcellular location. Pol IV acts on the
+      bacterial chromosome in the cytoplasm.
+    action: ACCEPT
+    reason: UniProt records cytoplasmic localization, appropriate for a bacterial
+      DNA polymerase.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: TreeGrafter equivalent of the cytoplasmic localization. Acceptable but
+      redundant with the cytoplasm annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Cytosol is consistent with the documented cytoplasmic location but is
+      a more specific compartment term inferred electronically; it is redundant given
+      the cytoplasm annotation and not independently supported for this protein.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0006259
+    label: DNA metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: Very broad parent term. Pol IV participates in DNA metabolism, but more
+      specific terms (DNA repair, translesion synthesis) are present.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: DNA metabolic process is a high-level parent of the specific DNA repair
+      and translesion synthesis terms already annotated, so it adds no informative
+      content.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: May be involved in translesional synthesis, in conjunction
+        with the beta clamp from PolIII.
+- term:
+    id: GO:0006261
+    label: DNA-templated DNA replication
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: Pol IV is not a replicative polymerase; its biological role is lesion
+      bypass and untargeted mutagenesis at stalled forks, not bulk genome replication.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This term is derived electronically from the generic polymerase reaction.
+      Pol IV is a translesion polymerase that extends misaligned/mismatched primers
+      and bypasses lesions rather than carrying out chromosomal replication; DNA repair
+      and translesion synthesis are the biologically accurate process terms.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: Copies undamaged DNA at stalled replication forks, which arise
+        in vivo from mismatched or misaligned primer ends.
+- term:
+    id: GO:0006281
+    label: DNA repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Core biological process. Pol IV contributes to DNA repair through translesion
+      synthesis as part of the DNA damage response.
+    action: ACCEPT
+    reason: DNA repair accurately reflects the role of Pol IV in lesion tolerance/bypass,
+      consistent with HAMAP-Rule annotation and Y-family polymerase function.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: May be involved in translesional synthesis, in conjunction
+        with the beta clamp from PolIII.
+- term:
+    id: GO:0009432
+    label: SOS response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: dinB is a classic SOS regulon member; Pol IV is induced as part of the
+      bacterial SOS response to DNA damage. Accepted as a core damage-response process.
+    action: ACCEPT
+    reason: The dinB gene (formerly dinP, DNA-damage-inducible) is part of the SOS
+      response in bacteria, and this term is well supported by the conserved family
+      annotation.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: Poorly processive, error-prone DNA polymerase involved in untargeted
+        mutagenesis.
+- term:
+    id: GO:0034061
+    label: DNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: Broad parent of DNA-directed DNA polymerase activity (GO:0003887), which
+      is also annotated and more informative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: DNA polymerase activity is the parent term; the specific DNA-directed
+      DNA polymerase activity (GO:0003887) is present and should be used as the core
+      molecular function instead.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: Poorly processive, error-prone DNA polymerase involved in untargeted
+        mutagenesis.
+- term:
+    id: GO:0042276
+    label: error-prone translesion synthesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Core biological process. Pol IV performs error-prone translesion synthesis,
+      bypassing lesions with low fidelity and contributing to untargeted mutagenesis.
+    action: ACCEPT
+    reason: Error-prone translesion synthesis is the most specific and accurate process
+      term for Pol IV, directly matching its error-prone, untargeted-mutagenesis role
+      and lack of proofreading.
+    supported_by:
+    - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+      supporting_text: Exhibits no 3&#39;-5&#39; exonuclease (proofreading) activity.
+core_functions:
+- description: Template-directed, error-prone DNA polymerase (EC 2.7.7.7) that extends
+    DNA primers using a Mg(2+)-dependent two-metal-ion mechanism and lacks 3&#39;-5&#39; exonuclease
+    proofreading activity.
+  molecular_function:
+    id: GO:0003887
+    label: DNA-directed DNA polymerase activity
+  directly_involved_in:
+  - id: GO:0042276
+    label: error-prone translesion synthesis
+  - id: GO:0006281
+    label: DNA repair
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+    supporting_text: Poorly processive, error-prone DNA polymerase involved in untargeted
+      mutagenesis.
+  - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+    supporting_text: Exhibits no 3&#39;-5&#39; exonuclease (proofreading) activity.
+- description: Y-family translesion polymerase that binds damaged DNA and bypasses
+    lesions at stalled replication forks in conjunction with the DNA polymerase III
+    beta clamp, as part of the DNA damage/SOS response.
+  molecular_function:
+    id: GO:0003684
+    label: damaged DNA binding
+  directly_involved_in:
+  - id: GO:0006281
+    label: DNA repair
+  - id: GO:0009432
+    label: SOS response
+  supported_by:
+  - reference_id: file:PSEPK/dinB/dinB-uniprot.txt
+    supporting_text: May be involved in translesional synthesis, in conjunction with
+      the beta clamp from PolIII.
+proposed_new_terms: []
+suggested_questions:
+- question: Does P. putida KT2440 Pol IV contribute to stress-induced (adaptive) mutagenesis
+    and antibiotic resistance acquisition under environmental stress, and is its expression
+    LexA/SOS-regulated in this organism?
+- question: What spectrum of DNA lesions (e.g., N2-dG adducts, oxidative lesions)
+    does P. putida Pol IV bypass most efficiently, and how does this shape the mutational
+    signature in this environmentally important bacterium?
+suggested_experiments:
+- experiment_type: Genetic mutagenesis assay
+  description: Construct a dinB (PP_1203) deletion and overexpression strain and measure
+    spontaneous and DNA-damage-induced mutation frequencies (e.g., rifampicin-resistance
+    rates) to quantify Pol IV&#39;s contribution to mutagenesis in P. putida.
+- experiment_type: In vitro biochemical characterization
+  description: Purify recombinant Pol IV and assay template-directed polymerase activity,
+    fidelity, Mg(2+) dependence, and lesion-bypass efficiency on defined lesion-containing
+    primer/template substrates, with and without the beta clamp.
+- experiment_type: Transcriptional reporter / RT-qPCR
+  description: Monitor dinB induction following DNA-damaging treatments (e.g., UV,
+    mitomycin C) and in a lexA background to confirm SOS regulation of Pol IV in P.
+    putida KT2440.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:interpro/panther/PTHR11076/PTHR11076-metadata.yaml
+  title: PANTHER family PTHR11076 (DNA repair polymerase UmuC / Y-family DNA polymerase)
+    and subfamily PTHR11076:SF33 (DNA polymerase kappa)
+  findings:
+  - statement: dinB (Pol IV) is classified in PANTHER family PTHR11076, the UmuC/DinB
+      Y-family of translesion DNA polymerases, and within subfamily PTHR11076:SF33,
+      supporting its core function as an error-prone translesion DNA polymerase.
+  - statement: The PTHR11076:SF33 subfamily name &#34;DNA polymerase kappa&#34; reflects the
+      eukaryotic ortholog of bacterial DinB (pol kappa is the eukaryotic DinB homolog),
+      consistent with a conserved Y-family role in translesion synthesis.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile
+    Pseudomonas putida KT2440.
+  findings:
+  - statement: Establishes the genome of P. putida KT2440 in which dinB (PP_1203)
+      is annotated; no Pol IV-specific functional characterization is reported.
+    supporting_text: Complete genome sequence and comparative analysis of the metabolically
+      versatile Pseudomonas putida KT2440.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

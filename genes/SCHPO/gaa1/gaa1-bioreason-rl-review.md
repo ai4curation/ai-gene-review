@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: gaa1 (S. pombe)
 
-Source: gaa1-deep-research-bioreason-rl.md
+Source: gaa1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

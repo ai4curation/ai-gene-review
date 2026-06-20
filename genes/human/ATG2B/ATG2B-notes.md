@@ -1,0 +1,43 @@
+# ATG2B notes
+
+## Deep research provenance
+
+Falcon deep research was attempted with the requested `perplexity-lite` fallback using:
+
+```bash
+just deep-research-falcon human ATG2B --fallback perplexity-lite
+```
+
+The Falcon child process timed out after 600 seconds. The fallback attempt then failed with a Perplexity API quota error, so no `ATG2B-deep-research-falcon.md` or fallback provider artifact was written. Per repository guidance, this manual notes file records the evidence review instead of creating a fake provider-named deep-research file.
+
+## Evidence synthesis
+
+ATG2B is one of the two mammalian ATG2 orthologs. The core mammalian phenotype is a redundant ATG2A/ATG2B requirement for autophagy: combined ATG2A/B depletion blocks autophagic flux, accumulates unclosed autophagic structures, and leaves other ATG proteins on abnormal LC3-positive membranes [PMID:22219374 "both Atg2A and Atg2B are required for autophagy and that they have redundant and overlapping functions"; PMID:22219374 "these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation"].
+
+The best-supported molecular function is membrane tethering plus lipid transfer. Osawa et al. report that human ATG2B has membrane tethering and lipid-transfer activity, promoted by negatively charged membranes and WIPI4 [PMID:31721365 "ATG2B possesses the membrane tethering (MT) and LT activity"; PMID:31721365 "negatively charged membranes and an Atg18 ortholog WIPI4"]. This supports `GO:0120013 lipid transfer activity` and `GO:0120009 intermembrane lipid transfer`, with `GO:0000045 autophagosome assembly` as the best replacement for broad `GO:0006914 autophagy`.
+
+The PN projection report lists ATG2B under `Autophagy-Lysosome Pathway|Autophagophore initiation and elongation|Regulation of autophagophore membrane composition|ATG2-WIPI complex component`, projecting `GO:0062079 ATG2-ATG18 complex` as a candidate addition. This projection is biologically plausible and conservative when treated as a component annotation, not as evidence for a new proteostasis/chaperone/degradation role. Direct evidence supports ATG2B-WDR45/WIPI4 complex membership [PMID:28820312 "We also purified the ATG2B-WDR45 complex and then performed 3-dimensional reconstruction of the complex"; PMID:28820312 "conserved aromatic H/YF motif in the C terminus of ATG2A and ATG2B that is crucial for complex formation"]. A human autophagy interaction-network paper also detects ATG2A/ATG2B/WDR45 association [PMID:20562859 "association between ATG2A, ATG2B, and WDR45 was unaltered by mTOR inhibition"].
+
+The PI3P-binding IBA annotation should be interpreted cautiously. WIPI/ATG18 proteins are the PI3P-binding effectors in the complex, while ATG2B binds liposomes without requiring PI3P or WDR45 in the cited abstract [PMID:28820312 "PtdIns3P-binding effectors which can form complexes with proteins in the Atg2 family"; PMID:28820312 "ATG2B and found that it could bind to liposomes independently of PtdIns3P or WDR45"]. I marked `GO:0032266 phosphatidylinositol-3-phosphate binding` as over-annotated for ATG2B.
+
+Lipid droplet localization is experimentally supported but not the main PN-relevant role. Velikkakath et al. report mammalian ATG2 proteins on lipid droplets and altered lipid droplet size/distribution after ATG2A/B depletion [PMID:22219374 "One novel aspect of the present study is the finding that mammalian Atg2 proteins are present on lipid droplets"; PMID:22219374 "These data suggest that mammalian Atg2A and Atg2B function both in autophagosome formation and regulation of lipid droplet volume and distribution."]. The same paper notes the directness/mechanism remains unresolved [PMID:22219374 "Further experiments will be required to test whether Atg2 proteins directly or indirectly associate with lipid droplets"], so I kept lipid-droplet annotations as non-core.
+
+Selective autophagy terms such as mitophagy, pexophagy, glycophagy, reticulophagy, and piecemeal microautophagy of the nucleus are plausible for a conserved core autophagy membrane-expansion factor, but they should not be read as cargo-specific receptor or recognition functions. I kept those as non-core rather than adding proteostasis-projection-driven cargo-specific conclusions.
+
+## Falcon deep research findings (2026-06-07)
+
+A real Falcon report (`ATG2B-deep-research-falcon.md`, Edison Scientific) was generated, superseding the earlier failed attempt noted above. Key findings vs the existing COMPLETE review (CONFIRMS / NEW / PROVISIONAL). PMIDs resolved via PubMed.
+
+- CONFIRMS core lipid-transfer/tether role at the ER-phagophore interface and ATG2A/ATG2B partial redundancy. Adds the strongest mechanistic primary source: in ATG2A/ATG2B double-knockout (DKO) cells a lipid-transfer-competent N-terminal mini-ATG2A(1-345) rescues autophagy whereas lipid-transport-dead mutants do not, establishing lipid transfer as the essential cellular activity [PMID:30952800 "ATG2 transports lipids to promote autophagosome biogenesis"; Valverde 2019]. Note: rescue assays were done with ATG2A; the DKO phenotype defines the shared module.
+
+- NEW interaction/mechanism: a conserved ATG2 LIR drives preferential binding to GABARAP-subfamily ATG8 proteins (GABARAP/GABARAP-L1); disrupting this interaction blocks phagophore formation/closure and phenocopies ATG2A/ATG2B DKO, while a WIPI4-binding mutant still rescues autophagy. Endogenous ATG2B co-localizes with GFP-ATG2A on LC3B/WIPI2/ATG16L1-positive early autophagic structures [PMID:32009292 "A conserved ATG2-GABARAP family interaction is critical for phagophore formation"; Bozic 2020]. This is the clearest direct ATG2B localization evidence and reframes WIPI4 binding as dispensable relative to GABARAP binding in mammalian flux — supports a possible future GABARAP/ATG8 LIR-based MF or interaction annotation (not added now; ATG2B-specific LIR not separately mapped to a cached supporting substring).
+
+- NEW lipid-source mechanism (2024): ANKFY1, an endosome-localized PI3P/FYVE protein, binds ATG2A and enhances ATG2A-mediated lipid transfer between PI3P liposomes; ANKFY1 depletion impairs autophagosome growth and largely phenocopies ATG2A/B depletion, identifying endosomes (not just ER) as a lipid donor for phagophore expansion [PMID:38622126 "ANKFY1 bridges ATG2A-mediated lipid transfer from endosomes to phagophores"; Wei 2024]. Direct binding shown for ATG2A; relevance to ATG2B is by redundancy.
+
+- NEW noncanonical context (2023): lysosome damage triggers CASM (direct ATG8 conjugation to single membranes) and promotes LC3A engagement with ATG2, extending ATG2 lipid-transfer machinery to lysosomal damage/repair beyond canonical autophagosome biogenesis [PMID:37796195 "Lysosome damage triggers direct ATG8 conjugation and ATG2 engagement via non-canonical autophagy"; Cross 2023]. Mammalian ATG2A/ATG2B treated collectively.
+
+- NEW disease link: an autosomal-dominant germline ~700-kb 14q32 duplication spanning ATG2B AND GSKIP predisposes to familial myeloid malignancies (MPN/ET progressing to AML/myelofibrosis); ATG2B/GSKIP overexpression increases hematopoietic progenitor differentiation and TPO sensitivity and cooperates with JAK2/MPL/CALR drivers [PMID:26280900 "Germline duplication of ATG2B and GSKIP predisposes to familial myeloid malignancies"; Saliba 2015]. Mouse Atg2b+Gskip double loss reduces the HSC pool, reportedly autophagy-independently [PMID:34751431-? Sakai 2022, DOI 10.1128/mcb.00024-21 — PMID not separately verified, kept notes-only]. PROVISIONAL/locus-level: causality is shared between ATG2B and GSKIP (dosage-sensitive locus), so this is NOT an ATG2B-specific molecular function and does not change annotations; recorded as disease/translational context only.
+
+- PROVISIONAL/low-confidence (not used to change annotations): Tang 2017 (cited as DOI 10.1038/cdd.2017.133 in the Falcon table from search-result metadata only) suggesting ATG2A/B deficiency shifts stress responses toward caspase-8/apoptosis; and Open Targets disease associations (Sjogren, neurodegeneration, colorectal carcinoma) flagged as hypothesis-generating only. Maeda 2019 (ATG2A lipid transfer, eLife) reinforces the tether/transfer model but is ATG2A-focused.
+
+Net effect on review: existing annotations and actions remain appropriate. I added the four well-resolved primary references (Bozic 2020, Valverde 2019, Wei 2024, Saliba 2015) as statement-only entries (none cached in publications/), one suggested question (GABARAP/ATG8 LIR), and one suggested experiment (endosomal/ANKFY1 lipid source). No annotation `action` changed.

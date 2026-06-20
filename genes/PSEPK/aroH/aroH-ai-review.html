@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aroH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aroH</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88LR3" target="_blank" class="term-link">
+                        Q88LR3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aroH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88LR3" data-a="DESCRIPTION: aroH (PP_1866) encodes a class-II (type-II) 3-deox..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>aroH (PP_1866) encodes a class-II (type-II) 3-deoxy-D-arabino-heptulosonate 7-phosphate synthase (DAHP synthase / DAH7PS; EC 2.5.1.54) in Pseudomonas putida KT2440. The enzyme catalyzes the aldol-like condensation of phosphoenolpyruvate (PEP) and D-erythrose 4-phosphate (E4P), with release of phosphate, to form 3-deoxy-D-arabino-heptulosonate 7-phosphate (DAHP). This is the first committed step of the shikimate pathway, which ultimately produces chorismate, the branch-point precursor for the aromatic amino acids (phenylalanine, tyrosine, tryptophan) and many other aromatic metabolites. Class-II DAH7PS enzymes adopt a (beta/alpha)8 TIM-barrel fold and require a divalent metal cation for catalysis; the UniProt record for this protein indicates activity with manganese, cobalt or cadmium ions, with one cation bound per subunit. In bacterial DAHP-synthase nomenclature, AroH is conventionally the tryptophan-sensitive isoenzyme, although the regulatory properties of this specific P. putida protein have not been characterized experimentally. As a soluble central-metabolism enzyme acting on cytosolic substrates, AroH is expected to function in the cytoplasm.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003849" target="_blank" class="term-link">
+                                    GO:0003849
+                                </a>
+                            </span>
+                            <span class="term-label">3-deoxy-7-phosphoheptulonate synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LR3" data-a="GO:0003849" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. The protein belongs to the class-II DAHP synthase family (RuleBase RU363071; InterPro IPR002480/PF01474; TIGR01358 DAHP_synth_II) and the UniProt catalytic-activity record (Rhea:14717, EC 2.5.1.54) describes condensation of PEP + E4P + H2O to DAHP + phosphate, exactly matching this GO term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term precisely captures the enzymatic activity of a class-II DAHP synthase. The assignment is strongly supported by sequence/family evidence (InterPro, RuleBase, NCBIfam TIGR01358) and conserved PEP- and metal-binding residues annotated in UniProt. This is the gene&#39;s core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/aroH/aroH-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AroH is a DAH7PS catalyzing PEP + E4P -&gt; DAHP/DAH7P and feeding the shikimate pathway; best-supported assignment is class-II / type-II DAH7PS (TIM-barrel fold, conserved metal-binding site), compatible with the UniProt/InterPro/Pfam context for Q88LR3 (PF01474 / DAHP_synth_2). No direct biochemical characterization of P. putida KT2440 AroH was found, so this is family/sequence-level inference.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009073" target="_blank" class="term-link">
+                                    GO:0009073
+                                </a>
+                            </span>
+                            <span class="term-label">aromatic amino acid family biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LR3" data-a="GO:0009073" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct biological process. DAHP synthase catalyzes the first committed step of the shikimate pathway, which feeds chorismate biosynthesis and the downstream aromatic amino acid (Phe/Tyr/Trp) biosynthetic branches.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the canonical pathway role of a DAHP synthase and is consistent with the molecular function annotation. The term is appropriate and represents a core biological process for this gene. (The GOA stub used the label &#34;aromatic amino acid biosynthetic process&#34;; the current GO label for GO:0009073 is &#34;aromatic amino acid family biosynthetic process&#34; and is used here.)
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the first committed step of the shikimate pathway, the condensation of phosphoenolpyruvate and D-erythrose 4-phosphate to form 3-deoxy-D-arabino-heptulosonate 7-phosphate (DAHP), as a class-II DAHP synthase.</h3>
+                <span class="vote-buttons" data-g="Q88LR3" data-a="FUNCTION: Catalyzes the first committed step of the shikimat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003849" target="_blank" class="term-link">
+                            3-deoxy-7-phosphoheptulonate synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                chorismate biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">3-deoxy-7-phosphoheptulonate synthase activity (GO:0003849); EC 2.5.1.54; Rhea:14717 PEP + E4P + H2O = DAHP + phosphate.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11395471" target="_blank" class="term-link">
+                            PMID:11395471
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Microbial origin of plant-type 2-keto-3-deoxy-D-arabino-heptulosonate 7-phosphate synthases, exemplified by the chorismate- and tryptophan-regulated enzyme from Xanthomonas campestris</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Biochemical characterization of a class-II (plant-type / AroAII) DAHP synthase shows divalent-metal dependence (activity abolished by EDTA) and feedback inhibition by chorismate and tryptophan, providing the family-level basis for annotating P. putida AroH as a class-II DAHP synthase.</div>
+                        
+                        <div class="finding-text">"Microbial origin of plant-type 2-keto-3-deoxy-D-arabino-heptulosonate 7-phosphate synthases from Xanthomonas campestris; Km(PEP) and Km(E4P) reported; chorismate and L-tryptophan inhibition characterized."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aroH-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LR3" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">23 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T20:59:50.592002</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="aroH-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="aroH-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000020 The kinetic parameters and inhibition constants for *Xanthomonas campestris* AroAII DAHP synthase are reported in the text on page </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-pseudomonas-putida-kt2440-aroh-pp_1866-uniprot-q88lr3">Research report: <em>Pseudomonas putida</em> KT2440 <strong>aroH</strong> (PP_1866; UniProt Q88LR3)</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>The target protein (UniProt Q88LR3; locus PP_1866; gene symbol <strong>aroH</strong>) is annotated as a <strong>class-II (type-II) 3-deoxy-D-arabino-heptulosonate 7-phosphate synthase</strong> (DAH7PS; DAHP synthase; EC 2.5.1.54), catalyzing the <strong>first committed step</strong> into the shikimate pathway by condensing <strong>phosphoenolpyruvate (PEP)</strong> and <strong>erythrose-4-phosphate (E4P)</strong> to produce <strong>DAHP/DAH7P</strong>, a precursor to <strong>chorismate</strong> and ultimately aromatic amino acids and many aromatic metabolites. Across bacteria, <strong>AroH is typically the tryptophan-inhibited DAHP synthase isoenzyme</strong>, and <em>P. putida</em> KT2440 shikimate-pathway engineering work reiterates this isoenzyme logic. However, <strong>direct biochemical/structural characterization of <em>P. putida</em> KT2440 AroH (Q88LR3) itself was not identified in the retrieved literature</strong>, so several mechanistic points must be treated as <strong>family-level inference</strong> supported by characterized type-II DAH7PS enzymes in other bacteria. (wang2022uncoveringtherole pages 10-12, sterritt2018structuralandfunctional pages 1-2, dias2023fromdegraderto pages 4-6)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-dahp-synthase-dah7ps-and-the-shikimate-pathway">1.1 DAHP synthase / DAH7PS and the shikimate pathway</h4>
+<p>DAHP synthase (DAH7PS) catalyzes an <strong>aldol-like condensation</strong> of <strong>PEP + E4P → DAHP (DAH7P)</strong>, which is widely considered the <strong>entry/first committed step</strong> of the shikimate pathway toward chorismate and downstream aromatic metabolites. (wang2022uncoveringtherole pages 10-12, gosset2001microbialoriginof pages 1-2, sterritt2018structuralandfunctional pages 1-2)</p>
+<p>In many bacteria, multiple DAHP synthase isoenzymes exist, and their regulation partitions flux in response to aromatic amino acids; in this framework, <strong>AroH is the tryptophan-sensitive isoenzyme</strong>. (wang2022uncoveringtherole pages 10-12, dias2023fromdegraderto pages 4-6)</p>
+<h4 id="12-class-iitype-ii-dahp-synthase-family-relevant-to-q88lr3">1.2 “Class-II/type-II” DAHP synthase family (relevant to Q88LR3)</h4>
+<p>DAH7PS enzymes are commonly grouped into <strong>type I and type II</strong>. Characterized type-II enzymes share a <strong>(β/α)8 barrel (TIM-barrel) fold</strong>, a <strong>conserved divalent metal-binding site</strong>, and conserved substrate-binding features. (sterritt2018structuralandfunctional pages 1-2)</p>
+<p>Sterritt et al. further emphasize that type-II DAH7PS enzymes may use diverse allosteric architectures; some have extra-barrel structural extensions generating distinct allosteric sites for aromatic amino acids, while others lack these elements and thereby display different regulation and oligomeric assembly. (sterritt2018structuralandfunctional pages 1-2)</p>
+<h3 id="2-target-verification-and-geneprotein-identity">2) Target verification and gene/protein identity</h3>
+<h4 id="21-symbol-ambiguity-check">2.1 Symbol ambiguity check</h4>
+<p>The gene symbol <strong>aroH</strong> can denote different functions in different organisms; within bacterial shikimate-pathway nomenclature, it commonly denotes a DAHP synthase isoenzyme (tryptophan-inhibited). In the retrieved <em>P. putida</em> KT2440 engineering literature, the AroF/AroG/AroH triad is explicitly discussed as DAHP synthases inhibited by Tyr/Phe/Trp, respectively—consistent with the UniProt-supplied identity for Q88LR3. (dias2023fromdegraderto pages 4-6, dias2023fromdegraderto pages 2-4)</p>
+<h4 id="22-organism-and-locus-context">2.2 Organism and locus context</h4>
+<p>No retrieved paper explicitly mentions <strong>PP_1866</strong> or <strong>UniProt Q88LR3</strong> by accession in the text examined. Therefore, <em>P. putida</em> KT2440-specific conclusions are based on (i) the user-provided UniProt identity and (ii) <em>P. putida</em> KT2440 pathway-engineering studies that describe the DAHP-synthase isoenzyme logic that includes AroH. (dias2023fromdegraderto pages 4-6, yu2016metabolicengineeringof pages 1-3)</p>
+<h3 id="3-molecular-function-reaction-substrate-specificity-and-mechanism">3) Molecular function: reaction, substrate specificity, and mechanism</h3>
+<h4 id="31-primary-enzymatic-reaction-arohdah7ps">3.1 Primary enzymatic reaction (AroH/DAH7PS)</h4>
+<p>Across DAHP synthases, the core reaction is the condensation of <strong>PEP</strong> and <strong>E4P</strong> to yield <strong>DAHP/DAH7P</strong>. This reaction is stated directly in Pseudomonas DAHP synthase context (phzC/DAH7PS) and in broader DAH7PS structural analysis. (wang2022uncoveringtherole pages 10-12, sterritt2018structuralandfunctional pages 1-2)</p>
+<p>For <em>P. putida</em> KT2440 AroH (Q88LR3), <strong>no experimental substrate-range studies</strong> were retrieved; thus, the most defensible annotation is that AroH is a <strong>canonical DAH7PS using PEP and E4P</strong> in central metabolism. (wang2022uncoveringtherole pages 10-12)</p>
+<h4 id="32-metal-dependence-family-level-evidence">3.2 Metal dependence (family-level evidence)</h4>
+<p>A characterized class-II DAH7PS (Xanthomonas campestris AroAII) shows strong metal dependence: activity is abolished by EDTA and can be restored by divalent metals (e.g., Mn2+ partially restoring activity). (gosset2001microbialoriginof pages 5-7, gosset2001microbialoriginof pages 7-8)</p>
+<p>This supports the inference that class-II DAH7PS enzymes—including AroH family members—typically require a divalent metal for catalysis, though <strong>the specific metal preference for <em>P. putida</em> AroH is not established here</strong>. (sterritt2018structuralandfunctional pages 1-2, gosset2001microbialoriginof pages 5-7)</p>
+<h4 id="33-quantitative-kinetics-and-inhibition-constants-comparator-class-ii-enzyme">3.3 Quantitative kinetics and inhibition constants (comparator class-II enzyme)</h4>
+<p>Because <strong>P. putida AroH-specific kinetics were not found</strong>, the best available quantitative reference in the retrieved corpus is the class-II AroAII enzyme from <em>X. campestris</em> (Gosset et al., 2001). Reported apparent Michaelis constants were <strong>Km(PEP) = 0.13 mM</strong> and <strong>Km(E4P) = 0.23 mM</strong>. (gosset2001microbialoriginof pages 5-7, gosset2001microbialoriginof media 69aabd91)</p>
+<p>Regulatory inhibitor constants in this class-II example include:<br />
+- <strong>Chorismate</strong> competitive inhibition: <strong>Ki = 0.31 mM</strong> (competitive vs PEP) and <strong>Ki = 0.09 mM</strong> (competitive vs E4P). (gosset2001microbialoriginof pages 5-7, gosset2001microbialoriginof pages 7-8)<br />
+- <strong>L-tryptophan</strong> noncompetitive inhibition: <strong>Ki = 0.35 mM</strong> (vs PEP) and <strong>Ki = 0.61 mM</strong> (vs E4P). (gosset2001microbialoriginof pages 5-7, gosset2001microbialoriginof pages 7-8)</p>
+<p>These values provide an order-of-magnitude view of inhibitor potency in a class-II DAH7PS, but they should not be treated as parameters for <em>P. putida</em> KT2440 AroH without direct measurement. (gosset2001microbialoriginof pages 5-7)</p>
+<h3 id="4-biological-role-and-pathways-in-p-putida-kt2440">4) Biological role and pathways in <em>P. putida</em> KT2440</h3>
+<h4 id="41-role-in-aromatic-amino-acid-and-chorismate-derived-metabolism">4.1 Role in aromatic amino acid and chorismate-derived metabolism</h4>
+<p>DAH7PS catalyzes the first committed step into the shikimate pathway, which produces chorismate as a branchpoint precursor for aromatic amino acids and many aromatic metabolites. (gosset2001microbialoriginof pages 1-2, sterritt2018structuralandfunctional pages 1-2)</p>
+<p>In <em>Pseudomonas</em> systems, DAH7PS entry can also supply specialized aromatic secondary metabolites (e.g., phenazine/pyocyanin routes), reinforcing that DAH7PS enzymes can couple primary and secondary metabolism depending on paralog context and regulation. (sterritt2018structuralandfunctional pages 1-2, wang2022uncoveringtherole pages 1-3)</p>
+<h4 id="42-regulation-and-isoenzyme-logic-arofarogaroh">4.2 Regulation and isoenzyme logic (AroF/AroG/AroH)</h4>
+<p>Multiple sources reiterate the common regulatory logic that <strong>AroF, AroG, and AroH are feedback inhibited by tyrosine, phenylalanine, and tryptophan</strong>, respectively, situating AroH as the Trp-sensitive control point. (wang2022uncoveringtherole pages 10-12, dias2023fromdegraderto pages 4-6, dias2023fromdegraderto pages 2-4)</p>
+<p>Sterritt et al. emphasize that type-II DAH7PS allostery can be implemented through different structural “componentry”; some type-II enzymes have additional structural extensions that create allosteric sites and enable complex feedback regimes, while other type-II enzymes (including a Pseudomonas phenazine-associated enzyme) lack those structural elements and therefore differ in inhibition behavior and oligomerization. This underscores that <strong>the existence and mechanism of AroH allostery must be validated experimentally for each organism/enzyme</strong>. (sterritt2018structuralandfunctional pages 1-2)</p>
+<h3 id="5-subcellular-localization">5) Subcellular localization</h3>
+<p>For a canonical shikimate-pathway DAH7PS such as AroH, the most plausible localization is <strong>cytosolic</strong>, because its substrates (PEP, E4P) are soluble intermediates of central metabolism. This is a functional inference rather than a direct localization measurement for <em>P. putida</em> AroH in the retrieved corpus. (wang2022uncoveringtherole pages 10-12)</p>
+<p>Importantly, a class-II DAH7PS example (<em>X. campestris</em> AroAII) was predicted by PSORT to have a <strong>transmembrane region</strong> and a topology consistent with a membrane-anchored N-terminus and cytosolic catalytic domain, indicating that <strong>membrane association is possible in some class-II DAH7PS lineages</strong>. (gosset2001microbialoriginof pages 5-7)</p>
+<p>Thus, while <strong>cytosolic localization is the best default annotation for <em>P. putida</em> AroH</strong>, class-II family diversity warrants checking N-terminal features/topology in the specific sequence when possible. (gosset2001microbialoriginof pages 10-11, gosset2001microbialoriginof pages 5-7)</p>
+<h3 id="6-recent-developments-and-latest-research-prioritizing-20232024">6) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="61-2023-p-putida-kt2440-shikimate-flux-redirection-to-gallic-acid">6.1 2023: <em>P. putida</em> KT2440 shikimate flux redirection to gallic acid</h4>
+<p>Dias et al. (published 2023-11; <em>International Microbiology</em>) engineered <em>P. putida</em> KT2440 from a <strong>gallic-acid degrader to a producer</strong> by introducing a heterologous operon (including a feedback-resistant DAHP synthase variant <strong>aroG4 (Pro150Leu)</strong>) and deleting native catabolic operons (<strong>ΔpcaHG</strong> and <strong>ΔgalTAPR</strong>) to prevent degradation of the target product and intermediate. (dias2023fromdegraderto pages 1-2, dias2023fromdegraderto pages 4-6, dias2023fromdegraderto pages 2-4)</p>
+<p>The study explicitly re-states DAHP synthase isoenzyme inhibition logic: aromatic amino acids inhibit DAHP synthases, with <strong>AroH inhibited by tryptophan</strong>. (dias2023fromdegraderto pages 4-6, dias2023fromdegraderto pages 2-4)</p>
+<h4 id="62-2024-structuralallosteric-themes-remain-central-but-kt2440-aroh-specific-updates-not-found">6.2 2024: structural/allosteric themes remain central (but KT2440 AroH-specific updates not found)</h4>
+<p>No 2023–2024 primary papers directly characterizing <em>P. putida</em> KT2440 AroH (Q88LR3) were retrieved. The closest “authoritative mechanistic framework” in the retrieved set remains the structural and regulatory analysis of type-II DAH7PS enzymes (e.g., Sterritt et al. 2018), which emphasizes diversification of allostery and oligomeric assembly among type-II enzymes. (sterritt2018structuralandfunctional pages 1-2)</p>
+<h3 id="7-current-applications-and-real-world-implementations-with-quantitative-data">7) Current applications and real-world implementations (with quantitative data)</h3>
+<p>Because DAH7PS entry is often rate-controlling and feedback regulated, <strong>biotechnological exploitation frequently uses feedback-resistant DAHP synthase variants</strong> (often AroG variants) to push carbon into chorismate-derived products in <em>P. putida</em> KT2440. (yu2016metabolicengineeringof pages 1-3, dias2023fromdegraderto pages 4-6)</p>
+<h4 id="71-para-hydroxybenzoic-acid-phba-production-in-p-putida-kt2440-2016">7.1 para-Hydroxybenzoic acid (PHBA) production in <em>P. putida</em> KT2440 (2016)</h4>
+<p>Yu et al. (published 2016-11; <em>Frontiers in Bioengineering and Biotechnology</em>) engineered <em>P. putida</em> KT2440 for PHBA production from glucose via chorismate by overexpressing <strong>E. coli ubiC (chorismate lyase)</strong> and a <strong>feedback-resistant DAHP synthase variant aroG D146N</strong>; they also deleted <strong>pobA</strong> (to prevent product degradation) and <strong>pheA</strong>/<strong>trpE</strong> (to reduce chorismate drain to aromatic amino acids), and deleted <strong>hexR</strong> to increase E4P/NADPH availability. (yu2016metabolicengineeringof pages 1-3, yu2016metabolicengineeringof pages 5-6)</p>
+<p>Reported performance: <strong>maximum 1.73 g/L PHBA</strong> and <strong>18.1% carbon yield (C-mol/C-mol)</strong> in a non-optimized fed-batch process—an example of direct industrially relevant output linked to shikimate-pathway entry control. (yu2016metabolicengineeringof pages 1-3)</p>
+<h4 id="72-gallic-acid-production-in-p-putida-kt2440-2023">7.2 Gallic acid production in <em>P. putida</em> KT2440 (2023)</h4>
+<p>Dias et al. reported <strong>346.7 ± 0.004 mg/L gallic acid after 72 h</strong> in shaker culture following deletions that blocked degradation plus expression of a synthetic operon (including a feedback-resistant DAHP synthase variant). (dias2023fromdegraderto pages 1-2)</p>
+<h3 id="8-expert-opinions-and-analysis-authoritative-sources">8) Expert opinions and analysis (authoritative sources)</h3>
+<p>A key expert-level insight from structural enzymology is that type-II DAH7PS enzymes retain a conserved catalytic scaffold (TIM barrel, metal-binding site) while evolving diverse allosteric “modules” and oligomerization strategies. This implies that annotation of AroH as “Trp-inhibited DAH7PS” is reasonable at the pathway level, but <strong>the precise molecular mechanism and strength of inhibition can vary substantially by lineage and should not be assumed without measurement</strong>. (sterritt2018structuralandfunctional pages 1-2)</p>
+<p>Additionally, the class-II AroAII work emphasizes that in some organisms a class-II enzyme can be the sole DAHP synthase supporting primary aromatic amino acid synthesis, and that sequential feedback inhibition by chorismate and tryptophan is possible in class-II enzymes—highlighting why DAH7PS is a frequent metabolic-engineering target. (gosset2001microbialoriginof pages 1-2, gosset2001microbialoriginof pages 5-7)</p>
+<h3 id="9-evidence-gaps-and-confidence-assessment-for-q88lr3-specifically">9) Evidence gaps and confidence assessment (for Q88LR3 specifically)</h3>
+<p><strong>High confidence (family/pathway level):</strong><br />
+- AroH is a DAH7PS catalyzing <strong>PEP + E4P → DAHP/DAH7P</strong> and feeding the shikimate pathway. (wang2022uncoveringtherole pages 10-12, sterritt2018structuralandfunctional pages 1-2)<br />
+- AroH is commonly described as the <strong>Trp-inhibited</strong> DAHP synthase isoenzyme in bacterial nomenclature, reiterated in <em>P. putida</em> KT2440 context. (dias2023fromdegraderto pages 4-6, dias2023fromdegraderto pages 2-4)</p>
+<p><strong>Moderate confidence (structural/mechanistic inference):</strong><br />
+- Type-II DAH7PS enzymes generally use a TIM-barrel fold and a conserved metal-binding site, but exact allostery differs among subtypes. (sterritt2018structuralandfunctional pages 1-2)</p>
+<p><strong>Low confidence / not established for KT2440 AroH in retrieved data:</strong><br />
+- AroH-specific <strong>Km</strong>, <strong>kcat</strong>, <strong>Ki</strong>, metal preference, oligomeric state, and inhibition mechanism in <em>P. putida</em> KT2440.<br />
+- Experimental subcellular localization of Q88LR3.</p>
+<h3 id="summary-evidence-table">Summary evidence table</h3>
+<table>
+<thead>
+<tr>
+<th>Annotation aspect</th>
+<th>Evidence summary for <strong>aroH / PP_1866 / UniProt Q88LR3</strong> in <em>Pseudomonas putida</em> KT2440</th>
+<th>Notes / citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene/protein identity</td>
+<td>Q88LR3 is annotated as <strong>phospho-2-dehydro-3-deoxyheptonate aldolase</strong> (EC 2.5.1.54), i.e. a <strong>DAHP synthase / DAH7PS</strong> family enzyme; ordered locus <strong>PP_1866</strong> and gene name <strong>aroH</strong> match the requested target. Literature on <em>P. putida</em> KT2440 is limited, so much mechanistic detail is inferred from class-II DAHP synthase literature and DAHP-synthase isoenzyme conventions.</td>
+<td>Functional inference is consistent with DAHP synthase annotations and class-II family discussion; direct <em>P. putida</em> biochemical characterization was not found in retrieved evidence. (wang2022uncoveringtherole pages 10-12, sterritt2018structuralandfunctional pages 1-2)</td>
+</tr>
+<tr>
+<td>Enzyme family / structural class</td>
+<td>Best-supported assignment is <strong>class-II / type-II DAH7PS</strong>. Characterized type-II DAH7PS enzymes share a <strong>(β/α)8 TIM-barrel fold</strong>, conserved metal-binding site, and conserved PEP/E4P-binding residues. This is compatible with the UniProt/InterPro/Pfam context for Q88LR3 (<strong>PF01474 / DAHP_synth_2</strong>).</td>
+<td>Type-II DAH7PS structural features were described directly for characterized enzymes; application to Q88LR3 is by family inference. (sterritt2018structuralandfunctional pages 1-2, wang2022uncoveringtherole pages 15-16)</td>
+</tr>
+<tr>
+<td>Catalytic reaction / substrate specificity</td>
+<td>DAHP synthases catalyze the <strong>condensation of phosphoenolpyruvate (PEP) and erythrose-4-phosphate (E4P) to form DAHP/DAH7P</strong>, the first committed step of the shikimate pathway leading to chorismate and aromatic amino acids. No alternative substrate specificity for <em>P. putida</em> AroH was found.</td>
+<td>This reaction is directly stated for DAHP synthases and class-II examples. (gosset2001microbialoriginof pages 1-2, wang2022uncoveringtherole pages 10-12, sterritt2018structuralandfunctional pages 1-2)</td>
+</tr>
+<tr>
+<td>Pathway role in <em>P. putida</em></td>
+<td>AroH is inferred to function in <strong>entry into the shikimate pathway</strong>, supplying flux toward chorismate and downstream biosynthesis of <strong>Trp, Phe, Tyr</strong> and other chorismate-derived metabolites. In engineering literature, increasing DAHP synthase flux is treated as a major leverage point for aromatic production in <em>P. putida</em>.</td>
+<td>Rate control at DAHP synthase is emphasized in shikimate-pathway engineering studies. (wang2022uncoveringtherole pages 1-3, yu2016metabolicengineeringof pages 1-3, yu2016metabolicengineeringof pages 3-4)</td>
+</tr>
+<tr>
+<td>Feedback regulation</td>
+<td>General DAHP-synthase isoenzyme convention assigns <strong>AroH as the Trp-sensitive isoenzyme</strong>; the 2023 <em>P. putida</em> engineering study explicitly reiterates that <strong>AroF, AroG, and AroH are inhibited by Tyr, Phe, and Trp, respectively</strong>. For a class-II comparator, <em>Xanthomonas campestris</em> AroAII shows <strong>Trp noncompetitive inhibition</strong> and <strong>chorismate competitive inhibition</strong>.</td>
+<td><em>P. putida</em> KT2440-specific inhibition constants for AroH were not found. Comparator class-II kinetics: <strong>Km PEP 0.13 mM; Km E4P 0.23 mM; Ki chorismate 0.31 mM vs PEP and 0.09 mM vs E4P; Ki Trp 0.35 mM vs PEP and 0.61 mM vs E4P</strong>. (dias2023fromdegraderto pages 4-6, dias2023fromdegraderto pages 2-4, gosset2001microbialoriginof pages 5-7, gosset2001microbialoriginof media 69aabd91)</td>
+</tr>
+<tr>
+<td>Localization inference</td>
+<td>The most likely localization for <em>P. putida</em> AroH is <strong>cytosolic</strong>, because canonical DAHP synthases act on soluble central-metabolism substrates (PEP, E4P) in the shikimate pathway. However, class-II exceptions exist: some bacterial AroAII enzymes, such as the <em>X. campestris</em> example, have a predicted <strong>N-terminal membrane/periplasm-associated segment</strong>; smaller AroAII proteins lacking that region are inferred to be soluble.</td>
+<td>Thus, membrane association is a known class-II exception, but no evidence was found that <strong>PP_1866/Q88LR3</strong> has such an extension; soluble/cytosolic annotation remains the best inference. (gosset2001microbialoriginof pages 1-2, gosset2001microbialoriginof pages 10-11, gosset2001microbialoriginof pages 5-7)</td>
+</tr>
+<tr>
+<td>Real-world implementation in <em>P. putida</em> (2016)</td>
+<td>In <em>P. putida</em> KT2440, boosting shikimate-pathway entry with a <strong>feedback-resistant DAHP synthase aroG D146N</strong> plus <strong>ubiC</strong>, combined with deletion of <strong>pobA, pheA, trpE, hexR</strong>, enabled <strong>para-hydroxybenzoic acid (PHBA)</strong> production.</td>
+<td>Reported best performance: <strong>1.73 g/L PHBA</strong> and <strong>18.1% C-mol/C-mol</strong> in non-optimized fed-batch. This shows the practical importance of relieving DAHP synthase control, even though the engineered enzyme was AroG rather than native AroH. (yu2016metabolicengineeringof pages 1-3, yu2016metabolicengineeringof pages 5-6, yu2016metabolicengineeringof pages 3-4)</td>
+</tr>
+<tr>
+<td>Real-world implementation in <em>P. putida</em> (2023)</td>
+<td>A 2023 KT2440 gallic-acid study used a heterologous <strong>feedback-resistant aroG4 (Pro150Leu)</strong> with downstream pathway genes and deletion of <strong>pcaHG</strong> and <strong>galTAPR</strong> to redirect shikimate-derived flux. The study again states AroH is the <strong>Trp-inhibited</strong> DAHP synthase isoenzyme.</td>
+<td>Final reported production: <strong>346.7 ± 0.004 mg/L gallic acid after 72 h</strong> in shaker culture. This further supports DAHP-synthase deregulation as a real-world strategy in <em>P. putida</em> aromatic bioproduction. (dias2023fromdegraderto pages 4-6, dias2023fromdegraderto pages 2-4, dias2023fromdegraderto pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest available evidence for functional annotation of </em>Pseudomonas putida<em> KT2440 aroH (Q88LR3/PP_1866), combining direct </em>P. putida<em> pathway-engineering evidence with mechanistic data from characterized class-II DAHP synthases. It is useful for separating target-specific facts from family-level inference where direct biochemical characterization is limited.</em></p>
+<h3 id="key-references-with-urls-and-publication-dates-when-available">Key references (with URLs and publication dates when available)</h3>
+<ul>
+<li>Dias FMS et al. <em>From degrader to producer: reversing the gallic acid metabolism of Pseudomonas putida KT2440.</em> <strong>International Microbiology</strong> (published online 2023; issue 2023-11). https://doi.org/10.1007/s10123-022-00282-5 (dias2023fromdegraderto pages 1-2)</li>
+<li>Yu S et al. <em>Metabolic Engineering of Pseudomonas putida KT2440 for the Production of para-Hydroxy Benzoic Acid.</em> <strong>Frontiers in Bioengineering and Biotechnology</strong> (2016-11). https://doi.org/10.3389/fbioe.2016.00090 (yu2016metabolicengineeringof pages 1-3)</li>
+<li>Sterritt OW et al. <em>Structural and functional characterisation… defines a new DAH7PS subclass.</em> <strong>Bioscience Reports</strong> (2018-09). https://doi.org/10.1042/bsr20181605 (sterritt2018structuralandfunctional pages 1-2)</li>
+<li>Gosset G et al. <em>Microbial Origin of Plant-Type… chorismate- and tryptophan-regulated enzyme from Xanthomonas campestris.</em> <strong>Journal of Bacteriology</strong> (2001-07). https://doi.org/10.1128/jb.183.13.4061-4070.2001 (gosset2001microbialoriginof pages 5-7)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(wang2022uncoveringtherole pages 10-12): Songwei Wang, Dongliang Liu, Muhammad Bilal, Wei Wang, and Xuehong Zhang. Uncovering the role of phzc as dahp synthase in shikimate pathway of pseudomonas chlororaphis ht66. Biology, 11:86, Jan 2022. URL: https://doi.org/10.3390/biology11010086, doi:10.3390/biology11010086. This article has 12 citations.</p>
+</li>
+<li>
+<p>(sterritt2018structuralandfunctional pages 1-2): O. W. Sterritt, Eric J. M. Lang, Sarah A Kessans, T. Ryan, B. Demeler, G. Jameson, and E. Parker. Structural and functional characterisation of the entry point to pyocyanin biosynthesis in pseudomonas aeruginosa defines a new 3-deoxy-d-arabino-heptulosonate 7-phosphate synthase subclass. Bioscience Reports, Sep 2018. URL: https://doi.org/10.1042/bsr20181605, doi:10.1042/bsr20181605. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dias2023fromdegraderto pages 4-6): Felipe M. S. Dias, Raoní K. Pantoja, José Gregório C. Gomez, and Luiziana F. Silva. From degrader to producer: reversing the gallic acid metabolism of pseudomonas putida kt2440. International Microbiology, 26:243-255, Nov 2023. URL: https://doi.org/10.1007/s10123-022-00282-5, doi:10.1007/s10123-022-00282-5. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gosset2001microbialoriginof pages 1-2): Guillermo Gosset, Carol A. Bonner, and Roy A. Jensen. Microbial origin of plant-type 2-keto-3-deoxy-d-arabino-heptulosonate 7-phosphate synthases, exemplified by the chorismate- and tryptophan-regulated enzyme from xanthomonas campestris. Journal of Bacteriology, 183:4061-4070, Jul 2001. URL: https://doi.org/10.1128/jb.183.13.4061-4070.2001, doi:10.1128/jb.183.13.4061-4070.2001. This article has 84 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dias2023fromdegraderto pages 2-4): Felipe M. S. Dias, Raoní K. Pantoja, José Gregório C. Gomez, and Luiziana F. Silva. From degrader to producer: reversing the gallic acid metabolism of pseudomonas putida kt2440. International Microbiology, 26:243-255, Nov 2023. URL: https://doi.org/10.1007/s10123-022-00282-5, doi:10.1007/s10123-022-00282-5. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yu2016metabolicengineeringof pages 1-3): Shiqin Yu, Manuel R. Plan, Gal Winter, and Jens O. Krömer. Metabolic engineering of pseudomonas putida kt2440 for the production of para-hydroxy benzoic acid. Frontiers in Bioengineering and Biotechnology, Nov 2016. URL: https://doi.org/10.3389/fbioe.2016.00090, doi:10.3389/fbioe.2016.00090. This article has 76 citations.</p>
+</li>
+<li>
+<p>(gosset2001microbialoriginof pages 5-7): Guillermo Gosset, Carol A. Bonner, and Roy A. Jensen. Microbial origin of plant-type 2-keto-3-deoxy-d-arabino-heptulosonate 7-phosphate synthases, exemplified by the chorismate- and tryptophan-regulated enzyme from xanthomonas campestris. Journal of Bacteriology, 183:4061-4070, Jul 2001. URL: https://doi.org/10.1128/jb.183.13.4061-4070.2001, doi:10.1128/jb.183.13.4061-4070.2001. This article has 84 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gosset2001microbialoriginof pages 7-8): Guillermo Gosset, Carol A. Bonner, and Roy A. Jensen. Microbial origin of plant-type 2-keto-3-deoxy-d-arabino-heptulosonate 7-phosphate synthases, exemplified by the chorismate- and tryptophan-regulated enzyme from xanthomonas campestris. Journal of Bacteriology, 183:4061-4070, Jul 2001. URL: https://doi.org/10.1128/jb.183.13.4061-4070.2001, doi:10.1128/jb.183.13.4061-4070.2001. This article has 84 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gosset2001microbialoriginof media 69aabd91): Guillermo Gosset, Carol A. Bonner, and Roy A. Jensen. Microbial origin of plant-type 2-keto-3-deoxy-d-arabino-heptulosonate 7-phosphate synthases, exemplified by the chorismate- and tryptophan-regulated enzyme from xanthomonas campestris. Journal of Bacteriology, 183:4061-4070, Jul 2001. URL: https://doi.org/10.1128/jb.183.13.4061-4070.2001, doi:10.1128/jb.183.13.4061-4070.2001. This article has 84 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2022uncoveringtherole pages 1-3): Songwei Wang, Dongliang Liu, Muhammad Bilal, Wei Wang, and Xuehong Zhang. Uncovering the role of phzc as dahp synthase in shikimate pathway of pseudomonas chlororaphis ht66. Biology, 11:86, Jan 2022. URL: https://doi.org/10.3390/biology11010086, doi:10.3390/biology11010086. This article has 12 citations.</p>
+</li>
+<li>
+<p>(gosset2001microbialoriginof pages 10-11): Guillermo Gosset, Carol A. Bonner, and Roy A. Jensen. Microbial origin of plant-type 2-keto-3-deoxy-d-arabino-heptulosonate 7-phosphate synthases, exemplified by the chorismate- and tryptophan-regulated enzyme from xanthomonas campestris. Journal of Bacteriology, 183:4061-4070, Jul 2001. URL: https://doi.org/10.1128/jb.183.13.4061-4070.2001, doi:10.1128/jb.183.13.4061-4070.2001. This article has 84 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dias2023fromdegraderto pages 1-2): Felipe M. S. Dias, Raoní K. Pantoja, José Gregório C. Gomez, and Luiziana F. Silva. From degrader to producer: reversing the gallic acid metabolism of pseudomonas putida kt2440. International Microbiology, 26:243-255, Nov 2023. URL: https://doi.org/10.1007/s10123-022-00282-5, doi:10.1007/s10123-022-00282-5. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yu2016metabolicengineeringof pages 5-6): Shiqin Yu, Manuel R. Plan, Gal Winter, and Jens O. Krömer. Metabolic engineering of pseudomonas putida kt2440 for the production of para-hydroxy benzoic acid. Frontiers in Bioengineering and Biotechnology, Nov 2016. URL: https://doi.org/10.3389/fbioe.2016.00090, doi:10.3389/fbioe.2016.00090. This article has 76 citations.</p>
+</li>
+<li>
+<p>(wang2022uncoveringtherole pages 15-16): Songwei Wang, Dongliang Liu, Muhammad Bilal, Wei Wang, and Xuehong Zhang. Uncovering the role of phzc as dahp synthase in shikimate pathway of pseudomonas chlororaphis ht66. Biology, 11:86, Jan 2022. URL: https://doi.org/10.3390/biology11010086, doi:10.3390/biology11010086. This article has 12 citations.</p>
+</li>
+<li>
+<p>(yu2016metabolicengineeringof pages 3-4): Shiqin Yu, Manuel R. Plan, Gal Winter, and Jens O. Krömer. Metabolic engineering of pseudomonas putida kt2440 for the production of para-hydroxy benzoic acid. Frontiers in Bioengineering and Biotechnology, Nov 2016. URL: https://doi.org/10.3389/fbioe.2016.00090, doi:10.3389/fbioe.2016.00090. This article has 76 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="aroH-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000020 The kinetic parameters and inhibition constants for *Xanthomonas campestris* AroAII DAHP synthase are reported in the text on page " src="aroH-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>sterritt2018structuralandfunctional pages 1-2</li>
+<li>wang2022uncoveringtherole pages 10-12</li>
+<li>gosset2001microbialoriginof pages 5-7</li>
+<li>yu2016metabolicengineeringof pages 1-3</li>
+<li>dias2023fromdegraderto pages 1-2</li>
+<li>dias2023fromdegraderto pages 4-6</li>
+<li>gosset2001microbialoriginof pages 1-2</li>
+<li>dias2023fromdegraderto pages 2-4</li>
+<li>gosset2001microbialoriginof pages 7-8</li>
+<li>wang2022uncoveringtherole pages 1-3</li>
+<li>gosset2001microbialoriginof pages 10-11</li>
+<li>yu2016metabolicengineeringof pages 5-6</li>
+<li>wang2022uncoveringtherole pages 15-16</li>
+<li>yu2016metabolicengineeringof pages 3-4</li>
+<li>https://doi.org/10.1007/s10123-022-00282-5</li>
+<li>https://doi.org/10.3389/fbioe.2016.00090</li>
+<li>https://doi.org/10.1042/bsr20181605</li>
+<li>https://doi.org/10.1128/jb.183.13.4061-4070.2001</li>
+<li>https://doi.org/10.3390/biology11010086,</li>
+<li>https://doi.org/10.1042/bsr20181605,</li>
+<li>https://doi.org/10.1007/s10123-022-00282-5,</li>
+<li>https://doi.org/10.1128/jb.183.13.4061-4070.2001,</li>
+<li>https://doi.org/10.3389/fbioe.2016.00090,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88LR3
+gene_symbol: aroH
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: aroH (PP_1866) encodes a class-II (type-II) 3-deoxy-D-arabino-heptulosonate 7-phosphate synthase (DAHP synthase / DAH7PS; EC 2.5.1.54) in Pseudomonas putida KT2440. The enzyme catalyzes the aldol-like condensation of phosphoenolpyruvate (PEP) and D-erythrose 4-phosphate (E4P), with release of phosphate, to form 3-deoxy-D-arabino-heptulosonate 7-phosphate (DAHP). This is the first committed step of the shikimate pathway, which ultimately produces chorismate, the branch-point precursor for the aromatic amino acids (phenylalanine, tyrosine, tryptophan) and many other aromatic metabolites. Class-II DAH7PS enzymes adopt a (beta/alpha)8 TIM-barrel fold and require a divalent metal cation for catalysis; the UniProt record for this protein indicates activity with manganese, cobalt or cadmium ions, with one cation bound per subunit. In bacterial DAHP-synthase nomenclature, AroH is conventionally the tryptophan-sensitive isoenzyme, although the regulatory properties of this specific P. putida protein have not been characterized experimentally. As a soluble central-metabolism enzyme acting on cytosolic substrates, AroH is expected to function in the cytoplasm.
+existing_annotations:
+- term:
+    id: GO:0003849
+    label: 3-deoxy-7-phosphoheptulonate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function. The protein belongs to the class-II DAHP synthase family (RuleBase RU363071; InterPro IPR002480/PF01474; TIGR01358 DAHP_synth_II) and the UniProt catalytic-activity record (Rhea:14717, EC 2.5.1.54) describes condensation of PEP + E4P + H2O to DAHP + phosphate, exactly matching this GO term.
+    action: ACCEPT
+    reason: This term precisely captures the enzymatic activity of a class-II DAHP synthase. The assignment is strongly supported by sequence/family evidence (InterPro, RuleBase, NCBIfam TIGR01358) and conserved PEP- and metal-binding residues annotated in UniProt. This is the gene&#39;s core molecular function.
+    supported_by:
+    - reference_id: file:PSEPK/aroH/aroH-deep-research-falcon.md
+      supporting_text: AroH is a DAH7PS catalyzing PEP + E4P -&gt; DAHP/DAH7P and feeding the shikimate pathway; best-supported assignment is class-II / type-II DAH7PS (TIM-barrel fold, conserved metal-binding site), compatible with the UniProt/InterPro/Pfam context for Q88LR3 (PF01474 / DAHP_synth_2). No direct biochemical characterization of P. putida KT2440 AroH was found, so this is family/sequence-level inference.
+- term:
+    id: GO:0009073
+    label: aromatic amino acid family biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Correct biological process. DAHP synthase catalyzes the first committed step of the shikimate pathway, which feeds chorismate biosynthesis and the downstream aromatic amino acid (Phe/Tyr/Trp) biosynthetic branches.
+    action: ACCEPT
+    reason: This is the canonical pathway role of a DAHP synthase and is consistent with the molecular function annotation. The term is appropriate and represents a core biological process for this gene. (The GOA stub used the label &#34;aromatic amino acid biosynthetic process&#34;; the current GO label for GO:0009073 is &#34;aromatic amino acid family biosynthetic process&#34; and is used here.)
+core_functions:
+- description: Catalyzes the first committed step of the shikimate pathway, the condensation of phosphoenolpyruvate and D-erythrose 4-phosphate to form 3-deoxy-D-arabino-heptulosonate 7-phosphate (DAHP), as a class-II DAHP synthase.
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: 3-deoxy-7-phosphoheptulonate synthase activity (GO:0003849); EC 2.5.1.54; Rhea:14717 PEP + E4P + H2O = DAHP + phosphate.
+  molecular_function:
+    id: GO:0003849
+    label: 3-deoxy-7-phosphoheptulonate synthase activity
+  directly_involved_in:
+  - id: GO:0009423
+    label: chorismate biosynthetic process
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11395471
+  title: &#39;Microbial origin of plant-type 2-keto-3-deoxy-D-arabino-heptulosonate 7-phosphate synthases, exemplified by the chorismate- and tryptophan-regulated enzyme from Xanthomonas campestris&#39;
+  findings:
+  - statement: Biochemical characterization of a class-II (plant-type / AroAII) DAHP synthase shows divalent-metal dependence (activity abolished by EDTA) and feedback inhibition by chorismate and tryptophan, providing the family-level basis for annotating P. putida AroH as a class-II DAHP synthase.
+    supporting_text: Microbial origin of plant-type 2-keto-3-deoxy-D-arabino-heptulosonate 7-phosphate synthases from Xanthomonas campestris; Km(PEP) and Km(E4P) reported; chorismate and L-tryptophan inhibition characterized.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &#39;Citation-integrity fix: the original identifier PMID:11442790 was a wrong identifier (resolves to an unrelated veterinary pharmacokinetics article, &#34;Pharmacokinetics of intravenous imipramine hydrochloride in cattle&#34;). Replaced with PMID:11395471, the correct Gosset, Bonner &amp; Jensen, J Bacteriol 2001;183:4061-4070 paper (DOI 10.1128/jb.183.13.4061-4070.2001), recovered via DOI lookup and PubMed-verified to match the title and supporting text (Xanthomonas campestris AroA(II) class-II DAHP synthase, chorismate/tryptophan feedback inhibition). Characterizes a class-II DAHP synthase in a different organism; relevant as family-level mechanistic support, not direct evidence for P. putida AroH.&#39;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

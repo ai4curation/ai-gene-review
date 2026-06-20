@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: cts2 (S. pombe)
 
-Source: cts2-deep-research-bioreason-rl.md
+Source: cts2-bioreason-rl-predictions.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Hsp83 (DROME)
 
-Source: Hsp83-deep-research-bioreason-rl.md
+Source: Hsp83-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

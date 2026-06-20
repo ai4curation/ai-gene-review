@@ -1,0 +1,3108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pepV - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pepV</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A133P372" target="_blank" class="term-link">
+                        A0A133P372
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Fusobacterium nucleatum</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pepV";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A133P372" data-a="DESCRIPTION: A putative cytoplasmic dipeptidase of the peptidas..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>A putative cytoplasmic dipeptidase of the peptidase M20A family (PepV-type) from Fusobacterium nucleatum. PepV enzymes are metal-dependent (dinuclear active-site metal centre, typically described as di-zinc in crystal structures but functionally preferring Mn2+ in several characterized homologs) exopeptidases that hydrolyze a broad range of L-amino-acid dipeptides into their constituent free amino acids, while being selective for dipeptides over tripeptides. The protein has the canonical two-domain PepV architecture comprising a catalytic domain and a lid/dimerization domain that together enclose the active site. In F. nucleatum, an asaccharolytic organism that relies on proteins and peptides as growth substrates, such intracellular dipeptidase activity supplies amino acids from imported dipeptides for energy and biosynthesis. This protein is annotated from a whole-genome shotgun (WGS) entry and has not been directly characterized; its function is inferred from family/domain signatures and from biochemically characterized PepV homologs together with organism-level dipeptidase physiology.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A133P372" data-a="GO:0006526" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter grafted this protein onto a PANTHER node (PTN000865753, family PTHR43808 &#34;ACETYLORNITHINE DEACETYLASE&#34;) associated with arginine biosynthesis. This is a paralog over-annotation. The protein&#39;s specific domain signatures (CDD cd03888 M20_PepV; TIGRFAM TIGR01887 &#34;dipeptidaselike&#34;; InterPro IPR010964 M20A_pepV-rel) and the &#34;Putative dipeptidase PepV&#34; name place it in the PepV dipeptidase branch of the broad M20A family, not the acetylornithine-deacetylase (ArgE) branch that participates in arginine biosynthesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The M20A family (PTHR43808) is broad and contains multiple functionally distinct subfamilies, including PepV dipeptidases, ArgE/acetylornithine deacetylase, and DapE. TreeGrafter placed A0A133P372 on the acetylornithine-deacetylase node, but the PepV-specific CDD/TIGRFAM/InterPro signatures and the UniProt name indicate this is a PepV dipeptidase involved in peptide catabolism, not an arginine-biosynthetic enzyme. Assigning an L-arginine biosynthetic process is a wrong-subfamily electronic mis-graft and is not supported by any direct or homolog evidence for this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39454956" target="_blank" class="term-link">
+                                        PMID:39454956
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Previously reported examples include the tripeptidase PepT (22, 23) of the M20B subfamily and the promiscuous dipeptidase PepV (24, 25) of the M20A subfamily.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A133P372" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PepV-family M20A enzymes are dinuclear metallopeptidases; crystal structures of PepV and the related PepD show two catalytic metal ions, typically modeled as zinc, that bind the active site and activate the catalytic water. The UniProt record lists Zn(2+) as cofactor (ARBA). This is well supported structurally.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Structural studies of PepV (Lactobacillus delbrueckii, PDB 1LFW) and the homologous PepD (Vibrio alginolyticus) establish a dinuclear zinc active site whose metals stabilize the tetrahedral intermediate and activate the catalytic water. The UniProt cofactor annotation (Zn2+) and InterPro IPR010964 support zinc binding. Note that some characterized PepV homologs (S. hominis ShPepV, S. aureus SaPepV) are functionally Mn2+-preferential in vitro, so the active site is more generally a divalent-metal centre; a broader GO:0046872 (metal ion binding) is also defensible, but di-zinc is the best-documented structural assignment and is retained.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12176387" target="_blank" class="term-link">
+                                        PMID:12176387
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cocrystallized inhibitor illustrates the two roles of the two catalytic zinc ions, namely stabilization of the tetrahedral intermediate and activation of the catalytic water molecule.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20819954" target="_blank" class="term-link">
+                                        PMID:20819954
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">each monomer comprises a catalytic domain containing two zinc ions at the active site center for its hydrolytic function</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008777" target="_blank" class="term-link">
+                                    GO:0008777
+                                </a>
+                            </span>
+                            <span class="term-label">acetylornithine deacetylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A133P372" data-a="GO:0008777" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This activity comes from the same TreeGrafter graft onto the acetylornithine-deacetylase PANTHER node (PTHR43808 / PTN000865753) that produced the arginine-biosynthesis annotation. It is a paralog over-annotation. The PepV-specific signatures (CDD cd03888 M20_PepV, TIGRFAM TIGR01887 dipeptidaselike, InterPro IPR010964 M20A_pepV-rel) and the protein name indicate a dipeptidase, not an acetylornithine deacetylase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PTHR43808 spans several catalytically distinct M20A subfamilies. The acetylornithine deacetylase (ArgE) function belongs to a different subfamily from PepV dipeptidases. Because the protein carries PepV-specific CDD/TIGRFAM/InterPro signatures and is named &#34;Putative dipeptidase PepV,&#34; the acetylornithine deacetylase MF is a wrong-subfamily electronic mis-graft, not the protein&#39;s real function, and no evidence supports an acetylornithine deacetylase role for this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39454956" target="_blank" class="term-link">
+                                        PMID:39454956
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Previously reported examples include the tripeptidase PepT (22, 23) of the M20B subfamily and the promiscuous dipeptidase PepV (24, 25) of the M20A subfamily.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A133P372" data-a="GO:0016787" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct general activity class (PepV is a hydrolase), but it is a root-level, uninformative term. A more specific and well-supported molecular function is available, namely dipeptidase / metallopeptidase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016787 (hydrolase activity) is not wrong, but it is far too general for a protein whose family identity supports the specific dipeptidase activity (GO:0016805) and metallopeptidase activity (GO:0008237). Per curation best practice, prefer the most specific defensible term; the specific terms are already (or should be) annotated, so the bare hydrolase term is redundant/over-general.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070573" target="_blank" class="term-link">
+                                    metallodipeptidase activity
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016805" target="_blank" class="term-link">
+                                    dipeptidase activity
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008237" target="_blank" class="term-link">
+                                    metallopeptidase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39454956" target="_blank" class="term-link">
+                                        PMID:39454956
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we set out to identify the dipeptidase responsible for this function in the staphylococcal malodor producer, S. hominis. We report the identification and biochemical characterization of the Cys-Gly-3M3SH active promiscuous metallopeptidase PepV from S. hominis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016805" target="_blank" class="term-link">
+                                    GO:0016805
+                                </a>
+                            </span>
+                            <span class="term-label">dipeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A133P372" data-a="GO:0016805" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function and matches the PepV identity. InterPro IPR010964 (M20A_pepV-rel), the dipeptidase UniProt keyword, and biochemical characterization of multiple PepV homologs (broad-spectrum dipeptidases selective for dipeptides over tripeptides) all support dipeptidase activity as the primary function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PepV proteins are biochemically established broad-specificity dipeptidases. ShPepV cleaved all L-amino-acid dipeptides tested (except D-Ala-D-Ala) but could not cleave a tripeptide, and L. delbrueckii PepV is a nonspecific amino dipeptidase. The InterPro IPR010964 signature and UniProt dipeptidase keyword directly assign this function to A0A133P372. This is the best-supported molecular function and is a core function of the gene. Direct assay of the F. nucleatum protein has not been done, so the IEA evidence is appropriate, but the assignment is strongly supported by family signatures and homolog biochemistry.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39454956" target="_blank" class="term-link">
+                                        PMID:39454956
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ShPepV was capable of cleaving all dipeptides tested (Fig. 2 and Datas S9 and S10). However, it was unable to cleave the tripeptide L-Ala-L-Ala-L-Ala, suggesting preference and selectivity for dipeptide substrates</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12176387" target="_blank" class="term-link">
+                                        PMID:12176387
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PepV from Lactobacillus delbrueckii, a dinuclear zinc peptidase, has been characterized as an unspecific amino dipeptidase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008237" target="_blank" class="term-link">
+                                    GO:0008237
+                                </a>
+                            </span>
+                            <span class="term-label">metallopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A133P372" data-a="GO:0008237" data-r="GO_REF:0000002" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PepV is a metal-dependent peptidase of the M20 family; the UniProt record carries the Metalloprotease keyword and a metallopeptidase activity GO mapping (UniProtKB-KW), and characterized homologs require a divalent metal cofactor for catalysis. This molecular function is well supported and complements the specific dipeptidase activity term. This is not a novel discovery; it already exists as an IEA UniProtKB-KW mapping in the UniProt record (DR GO line) but is absent from the seeded QuickGO/GOA export, so it is flagged NEW here only to recommend its retention in GOA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The M20A PepV enzymes are metallopeptidases that depend on active-site divalent metals to activate the catalytic water; ShPepV/SaPepV are metal-dependent and Mn2+-preferential in vitro, and PepV crystal structures contain a dinuclear metal centre. The UniProt Metalloprotease keyword and the GOA metallopeptidase mapping support this. It is retained as a core molecular function alongside dipeptidase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39454956" target="_blank" class="term-link">
+                                        PMID:39454956
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We report the identification and biochemical characterization of the Cys-Gly-3M3SH active promiscuous metallopeptidase PepV from S. hominis.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40135891" target="_blank" class="term-link">
+                                        PMID:40135891
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PepV-a member of the M20 peptidase family which has been described as a manganese-dependent dipeptidase in vitro</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A133P372" data-a="GO:0006508" data-r="GO_REF:0000120" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PepV hydrolyzes peptide bonds (of dipeptides), so it participates in proteolysis. The UniProt record carries the Protease keyword and a proteolysis GO mapping (UniProtKB-KW). This is correct, though it is a general biological process term; the more specific peptide catabolic process (GO:0043171) is proposed below. Like the metallopeptidase term, this is not a novel discovery; it already exists as an IEA UniProtKB-KW mapping in the UniProt record but is absent from the seeded QuickGO/GOA export, so it is flagged NEW here only to recommend its retention in GOA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As a dipeptidase, PepV cleaves peptide bonds and is correctly annotated to proteolysis. This is well supported by the protease keyword and by homolog biochemistry demonstrating dipeptide bond hydrolysis. It is retained as a non-core general process; the more specific direct role is captured by the proposed peptide catabolic process (GO:0043171) term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12176387" target="_blank" class="term-link">
+                                        PMID:12176387
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PepV recognizes and fixes the dipeptide backbone, while the side chains are not specifically probed and can vary, rendering it a nonspecific dipeptidase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070573" target="_blank" class="term-link">
+                                    GO:0070573
+                                </a>
+                            </span>
+                            <span class="term-label">metallodipeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A133P372" data-a="GO:0070573" data-r="GO_REF:0000002" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PepV is both a dipeptidase and a metallopeptidase; the specific child term metallodipeptidase activity precisely captures this combined identity (a metal-dependent dipeptidase). Proposing it as the most precise molecular-function term for the protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The protein&#39;s dipeptidase activity (GO:0016805) and metallopeptidase activity (GO:0008237) are both supported; the more specific term GO:0070573 (metallodipeptidase activity) unifies these and is the single most informative MF term for a metal-dependent PepV dipeptidase. Supported by homolog biochemistry showing metal-dependent dipeptide hydrolysis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39454956" target="_blank" class="term-link">
+                                        PMID:39454956
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the Cys-Gly-3M3SH active promiscuous metallopeptidase PepV from S. hominis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40135891" target="_blank" class="term-link">
+                                        PMID:40135891
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PepV-a member of the M20 peptidase family which has been described as a manganese-dependent dipeptidase in vitro</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043171" target="_blank" class="term-link">
+                                    GO:0043171
+                                </a>
+                            </span>
+                            <span class="term-label">peptide catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A133P372" data-a="GO:0043171" data-r="GO_REF:0000002" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hydrolysis of dipeptides into free amino acids is a peptide catabolic process. In F. nucleatum, which utilizes dipeptides as growth substrates and has intracellular dipeptidase activity, PepV-type activity contributes to the breakdown of imported dipeptides.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Beyond the generic proteolysis term, the biological role of a dipeptidase is the catabolic breakdown of peptides to liberate amino acids. F. nucleatum preferentially utilizes proteins and peptides and possesses intracellular dipeptidase activities; dipeptides such as glutamylglutamate support its growth. GO:0043171 (peptide catabolic process) captures this role. Evidence is organism-level plus homolog inference (no direct assay of this protein), so the IEA-level evidence is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11860556" target="_blank" class="term-link">
+                                        PMID:11860556
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These results clearly indicate that dipeptides such as aspartylaspartate and glutamylglutamate can be utilized as growth substrates for P. gingivalis, P. intermedia, P. nigrescens and F. nucleatum.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39454956" target="_blank" class="term-link">
+                                        PMID:39454956
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">this protein has a more general cellular function in dipeptide turnover, rather than a specialized role in malodor production</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A133P372" data-a="GO:0005737" data-r="GO_REF:0000002" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PepV-type dipeptidases act intracellularly. F. nucleatum dipeptidase activity is predominantly intracellular, and characterized PepV homologs (S. aureus) localize primarily to the cytosol with no signal peptide. The protein has no detectable signal sequence, consistent with cytoplasmic localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subcellular fractionation of S. aureus showed PepV is primarily cytosolic with only a minute membrane fraction, and it lacks an N-terminal signal sequence. F. nucleatum dipeptidase activity is described as intracellular. The F. nucleatum protein likewise has no signal peptide annotated. Cytoplasmic localization is therefore the most defensible compartment, supported by homolog evidence; marked at IEA level since this protein was not directly localized.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40135891" target="_blank" class="term-link">
+                                        PMID:40135891
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immune-reactive PepV was observed in the cytosol with a minute amount in the membrane fraction</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40135891" target="_blank" class="term-link">
+                                        PMID:40135891
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">An N-terminal signal sequence could not be detected for S. aureus PepV using SignalP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Metal-dependent (dinuclear metallo-) dipeptidase that hydrolyzes a broad range of L-amino-acid dipeptides into their constituent free amino acids, with selectivity for dipeptides over longer peptides.</h3>
+                <span class="vote-buttons" data-g="A0A133P372" data-a="FUNCTION: Metal-dependent (dinuclear metallo-) dipeptidase t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070573" target="_blank" class="term-link">
+                            metallodipeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39454956" target="_blank" class="term-link">
+                                PMID:39454956
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">ShPepV was capable of cleaving all dipeptides tested (Fig. 2 and Datas S9 and S10). However, it was unable to cleave the tripeptide L-Ala-L-Ala-L-Ala, suggesting preference and selectivity for dipeptide substrates</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12176387" target="_blank" class="term-link">
+                                PMID:12176387
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">PepV from Lactobacillus delbrueckii, a dinuclear zinc peptidase, has been characterized as an unspecific amino dipeptidase.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Intracellular catabolism of imported dipeptides to supply free amino acids for energy and biosynthesis in an asaccharolytic, peptide-utilizing organism.</h3>
+                <span class="vote-buttons" data-g="A0A133P372" data-a="FUNCTION: Intracellular catabolism of imported dipeptides to..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043171" target="_blank" class="term-link">
+                                peptide catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11860556" target="_blank" class="term-link">
+                                PMID:11860556
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">These results clearly indicate that dipeptides such as aspartylaspartate and glutamylglutamate can be utilized as growth substrates for P. gingivalis, P. intermedia, P. nigrescens and F. nucleatum.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11860556" target="_blank" class="term-link">
+                            PMID:11860556
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dipeptide utilization by the periodontal pathogens Porphyromonas gingivalis, Prevotella intermedia, Prevotella nigrescens and Fusobacterium nucleatum.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">F. nucleatum preferentially utilizes proteins and peptides as growth substrates and can use dipeptides such as glutamylglutamate as growth substrates.</div>
+                        
+                        <div class="finding-text">"These results clearly indicate that dipeptides such as aspartylaspartate and glutamylglutamate can be utilized as growth substrates for P. gingivalis, P. intermedia, P. nigrescens and F. nucleatum."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39454956" target="_blank" class="term-link">
+                            PMID:39454956
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of a staphylococcal dipeptidase involved in the production of human body odor.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The M20A-family PepV is a metal-dependent, promiscuous metallopeptidase that cleaves all L-amino-acid dipeptides tested (except D-Ala-D-Ala) but not a tripeptide, indicating broad dipeptidase activity with selectivity for dipeptides.</div>
+                        
+                        <div class="finding-text">"ShPepV was capable of cleaving all dipeptides tested (Fig. 2 and Datas S9 and S10). However, it was unable to cleave the tripeptide L-Ala-L-Ala-L-Ala, suggesting preference and selectivity for dipeptide substrates"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PepV is functionally Mn2+-preferential as its metal cofactor in vitro.</div>
+                        
+                        <div class="finding-text">"with Mn2+-bound ShPepV exhibiting the highest activity with Co2+ having the second highest"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20819954" target="_blank" class="term-link">
+                            PMID:20819954
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structure and mutational analysis of aminoacylhistidine dipeptidase from Vibrio alginolyticus reveal a new architecture of M20 metallopeptidases.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">M20 metallopeptidases (PepD/PepV) catalyze a broad range of dipeptide and tripeptide substrates and use a dinuclear (di-zinc) active site for hydrolysis; PepV exists as a monomer.</div>
+                        
+                        <div class="finding-text">"each monomer comprises a catalytic domain containing two zinc ions at the active site center for its hydrolytic function"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12176387" target="_blank" class="term-link">
+                            PMID:12176387
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structure of the dinuclear zinc aminopeptidase PepV from Lactobacillus delbrueckii unravels its preference for dipeptides.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">L. delbrueckii PepV is a dinuclear zinc dipeptidase that recognizes the dipeptide backbone non-specifically (broad specificity), with the two zinc ions stabilizing the tetrahedral intermediate and activating the catalytic water.</div>
+                        
+                        <div class="finding-text">"The cocrystallized inhibitor illustrates the two roles of the two catalytic zinc ions, namely stabilization of the tetrahedral intermediate and activation of the catalytic water molecule."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40135891" target="_blank" class="term-link">
+                            PMID:40135891
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A SecA-associated protease modulates the extent of surface display of staphylococcal protein A.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S. aureus PepV is a manganese-dependent M20-family dipeptidase that is primarily cytosolic and lacks an N-terminal signal sequence.</div>
+                        
+                        <div class="finding-text">"Immune-reactive PepV was observed in the cytosol with a minute amount in the membrane fraction"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does F. nucleatum PepV (A0A133P372) prefer Mn2+ or Zn2+ as its catalytic metal in vivo, and how does this affect substrate range?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A133P372" data-a="Q: Does F. nucleatum PepV (A0A133P372) prefer Mn2+ or..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which dipeptides are the physiologically most relevant substrates for PepV in F. nucleatum (e.g., glutamyl dipeptides, given F. nucleatum&#39;s use of glutamylglutamate)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A133P372" data-a="Q: Which dipeptides are the physiologically most rele..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is pepV required for F. nucleatum growth on dipeptides as the sole peptide source, or is it functionally redundant with other intracellular peptidases?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A133P372" data-a="Q: Is pepV required for F. nucleatum growth on dipept..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Recombinantly express and purify A0A133P372, then assay hydrolysis of a panel of L-amino-acid dipeptides (including glutamylglutamate and Xaa-His dipeptides) and a control tripeptide to confirm dipeptidase activity and dipeptide selectivity.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A133P372" data-a="EXPERIMENT: Recombinantly express and purify A0A133P372, then ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform metal-reconstitution assays (apo-enzyme plus Mn2+, Zn2+, Co2+) to determine the preferred catalytic metal of the F. nucleatum enzyme.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A133P372" data-a="EXPERIMENT: Perform metal-reconstitution assays (apo-enzyme pl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a pepV deletion (or knockdown) in F. nucleatum and test growth on dipeptide-supplemented media to assess the in vivo contribution to dipeptide utilization; perform subcellular fractionation to confirm cytoplasmic localization.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A133P372" data-a="EXPERIMENT: Construct a pepV deletion (or knockdown) in F. nuc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pepV-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A133P372" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">22 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-17T10:29:52.292407</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pepV-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pepV-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000018 I have extracted Table 1, which provides the kinetic parameters for PepV activity, and Figure 3, which demonstrates the metal depen</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-pepv-uniprot-a0a133p372-in-fusobacterium-nucleatum-fusnu">Research report: Functional annotation of <strong>pepV</strong> (UniProt <strong>A0A133P372</strong>) in <em>Fusobacterium nucleatum</em> (FUSNU)</h2>
+<h3 id="1-target-verification-geneprotein-identity">1) Target verification (gene/protein identity)</h3>
+<p>The target protein is UniProt accession <strong>A0A133P372</strong> from <em>Fusobacterium nucleatum</em>, annotated as <strong>“putative dipeptidase PepV”</strong> and belonging to the <strong>peptidase M20A family</strong> (M20 metallopeptidases) with the canonical catalytic and dimerization/lid domains typical of PepV-like enzymes (per the user-provided UniProt context). No retrieved literature directly used the <em>F. nucleatum</em> locus name <strong>HMPREF3221_00844</strong> or accession <strong>A0A133P372</strong>; therefore, gene-specific claims below are limited to (i) <strong>direct organism-level physiology</strong> in <em>F. nucleatum</em> plus (ii) <strong>mechanistic/biochemical inference from PepV/M20A homologs</strong> that are explicitly described as PepV (or closely related M20A dipeptidases). (takahashi2002dipeptideutilizationby pages 5-6, herman2024identificationofa pages 2-4)</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-pepv-peptidase-v-m20a-as-a-cytosolic-exopeptidase">2.1 PepV / Peptidase V (M20A) as a cytosolic exopeptidase</h4>
+<p>PepV (also called peptidase V or aminopeptidase/dipeptidase V in some contexts) is best supported as a <strong>metal-dependent intracellular dipeptidase</strong> that hydrolyzes dipeptides into their constituent amino acids, thereby supporting amino-acid supply from imported peptides (herman2024identificationofa pages 2-4, takahashi2002dipeptideutilizationby pages 5-6). In the M20 family broadly, enzymes hydrolyze <strong>dipeptide and tripeptide</strong> substrates; for M20 enzymes related to PepV/PepD, substrates include <strong>Xaa–His dipeptides</strong> such as <strong>L-carnosine</strong> and <strong>L-homocarnosine</strong>, which is consistent with the family’s role in peptide/amino-acid utilization (chang2010crystalstructureand pages 1-2).</p>
+<h4 id="22-domain-architecture-and-catalytic-mechanism-m20m28-metallopeptidases">2.2 Domain architecture and catalytic mechanism (M20/M28 metallopeptidases)</h4>
+<p>M20 metallopeptidases typically have a <strong>catalytic domain</strong> plus a <strong>lid/dimerization domain</strong> that shapes substrate binding (azam2025asecaassociatedprotease pages 2-5, chang2010crystalstructureand pages 6-7). Structure-guided analysis of PepV-like enzymes identifies lid-domain residues implicated in C-terminal/transition-state binding (e.g., <strong>Asn217, His269, Arg350</strong> in PepV numbering referenced in the structural literature) (chang2010crystalstructureand pages 8-9). These enzymes use a <strong>di-metal catalytic center</strong> (often discussed as di-Zn in structural work on related M20 enzymes), where the metals activate a water molecule for nucleophilic attack during peptide bond hydrolysis (chang2010crystalstructureand pages 6-7, chang2010crystalstructureand pages 1-2).</p>
+<h3 id="3-most-defensible-functional-annotation-for-f-nucleatum-pepv-a0a133p372">3) Most defensible functional annotation for <em>F. nucleatum</em> PepV (A0A133P372)</h3>
+<h4 id="31-primary-biochemical-function-reaction-catalyzed">3.1 Primary biochemical function (reaction catalyzed)</h4>
+<p>The most defensible annotation is that <em>F. nucleatum</em> PepV is an <strong>intracellular metal-dependent dipeptidase</strong> catalyzing:</p>
+<p><strong>Dipeptide + H2O → amino acid 1 + amino acid 2</strong></p>
+<p>This conclusion is supported by:<br />
+- <strong>Direct organism-level evidence</strong> that <em>F. nucleatum</em> grows using dipeptides and contains <strong>intracellular dipeptidase activities</strong> (takahashi2002dipeptideutilizationby pages 5-6).<br />
+- <strong>Direct biochemical evidence</strong> that characterized PepV homologs are broad-spectrum dipeptidases selective for <strong>dipeptides (not tripeptides)</strong> (herman2024identificationofa pages 2-4).</p>
+<p>Because no gene knockout/biochemical characterization of A0A133P372 itself was retrieved, <strong>substrate scope in <em>F. nucleatum</em></strong> should be treated as <strong>inferred</strong>, not experimentally proven for this specific protein.</p>
+<h4 id="32-substrate-specificity-what-it-likely-hydrolyzes">3.2 Substrate specificity (what it likely hydrolyzes)</h4>
+<p><strong>Evidence from PepV homolog biochemistry (highest-confidence homolog inference):</strong><br />
+A 2024 mechanistic study identified a staphylococcal PepV (ShPepV; M20A family) as a <strong>general dipeptidase</strong> that cleaves a wide range of <strong>L-amino-acid dipeptides</strong> (all tested except <strong>D-Ala–D-Ala</strong>) and does <strong>not</strong> cleave the tripeptide <strong>L-Ala–L-Ala–L-Ala</strong>, indicating <strong>strong dipeptide selectivity</strong> (herman2024identificationofa pages 2-4). The same study quantified PepV kinetics on two dipeptides:<br />
+- <strong>Cys–Gly-3M3SH</strong> (bulky malodor precursor): <strong>kcat 3.41 s−1, Km 1.29 mM</strong> (herman2024identificationofa pages 4-5, herman2024identificationofa media ac4f7f69)<br />
+- <strong>Cys–Gly</strong>: <strong>kcat 405.40 s−1, Km 2.19 mM</strong> (herman2024identificationofa pages 4-5, herman2024identificationofa media ac4f7f69)</p>
+<p>These data indicate PepV can accommodate both small and bulky dipeptides, though turnover can vary by ~2 orders of magnitude depending on substrate chemistry (herman2024identificationofa pages 4-5, herman2024identificationofa media ac4f7f69).</p>
+<p><strong>Evidence from <em>F. nucleatum</em> physiology (direct but not gene-specific):</strong><br />
+In <em>F. nucleatum</em> strains ATCC 25586 and ATCC 10953, dipeptides supported growth in a <strong>concentration-dependent</strong> manner up to <strong>5 mM</strong>, consistent with a physiology that relies on intracellular dipeptide hydrolysis (takahashi2002dipeptideutilizationby pages 5-6). The same work highlighted utilization of <strong>glutamylglutamate (Glu2)</strong> (takahashi2002dipeptideutilizationby pages 4-5).</p>
+<p>Taken together, the best-supported substrate statement for A0A133P372 is: <strong>broad dipeptide hydrolysis</strong> supporting amino-acid supply; specific preferences (e.g., for Xaa–His, glutamyl dipeptides, or sulfur-containing dipeptides like Cys–Gly) remain <strong>unresolved in <em>F. nucleatum</em> without direct assay</strong> (herman2024identificationofa pages 2-4, takahashi2002dipeptideutilizationby pages 5-6).</p>
+<h4 id="33-metal-dependence-cofactors">3.3 Metal dependence / cofactors</h4>
+<p>PepV/M20A enzymes are <strong>metallopeptidases</strong>. The best recent biochemical evidence indicates PepV activity is strongly <strong>metal dependent</strong> and can show a preference for <strong>Mn2+</strong>:<br />
+- In vitro reactivation of EDTA-treated apo-ShPepV showed activity recovered most strongly with <strong>Mn2+</strong>, with <strong>Co2+</strong> second-best (herman2024identificationofa pages 2-4, herman2024identificationofa media 7c781f26).<br />
+- Independent work on <em>S. aureus</em> PepV describes it as a <strong>manganese-dependent dipeptidase</strong> in vitro and notes that chelation can promote loss of metal cofactors and self-cleavage/autodegradation under specific conditions (azam2025asecaassociatedprotease pages 1-2, azam2025asecaassociatedprotease pages 11-13).</p>
+<p>Structural literature for PepV-like M20 enzymes also supports a <strong>di-metal active site</strong> (often discussed as di-Zn in crystallographic contexts), consistent with metallo-dependent catalysis via metal-activated water (chang2010crystalstructureand pages 6-7, chang2010crystalstructureand pages 1-2). For <em>F. nucleatum</em> A0A133P372, the conservative conclusion is <strong>metal-dependent catalysis is highly likely</strong>, but whether its optimal metal is Mn2+ vs Zn2+ is <strong>not yet directly demonstrated</strong> for this species.</p>
+<h4 id="34-oligomeric-state-and-structural-considerations">3.4 Oligomeric state and structural considerations</h4>
+<p>M20 peptidases can exist as monomers or dimers depending on subfamily and domain architecture (azam2025asecaassociatedprotease pages 2-5). Structural comparison work explicitly notes that PepV can exist as a <strong>monomer</strong> (contrasted with dimeric PepD in the same family) (chang2010crystalstructureand pages 1-2). In PepV-like enzymes, a lid domain folds over the active site to create a substrate-binding cavity, and specific lid residues participate in substrate/transition-state binding (chang2010crystalstructureand pages 6-7, chang2010crystalstructureand pages 8-9).</p>
+<p>Thus, A0A133P372 is most reasonably modeled as a <strong>cytosolic, two-domain M20A metallopeptidase</strong> whose lid domain controls dipeptide access and specificity; whether it is strictly monomeric in vivo in <em>F. nucleatum</em> is <strong>not directly evidenced</strong> here.</p>
+<h3 id="4-cellular-localization-and-pathway-placement-in-f-nucleatum">4) Cellular localization and pathway placement in <em>F. nucleatum</em></h3>
+<h4 id="41-localization">4.1 Localization</h4>
+<p>Direct experimental localization of <em>F. nucleatum</em> A0A133P372 was not identified in the retrieved literature. However:<br />
+- <em>F. nucleatum</em> exhibits primarily <strong>intracellular dipeptidase activities</strong> (with minimal cell-bound activity, except weak aspartate dipeptidase activity in one strain), supporting an <strong>intracellular localization</strong> for dipeptidase function in this organism (takahashi2002dipeptideutilizationby pages 5-6).<br />
+- PepV homolog studies supporting intracellular roles include (i) staphylococcal PepV processing dipeptides after import (herman2024identificationofa pages 7-9) and (ii) cytosolic enrichment of PepV in <em>S. aureus</em> (azam2025asecaassociatedprotease pages 2-5).</p>
+<p>Accordingly, the most defensible localization annotation for A0A133P372 is <strong>cytosolic (intracellular)</strong>.</p>
+<h4 id="42-metabolic-pathway-context">4.2 Metabolic pathway context</h4>
+<p>A physiological study of periodontal pathogens demonstrated that <em>F. nucleatum</em> strains can use dipeptides (e.g., glutamylglutamate) to support growth and convert substrates primarily into <strong>acetate and butyrate</strong> (with ammonia production), consistent with amino-acid fermentation pathways where dipeptide hydrolysis supplies amino-acid inputs (takahashi2002dipeptideutilizationby pages 4-5). The same study suggested <em>F. nucleatum</em> lacks uptake/transport for oligopeptides longer than dipeptides, implying a niche specialization in <strong>dipeptide import + intracellular hydrolysis</strong> (takahashi2002dipeptideutilizationby pages 5-6).</p>
+<h3 id="5-recent-developments-20232024-prioritized">5) Recent developments (2023–2024 prioritized)</h3>
+<p>Direct 2023–2024 papers specifically characterizing <strong>PepV in <em>F. nucleatum</em></strong> were not retrieved in the tool searches, so “recent developments” are best represented by <strong>PepV/M20A family</strong> advances with clear real-world relevance:</p>
+<ol>
+<li><strong>High-resolution functional assignment of PepV as the key dipeptidase for a human-relevant phenotype (body odor precursor processing).</strong> A 2024 JBC study biochemically established an M20A PepV as the primary enzyme hydrolyzing the dipeptide odor precursor Cys–Gly-3M3SH, quantified kinetics, and mapped activity changes from active-site mutations (herman2024identificationofa pages 1-2, herman2024identificationofa pages 4-5).</li>
+<li><strong>Improved experimental clarity on metal preference.</strong> The same 2024 work showed that PepV activity can be strongly restored by Mn2+ (and to a lesser extent Co2+) after EDTA treatment, supporting a “functionally Mn-preferential” metallopeptidase model for at least some PepV enzymes (herman2024identificationofa pages 2-4, herman2024identificationofa media 7c781f26).</li>
+</ol>
+<p>These developments strengthen confidence in annotating A0A133P372 as a <strong>broad dipeptidase</strong> and suggest a plausible Mn-dependent catalytic mode, while still requiring direct <em>F. nucleatum</em>-specific validation.</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<p>The strongest “real-world implementation” evidence in the retrieved set is the use of PepV biochemistry to explain and potentially modulate <strong>human malodor formation</strong>:<br />
+- PepV acts on an imported odor precursor dipeptide (Cys–Gly-3M3SH), enabling downstream conversion to the volatile thiol 3M3SH; this establishes PepV as a potential intervention point for controlling odor-associated microbial metabolism (herman2024identificationofa pages 7-9, herman2024identificationofa pages 1-2).</p>
+<p>No <em>F. nucleatum</em>-specific clinical/industrial application of PepV was identified in the retrieved evidence.</p>
+<h3 id="7-expert-opinions-authoritative-synthesis-from-sources">7) Expert opinions / authoritative synthesis from sources</h3>
+<p>Two cross-cutting expert-level conclusions are most directly supported by the primary literature assembled here:<br />
+1. <strong>PepV/M20A enzymes are best viewed as intracellular peptide catabolism enzymes, not secreted proteases</strong>, consistent with intracellular localization in multiple contexts and with <em>F. nucleatum</em> intracellular dipeptidase activity (takahashi2002dipeptideutilizationby pages 5-6, azam2025asecaassociatedprotease pages 2-5).<br />
+2. <strong>Substrate recognition is strongly controlled by lid-domain architecture</strong>, enabling broad dipeptide acceptance yet allowing substantial kinetic variation across substrates; this is evidenced by structural/mechanistic analysis of PepV-like enzymes (lid residues, active-site cavity) and by large kinetic differences between Cys–Gly and Cys–Gly-3M3SH (chang2010crystalstructureand pages 8-9, herman2024identificationofa pages 4-5).</p>
+<h3 id="8-relevant-statistics-and-quantitative-data-recent-and-direct">8) Relevant statistics and quantitative data (recent and direct)</h3>
+<h4 id="81-quantitative-pepv-kinetics-and-metal-dependence-2024">8.1 Quantitative PepV kinetics and metal dependence (2024)</h4>
+<p>Kinetic parameters for PepV-catalyzed dipeptide hydrolysis (staphylococcal PepV) include:<br />
+- Cys–Gly-3M3SH: <strong>kcat 3.41 s−1, Km 1.29 mM</strong> (herman2024identificationofa pages 4-5, herman2024identificationofa media ac4f7f69)<br />
+- Cys–Gly: <strong>kcat 405.40 s−1, Km 2.19 mM</strong> (herman2024identificationofa pages 4-5, herman2024identificationofa media ac4f7f69)</p>
+<p>Metal-dependence experiments show strongest reactivation with <strong>Mn2+</strong>, with <strong>Co2+</strong> next (herman2024identificationofa pages 2-4, herman2024identificationofa media 7c781f26).</p>
+<h4 id="82-quantitative-f-nucleatum-dipeptide-utilization-2002">8.2 Quantitative <em>F. nucleatum</em> dipeptide utilization (2002)</h4>
+<p>In <em>F. nucleatum</em> strains ATCC 25586 and ATCC 10953, dipeptides supported growth up to <strong>5 mM</strong> in a concentration-dependent manner (takahashi2002dipeptideutilizationby pages 5-6). Reported activity values for glutamylglutamate (Glu2) were <strong>36.0 ± 6.5</strong> (ATCC 25586) and <strong>24.6 ± 5.2</strong> (ATCC 10953) (takahashi2002dipeptideutilizationby pages 5-6). Fermentation end products from glutamate/Glu2 included <strong>acetate and butyrate</strong> with strain-specific yields (takahashi2002dipeptideutilizationby pages 4-5).</p>
+<h3 id="9-evidence-summary-table">9) Evidence summary table</h3>
+<p>The following table consolidates direct evidence vs homolog-based inference relevant to annotating <em>F. nucleatum</em> PepV (A0A133P372):</p>
+<table>
+<thead>
+<tr>
+<th>Evidence focus</th>
+<th>Key findings</th>
+<th>Source</th>
+<th>URL/DOI</th>
+<th>Notes on applicability to <em>Fusobacterium nucleatum</em> A0A133P372</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reaction/substrate; metal dependence; organism/context</td>
+<td><em>Staphylococcus hominis</em> ShPepV is an M20A-family <strong>dipeptidase</strong> with broad activity on L-amino-acid dipeptides, but not tested on Ala-Ala-Ala, supporting <strong>dipeptide selectivity</strong>. It cleaves the malodor precursor <strong>Cys-Gly-3M3SH</strong> and also <strong>Cys-Gly</strong>. Reported kinetics: Cys-Gly-3M3SH <strong>kcat 3.41 s^-1, Km 1.29 mM, kcat/Km 2.64 s^-1 mM^-1</strong>; Cys-Gly <strong>kcat 405.40 s^-1, Km 2.19 mM, kcat/Km 186 s^-1 mM^-1</strong>. Apo-enzyme reactivation showed strongest activity with <strong>Mn2+</strong>, with <strong>Co2+</strong> second-best, supporting metal-dependent catalysis with Mn preference. Structural modeling showed canonical PepV catalytic + lid architecture and a binding cleft accommodating bulky dipeptides. (herman2024identificationofa pages 4-5, herman2024identificationofa pages 2-4, herman2024identificationofa pages 1-2, herman2024identificationofa media ac4f7f69, herman2024identificationofa media 7c781f26)</td>
+<td>Herman et al., 2024, <em>Journal of Biological Chemistry</em></td>
+<td>https://doi.org/10.1016/j.jbc.2024.107928</td>
+<td><strong>Homolog inference</strong>. Strong evidence that bacterial PepV enzymes are intracellular metal-dependent dipeptidases with broad dipeptide scope; not direct data for <em>F. nucleatum</em> A0A133P372, but highly relevant for assigning generic PepV function.</td>
+</tr>
+<tr>
+<td>Localization; pathway context; organism/context</td>
+<td>In staphylococci, Cys-Gly-3M3SH is imported by <strong>DtpT</strong>, then PepV acts before PatB, implying <strong>intracellular/cytoplasmic processing</strong> of the dipeptide. The paper explicitly argues that an <strong>intracellular staphylococcal dipeptidase</strong> is required for malodor precursor processing. (herman2024identificationofa pages 7-9, herman2024identificationofa pages 1-2)</td>
+<td>Herman et al., 2024, <em>Journal of Biological Chemistry</em></td>
+<td>https://doi.org/10.1016/j.jbc.2024.107928</td>
+<td><strong>Homolog inference</strong> for localization. Supports annotating PepV as most likely <strong>cytosolic</strong> rather than secreted, consistent with peptide catabolism after import.</td>
+</tr>
+<tr>
+<td>Structure/mechanism; metal center; oligomeric state; organism/context</td>
+<td>Structural comparison paper on <em>Vibrio alginolyticus</em> PepD states that related M20 enzymes hydrolyze <strong>dipeptides/tripeptides including Xaa-His dipeptides</strong> and that PepD is structurally similar to <strong>PepV</strong>, which is noted to exist as a <strong>monomer</strong>. Family active sites contain <strong>two zinc ions</strong>; PepV substrate/transition-state binding residues previously identified include <strong>Asn217, His269, Arg350</strong> in the lid domain, and catalysis involves a metal-activated water/hydroxide. (chang2010crystalstructureand pages 6-7, chang2010crystalstructureand pages 8-9, chang2010crystalstructureand pages 1-2, chang2010crystalstructureand pages 4-5)</td>
+<td>Chang et al., 2010, <em>Journal of Biological Chemistry</em></td>
+<td>https://doi.org/10.1074/jbc.M110.139683</td>
+<td><strong>Homolog/family inference</strong> only. Useful for assigning A0A133P372 to a <strong>metal-dependent M20A exopeptidase/dipeptidase</strong> with canonical catalytic/lid domains; substrate details may vary by species.</td>
+</tr>
+<tr>
+<td>Family architecture; localization; metal dependence; organism/context</td>
+<td><em>Staphylococcus aureus</em> PepV is described as an M20 metallopeptidase and <strong>manganese-dependent dipeptidase</strong> in vitro that can cleave <strong>penicillin and other dipeptide substrates</strong>. It lacks a signal peptide and is reported as <strong>primarily cytosolic</strong>, with only a minor membrane-associated fraction; it also associates with <strong>SecA</strong> and modulates surface display of certain proteins. Chelation promotes loss of metal cofactors and PepV <strong>self-cleavage/autodegradation</strong> in vitro. (azam2025asecaassociatedprotease pages 11-13, azam2025asecaassociatedprotease pages 2-5, azam2025asecaassociatedprotease pages 1-2)</td>
+<td>Azam et al., 2025, <em>Journal of Bacteriology</em></td>
+<td>https://doi.org/10.1128/jb.00522-24</td>
+<td><strong>Homolog inference</strong>. Supports cytosolic localization and Mn-dependent dipeptidase activity, but the SecA/surface-display role is likely lineage-specific and should <strong>not</strong> be transferred directly to <em>F. nucleatum</em> without direct evidence.</td>
+</tr>
+<tr>
+<td>Direct evidence in <em>Fusobacterium nucleatum</em>; peptide utilization; localization context</td>
+<td>In <em>F. nucleatum</em> strains <strong>ATCC 25586</strong> and <strong>ATCC 10953</strong>, dipeptides supported growth in a concentration-dependent manner up to <strong>5 mM</strong>. The organisms utilized <strong>glutamylglutamate (Glu2)</strong>; Glu2 activity values reported were <strong>36.0 ± 6.5</strong> (ATCC 25586) and <strong>24.6 ± 5.2</strong> (ATCC 10953). The paper states that <strong>all tested strains had intracellular dipeptidase activities</strong>, while cell-bound activity was absent except <strong>weak aspartate dipeptidase activity</strong> in <em>F. nucleatum</em> ATCC 10953. The authors further note <em>F. nucleatum</em> appeared to lack transport activity for oligopeptides longer than dipeptides. (takahashi2002dipeptideutilizationby pages 5-6, takahashi2002dipeptideutilizationby pages 1-4, takahashi2002dipeptideutilizationby pages 4-5)</td>
+<td>Takahashi &amp; Sato, 2002, <em>Oral Microbiology and Immunology</em></td>
+<td>https://doi.org/10.1046/j.0902-0055.2001.00089.x</td>
+<td><strong>Direct organism-level evidence</strong>, but <strong>not gene-specific</strong> for A0A133P372. Strongly supports that <em>F. nucleatum</em> has intracellular dipeptidase function and uses dipeptides nutritionally, consistent with annotating PepV as part of intracellular peptide catabolism.</td>
+</tr>
+<tr>
+<td>Functional synthesis for annotation</td>
+<td>Across direct <em>F. nucleatum</em> physiology and PepV homolog biochemistry, the most defensible annotation is that A0A133P372 is a <strong>putative intracellular metal-dependent dipeptidase (PepV/M20A family)</strong> involved in <strong>hydrolysis of imported dipeptides to free amino acids</strong> for nutrition/metabolism. Evidence for exact substrate preference in <em>F. nucleatum</em> remains <strong>unverified experimentally</strong>; broad dipeptide specificity and Mn/Zn-dependent catalysis are inferred from homologs, whereas intracellular dipeptide use is supported directly at the organism level. (herman2024identificationofa pages 4-5, herman2024identificationofa pages 2-4, takahashi2002dipeptideutilizationby pages 5-6, takahashi2002dipeptideutilizationby pages 4-5)</td>
+<td>Synthesis from cited studies</td>
+<td>URLs above</td>
+<td><strong>Best-current functional annotation</strong> for A0A133P372; confidence is moderate for general dipeptidase role, lower for precise substrate spectrum and metal preference in <em>F. nucleatum</em>.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles direct and homolog-based evidence relevant to annotating </em>Fusobacterium nucleatum<em> A0A133P372 as a PepV-family M20A dipeptidase. It separates organism-level physiology from cross-species biochemical inference so the strength and scope of each claim are clear.</em></p>
+<h3 id="10-key-limitations-and-recommended-next-validation-steps">10) Key limitations and recommended next validation steps</h3>
+<ul>
+<li><strong>Limitation (gene-specific evidence):</strong> No retrieved study directly characterizes A0A133P372 (sequence-specific enzymology, knockout phenotype, localization in <em>F. nucleatum</em>). Therefore, detailed substrate preferences and metal optima remain <strong>inferred</strong> from homologs rather than proven for the target protein (herman2024identificationofa pages 2-4, takahashi2002dipeptideutilizationby pages 5-6).</li>
+<li><strong>Most informative experiments for A0A133P372:</strong> (i) recombinant expression and dipeptide panel assays (including glutamylglutamate and Xaa–His dipeptides), (ii) metal reconstitution (Mn2+, Zn2+, Co2+), and (iii) cellular fractionation/proteomics to confirm cytosolic localization under relevant growth conditions.</li>
+</ul>
+<h3 id="key-sources-with-dates-and-urls">Key sources (with dates and URLs)</h3>
+<ul>
+<li>Herman R. et al. <strong>2024-12</strong>. <em>J Biol Chem</em>. “Identification of a staphylococcal dipeptidase involved in the production of human body odor.” https://doi.org/10.1016/j.jbc.2024.107928 (herman2024identificationofa pages 2-4, herman2024identificationofa pages 4-5)</li>
+<li>Takahashi N., Sato T. <strong>2002-02</strong>. <em>Oral Microbiol Immunol</em>. “Dipeptide utilization by … <em>Fusobacterium nucleatum</em>.” https://doi.org/10.1046/j.0902-0055.2001.00089.x (takahashi2002dipeptideutilizationby pages 5-6, takahashi2002dipeptideutilizationby pages 4-5)</li>
+<li>Chang C.-Y. et al. <strong>2010-12</strong>. <em>J Biol Chem</em>. “Crystal structure and mutational analysis of aminoacylhistidine dipeptidase … reveal a new architecture of M20 metallopeptidases.” https://doi.org/10.1074/jbc.M110.139683 (chang2010crystalstructureand pages 1-2, chang2010crystalstructureand pages 6-7)</li>
+<li>Azam M.S. et al. <strong>2025-04</strong>. <em>J Bacteriol</em>. “A SecA-associated protease modulates the extent of surface display of staphylococcal protein A.” https://doi.org/10.1128/jb.00522-24 (azam2025asecaassociatedprotease pages 1-2, azam2025asecaassociatedprotease pages 2-5)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(takahashi2002dipeptideutilizationby pages 5-6): N. Takahashi and Takuichi Sato. Dipeptide utilization by the periodontal pathogens porphyromonas gingivalis, prevotella intermedia, prevotella nigrescens and fusobacterium nucleatum. Oral microbiology and immunology, 17 1:50-4, Feb 2002. URL: https://doi.org/10.1046/j.0902-0055.2001.00089.x, doi:10.1046/j.0902-0055.2001.00089.x. This article has 85 citations.</p>
+</li>
+<li>
+<p>(herman2024identificationofa pages 2-4): Reyme Herman, Bethan Kinniment-Williams, Michelle Rudden, Alexander Gordon James, Anthony J. Wilkinson, Barry Murphy, and Gavin H. Thomas. Identification of a staphylococcal dipeptidase involved in the production of human body odor. Journal of Biological Chemistry, 300:107928, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107928, doi:10.1016/j.jbc.2024.107928. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chang2010crystalstructureand pages 1-2): Chin-Yuan Chang, Yin-Cheng Hsieh, Ting-Yi Wang, Yi-Chin Chen, Yu-Kuo Wang, Ting-Wei Chiang, Yi-Ju Chen, Cheng-Hsiang Chang, Chun-Jung Chen, and Tung-Kung Wu. Crystal structure and mutational analysis of aminoacylhistidine dipeptidase from vibrio alginolyticus reveal a new architecture of m20 metallopeptidases. Journal of Biological Chemistry, 285:39500-39510, Dec 2010. URL: https://doi.org/10.1074/jbc.m110.139683, doi:10.1074/jbc.m110.139683. This article has 25 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(azam2025asecaassociatedprotease pages 2-5): Muhammad S. Azam, Amany M. Ibrahim, Owen Leddy, So-Young Oh, Olaf Schneewind, and Dominique Missiakas. A seca-associated protease modulates the extent of surface display of staphylococcal protein a. Apr 2025. URL: https://doi.org/10.1128/jb.00522-24, doi:10.1128/jb.00522-24. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chang2010crystalstructureand pages 6-7): Chin-Yuan Chang, Yin-Cheng Hsieh, Ting-Yi Wang, Yi-Chin Chen, Yu-Kuo Wang, Ting-Wei Chiang, Yi-Ju Chen, Cheng-Hsiang Chang, Chun-Jung Chen, and Tung-Kung Wu. Crystal structure and mutational analysis of aminoacylhistidine dipeptidase from vibrio alginolyticus reveal a new architecture of m20 metallopeptidases. Journal of Biological Chemistry, 285:39500-39510, Dec 2010. URL: https://doi.org/10.1074/jbc.m110.139683, doi:10.1074/jbc.m110.139683. This article has 25 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chang2010crystalstructureand pages 8-9): Chin-Yuan Chang, Yin-Cheng Hsieh, Ting-Yi Wang, Yi-Chin Chen, Yu-Kuo Wang, Ting-Wei Chiang, Yi-Ju Chen, Cheng-Hsiang Chang, Chun-Jung Chen, and Tung-Kung Wu. Crystal structure and mutational analysis of aminoacylhistidine dipeptidase from vibrio alginolyticus reveal a new architecture of m20 metallopeptidases. Journal of Biological Chemistry, 285:39500-39510, Dec 2010. URL: https://doi.org/10.1074/jbc.m110.139683, doi:10.1074/jbc.m110.139683. This article has 25 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herman2024identificationofa pages 4-5): Reyme Herman, Bethan Kinniment-Williams, Michelle Rudden, Alexander Gordon James, Anthony J. Wilkinson, Barry Murphy, and Gavin H. Thomas. Identification of a staphylococcal dipeptidase involved in the production of human body odor. Journal of Biological Chemistry, 300:107928, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107928, doi:10.1016/j.jbc.2024.107928. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herman2024identificationofa media ac4f7f69): Reyme Herman, Bethan Kinniment-Williams, Michelle Rudden, Alexander Gordon James, Anthony J. Wilkinson, Barry Murphy, and Gavin H. Thomas. Identification of a staphylococcal dipeptidase involved in the production of human body odor. Journal of Biological Chemistry, 300:107928, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107928, doi:10.1016/j.jbc.2024.107928. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(takahashi2002dipeptideutilizationby pages 4-5): N. Takahashi and Takuichi Sato. Dipeptide utilization by the periodontal pathogens porphyromonas gingivalis, prevotella intermedia, prevotella nigrescens and fusobacterium nucleatum. Oral microbiology and immunology, 17 1:50-4, Feb 2002. URL: https://doi.org/10.1046/j.0902-0055.2001.00089.x, doi:10.1046/j.0902-0055.2001.00089.x. This article has 85 citations.</p>
+</li>
+<li>
+<p>(herman2024identificationofa media 7c781f26): Reyme Herman, Bethan Kinniment-Williams, Michelle Rudden, Alexander Gordon James, Anthony J. Wilkinson, Barry Murphy, and Gavin H. Thomas. Identification of a staphylococcal dipeptidase involved in the production of human body odor. Journal of Biological Chemistry, 300:107928, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107928, doi:10.1016/j.jbc.2024.107928. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(azam2025asecaassociatedprotease pages 1-2): Muhammad S. Azam, Amany M. Ibrahim, Owen Leddy, So-Young Oh, Olaf Schneewind, and Dominique Missiakas. A seca-associated protease modulates the extent of surface display of staphylococcal protein a. Apr 2025. URL: https://doi.org/10.1128/jb.00522-24, doi:10.1128/jb.00522-24. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(azam2025asecaassociatedprotease pages 11-13): Muhammad S. Azam, Amany M. Ibrahim, Owen Leddy, So-Young Oh, Olaf Schneewind, and Dominique Missiakas. A seca-associated protease modulates the extent of surface display of staphylococcal protein a. Apr 2025. URL: https://doi.org/10.1128/jb.00522-24, doi:10.1128/jb.00522-24. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herman2024identificationofa pages 7-9): Reyme Herman, Bethan Kinniment-Williams, Michelle Rudden, Alexander Gordon James, Anthony J. Wilkinson, Barry Murphy, and Gavin H. Thomas. Identification of a staphylococcal dipeptidase involved in the production of human body odor. Journal of Biological Chemistry, 300:107928, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107928, doi:10.1016/j.jbc.2024.107928. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herman2024identificationofa pages 1-2): Reyme Herman, Bethan Kinniment-Williams, Michelle Rudden, Alexander Gordon James, Anthony J. Wilkinson, Barry Murphy, and Gavin H. Thomas. Identification of a staphylococcal dipeptidase involved in the production of human body odor. Journal of Biological Chemistry, 300:107928, Dec 2024. URL: https://doi.org/10.1016/j.jbc.2024.107928, doi:10.1016/j.jbc.2024.107928. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chang2010crystalstructureand pages 4-5): Chin-Yuan Chang, Yin-Cheng Hsieh, Ting-Yi Wang, Yi-Chin Chen, Yu-Kuo Wang, Ting-Wei Chiang, Yi-Ju Chen, Cheng-Hsiang Chang, Chun-Jung Chen, and Tung-Kung Wu. Crystal structure and mutational analysis of aminoacylhistidine dipeptidase from vibrio alginolyticus reveal a new architecture of m20 metallopeptidases. Journal of Biological Chemistry, 285:39500-39510, Dec 2010. URL: https://doi.org/10.1074/jbc.m110.139683, doi:10.1074/jbc.m110.139683. This article has 25 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(takahashi2002dipeptideutilizationby pages 1-4): N. Takahashi and Takuichi Sato. Dipeptide utilization by the periodontal pathogens porphyromonas gingivalis, prevotella intermedia, prevotella nigrescens and fusobacterium nucleatum. Oral microbiology and immunology, 17 1:50-4, Feb 2002. URL: https://doi.org/10.1046/j.0902-0055.2001.00089.x, doi:10.1046/j.0902-0055.2001.00089.x. This article has 85 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pepV-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000018 I have extracted Table 1, which provides the kinetic parameters for PepV activity, and Figure 3, which demonstrates the metal depen" src="pepV-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>chang2010crystalstructureand pages 1-2</li>
+<li>chang2010crystalstructureand pages 8-9</li>
+<li>takahashi2002dipeptideutilizationby pages 5-6</li>
+<li>herman2024identificationofa pages 2-4</li>
+<li>takahashi2002dipeptideutilizationby pages 4-5</li>
+<li>azam2025asecaassociatedprotease pages 2-5</li>
+<li>herman2024identificationofa pages 7-9</li>
+<li>chang2010crystalstructureand pages 6-7</li>
+<li>herman2024identificationofa pages 4-5</li>
+<li>azam2025asecaassociatedprotease pages 1-2</li>
+<li>azam2025asecaassociatedprotease pages 11-13</li>
+<li>herman2024identificationofa pages 1-2</li>
+<li>chang2010crystalstructureand pages 4-5</li>
+<li>takahashi2002dipeptideutilizationby pages 1-4</li>
+<li>https://doi.org/10.1016/j.jbc.2024.107928</li>
+<li>https://doi.org/10.1074/jbc.M110.139683</li>
+<li>https://doi.org/10.1128/jb.00522-24</li>
+<li>https://doi.org/10.1046/j.0902-0055.2001.00089.x</li>
+<li>https://doi.org/10.1046/j.0902-0055.2001.00089.x,</li>
+<li>https://doi.org/10.1016/j.jbc.2024.107928,</li>
+<li>https://doi.org/10.1074/jbc.m110.139683,</li>
+<li>https://doi.org/10.1128/jb.00522-24,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A133P372
+gene_symbol: pepV
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:851
+  label: Fusobacterium nucleatum
+description: A putative cytoplasmic dipeptidase of the peptidase M20A family (PepV-type)
+  from Fusobacterium nucleatum. PepV enzymes are metal-dependent (dinuclear active-site
+  metal centre, typically described as di-zinc in crystal structures but functionally
+  preferring Mn2+ in several characterized homologs) exopeptidases that hydrolyze a broad
+  range of L-amino-acid dipeptides into their constituent free amino acids, while being
+  selective for dipeptides over tripeptides. The protein has the canonical two-domain PepV
+  architecture comprising a catalytic domain and a lid/dimerization domain that together
+  enclose the active site. In F. nucleatum, an asaccharolytic organism that relies on
+  proteins and peptides as growth substrates, such intracellular dipeptidase activity
+  supplies amino acids from imported dipeptides for energy and biosynthesis. This protein
+  is annotated from a whole-genome shotgun (WGS) entry and has not been directly
+  characterized; its function is inferred from family/domain signatures and from
+  biochemically characterized PepV homologs together with organism-level dipeptidase
+  physiology.
+existing_annotations:
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: TreeGrafter grafted this protein onto a PANTHER node (PTN000865753, family
+      PTHR43808 &#34;ACETYLORNITHINE DEACETYLASE&#34;) associated with arginine biosynthesis.
+      This is a paralog over-annotation. The protein&#39;s specific domain signatures
+      (CDD cd03888 M20_PepV; TIGRFAM TIGR01887 &#34;dipeptidaselike&#34;; InterPro IPR010964
+      M20A_pepV-rel) and the &#34;Putative dipeptidase PepV&#34; name place it in the PepV
+      dipeptidase branch of the broad M20A family, not the acetylornithine-deacetylase
+      (ArgE) branch that participates in arginine biosynthesis.
+    action: REMOVE
+    reason: The M20A family (PTHR43808) is broad and contains multiple functionally
+      distinct subfamilies, including PepV dipeptidases, ArgE/acetylornithine
+      deacetylase, and DapE. TreeGrafter placed A0A133P372 on the acetylornithine-deacetylase
+      node, but the PepV-specific CDD/TIGRFAM/InterPro signatures and the UniProt name
+      indicate this is a PepV dipeptidase involved in peptide catabolism, not an
+      arginine-biosynthetic enzyme. Assigning an L-arginine biosynthetic process is a
+      wrong-subfamily electronic mis-graft and is not supported by any direct or homolog
+      evidence for this protein.
+    supported_by:
+    - reference_id: PMID:39454956
+      supporting_text: &#39;Previously reported examples include the tripeptidase PepT (22,
+        23) of the M20B subfamily and the promiscuous dipeptidase PepV (24, 25) of the
+        M20A subfamily.&#39;
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: PepV-family M20A enzymes are dinuclear metallopeptidases; crystal structures
+      of PepV and the related PepD show two catalytic metal ions, typically modeled as
+      zinc, that bind the active site and activate the catalytic water. The UniProt record
+      lists Zn(2+) as cofactor (ARBA). This is well supported structurally.
+    action: ACCEPT
+    reason: Structural studies of PepV (Lactobacillus delbrueckii, PDB 1LFW) and the
+      homologous PepD (Vibrio alginolyticus) establish a dinuclear zinc active site whose
+      metals stabilize the tetrahedral intermediate and activate the catalytic water.
+      The UniProt cofactor annotation (Zn2+) and InterPro IPR010964 support zinc binding.
+      Note that some characterized PepV homologs (S. hominis ShPepV, S. aureus SaPepV)
+      are functionally Mn2+-preferential in vitro, so the active site is more generally a
+      divalent-metal centre; a broader GO:0046872 (metal ion binding) is also defensible,
+      but di-zinc is the best-documented structural assignment and is retained.
+    supported_by:
+    - reference_id: PMID:12176387
+      supporting_text: The cocrystallized inhibitor illustrates the two roles of the two
+        catalytic zinc ions, namely stabilization of the tetrahedral intermediate and
+        activation of the catalytic water molecule.
+    - reference_id: PMID:20819954
+      supporting_text: each monomer comprises a catalytic domain containing two zinc ions
+        at the active site center for its hydrolytic function
+- term:
+    id: GO:0008777
+    label: acetylornithine deacetylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: This activity comes from the same TreeGrafter graft onto the acetylornithine-deacetylase
+      PANTHER node (PTHR43808 / PTN000865753) that produced the arginine-biosynthesis
+      annotation. It is a paralog over-annotation. The PepV-specific signatures (CDD
+      cd03888 M20_PepV, TIGRFAM TIGR01887 dipeptidaselike, InterPro IPR010964
+      M20A_pepV-rel) and the protein name indicate a dipeptidase, not an acetylornithine
+      deacetylase.
+    action: REMOVE
+    reason: PTHR43808 spans several catalytically distinct M20A subfamilies. The
+      acetylornithine deacetylase (ArgE) function belongs to a different subfamily from
+      PepV dipeptidases. Because the protein carries PepV-specific CDD/TIGRFAM/InterPro
+      signatures and is named &#34;Putative dipeptidase PepV,&#34; the acetylornithine deacetylase
+      MF is a wrong-subfamily electronic mis-graft, not the protein&#39;s real function, and
+      no evidence supports an acetylornithine deacetylase role for this protein.
+    supported_by:
+    - reference_id: PMID:39454956
+      supporting_text: &#39;Previously reported examples include the tripeptidase PepT (22,
+        23) of the M20B subfamily and the promiscuous dipeptidase PepV (24, 25) of the
+        M20A subfamily.&#39;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the correct general activity class (PepV is a hydrolase), but it is
+      a root-level, uninformative term. A more specific and well-supported molecular
+      function is available, namely dipeptidase / metallopeptidase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0016787 (hydrolase activity) is not wrong, but it is far too general for a
+      protein whose family identity supports the specific dipeptidase activity (GO:0016805)
+      and metallopeptidase activity (GO:0008237). Per curation best practice, prefer the
+      most specific defensible term; the specific terms are already (or should be)
+      annotated, so the bare hydrolase term is redundant/over-general.
+    proposed_replacement_terms:
+    - id: GO:0070573
+      label: metallodipeptidase activity
+    - id: GO:0016805
+      label: dipeptidase activity
+    - id: GO:0008237
+      label: metallopeptidase activity
+    supported_by:
+    - reference_id: PMID:39454956
+      supporting_text: we set out to identify the dipeptidase responsible for this
+        function in the staphylococcal malodor producer, S. hominis. We report the
+        identification and biochemical characterization of the Cys-Gly-3M3SH active
+        promiscuous metallopeptidase PepV from S. hominis.
+- term:
+    id: GO:0016805
+    label: dipeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This is the core molecular function and matches the PepV identity. InterPro
+      IPR010964 (M20A_pepV-rel), the dipeptidase UniProt keyword, and biochemical
+      characterization of multiple PepV homologs (broad-spectrum dipeptidases selective
+      for dipeptides over tripeptides) all support dipeptidase activity as the primary
+      function.
+    action: ACCEPT
+    reason: PepV proteins are biochemically established broad-specificity dipeptidases.
+      ShPepV cleaved all L-amino-acid dipeptides tested (except D-Ala-D-Ala) but could
+      not cleave a tripeptide, and L. delbrueckii PepV is a nonspecific amino dipeptidase.
+      The InterPro IPR010964 signature and UniProt dipeptidase keyword directly assign
+      this function to A0A133P372. This is the best-supported molecular function and is
+      a core function of the gene. Direct assay of the F. nucleatum protein has not been
+      done, so the IEA evidence is appropriate, but the assignment is strongly supported
+      by family signatures and homolog biochemistry.
+    supported_by:
+    - reference_id: PMID:39454956
+      supporting_text: ShPepV was capable of cleaving all dipeptides tested (Fig. 2 and
+        Datas S9 and S10). However, it was unable to cleave the tripeptide L-Ala-L-Ala-L-Ala,
+        suggesting preference and selectivity for dipeptide substrates
+    - reference_id: PMID:12176387
+      supporting_text: PepV from Lactobacillus delbrueckii, a dinuclear zinc peptidase,
+        has been characterized as an unspecific amino dipeptidase.
+- term:
+    id: GO:0008237
+    label: metallopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: PepV is a metal-dependent peptidase of the M20 family; the UniProt record
+      carries the Metalloprotease keyword and a metallopeptidase activity GO mapping
+      (UniProtKB-KW), and characterized homologs require a divalent metal cofactor for
+      catalysis. This molecular function is well supported and complements the specific
+      dipeptidase activity term. This is not a novel discovery; it already exists as an
+      IEA UniProtKB-KW mapping in the UniProt record (DR GO line) but is absent from the
+      seeded QuickGO/GOA export, so it is flagged NEW here only to recommend its retention
+      in GOA.
+    action: NEW
+    reason: The M20A PepV enzymes are metallopeptidases that depend on active-site divalent
+      metals to activate the catalytic water; ShPepV/SaPepV are metal-dependent and
+      Mn2+-preferential in vitro, and PepV crystal structures contain a dinuclear metal
+      centre. The UniProt Metalloprotease keyword and the GOA metallopeptidase mapping
+      support this. It is retained as a core molecular function alongside dipeptidase
+      activity.
+    supported_by:
+    - reference_id: PMID:39454956
+      supporting_text: We report the identification and biochemical characterization of
+        the Cys-Gly-3M3SH active promiscuous metallopeptidase PepV from S. hominis.
+    - reference_id: PMID:40135891
+      supporting_text: PepV-a member of the M20 peptidase family which has been described
+        as a manganese-dependent dipeptidase in vitro
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: PepV hydrolyzes peptide bonds (of dipeptides), so it participates in
+      proteolysis. The UniProt record carries the Protease keyword and a proteolysis GO
+      mapping (UniProtKB-KW). This is correct, though it is a general biological process
+      term; the more specific peptide catabolic process (GO:0043171) is proposed below.
+      Like the metallopeptidase term, this is not a novel discovery; it already exists as
+      an IEA UniProtKB-KW mapping in the UniProt record but is absent from the seeded
+      QuickGO/GOA export, so it is flagged NEW here only to recommend its retention in GOA.
+    action: NEW
+    reason: As a dipeptidase, PepV cleaves peptide bonds and is correctly annotated to
+      proteolysis. This is well supported by the protease keyword and by homolog
+      biochemistry demonstrating dipeptide bond hydrolysis. It is retained as a non-core
+      general process; the more specific direct role is captured by the proposed peptide
+      catabolic process (GO:0043171) term.
+    supported_by:
+    - reference_id: PMID:12176387
+      supporting_text: PepV recognizes and fixes the dipeptide backbone, while the side
+        chains are not specifically probed and can vary, rendering it a nonspecific
+        dipeptidase.
+- term:
+    id: GO:0070573
+    label: metallodipeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: PepV is both a dipeptidase and a metallopeptidase; the specific child term
+      metallodipeptidase activity precisely captures this combined identity (a
+      metal-dependent dipeptidase). Proposing it as the most precise molecular-function
+      term for the protein.
+    action: NEW
+    reason: The protein&#39;s dipeptidase activity (GO:0016805) and metallopeptidase activity
+      (GO:0008237) are both supported; the more specific term GO:0070573
+      (metallodipeptidase activity) unifies these and is the single most informative MF
+      term for a metal-dependent PepV dipeptidase. Supported by homolog biochemistry
+      showing metal-dependent dipeptide hydrolysis.
+    supported_by:
+    - reference_id: PMID:39454956
+      supporting_text: the Cys-Gly-3M3SH active promiscuous metallopeptidase PepV from
+        S. hominis
+    - reference_id: PMID:40135891
+      supporting_text: PepV-a member of the M20 peptidase family which has been described
+        as a manganese-dependent dipeptidase in vitro
+- term:
+    id: GO:0043171
+    label: peptide catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Hydrolysis of dipeptides into free amino acids is a peptide catabolic process.
+      In F. nucleatum, which utilizes dipeptides as growth substrates and has intracellular
+      dipeptidase activity, PepV-type activity contributes to the breakdown of imported
+      dipeptides.
+    action: NEW
+    reason: Beyond the generic proteolysis term, the biological role of a dipeptidase is
+      the catabolic breakdown of peptides to liberate amino acids. F. nucleatum
+      preferentially utilizes proteins and peptides and possesses intracellular
+      dipeptidase activities; dipeptides such as glutamylglutamate support its growth.
+      GO:0043171 (peptide catabolic process) captures this role. Evidence is organism-level
+      plus homolog inference (no direct assay of this protein), so the IEA-level evidence
+      is appropriate.
+    supported_by:
+    - reference_id: PMID:11860556
+      supporting_text: These results clearly indicate that dipeptides such as
+        aspartylaspartate and glutamylglutamate can be utilized as growth substrates for
+        P. gingivalis, P. intermedia, P. nigrescens and F. nucleatum.
+    - reference_id: PMID:39454956
+      supporting_text: this protein has a more general cellular function in dipeptide
+        turnover, rather than a specialized role in malodor production
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: PepV-type dipeptidases act intracellularly. F. nucleatum dipeptidase activity
+      is predominantly intracellular, and characterized PepV homologs (S. aureus) localize
+      primarily to the cytosol with no signal peptide. The protein has no detectable
+      signal sequence, consistent with cytoplasmic localization.
+    action: NEW
+    reason: Subcellular fractionation of S. aureus showed PepV is primarily cytosolic
+      with only a minute membrane fraction, and it lacks an N-terminal signal sequence.
+      F. nucleatum dipeptidase activity is described as intracellular. The F. nucleatum
+      protein likewise has no signal peptide annotated. Cytoplasmic localization is
+      therefore the most defensible compartment, supported by homolog evidence; marked at
+      IEA level since this protein was not directly localized.
+    supported_by:
+    - reference_id: PMID:40135891
+      supporting_text: Immune-reactive PepV was observed in the cytosol with a minute
+        amount in the membrane fraction
+    - reference_id: PMID:40135891
+      supporting_text: An N-terminal signal sequence could not be detected for S. aureus
+        PepV using SignalP
+core_functions:
+- description: Metal-dependent (dinuclear metallo-) dipeptidase that hydrolyzes a broad
+    range of L-amino-acid dipeptides into their constituent free amino acids, with
+    selectivity for dipeptides over longer peptides.
+  supported_by:
+  - reference_id: PMID:39454956
+    supporting_text: ShPepV was capable of cleaving all dipeptides tested (Fig. 2 and
+      Datas S9 and S10). However, it was unable to cleave the tripeptide L-Ala-L-Ala-L-Ala,
+      suggesting preference and selectivity for dipeptide substrates
+  - reference_id: PMID:12176387
+    supporting_text: PepV from Lactobacillus delbrueckii, a dinuclear zinc peptidase,
+      has been characterized as an unspecific amino dipeptidase.
+  molecular_function:
+    id: GO:0070573
+    label: metallodipeptidase activity
+- description: Intracellular catabolism of imported dipeptides to supply free amino acids
+    for energy and biosynthesis in an asaccharolytic, peptide-utilizing organism.
+  supported_by:
+  - reference_id: PMID:11860556
+    supporting_text: These results clearly indicate that dipeptides such as
+      aspartylaspartate and glutamylglutamate can be utilized as growth substrates for
+      P. gingivalis, P. intermedia, P. nigrescens and F. nucleatum.
+  directly_involved_in:
+  - id: GO:0043171
+    label: peptide catabolic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+proposed_new_terms: []
+suggested_questions:
+- question: Does F. nucleatum PepV (A0A133P372) prefer Mn2+ or Zn2+ as its catalytic
+    metal in vivo, and how does this affect substrate range?
+- question: Which dipeptides are the physiologically most relevant substrates for PepV
+    in F. nucleatum (e.g., glutamyl dipeptides, given F. nucleatum&#39;s use of
+    glutamylglutamate)?
+- question: Is pepV required for F. nucleatum growth on dipeptides as the sole peptide
+    source, or is it functionally redundant with other intracellular peptidases?
+suggested_experiments:
+- description: Recombinantly express and purify A0A133P372, then assay hydrolysis of a
+    panel of L-amino-acid dipeptides (including glutamylglutamate and Xaa-His dipeptides)
+    and a control tripeptide to confirm dipeptidase activity and dipeptide selectivity.
+- description: Perform metal-reconstitution assays (apo-enzyme plus Mn2+, Zn2+, Co2+) to
+    determine the preferred catalytic metal of the F. nucleatum enzyme.
+- description: Construct a pepV deletion (or knockdown) in F. nucleatum and test growth on
+    dipeptide-supplemented media to assess the in vivo contribution to dipeptide
+    utilization; perform subcellular fractionation to confirm cytoplasmic localization.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11860556
+  title: Dipeptide utilization by the periodontal pathogens Porphyromonas gingivalis,
+    Prevotella intermedia, Prevotella nigrescens and Fusobacterium nucleatum.
+  findings:
+  - statement: F. nucleatum preferentially utilizes proteins and peptides as growth
+      substrates and can use dipeptides such as glutamylglutamate as growth substrates.
+    supporting_text: These results clearly indicate that dipeptides such as
+      aspartylaspartate and glutamylglutamate can be utilized as growth substrates for
+      P. gingivalis, P. intermedia, P. nigrescens and F. nucleatum.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Direct organism-level evidence that F. nucleatum utilizes dipeptides as
+      growth substrates; abstract-only in cache but PMID resolves to the intended paper.
+      Not gene-specific for A0A133P372.
+- id: PMID:39454956
+  title: Identification of a staphylococcal dipeptidase involved in the production of
+    human body odor.
+  findings:
+  - statement: The M20A-family PepV is a metal-dependent, promiscuous metallopeptidase
+      that cleaves all L-amino-acid dipeptides tested (except D-Ala-D-Ala) but not a
+      tripeptide, indicating broad dipeptidase activity with selectivity for dipeptides.
+    supporting_text: ShPepV was capable of cleaving all dipeptides tested (Fig. 2 and
+      Datas S9 and S10). However, it was unable to cleave the tripeptide L-Ala-L-Ala-L-Ala,
+      suggesting preference and selectivity for dipeptide substrates
+  - statement: PepV is functionally Mn2+-preferential as its metal cofactor in vitro.
+    supporting_text: with Mn2+-bound ShPepV exhibiting the highest activity with Co2+
+      having the second highest
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full-text available; biochemically characterizes a PepV homolog (M20A)
+      as a broad metal-dependent dipeptidase. Strong homolog inference for the F. nucleatum
+      protein&#39;s molecular function.
+- id: PMID:20819954
+  title: Crystal structure and mutational analysis of aminoacylhistidine dipeptidase from
+    Vibrio alginolyticus reveal a new architecture of M20 metallopeptidases.
+  findings:
+  - statement: M20 metallopeptidases (PepD/PepV) catalyze a broad range of dipeptide and
+      tripeptide substrates and use a dinuclear (di-zinc) active site for hydrolysis;
+      PepV exists as a monomer.
+    supporting_text: each monomer comprises a catalytic domain containing two zinc ions
+      at the active site center for its hydrolytic function
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Abstract-only in cache but PMID resolves to the intended paper; supports
+      M20 di-zinc architecture and PepV/PepD family relationship. Homolog/family inference.
+- id: PMID:12176387
+  title: Crystal structure of the dinuclear zinc aminopeptidase PepV from Lactobacillus
+    delbrueckii unravels its preference for dipeptides.
+  findings:
+  - statement: L. delbrueckii PepV is a dinuclear zinc dipeptidase that recognizes the
+      dipeptide backbone non-specifically (broad specificity), with the two zinc ions
+      stabilizing the tetrahedral intermediate and activating the catalytic water.
+    supporting_text: The cocrystallized inhibitor illustrates the two roles of the two
+      catalytic zinc ions, namely stabilization of the tetrahedral intermediate and
+      activation of the catalytic water molecule.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract-only in cache but PMID resolves to the canonical PepV crystal
+      structure (PDB 1LFW); directly supports the di-zinc dipeptidase mechanism and broad
+      specificity of PepV. Homolog/family inference.
+- id: PMID:40135891
+  title: A SecA-associated protease modulates the extent of surface display of
+    staphylococcal protein A.
+  findings:
+  - statement: S. aureus PepV is a manganese-dependent M20-family dipeptidase that is
+      primarily cytosolic and lacks an N-terminal signal sequence.
+    supporting_text: Immune-reactive PepV was observed in the cytosol with a minute amount
+      in the membrane fraction
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Full-text available; supports cytosolic localization and Mn-dependent
+      dipeptidase activity of a PepV homolog. The SecA/SpA surface-display role is
+      lineage-specific to staphylococci and is not transferred to F. nucleatum.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

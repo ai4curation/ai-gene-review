@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: rpoS (P. putida)
 
-Source: rpoS-deep-research-bioreason-rl.md
+Source: rpoS-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

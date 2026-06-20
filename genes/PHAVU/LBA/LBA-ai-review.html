@@ -1,0 +1,3282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LBA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LBA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P02234" target="_blank" class="term-link">
+                        P02234
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Phaseolus vulgaris</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LBA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P02234" data-a="DESCRIPTION: LBA (UniProt P02234; LGBA_PHAVU, &#34;PvLba&#34;) encodes ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LBA (UniProt P02234; LGBA_PHAVU, &#34;PvLba&#34;) encodes leghemoglobin alpha / leghemoglobin component A of Phaseolus vulgaris (common/kidney bean), a member of the plant globin family (InterPro IPR000971 Globin, IPR001032 Leghaemoglobin-like, IPR019824 Leghaemoglobin_Fe_BS). It is a small (~16 kDa, 146 aa) monomeric heme protein expressed at very high abundance specifically in the cytosol of infected cells of functional legume root nodules. Its core molecular function is reversible, high-affinity binding of dioxygen at a pentacoordinated ferrous (Fe2+) heme iron. Physiologically, leghemoglobin resolves the nodule &#34;oxygen paradox&#34;: it acts as an oxygen carrier/buffer that delivers O2 toward the symbiosomes to sustain the high respiratory flux of nitrogen-fixing bacteroids while keeping free O2 extremely low (sub-micromolar, reported &lt;50 nM in infected cells) so that the oxygen-labile bacterial nitrogenase is not inactivated. This O2-homeostasis role is essential for symbiotic nitrogen fixation. Beyond O2 transport, PvLba also participates in nodule nitrogen/oxidative chemistry: it is nitrated in vivo on distal-pocket tyrosines (mainly Tyr-31, with Tyr-26 and Tyr-134) by a nitrite/peroxide-dependent (ferryl-Lb) mechanism, and the broader nodule hemoglobin network contributes to NO/ROS homeostasis. UniProt also notes a phosphoserine (Ser-46) that modulates the heme pocket. The protein functions in the infected-cell cytosol (a nucleus localization is asserted only by similarity/ISS and is not the site of its O2-carrier function). The gene symbol &#34;LBA&#34; here refers unambiguously to the bean nodule leghemoglobin and is not to be confused with unrelated &#34;LBA&#34; symbols (e.g. mammalian albumin) in other organisms.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P02234" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization asserted via UniProtKB Subcellular Location keyword mapping (SL-0191). The UniProt nucleus assignment is itself only &#34;By similarity&#34; (ECO:0000250) to other legume globins, not experimental for PvLba.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Leghemoglobin&#39;s functionally relevant location is the cytosol of infected nodule cells, where it buffers and delivers O2 to symbiosomes; the deep-research synthesis places PvLba in the infected host-cell cytosol in proximity to symbiosomes, not the nucleus. The UniProt nucleus call is inferred by similarity (ISS/By similarity) to P02240 and is not supported by gene-specific experimental evidence for the bean protein. It is retained as non-core because a globin nuclear pool, if present, is not where the O2-carrier function is executed.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lb is consistently described as **nodule-localized** and functioning in the infected nodule environment</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02234" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization assigned via UniProtKB Subcellular Location keyword mapping (SL-0091; UniProt &#34;Cytoplasm, cytosol&#34;). This is the functionally meaningful location of leghemoglobin.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the correct core cellular component. Leghemoglobin is a soluble cytosolic hemeprotein present at very high concentration in the cytosol of infected nodule cells, where it buffers free O2 and ferries O2 toward the symbiosome membrane. Both UniProt (&#34;Cytoplasm, cytosol&#34;) and the literature synthesis localize PvLba to the infected host-cell cytosol.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cytoplasm, cytosol</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lb is described as an abundant hemeprotein (reported in the **millimolar range**)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019825" target="_blank" class="term-link">
+                                    GO:0019825
+                                </a>
+                            </span>
+                            <span class="term-label">oxygen binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02234" data-a="GO:0019825" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Oxygen-binding molecular function assigned from InterPro globin/leghemoglobin domain signatures. This is a core, correct molecular function of PvLba.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Reversible O2 binding at the ferrous heme is the defining molecular activity of leghemoglobin and is directly consistent with the UniProt FUNCTION statement and the globin domain architecture. The InterPro-based assignment is at an appropriate level of specificity for a globin and is corroborated by the literature synthesis describing PvLba as an oxygen-binding heme globin.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">facilitates the diffusion of oxygen to the bacteroids while preventing</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25603991" target="_blank" class="term-link">
+                                        PMID:25603991
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">essential role as an O2 transporter</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**only ferrous (Fe²⁺) leghemoglobin binds O₂**, so maintenance of the reduced state is integral to function</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02234" data-a="GO:0020037" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Heme-binding molecular function assigned from InterPro globin/leghemoglobin domain signatures. Correct and core: leghemoglobin is a b-type heme protein.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Heme binding is essential to leghemoglobin function: O2 is bound at a pentacoordinated ferrous heme b, and UniProt annotates heme b binding residues (e.g. His-93 proximal, and contacts at 46 and 96) on the bean protein. The deep-research synthesis explicitly describes PvLba as a heme-binding globin. This is the more informative and specific molecular-function counterpart to the broad SPKW &#34;metal ion binding&#34; term and is the preferred replacement target for it.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Leghemoglobin that reversibly binds oxygen O(2) through a</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**Leghemoglobins (Lbs)** are **heme-containing globins**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P02234" data-a="GO:0005634" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization transferred by sequence-similarity (ISS) from UniProtKB:P02240 (soybean leghemoglobin a). Duplicates the IEA nucleus annotation with a different evidence path.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This ISS annotation rests on similarity to soybean P02240 rather than on gene-specific experimental data for PvLba, and the nucleus is not where leghemoglobin carries out its oxygen-carrier function (the infected-cell cytosol is). As with the IEA nucleus annotation, it is retained but marked non-core: any nuclear globin pool is not the locus of the protein&#39;s core O2-buffering/transport activity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">functioning in the infected nodule environment where symbiosomes and nitrogenase activity occur</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005344" target="_blank" class="term-link">
+                                    GO:0005344
+                                </a>
+                            </span>
+                            <span class="term-label">oxygen carrier activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02234" data-a="GO:0005344" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Oxygen transport&#34;; snapshot-only, removed in the current GOA release. Oxygen carrier activity is the defining molecular function of leghemoglobin.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was NOT justified - it caused collateral damage by dropping a correct, CORE molecular-function term. Leghemoglobin is, by definition, an oxygen carrier: it reversibly binds O2 at a ferrous heme and shuttles/buffers it in nodule cells. The deep-research synthesis describes PvLba as an oxygen-binding heme globin that facilitates O2 diffusion/transport and buffers O2 in nodules, occurring at high (millimolar) concentration in the infected host-cell cytosol as a &#34;high-abundance oxygen buffer/transport system&#34;. UniProt&#39;s FUNCTION statement states the protein &#34;facilitates the diffusion of oxygen to the bacteroids&#34;. This is the most precise and most informative MF for leghemoglobin and should be retained (it complements the InterPro &#34;oxygen binding&#34; term). Re-add and ACCEPT.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25603991" target="_blank" class="term-link">
+                                        PMID:25603991
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">essential role as an O2 transporter</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lb is described as an abundant hemeprotein (reported in the **millimolar range**)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">facilitates the diffusion of oxygen to the bacteroids while preventing</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015671" target="_blank" class="term-link">
+                                    GO:0015671
+                                </a>
+                            </span>
+                            <span class="term-label">oxygen transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02234" data-a="GO:0015671" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Oxygen transport&#34;; snapshot-only, removed in the current GOA release. This is the biological-process counterpart of leghemoglobin&#39;s oxygen-carrier molecular function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was NOT justified - it is collateral damage. Oxygen transport is exactly the process leghemoglobin performs: it delivers O2 toward the symbiosomes to support bacteroid respiration while buffering free O2. The deep-research synthesis states leghemoglobins &#34;function as O2 transporters delivering O2 to symbiosomes&#34; and that PvLba &#34;facilitates O2 diffusion/transport and buffers O2 in nodules&#34;, and UniProt records that the protein facilitates the diffusion of oxygen to the bacteroids. The term is accurate and core; re-add and ACCEPT. (It is more informative than the bare &#34;nodulation&#34; process term that was also keyword-derived.)
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25603991" target="_blank" class="term-link">
+                                        PMID:25603991
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">essential role as an O2 transporter</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PvLba supports this by **delivering O₂ at low free concentrations** (oxygen buffering/transport) to infected nodule cells and symbiosomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">facilitates the diffusion of oxygen to the bacteroids while preventing</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P02234" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keywords &#34;Metal-binding&#34; and &#34;Iron&#34;; snapshot-only, removed in the current GOA release. Leghemoglobin binds the iron atom of its heme prosthetic group, so the term is correct but very broad.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this generic keyword-derived term lost little, because the biology is better captured by more specific terms. PvLba does bind a metal ion - the heme iron - and only the ferrous (Fe2+) form binds O2 efficiently, consistent with canonical globin chemistry. However, &#34;metal ion binding&#34; (the broad parent) is uninformative for a globin: the precise, gene-relevant terms are &#34;heme binding&#34; (GO:0020037, already present and ACCEPTed in current GOA, capturing binding of the heme b cofactor) and &#34;iron ion binding&#34; (GO:0005506, capturing the coordinated heme iron). The annotation should therefore be re-added but MODIFIED to these specific terms rather than retained at the broad metal-ion level. Tier B (broad/over-annotated but not wrong).
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    heme binding
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005506" target="_blank" class="term-link">
+                                    iron ion binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Leghemoglobin that reversibly binds oxygen O(2) through a</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">pentacoordinated heme iron</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**only ferrous (Fe²⁺) leghemoglobin binds O₂**, so maintenance of the reduced state is integral to function</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009877" target="_blank" class="term-link">
+                                    GO:0009877
+                                </a>
+                            </span>
+                            <span class="term-label">nodulation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P02234" data-a="GO:0009877" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Nodulation&#34;; snapshot-only, removed in the current GOA release. The keyword reflects that leghemoglobin is a hallmark protein OF the nodule, not that the protein drives the nodulation/organogenesis program.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED. &#34;Nodulation&#34; denotes the developmental process of nodule formation/organogenesis triggered by rhizobial symbiosis. PvLba is not part of that developmental program; it is a highly abundant nodule-EXPRESSED oxygen carrier whose function is O2 binding/transport and buffering within the already-formed nodule. The keyword captures the nodule expression/localization context (&#34;localized in host cells associated with the symbiosis&#34;; &#34;specialization for infected nodule cells&#34;) rather than a developmental role - expression and location are not the same as participation in the organogenesis process. The protein&#39;s genuine biological contribution (nodule O2 homeostasis enabling symbiotic nitrogen fixation) is already and better captured by &#34;oxygen transport&#34; (GO:0015671, re-added above) and is more precisely described as symbiotic nitrogen fixation support. The bare &#34;nodulation&#34; term is an over-broad/contextual over-annotation; its removal is appropriate. Tier A (removal justified). If a process term beyond oxygen transport were desired, &#34;nitrogen fixation&#34; (GO:0009399) would be the biologically apt downstream context.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015671" target="_blank" class="term-link">
+                                    oxygen transport
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lb is a **marker of functional (pink) nodules**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PHAVU/LBA/LBA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">accumulate to very high levels in legume root nodules</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25603991" target="_blank" class="term-link">
+                                        PMID:25603991
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">essential role as an O2 transporter</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Leghemoglobin alpha is the abundant nodule hemoglobin whose core molecular function is reversible, high-affinity binding of dioxygen at a pentacoordinated ferrous (Fe2+) heme b iron. As an oxygen carrier it shuttles and buffers O2 in the cytosol of infected nodule cells.
+</h3>
+                <span class="vote-buttons" data-g="P02234" data-a="FUNCTION: Leghemoglobin alpha is the abundant nodule hemoglo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005344" target="_blank" class="term-link">
+                            oxygen carrier activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015671" target="_blank" class="term-link">
+                                oxygen transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25603991" target="_blank" class="term-link">
+                                PMID:25603991
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">essential role as an O2 transporter</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PHAVU/LBA/LBA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">facilitates the diffusion of oxygen to the bacteroids while preventing</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>By binding the heme b prosthetic group (and its coordinated iron), leghemoglobin acquires the redox-active ferrous center required for O2 ligation; heme binding is the structural basis of its oxygen-carrier activity.
+</h3>
+                <span class="vote-buttons" data-g="P02234" data-a="FUNCTION: By binding the heme b prosthetic group (and its co..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                            heme binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PHAVU/LBA/LBA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Leghemoglobin that reversibly binds oxygen O(2) through a</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PHAVU/LBA/LBA-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">**Leghemoglobins (Lbs)** are **heme-containing globins**</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Physiologically, leghemoglobin enables symbiotic nitrogen fixation by maintaining nodule oxygen homeostasis: it delivers O2 toward the symbiosomes to sustain bacteroid respiration while keeping free O2 low enough to protect the oxygen-labile nitrogenase (the &#34;oxygen paradox&#34;).
+</h3>
+                <span class="vote-buttons" data-g="P02234" data-a="FUNCTION: Physiologically, leghemoglobin enables symbiotic n..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005344" target="_blank" class="term-link">
+                            oxygen carrier activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015671" target="_blank" class="term-link">
+                                oxygen transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PHAVU/LBA/LBA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">the bacterial nitrogenase from being inactivated by buffering dioxygen,</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PHAVU/LBA/LBA-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PvLba supports this by **delivering O₂ at low free concentrations** (oxygen buffering/transport) to infected nodule cells and symbiosomes</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25603991" target="_blank" class="term-link">
+                            PMID:25603991
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Leghemoglobin is nitrated in functional legume nodules in a tyrosine residue within the heme cavity by a nitrite/peroxide-dependent mechanism.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Primary Phaseolus vulgaris study (Sainz et al. 2015, Plant J). States that leghemoglobin is an abundant hemeprotein of legume nodules whose essential role is as an O2 transporter, and demonstrates in vivo nitration of PvLba at Tyr30 in the distal heme pocket by a nitrite/peroxide-dependent (oxoferryl-Lb) mechanism.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro globin/leghemoglobin signatures (IPR000971, IPR001032, IPR012292, IPR019824) assign oxygen binding (GO:0019825) and heme binding (GO:0020037) to PvLba; both are core molecular functions of a plant globin.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A nucleus localization was transferred to PvLba by sequence similarity (ISS) from soybean leghemoglobin a (UniProtKB:P02240); it is not gene-specific experimental evidence and is not the functional site of the O2 carrier.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Subcellular-location keyword mapping assigns cytosol (SL-0091) and nucleus (SL-0191); the cytosol assignment matches the functional location of leghemoglobin in infected nodule cells.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For PvLba, the keyword &#34;Oxygen transport&#34; mapped to BOTH a correct core molecular function (oxygen carrier activity, GO:0005344) and a correct process (oxygen transport, GO:0015671); removing these was collateral damage. The keywords &#34;Metal-binding&#34;/&#34;Iron&#34; mapped to a broad term (metal ion binding) better replaced by heme/iron binding, and &#34;Nodulation&#34; mapped to an over-broad contextual process term.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PHAVU/LBA/LBA-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB entry LGBA_PHAVU (P02234) - Leghemoglobin alpha, Phaseolus vulgaris.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FUNCTION - reversibly binds O2 through a pentacoordinated heme iron and, in root nodules, facilitates diffusion of oxygen to the bacteroids while preventing the bacterial nitrogenase from being inactivated by buffering dioxygen; essential for symbiotic nitrogen fixation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Subcellular location is cytoplasm/cytosol (and nucleus by similarity); tissue specificity is root nodules; the protein is nitrated mainly at Tyr-31 (also Tyr-26, Tyr-134) and phosphorylated at Ser-46; belongs to the plant globin family.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PHAVU/LBA/LBA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of Phaseolus vulgaris leghemoglobin alpha (PvLba, P02234).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvLba is a nodule-localized plant globin whose primary role is to buffer and transport O2 in infected nodule cells, enabling high respiratory flux to bacteroids while keeping free O2 extremely low to protect the O2-labile nitrogenase (&#34;oxygen paradox&#34;); free O2 in infected cells is held sub-micromolar (&lt;50 nM) and Lb occurs at millimolar concentration in the host-cell cytosol.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Best-supported annotation - molecular function = oxygen-binding/oxygen-carrier heme globin; process = oxygen transport / symbiotic nitrogen fixation support via nodule O2 homeostasis; location = infected host-cell cytosol of root nodules in proximity to symbiosomes.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Bean-specific PTM evidence - PvLba is nitrated in vivo at distal-pocket tyrosines (mainly Tyr30 in the study numbering; UniProt Tyr-31) by a nitrite/peroxide (ferryl-Lb) mechanism; the broader nodule hemoglobin network contributes to NO/ROS homeostasis.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are the millimolar levels of leghemoglobin in bean nodules rate-limiting for symbiotic nitrogen fixation, and does natural genotype variation in PvLba abundance correlate with fixation performance?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Manuel Becana, Michael Udvardi</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P02234" data-a="Q: Are the millimolar levels of leghemoglobin in bean..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the in vivo functional consequence of distal-pocket tyrosine nitration (Tyr-31/Tyr-26/Tyr-134) and Ser-46 phosphorylation for the O2 affinity and oxygen-carrier activity of PvLba during nodule development and senescence?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Manuel Becana</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P02234" data-a="Q: What is the in vivo functional consequence of dist..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate PvLba loss-of-function (RNAi or CRISPR) bean nodules and measure free O2 concentration, bacteroid respiration, nitrogenase activity and nitro-oxidative stress markers, to test whether bean leghemoglobin is required for nodule O2 homeostasis as shown for Lotus leghemoglobins.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of PvLba elevates free O2 and accumulates ROS/NO in infected cells, impairing nitrogenase activity and symbiotic nitrogen fixation.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: reverse-genetics phenotyping of symbiotic nitrogen fixation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P02234" data-a="EXPERIMENT: Generate PvLba loss-of-function (RNAi or CRISPR) b..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure O2 association/dissociation kinetics and equilibrium affinity of recombinant wild-type PvLba versus Tyr31-nitrated and Ser46-phosphomimic variants, and determine whether these PTMs shift the protein between O2-buffering and O2-delivery modes.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Distal-pocket nitration and Ser-46 phosphorylation modulate heme-pocket chemistry and thereby tune leghemoglobin between buffering and delivering O2 to symbiosomes.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro ligand-binding kinetics on modified protein</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P02234" data-a="EXPERIMENT: Measure O2 association/dissociation kinetics and e..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LBA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P02234" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">41 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T08:38:10.633392</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="LBA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="LBA-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000007 Figure 4 shows the quantification of Tyr30 nitration in PvLba (Phaseolus vulgaris leghaemoglobin a) during nodule development. The </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-lba-leghemoglobin-a-uniprot-p02234-in-phaseolus-vulgaris">Research Report: Functional Annotation of <strong>LBA</strong> (Leghemoglobin A; <strong>UniProt P02234</strong>) in <em>Phaseolus vulgaris</em></h2>
+<h3 id="0-target-verification-critical-disambiguation">0) Target verification (critical disambiguation)</h3>
+<p>The symbol <strong>LBA</strong> is ambiguous across biology, but the research summarized here is restricted to the UniProt-defined target: <strong>UniProt P02234</strong>, described as <strong>leghemoglobin alpha / Leghemoglobin A (PvLba)</strong> from <strong>common bean (<em>Phaseolus vulgaris</em>)</strong> and belonging to the <strong>plant globin (leghemoglobin-like) family</strong>. A Phaseolus-specific primary study explicitly refers to “<strong>bean Lba (PvLba)</strong>” in functional bean nodules and measures its in vivo post-translational modification, supporting that the literature discussed here is on the correct protein identity (PvLba/leghemoglobin A), not an unrelated “LBA” in other taxa. (sainz2015leghemoglobinisnitrated pages 4-6)</p>
+<hr />
+<h3 id="1-key-concepts-definitions-and-current-understanding">1) Key concepts, definitions, and current understanding</h3>
+<h4 id="11-what-is-leghemoglobin-lb-and-what-does-pvlba-do">1.1 What is leghemoglobin (Lb) and what does PvLba do?</h4>
+<p><strong>Leghemoglobins (Lbs)</strong> are <strong>heme-containing globins</strong> that accumulate to very high levels in legume root nodules and are central to the physiology of symbiotic nitrogen fixation. In functional nodules, Lb is described as an abundant hemeprotein (reported in the <strong>millimolar range</strong>) whose <strong>essential biochemical function is oxygen (O₂) transport/delivery</strong> to the symbiosome/respiring nodule tissues while maintaining <strong>low free O₂</strong> compatible with oxygen-labile nitrogenase. (sainz2015leghemoglobinisnitrated pages 1-3)</p>
+<p>In <em>P. vulgaris</em> nodules specifically, <strong>PvLba</strong> is treated as the major bean leghemoglobin species in a Phaseolus-focused biochemical study, consistent with UniProt P02234 being a nodule hemoglobin. (sainz2015leghemoglobinisnitrated pages 1-3, sainz2015leghemoglobinisnitrated pages 4-6)</p>
+<h4 id="12-biochemical-mechanism-heme-iron-state-ligand-binding-and-nodule-microoxia">1.2 Biochemical mechanism: heme iron state, ligand binding, and nodule microoxia</h4>
+<p>A defining mechanistic point is that <strong>only ferrous (Fe²⁺) leghemoglobin binds O₂</strong>, so maintenance of the reduced state is integral to function. (sainz2015leghemoglobinisnitrated pages 1-3)</p>
+<p>Recent legume work synthesizes the physiological framing: Lb maintains a microoxic environment necessary for nitrogenase while still enabling respiration; free O₂ in infected nodule tissues has been described at <strong>nanomolar levels (&lt;50 nM)</strong> in modern summaries of nodule physiology. (lamoureux2024theeffectof pages 26-29)</p>
+<h4 id="13-beyond-oxygen-roles-in-reactive-nitrogenoxygen-chemistry-noros">1.3 Beyond oxygen: roles in reactive nitrogen/oxygen chemistry (NO/ROS)</h4>
+<p>A current consensus view (supported by both Phaseolus primary work and recent legume genetics) is that Lbs are not only O₂ buffers but also intersect strongly with <strong>reactive nitrogen species (RNS)</strong> and <strong>reactive oxygen species (ROS)</strong>:</p>
+<ul>
+<li><strong>NO binding:</strong> ferrous Lb binds nitric oxide (•NO) avidly to form <strong>LbNO</strong>, detectable in intact nodules. (sainz2015leghemoglobinisnitrated pages 1-3)</li>
+<li><strong>Redox chemistry:</strong> ferrous/ferric/ferryl Lb can react with RNS; Lb can participate in reactions that detoxify reactive species (e.g., peroxynitrite-derived chemistry). (sainz2015leghemoglobinisnitrated pages 1-3)</li>
+<li><strong>NO dioxygenase-like activity in nodules (conserved across legumes):</strong> recent experimental work in <em>Lotus japonicus</em> highlights that hemoglobins (including Lbs) can convert <strong>NO to nitrate</strong> in vitro via NO dioxygenase activity, and that nodules lacking Lbs accumulate NO and ROS (nitro-oxidative stress). While this is not Phaseolus-specific, it is mechanistically relevant because Lb structure/function is strongly conserved across legumes. (minguillon2024dynamicsofhemoglobins pages 13-15, minguillon2024dynamicsofhemoglobins pages 1-2)</li>
+</ul>
+<hr />
+<h3 id="2-experimental-evidence-directly-relevant-to-phaseolus-vulgaris-pvlba-uniprot-p02234">2) Experimental evidence directly relevant to <strong>Phaseolus vulgaris PvLba (UniProt P02234)</strong></h3>
+<h4 id="21-in-vivo-post-translational-modification-nitration-of-pvlba-in-active-nodules">2.1 In vivo post-translational modification: nitration of PvLba in active nodules</h4>
+<p>A key Phaseolus-specific primary study demonstrated that <strong>PvLba is nitrated in functional bean nodules</strong> at a tyrosine residue <strong>within the heme cavity</strong>, with <strong>Tyr30</strong> in the distal heme pocket being the predominant nitration site used for quantification. (sainz2015leghemoglobinisnitrated pages 4-6, sainz2015leghemoglobinisnitrated pages 1-3)</p>
+<p><strong>Quantitative in vivo observation:</strong> in <strong>young bean nodules</strong>, the fraction of PvLba nitrated at Tyr30 was approximately <strong>0.23%</strong>, and nitration <strong>decreased in senescent nodules</strong> and after <strong>nitrate treatment</strong>; this is shown in the paper’s quantification figure. (sainz2015leghemoglobinisnitrated media 99e0ea56)</p>
+<p><strong>Mechanistic in vitro support (physiology-linked conditions):</strong> PvLba nitration required <strong>nitrite + hydrogen peroxide</strong> (H₂O₂), and was inhibited by iron chelation or scavengers of nitrating radicals, supporting a <strong>nitrite/peroxide-dependent</strong> mechanism coupled to heme redox chemistry. The study used conditions described as physiologically relevant (e.g., ferric Lb ~10 µM; H₂O₂ 20–100 µM; nitrite ~100 µM) to generate substantial nitration in vitro, whereas omission of H₂O₂ prevented nitration. (sainz2015leghemoglobinisnitrated pages 4-6)</p>
+<p><strong>Functional interpretation (author analysis):</strong> the authors suggest Lb can act as a sink for toxic reactive nitrogen/oxygen species (e.g., peroxynitrite-related chemistry), tying a Phaseolus leghemoglobin directly to nodule nitro-oxidative chemistry beyond oxygen transport. (sainz2015leghemoglobinisnitrated pages 1-3)</p>
+<hr />
+<h3 id="3-recent-developments-prioritizing-20232024">3) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="31-2024-gene-specific-regulation-and-mutant-evidence-for-redox-stress-in-nodules-model-legume">3.1 2024: gene-specific regulation and mutant evidence for redox stress in nodules (model legume)</h4>
+<p>A 2024 <em>Journal of Experimental Botany</em> study in <em>Lotus japonicus</em> systematically quantified regulation of nodule hemoglobins and used <strong>CRISPR mutants lacking Lbs</strong> plus transcription-factor mutants. Major findings relevant to functional annotation of PvLba by homology/conservation include:</p>
+<ul>
+<li><strong>Nitrate regulation:</strong> Lb (and class 2 phytoglobin) expression was <strong>suppressed by nitrate</strong>; nitrate treatments were <strong>0, 0.5, 5, 10 mM KNO₃ for 2 days</strong>, and nitrate-responsive promoter elements were identified. (minguillon2024dynamicsofhemoglobins pages 1-2, minguillon2024dynamicsofhemoglobins pages 13-15)</li>
+<li><strong>Physiological consequence of Lb loss:</strong> Lb-deficient nodules showed <strong>NO and ROS accumulation</strong> and altered antioxidants/senescence markers—evidence that Lbs help prevent <strong>nitro-oxidative stress</strong> during nodule function. (minguillon2024dynamicsofhemoglobins pages 1-2, minguillon2024dynamicsofhemoglobins pages 13-15)</li>
+</ul>
+<p>Although these experiments are not in <em>P. vulgaris</em>, they represent authoritative, modern functional genetics supporting a conserved role of Lbs (including PvLba) in balancing O₂ supply with redox/NO constraints in nodules. (minguillon2024dynamicsofhemoglobins pages 1-2)</p>
+<h4 id="32-2024-nodule-defensesenescence-framework-and-leghemoglobin-as-a-functional-marker">3.2 2024: nodule defense–senescence framework and leghemoglobin as a functional marker</h4>
+<p>A 2024 review in <em>Plant Communications</em> emphasizes:</p>
+<ul>
+<li>Lb is a key controller of the low-O₂ environment required for nitrogenase.</li>
+<li>Lb is a <strong>marker of functional (pink) nodules</strong>, and <strong>oxidation of Lb</strong> accompanies senescence (greenish coloration). (berrabah2024defenseandsenescence pages 1-2)</li>
+</ul>
+<p>This consolidates expert-level interpretation that Lb status is tightly linked to both <strong>symbiotic performance</strong> and <strong>nodule lifespan/turnover</strong>. (berrabah2024defenseandsenescence pages 1-2)</p>
+<h4 id="33-2024-transcriptomics-linking-oxygen-binding-genes-to-functional-nodules">3.3 2024: transcriptomics linking oxygen-binding genes to functional nodules</h4>
+<p>A 2024 <em>Frontiers in Plant Science</em> transcriptome/anatomy study in soybean–rhizobium combinations reports enrichment and higher expression of <strong>oxygen-binding genes (including oxygen-binding proteins such as leghemoglobin)</strong> in conditions associated with effective/fully developed nodules, consistent with Lb-mediated microoxia being a central determinant of symbiotic effectiveness. (zadegan2024differentialsymbioticcompatibilities pages 11-12)</p>
+<hr />
+<h3 id="4-functional-annotation-biological-processes-pathways-and-localization">4) Functional annotation: biological processes, pathways, and localization</h3>
+<h4 id="41-biological-process-and-pathway-context">4.1 Biological process and pathway context</h4>
+<p>Based on Phaseolus-specific biochemistry and cross-legume consensus:</p>
+<ul>
+<li><strong>Primary process:</strong> symbiotic nitrogen fixation requires high respiration yet oxygen-sensitive nitrogenase; PvLba supports this by <strong>delivering O₂ at low free concentrations</strong> (oxygen buffering/transport) to infected nodule cells and symbiosomes. (sainz2015leghemoglobinisnitrated pages 1-3, lamoureux2024theeffectof pages 26-29)</li>
+<li><strong>Redox/NO homeostasis:</strong> PvLba participates in nodule reactive chemistry—binding NO (LbNO), reacting with RNS/ROS, and undergoing measurable nitration in vivo, consistent with active engagement in nitro-oxidative processes in nodules. (sainz2015leghemoglobinisnitrated pages 1-3, sainz2015leghemoglobinisnitrated pages 4-6, sainz2015leghemoglobinisnitrated media 99e0ea56)</li>
+</ul>
+<h4 id="42-subcellulartissue-localization">4.2 Subcellular/tissue localization</h4>
+<p>Within the available evidence, Lb is consistently described as <strong>nodule-localized</strong> and functioning in the infected nodule environment where symbiosomes and nitrogenase activity occur; its function is explicitly tied to delivering O₂ to the symbiosomal membrane and maintaining microoxic conditions. (lamoureux2024theeffectof pages 26-29)</p>
+<hr />
+<h3 id="5-current-applications-and-real-world-implementations-leghemoglobin-class">5) Current applications and real-world implementations (leghemoglobin class)</h3>
+<p>PvLba itself is a bean nodule protein, but the broader <strong>leghemoglobin protein class</strong> has a major real-world deployment as a <strong>color/flavor heme ingredient in plant-based meat analogues</strong>, enabled by precision fermentation.</p>
+<h4 id="51-regulatory-implementation-efsa-2024-opinions-soy-leghemoglobin">5.1 Regulatory implementation: EFSA 2024 opinions (soy leghemoglobin)</h4>
+<p>EFSA’s 2024 scientific opinion evaluated <strong>soy leghemoglobin</strong> produced in genetically modified <em>Komagataella phaffii</em> (LegH Prep) for use as a colouring in meat analogue products and concluded that it <strong>does not raise a safety concern</strong> at proposed use and use levels. (younes2024safetyofsoy pages 4-6, younes2024safetyofsoy pages 1-2)</p>
+<p>Key quantitative statistics from EFSA’s exposure/safety evaluation include:</p>
+<ul>
+<li><strong>Dietary exposure estimates (max use):</strong> mean exposure up to <strong>7.3 mg soy leghemoglobin/kg bw/day</strong> in toddlers/children; 95th percentile up to <strong>32.9 mg/kg bw/day</strong> (toddlers). (younes2024safetyofsoy pages 3-4)</li>
+<li><strong>Toxicology NOAEL (90-day):</strong> no adverse effects at the highest doses tested; reported NOAEL for soy leghemoglobin component at <strong>2328 mg/kg bw/day (males)</strong> and <strong>2865 mg/kg bw/day (females)</strong> in one EFSA summary. (younes2024safetyofsoy pages 4-6)</li>
+<li><strong>Proposed maximum use level:</strong> <strong>0.8%</strong> soy leghemoglobin protein in meat analogue products. (casacuberta2024assessmentofsoy pages 12-12)</li>
+</ul>
+<p>These regulatory documents provide authoritative, real-world implementation context for leghemoglobin proteins as ingredients, even though they pertain to soybean leghemoglobin rather than PvLba from bean. (younes2024safetyofsoy pages 3-4, younes2024safetyofsoy pages 4-6)</p>
+<h4 id="52-precision-fermentationbioprocessing-20232024-titer-improvements">5.2 Precision fermentation/bioprocessing: 2023–2024 titer improvements</h4>
+<p>Recent biotechnology literature reports strong progress in recombinant leghemoglobin production:</p>
+<ul>
+<li><strong>Engineered <em>Kluyveromyces marxianus</em> (2024):</strong> intracellular leghemoglobin A (LBA) titer <strong>7.27 g/L</strong> with heme content <strong>66.32 mg/L</strong> in a 5-L fermentor, achieved by remodeling heme metabolism (authors describe this as the highest intracellular expression reported). (tian2024highlevelexpressionof pages 1-2)</li>
+<li><strong>Engineered <em>Saccharomyces cerevisiae</em> (2024):</strong> intracellular titers up to <strong>544.8 mg/L</strong> in a 5-L fermenter; secreted leghemoglobin <strong>88.5 mg/L</strong> after signal peptide/protease engineering. (huang2024efficientsecretoryexpression pages 1-2)</li>
+<li><strong>Heme biosynthesis optimization by metabolic modeling (2023, <em>Pichia/K. phaffii</em>):</strong> growth-coupled modeling suggests heme pathway upregulation (e.g., <strong>HEM1/ALAS</strong> and combinations such as <strong>HEM1/2/3/12</strong>) can increase predicted heme/legH output (e.g., ~<strong>41%</strong> increase for a combined upregulation set; ~<strong>1.5×</strong> for broader changes), and highlights glycine/C1 metabolism as key precursor supply nodes. (pentjuss2023pichiapastorisgrowth—coupled pages 4-5)</li>
+</ul>
+<hr />
+<h3 id="6-expert-opinions-authoritative-interpretations-what-experts-emphasize">6) Expert opinions / authoritative interpretations (what experts emphasize)</h3>
+<p>Across recent authoritative sources, the expert framing of Lb biology converges on:</p>
+<ul>
+<li><strong>O₂ control is the core constraint in nitrogen fixation</strong>, and Lb is the plant protein that enables this “engineering” of a microoxic niche in nodules. (berrabah2024defenseandsenescence pages 1-2, lamoureux2024theeffectof pages 26-29)</li>
+<li><strong>Redox and signaling integration:</strong> modern genetic and biochemical evidence suggests Lbs sit at the interface of O₂ delivery and nitro-oxidative stress, with Lb loss causing NO/ROS accumulation and with Lb itself being a target/participant in RNS chemistry (e.g., nitration in vivo). (minguillon2024dynamicsofhemoglobins pages 1-2, sainz2015leghemoglobinisnitrated pages 4-6)</li>
+</ul>
+<hr />
+<h3 id="7-summary-functional-statement-annotation-ready">7) Summary functional statement (annotation-ready)</h3>
+<p><strong>PvLba (UniProt P02234; gene LBA) is a nodule-localized leghemoglobin that binds O₂ via a heme cofactor (ferrous state) and supports symbiotic nitrogen fixation by buffering and delivering O₂ at very low free concentrations compatible with nitrogenase. PvLba also participates in nodule redox/RNS chemistry: it forms NO-bound complexes and undergoes measurable in vivo tyrosine nitration (primarily Tyr30 in the distal heme pocket) via a nitrite/peroxide-dependent mechanism, linking it to NO/ROS homeostasis in functional nodules.</strong> (sainz2015leghemoglobinisnitrated pages 1-3, sainz2015leghemoglobinisnitrated pages 4-6, sainz2015leghemoglobinisnitrated media 99e0ea56)</p>
+<hr />
+<h3 id="evidence-map-structured">Evidence map (structured)</h3>
+<table>
+<thead>
+<tr>
+<th>Functional aspect</th>
+<th>Key statements</th>
+<th>Evidence type</th>
+<th>Quantitative data</th>
+<th>Key references with year and DOI URL</th>
+<th>PaperQA citation IDs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>O2 transport/buffering</td>
+<td>PvLba is a highly abundant nodule hemeprotein whose essential role is O2 transport/delivery to symbiosomes while buffering free O2 to protect nitrogenase. Closely related leghemoglobins in legumes occur at millimolar concentrations and help maintain very low free O2 in infected cells.</td>
+<td>Primary; review</td>
+<td>Lb abundance in nodules ~1–5 mM; free O2 reported as &lt;50 nM in nodules in recent legume literature.</td>
+<td>Sainz et al., 2015, <em>Plant J.</em> DOI: https://doi.org/10.1111/tpj.12762; Minguillón et al., 2024, <em>J Exp Bot</em> DOI: https://doi.org/10.1093/jxb/erad455</td>
+<td>(sainz2015leghemoglobinisnitrated pages 1-3, minguillon2024dynamicsofhemoglobins pages 1-2, lamoureux2024theeffectof pages 26-29)</td>
+</tr>
+<tr>
+<td>NO/ROS chemistry</td>
+<td>PvLba reacts with reactive nitrogen/oxygen species; ferrous Lb binds NO to form LbNO, and Lbs can convert NO-derived species to nitrate in vitro. Recent mutant data in Lotus indicate that loss of Lbs causes NO and ROS accumulation, supporting a conserved role in nodule redox homeostasis.</td>
+<td>Primary; review</td>
+<td>In vitro PvLba nitration assays used ~10 µM ferric Lb, 20–100 µM H2O2, and ~100 µM nitrite; nitrate treatments in Lotus study were 0, 0.5, 5, 10 mM KNO3 for 2 d.</td>
+<td>Sainz et al., 2015, https://doi.org/10.1111/tpj.12762; Minguillón et al., 2024, https://doi.org/10.1093/jxb/erad455</td>
+<td>(sainz2015leghemoglobinisnitrated pages 4-6, sainz2015leghemoglobinisnitrated pages 1-3, minguillon2024dynamicsofhemoglobins pages 1-2, minguillon2024dynamicsofhemoglobins pages 13-15, minguillon2024dynamicsofhemoglobins pages 16-17)</td>
+</tr>
+<tr>
+<td>Post-translational modifications</td>
+<td>PvLba is nitrated in functional bean nodules, predominantly at Tyr30 in the distal heme pocket, indicating in vivo modification by nitrite/peroxide chemistry. This supports that LBA is an active redox-reactive globin in nodules rather than a passive O2 carrier only.</td>
+<td>Primary</td>
+<td>Young bean nodules contained ~0.23% nitrated PvLba; in vitro nitration reached ~25–70% under tested oxidant/nitrite conditions; nitration decreased in senescent and nitrate-treated nodules.</td>
+<td>Sainz et al., 2015, https://doi.org/10.1111/tpj.12762</td>
+<td>(sainz2015leghemoglobinisnitrated pages 4-6, sainz2015leghemoglobinisnitrated media 99e0ea56)</td>
+</tr>
+<tr>
+<td>Regulation by nitrate/stress</td>
+<td>Recent legume data show Lb genes are strongly down-regulated by nitrate and dark stress, with nitrate-responsive promoter elements implicated. This is relevant to PvLba annotation because leghemoglobin expression is tightly coupled to nodule physiological state and N-fixation activity.</td>
+<td>Primary</td>
+<td>Nitrate suppressed Lbs after 2 d exposure to 0.5–10 mM KNO3; compensatory regulation between Lb paralogs was observed in Lotus mutants.</td>
+<td>Minguillón et al., 2024, https://doi.org/10.1093/jxb/erad455</td>
+<td>(minguillon2024dynamicsofhemoglobins pages 1-2, minguillon2024dynamicsofhemoglobins pages 13-15, minguillon2024dynamicsofhemoglobins pages 16-17, minguillon2024dynamicsofhemoglobins pages 17-18)</td>
+</tr>
+<tr>
+<td>Role in senescence/defense</td>
+<td>Leghemoglobin is a marker of functional pink nodules; oxidation/decrease of Lb accompanies senescence and loss of N-fixation capacity. Reviews and recent studies connect Lb decline with nitro-oxidative stress, defense activation, and senescence-associated changes in antioxidants and proteolysis.</td>
+<td>Review; primary</td>
+<td>Nodule N2-fixation peak ~4 weeks and lifespan ~10–12 weeks in a recent synthesis; antioxidants in nodules include ascorbate ~1–2 mM and glutathione ~0.5–1 mM; APX ~0.9% of soluble protein.</td>
+<td>Berrabah et al., 2024, <em>Plant Commun.</em> DOI: https://doi.org/10.1016/j.xplc.2024.100888; Minguillón et al., 2024, https://doi.org/10.1093/jxb/erad455</td>
+<td>(berrabah2024defenseandsenescence pages 1-2, lamoureux2024theeffectof pages 26-29, minguillon2024dynamicsofhemoglobins pages 13-15, lamoureux2024theeffectof pages 29-32)</td>
+</tr>
+<tr>
+<td>Applications in food/fermentation</td>
+<td>Although not specific to PvLba from bean, closely related leghemoglobins are used as heme/flavor-color ingredients in plant-based meat and are being optimized by precision fermentation in yeasts. Recent biotech studies report substantially improved recombinant production titers.</td>
+<td>Biotech; review</td>
+<td>K. marxianus intracellular LBA reached 7.27 g/L in 5 L fermentor with heme content 66.32 mg/L; S. cerevisiae intracellular LegH reached 544.8 mg/L and secreted LegH 88.5 mg/L; another K. phaffii process reported highest biomass density 121.80 gDCW/L and LegH yield 0.513 mg/gDCW.</td>
+<td>Tian et al., 2024, <em>Front Bioeng Biotechnol.</em> DOI: https://doi.org/10.3389/fbioe.2023.1329016; Huang et al., 2024, <em>Fermentation</em> DOI: https://doi.org/10.3390/fermentation10030146; Suleiko et al., 2024, <em>Fermentation</em> DOI: https://doi.org/10.3390/fermentation10010055</td>
+<td>(tian2024highlevelexpressionof pages 1-2, huang2024efficientsecretoryexpression pages 1-2)</td>
+</tr>
+<tr>
+<td>Safety/exposure data</td>
+<td>Regulatory assessments of soy leghemoglobin produced in GM yeast concluded no safety concern at proposed use levels in meat analogues, though these data apply to soy LegH rather than bean PvLba directly. The evidence is still useful for real-world implementation of the leghemoglobin protein class.</td>
+<td>Regulatory</td>
+<td>Proposed maximum use level 0.8% soy leghemoglobin protein in meat analogues; mean dietary exposure up to 7.3 mg/kg bw/day and 95th percentile up to 32.9 mg/kg bw/day; NOAEL in 90-day study at highest tested doses corresponded to 2328 mg/kg bw/day (males) and 2865 mg/kg bw/day (females) soy leghemoglobin.</td>
+<td>Younes et al., 2024, <em>EFSA J.</em> DOI: https://doi.org/10.2903/j.efsa.2024.8822; Casacuberta et al., 2024, <em>EFSA J.</em> DOI: https://doi.org/10.2903/j.efsa.2024.9060</td>
+<td>(younes2024safetyofsoy pages 3-4, younes2024safetyofsoy pages 4-6, casacuberta2024assessmentofsoy pages 10-11, younes2024safetyofsoy pages 1-2, casacuberta2024assessmentofsoy pages 12-12)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the functional annotation of Phaseolus vulgaris leghemoglobin A (PvLba; UniProt P02234) using direct bean evidence where available and closely related leghemoglobin evidence for conserved functions, regulation, applications, and safety context.</em></p>
+<hr />
+<h3 id="key-sources-urls-and-dates">Key sources (URLs and dates)</h3>
+<ul>
+<li>Sainz M. et al. <strong>2015-03</strong>. <em>The Plant Journal</em>. “Leghemoglobin is nitrated in functional legume nodules…” https://doi.org/10.1111/tpj.12762 (sainz2015leghemoglobinisnitrated pages 4-6, sainz2015leghemoglobinisnitrated pages 1-3, sainz2015leghemoglobinisnitrated media 99e0ea56)</li>
+<li>Minguillón S. et al. <strong>2024-11</strong>. <em>Journal of Experimental Botany</em>. “Dynamics of hemoglobins during nodule development…” https://doi.org/10.1093/jxb/erad455 (minguillon2024dynamicsofhemoglobins pages 1-2, minguillon2024dynamicsofhemoglobins pages 13-15)</li>
+<li>Berrabah F. et al. <strong>2024-04</strong>. <em>Plant Communications</em>. “Defense and senescence interplay in legume nodules” https://doi.org/10.1016/j.xplc.2024.100888 (berrabah2024defenseandsenescence pages 1-2)</li>
+<li>Younes M. et al. <strong>2024-06</strong>. <em>EFSA Journal</em>. “Safety of soy leghemoglobin… as a food additive” https://doi.org/10.2903/j.efsa.2024.8822 (younes2024safetyofsoy pages 3-4, younes2024safetyofsoy pages 4-6)</li>
+<li>Casacuberta J. et al. <strong>2024-11</strong>. <em>EFSA Journal</em>. “Assessment of soy leghemoglobin produced from GM <em>K. phaffii</em>…” https://doi.org/10.2903/j.efsa.2024.9060 (casacuberta2024assessmentofsoy pages 10-11, casacuberta2024assessmentofsoy pages 12-12)</li>
+<li>Huang Y. et al. <strong>2024-03</strong>. <em>Fermentation</em>. “Efficient secretory expression of Leghemoglobin in <em>S. cerevisiae</em>” https://doi.org/10.3390/fermentation10030146 (huang2024efficientsecretoryexpression pages 1-2)</li>
+<li>Tian T. et al. <strong>2024-01</strong>. <em>Frontiers in Bioengineering and Biotechnology</em>. “High-level expression of leghemoglobin in <em>K. marxianus</em>…” https://doi.org/10.3389/fbioe.2023.1329016 (tian2024highlevelexpressionof pages 1-2)</li>
+<li>Pentjuss A. et al. <strong>2023-09</strong>. <em>Scientific Reports</em>. “Pichia pastoris growth—coupled heme biosynthesis…” https://doi.org/10.1038/s41598-023-42865-w (pentjuss2023pichiapastorisgrowth—coupled pages 4-5, pentjuss2023pichiapastorisgrowth—coupled pages 1-2)</li>
+<li>Zadegan S.B. et al. <strong>2024-09</strong>. <em>Frontiers in Plant Science</em>. “Differential symbiotic compatibilities…” https://doi.org/10.3389/fpls.2024.1435632 (zadegan2024differentialsymbioticcompatibilities pages 11-12)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(sainz2015leghemoglobinisnitrated pages 4-6): Martha Sainz, Laura Calvo‐Begueria, Carmen Pérez‐Rontomé, Stefanie Wienkoop, Joaquín Abián, Christiana Staudinger, Silvina Bartesaghi, Rafael Radi, and Manuel Becana. Leghemoglobin is nitrated in functional legume nodules in a tyrosine residue within the heme cavity by a nitrite/peroxide-dependent mechanism. The Plant journal : for cell and molecular biology, 81 5:723-35, Mar 2015. URL: https://doi.org/10.1111/tpj.12762, doi:10.1111/tpj.12762. This article has 80 citations.</p>
+</li>
+<li>
+<p>(sainz2015leghemoglobinisnitrated pages 1-3): Martha Sainz, Laura Calvo‐Begueria, Carmen Pérez‐Rontomé, Stefanie Wienkoop, Joaquín Abián, Christiana Staudinger, Silvina Bartesaghi, Rafael Radi, and Manuel Becana. Leghemoglobin is nitrated in functional legume nodules in a tyrosine residue within the heme cavity by a nitrite/peroxide-dependent mechanism. The Plant journal : for cell and molecular biology, 81 5:723-35, Mar 2015. URL: https://doi.org/10.1111/tpj.12762, doi:10.1111/tpj.12762. This article has 80 citations.</p>
+</li>
+<li>
+<p>(lamoureux2024theeffectof pages 26-29): KE Lamoureux. The effect of copper-induced oxidative stress on symbiosis between model legume lotus japonicus and mesorhizobium loti. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(minguillon2024dynamicsofhemoglobins pages 13-15): Samuel Minguillón, Ángela Román, Carmen Pérez-Rontomé, Longlong Wang, Ping Xu, Jeremy D Murray, Deqiang Duanmu, Maria C Rubio, and Manuel Becana. Dynamics of hemoglobins during nodule development, nitrate response, and dark stress in lotus japonicus. Journal of Experimental Botany, 75:1547-1564, Nov 2024. URL: https://doi.org/10.1093/jxb/erad455, doi:10.1093/jxb/erad455. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(minguillon2024dynamicsofhemoglobins pages 1-2): Samuel Minguillón, Ángela Román, Carmen Pérez-Rontomé, Longlong Wang, Ping Xu, Jeremy D Murray, Deqiang Duanmu, Maria C Rubio, and Manuel Becana. Dynamics of hemoglobins during nodule development, nitrate response, and dark stress in lotus japonicus. Journal of Experimental Botany, 75:1547-1564, Nov 2024. URL: https://doi.org/10.1093/jxb/erad455, doi:10.1093/jxb/erad455. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sainz2015leghemoglobinisnitrated media 99e0ea56): Martha Sainz, Laura Calvo‐Begueria, Carmen Pérez‐Rontomé, Stefanie Wienkoop, Joaquín Abián, Christiana Staudinger, Silvina Bartesaghi, Rafael Radi, and Manuel Becana. Leghemoglobin is nitrated in functional legume nodules in a tyrosine residue within the heme cavity by a nitrite/peroxide-dependent mechanism. The Plant journal : for cell and molecular biology, 81 5:723-35, Mar 2015. URL: https://doi.org/10.1111/tpj.12762, doi:10.1111/tpj.12762. This article has 80 citations.</p>
+</li>
+<li>
+<p>(berrabah2024defenseandsenescence pages 1-2): Fathi Berrabah, Farouk Benaceur, Chaoyan Yin, Dawei Xin, Kévin Magne, Marie Garmier, Véronique Gruber, and Pascal Ratet. Defense and senescence interplay in legume nodules. Plant Communications, 5:100888, Apr 2024. URL: https://doi.org/10.1016/j.xplc.2024.100888, doi:10.1016/j.xplc.2024.100888. This article has 26 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zadegan2024differentialsymbioticcompatibilities pages 11-12): Sobhan Bahrami Zadegan, Wonseok Kim, Hafiz Muhammad Khalid Abbas, Sunhyung Kim, Hari B. Krishnan, and Tarek Hewezi. Differential symbiotic compatibilities between rhizobium strains and cultivated and wild soybeans revealed by anatomical and transcriptome analyses. Frontiers in Plant Science, Sep 2024. URL: https://doi.org/10.3389/fpls.2024.1435632, doi:10.3389/fpls.2024.1435632. This article has 8 citations.</p>
+</li>
+<li>
+<p>(younes2024safetyofsoy pages 4-6): Maged Younes, Gabriele Aquilina, Gisela Degen, Karl‐Heinz Engel, Paul Fowler, Maria Jose Frutos Fernandez, Peter Fürst, Ursula Gundert‐Remy, Rainer Gürtler, Trine Husøy, Melania Manco, Wim Mennes, Sabina Passamonti, Peter Moldeus, Romina Shah, Ine Waalkens‐Berendsen, Matthew Wright, José Manuel Barat Baviera, David Gott, Lieve Herman, Jean‐Charles Leblanc, Detlef Wölfle, Jaime Aguilera Entrena, Gabriele Gagliardi, Ana Maria Rincon, Laura Ruggeri, Camilla Smeraldi, Alexandra Tard, and Laurence Castle. Safety of soy leghemoglobin from genetically modified komagataella phaffii as a food additive. EFSA Journal, Jun 2024. URL: https://doi.org/10.2903/j.efsa.2024.8822, doi:10.2903/j.efsa.2024.8822. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(younes2024safetyofsoy pages 1-2): Maged Younes, Gabriele Aquilina, Gisela Degen, Karl‐Heinz Engel, Paul Fowler, Maria Jose Frutos Fernandez, Peter Fürst, Ursula Gundert‐Remy, Rainer Gürtler, Trine Husøy, Melania Manco, Wim Mennes, Sabina Passamonti, Peter Moldeus, Romina Shah, Ine Waalkens‐Berendsen, Matthew Wright, José Manuel Barat Baviera, David Gott, Lieve Herman, Jean‐Charles Leblanc, Detlef Wölfle, Jaime Aguilera Entrena, Gabriele Gagliardi, Ana Maria Rincon, Laura Ruggeri, Camilla Smeraldi, Alexandra Tard, and Laurence Castle. Safety of soy leghemoglobin from genetically modified komagataella phaffii as a food additive. EFSA Journal, Jun 2024. URL: https://doi.org/10.2903/j.efsa.2024.8822, doi:10.2903/j.efsa.2024.8822. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(younes2024safetyofsoy pages 3-4): Maged Younes, Gabriele Aquilina, Gisela Degen, Karl‐Heinz Engel, Paul Fowler, Maria Jose Frutos Fernandez, Peter Fürst, Ursula Gundert‐Remy, Rainer Gürtler, Trine Husøy, Melania Manco, Wim Mennes, Sabina Passamonti, Peter Moldeus, Romina Shah, Ine Waalkens‐Berendsen, Matthew Wright, José Manuel Barat Baviera, David Gott, Lieve Herman, Jean‐Charles Leblanc, Detlef Wölfle, Jaime Aguilera Entrena, Gabriele Gagliardi, Ana Maria Rincon, Laura Ruggeri, Camilla Smeraldi, Alexandra Tard, and Laurence Castle. Safety of soy leghemoglobin from genetically modified komagataella phaffii as a food additive. EFSA Journal, Jun 2024. URL: https://doi.org/10.2903/j.efsa.2024.8822, doi:10.2903/j.efsa.2024.8822. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(casacuberta2024assessmentofsoy pages 12-12): Josep Casacuberta, Francisco Barro, Albert Braeuning, Pilar Cubas, Ruud de Maagd, Michelle M. Epstein, Thomas Frenzel, Jean‐Luc Gallois, Frits Koning, Antoine Messéan, F. Javier Moreno, Fabien Nogué, Giovanni Savoini, Alan H. Schulman, Christoph Tebbe, Eve Veromann, Andrea Gennaro, Aina Belen Gil Gonzalez, José Ángel Gómez Ruiz, Tilemachos Goumperis, Dafni Maria Kagkli, Paolo Lenzi, Aleksandra Lewandowska, Pietro Piffanelli, and Reinhilde Schoonjans. Assessment of soy leghemoglobin produced from genetically modified komagataella phaffii, under regulation (ec) no 1829/2003 (application efsa‐gmo‐nl‐2019‐162). EFSA Journal, Nov 2024. URL: https://doi.org/10.2903/j.efsa.2024.9060, doi:10.2903/j.efsa.2024.9060. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tian2024highlevelexpressionof pages 1-2): Tian Tian, Xinwei Wu, Pingping Wu, Xinyi Lu, Qi Wang, Yifan Lin, Canjie Liu, Jungang Zhou, Yao Yu, and Hong Lu. High-level expression of leghemoglobin in kluyveromyces marxianus by remodeling the heme metabolism pathway. Frontiers in Bioengineering and Biotechnology, Jan 2024. URL: https://doi.org/10.3389/fbioe.2023.1329016, doi:10.3389/fbioe.2023.1329016. This article has 29 citations.</p>
+</li>
+<li>
+<p>(huang2024efficientsecretoryexpression pages 1-2): Yiyun Huang, Jingwen Zhou, Jianghua Li, Guocheng Du, Jian Chen, and Xinrui Zhao. Efficient secretory expression of leghemoglobin in saccharomyces cerevisiae. Fermentation, 10:146, Mar 2024. URL: https://doi.org/10.3390/fermentation10030146, doi:10.3390/fermentation10030146. This article has 9 citations.</p>
+</li>
+<li>
+<p>(pentjuss2023pichiapastorisgrowth—coupled pages 4-5): Agris Pentjuss, Emils Bolmanis, Anastasija Suleiko, Elina Didrihsone, Arturs Suleiko, Konstantins Dubencovs, Janis Liepins, Andris Kazaks, and Juris Vanags. Pichia pastoris growth—coupled heme biosynthesis analysis using metabolic modelling. Scientific Reports, Sep 2023. URL: https://doi.org/10.1038/s41598-023-42865-w, doi:10.1038/s41598-023-42865-w. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(minguillon2024dynamicsofhemoglobins pages 16-17): Samuel Minguillón, Ángela Román, Carmen Pérez-Rontomé, Longlong Wang, Ping Xu, Jeremy D Murray, Deqiang Duanmu, Maria C Rubio, and Manuel Becana. Dynamics of hemoglobins during nodule development, nitrate response, and dark stress in lotus japonicus. Journal of Experimental Botany, 75:1547-1564, Nov 2024. URL: https://doi.org/10.1093/jxb/erad455, doi:10.1093/jxb/erad455. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(minguillon2024dynamicsofhemoglobins pages 17-18): Samuel Minguillón, Ángela Román, Carmen Pérez-Rontomé, Longlong Wang, Ping Xu, Jeremy D Murray, Deqiang Duanmu, Maria C Rubio, and Manuel Becana. Dynamics of hemoglobins during nodule development, nitrate response, and dark stress in lotus japonicus. Journal of Experimental Botany, 75:1547-1564, Nov 2024. URL: https://doi.org/10.1093/jxb/erad455, doi:10.1093/jxb/erad455. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lamoureux2024theeffectof pages 29-32): KE Lamoureux. The effect of copper-induced oxidative stress on symbiosis between model legume lotus japonicus and mesorhizobium loti. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(casacuberta2024assessmentofsoy pages 10-11): Josep Casacuberta, Francisco Barro, Albert Braeuning, Pilar Cubas, Ruud de Maagd, Michelle M. Epstein, Thomas Frenzel, Jean‐Luc Gallois, Frits Koning, Antoine Messéan, F. Javier Moreno, Fabien Nogué, Giovanni Savoini, Alan H. Schulman, Christoph Tebbe, Eve Veromann, Andrea Gennaro, Aina Belen Gil Gonzalez, José Ángel Gómez Ruiz, Tilemachos Goumperis, Dafni Maria Kagkli, Paolo Lenzi, Aleksandra Lewandowska, Pietro Piffanelli, and Reinhilde Schoonjans. Assessment of soy leghemoglobin produced from genetically modified komagataella phaffii, under regulation (ec) no 1829/2003 (application efsa‐gmo‐nl‐2019‐162). EFSA Journal, Nov 2024. URL: https://doi.org/10.2903/j.efsa.2024.9060, doi:10.2903/j.efsa.2024.9060. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pentjuss2023pichiapastorisgrowth—coupled pages 1-2): Agris Pentjuss, Emils Bolmanis, Anastasija Suleiko, Elina Didrihsone, Arturs Suleiko, Konstantins Dubencovs, Janis Liepins, Andris Kazaks, and Juris Vanags. Pichia pastoris growth—coupled heme biosynthesis analysis using metabolic modelling. Scientific Reports, Sep 2023. URL: https://doi.org/10.1038/s41598-023-42865-w, doi:10.1038/s41598-023-42865-w. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="LBA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000007 Figure 4 shows the quantification of Tyr30 nitration in PvLba (Phaseolus vulgaris leghaemoglobin a) during nodule development. The " src="LBA-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>sainz2015leghemoglobinisnitrated pages 4-6</li>
+<li>sainz2015leghemoglobinisnitrated pages 1-3</li>
+<li>lamoureux2024theeffectof pages 26-29</li>
+<li>minguillon2024dynamicsofhemoglobins pages 1-2</li>
+<li>berrabah2024defenseandsenescence pages 1-2</li>
+<li>zadegan2024differentialsymbioticcompatibilities pages 11-12</li>
+<li>younes2024safetyofsoy pages 3-4</li>
+<li>younes2024safetyofsoy pages 4-6</li>
+<li>casacuberta2024assessmentofsoy pages 12-12</li>
+<li>tian2024highlevelexpressionof pages 1-2</li>
+<li>huang2024efficientsecretoryexpression pages 1-2</li>
+<li>minguillon2024dynamicsofhemoglobins pages 13-15</li>
+<li>younes2024safetyofsoy pages 1-2</li>
+<li>minguillon2024dynamicsofhemoglobins pages 16-17</li>
+<li>minguillon2024dynamicsofhemoglobins pages 17-18</li>
+<li>lamoureux2024theeffectof pages 29-32</li>
+<li>casacuberta2024assessmentofsoy pages 10-11</li>
+<li>https://doi.org/10.1111/tpj.12762;</li>
+<li>https://doi.org/10.1093/jxb/erad455</li>
+<li>https://doi.org/10.1111/tpj.12762</li>
+<li>https://doi.org/10.1016/j.xplc.2024.100888;</li>
+<li>https://doi.org/10.3389/fbioe.2023.1329016;</li>
+<li>https://doi.org/10.3390/fermentation10030146;</li>
+<li>https://doi.org/10.3390/fermentation10010055</li>
+<li>https://doi.org/10.2903/j.efsa.2024.8822;</li>
+<li>https://doi.org/10.2903/j.efsa.2024.9060</li>
+<li>https://doi.org/10.1016/j.xplc.2024.100888</li>
+<li>https://doi.org/10.2903/j.efsa.2024.8822</li>
+<li>https://doi.org/10.3390/fermentation10030146</li>
+<li>https://doi.org/10.3389/fbioe.2023.1329016</li>
+<li>https://doi.org/10.1038/s41598-023-42865-w</li>
+<li>https://doi.org/10.3389/fpls.2024.1435632</li>
+<li>https://doi.org/10.1111/tpj.12762,</li>
+<li>https://doi.org/10.1093/jxb/erad455,</li>
+<li>https://doi.org/10.1016/j.xplc.2024.100888,</li>
+<li>https://doi.org/10.3389/fpls.2024.1435632,</li>
+<li>https://doi.org/10.2903/j.efsa.2024.8822,</li>
+<li>https://doi.org/10.2903/j.efsa.2024.9060,</li>
+<li>https://doi.org/10.3389/fbioe.2023.1329016,</li>
+<li>https://doi.org/10.3390/fermentation10030146,</li>
+<li>https://doi.org/10.1038/s41598-023-42865-w,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P02234
+gene_symbol: LBA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3885
+  label: Phaseolus vulgaris
+description: &gt;
+  LBA (UniProt P02234; LGBA_PHAVU, &#34;PvLba&#34;) encodes leghemoglobin alpha / leghemoglobin
+  component A of Phaseolus vulgaris (common/kidney bean), a member of the plant globin family
+  (InterPro IPR000971 Globin, IPR001032 Leghaemoglobin-like, IPR019824 Leghaemoglobin_Fe_BS).
+  It is a small (~16 kDa, 146 aa) monomeric heme protein expressed at very high abundance
+  specifically in the cytosol of infected cells of functional legume root nodules. Its core
+  molecular function is reversible, high-affinity binding of dioxygen at a pentacoordinated
+  ferrous (Fe2+) heme iron. Physiologically, leghemoglobin resolves the nodule &#34;oxygen
+  paradox&#34;: it acts as an oxygen carrier/buffer that delivers O2 toward the symbiosomes to
+  sustain the high respiratory flux of nitrogen-fixing bacteroids while keeping free O2
+  extremely low (sub-micromolar, reported &lt;50 nM in infected cells) so that the
+  oxygen-labile bacterial nitrogenase is not inactivated. This O2-homeostasis role is
+  essential for symbiotic nitrogen fixation. Beyond O2 transport, PvLba also participates
+  in nodule nitrogen/oxidative chemistry: it is nitrated in vivo on distal-pocket tyrosines
+  (mainly Tyr-31, with Tyr-26 and Tyr-134) by a nitrite/peroxide-dependent (ferryl-Lb)
+  mechanism, and the broader nodule hemoglobin network contributes to NO/ROS homeostasis.
+  UniProt also notes a phosphoserine (Ser-46) that modulates the heme pocket. The protein
+  functions in the infected-cell cytosol (a nucleus localization is asserted only by
+  similarity/ISS and is not the site of its O2-carrier function). The gene symbol &#34;LBA&#34;
+  here refers unambiguously to the bean nodule leghemoglobin and is not to be confused with
+  unrelated &#34;LBA&#34; symbols (e.g. mammalian albumin) in other organisms.
+existing_annotations:
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      Nuclear localization asserted via UniProtKB Subcellular Location keyword mapping
+      (SL-0191). The UniProt nucleus assignment is itself only &#34;By similarity&#34;
+      (ECO:0000250) to other legume globins, not experimental for PvLba.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      Leghemoglobin&#39;s functionally relevant location is the cytosol of infected nodule
+      cells, where it buffers and delivers O2 to symbiosomes; the deep-research synthesis
+      places PvLba in the infected host-cell cytosol in proximity to symbiosomes, not the
+      nucleus. The UniProt nucleus call is inferred by similarity (ISS/By similarity) to
+      P02240 and is not supported by gene-specific experimental evidence for the bean
+      protein. It is retained as non-core because a globin nuclear pool, if present, is not
+      where the O2-carrier function is executed.
+    supported_by:
+    - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+      supporting_text: &#34;Lb is consistently described as **nodule-localized** and functioning in the infected nodule environment&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      Cytosolic localization assigned via UniProtKB Subcellular Location keyword mapping
+      (SL-0091; UniProt &#34;Cytoplasm, cytosol&#34;). This is the functionally meaningful
+      location of leghemoglobin.
+    action: ACCEPT
+    reason: &gt;
+      This is the correct core cellular component. Leghemoglobin is a soluble cytosolic
+      hemeprotein present at very high concentration in the cytosol of infected nodule
+      cells, where it buffers free O2 and ferries O2 toward the symbiosome membrane. Both
+      UniProt (&#34;Cytoplasm, cytosol&#34;) and the literature synthesis localize PvLba to the
+      infected host-cell cytosol.
+    supported_by:
+    - reference_id: file:PHAVU/LBA/LBA-uniprot.txt
+      supporting_text: &#34;Cytoplasm, cytosol&#34;
+    - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+      supporting_text: &#34;Lb is described as an abundant hemeprotein (reported in the **millimolar range**)&#34;
+- term:
+    id: GO:0019825
+    label: oxygen binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      Oxygen-binding molecular function assigned from InterPro globin/leghemoglobin domain
+      signatures. This is a core, correct molecular function of PvLba.
+    action: ACCEPT
+    reason: &gt;
+      Reversible O2 binding at the ferrous heme is the defining molecular activity of
+      leghemoglobin and is directly consistent with the UniProt FUNCTION statement and the
+      globin domain architecture. The InterPro-based assignment is at an appropriate level
+      of specificity for a globin and is corroborated by the literature synthesis describing
+      PvLba as an oxygen-binding heme globin.
+    supported_by:
+    - reference_id: file:PHAVU/LBA/LBA-uniprot.txt
+      supporting_text: &#34;facilitates the diffusion of oxygen to the bacteroids while preventing&#34;
+    - reference_id: PMID:25603991
+      supporting_text: &#34;essential role as an O2 transporter&#34;
+    - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+      supporting_text: &#34;**only ferrous (Fe²⁺) leghemoglobin binds O₂**, so maintenance of the reduced state is integral to function&#34;
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      Heme-binding molecular function assigned from InterPro globin/leghemoglobin domain
+      signatures. Correct and core: leghemoglobin is a b-type heme protein.
+    action: ACCEPT
+    reason: &gt;
+      Heme binding is essential to leghemoglobin function: O2 is bound at a pentacoordinated
+      ferrous heme b, and UniProt annotates heme b binding residues (e.g. His-93 proximal,
+      and contacts at 46 and 96) on the bean protein. The deep-research synthesis explicitly
+      describes PvLba as a heme-binding globin. This is the more informative and specific
+      molecular-function counterpart to the broad SPKW &#34;metal ion binding&#34; term and is the
+      preferred replacement target for it.
+    supported_by:
+    - reference_id: file:PHAVU/LBA/LBA-uniprot.txt
+      supporting_text: &#34;Leghemoglobin that reversibly binds oxygen O(2) through a&#34;
+    - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+      supporting_text: &#34;**Leghemoglobins (Lbs)** are **heme-containing globins**&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;
+      Nuclear localization transferred by sequence-similarity (ISS) from UniProtKB:P02240
+      (soybean leghemoglobin a). Duplicates the IEA nucleus annotation with a different
+      evidence path.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      This ISS annotation rests on similarity to soybean P02240 rather than on
+      gene-specific experimental data for PvLba, and the nucleus is not where leghemoglobin
+      carries out its oxygen-carrier function (the infected-cell cytosol is). As with the
+      IEA nucleus annotation, it is retained but marked non-core: any nuclear globin pool is
+      not the locus of the protein&#39;s core O2-buffering/transport activity.
+    supported_by:
+    - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+      supporting_text: &#34;functioning in the infected nodule environment where symbiosomes and nitrogenase activity occur&#34;
+# --- SPKW keyword-mapping annotations (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED from the
+# current (2026) GOA release when GOA retired the keyword2GO (keyword2GO/SPKW) pipeline for
+# cellular organisms. Re-added here and reviewed retrospectively to assess whether their
+# removal was justified. Derived from UniProt keywords on this entry: &#34;Oxygen transport&#34;,
+# &#34;Transport&#34;, &#34;Metal-binding&#34;, &#34;Iron&#34;, &#34;Nodulation&#34;, &#34;Nitrogen fixation&#34;.
+- term:
+    id: GO:0005344
+    label: oxygen carrier activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Oxygen transport&#34;;
+      snapshot-only, removed in the current GOA release. Oxygen carrier activity is the
+      defining molecular function of leghemoglobin.
+    action: ACCEPT
+    reason: &gt;
+      GOA&#39;s removal of this annotation was NOT justified - it caused collateral damage by
+      dropping a correct, CORE molecular-function term. Leghemoglobin is, by definition, an
+      oxygen carrier: it reversibly binds O2 at a ferrous heme and shuttles/buffers it in
+      nodule cells. The deep-research synthesis describes PvLba as an oxygen-binding heme
+      globin that facilitates O2 diffusion/transport and buffers O2 in nodules, occurring at
+      high (millimolar) concentration in the infected host-cell cytosol as a &#34;high-abundance
+      oxygen buffer/transport system&#34;. UniProt&#39;s FUNCTION statement states the protein
+      &#34;facilitates the diffusion of oxygen to the bacteroids&#34;. This is the most precise and
+      most informative MF for leghemoglobin and should be retained (it complements the
+      InterPro &#34;oxygen binding&#34; term). Re-add and ACCEPT.
+    supported_by:
+    - reference_id: PMID:25603991
+      supporting_text: &#34;essential role as an O2 transporter&#34;
+    - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+      supporting_text: &#34;Lb is described as an abundant hemeprotein (reported in the **millimolar range**)&#34;
+    - reference_id: file:PHAVU/LBA/LBA-uniprot.txt
+      supporting_text: &#34;facilitates the diffusion of oxygen to the bacteroids while preventing&#34;
+- term:
+    id: GO:0015671
+    label: oxygen transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Oxygen transport&#34;;
+      snapshot-only, removed in the current GOA release. This is the biological-process
+      counterpart of leghemoglobin&#39;s oxygen-carrier molecular function.
+    action: ACCEPT
+    reason: &gt;
+      GOA&#39;s removal of this annotation was NOT justified - it is collateral damage. Oxygen
+      transport is exactly the process leghemoglobin performs: it delivers O2 toward the
+      symbiosomes to support bacteroid respiration while buffering free O2. The deep-research
+      synthesis states leghemoglobins &#34;function as O2 transporters delivering O2 to
+      symbiosomes&#34; and that PvLba &#34;facilitates O2 diffusion/transport and buffers O2 in
+      nodules&#34;, and UniProt records that the protein facilitates the diffusion of oxygen to
+      the bacteroids. The term is accurate and core; re-add and ACCEPT. (It is more
+      informative than the bare &#34;nodulation&#34; process term that was also keyword-derived.)
+    supported_by:
+    - reference_id: PMID:25603991
+      supporting_text: &#34;essential role as an O2 transporter&#34;
+    - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+      supporting_text: &#34;PvLba supports this by **delivering O₂ at low free concentrations** (oxygen buffering/transport) to infected nodule cells and symbiosomes&#34;
+    - reference_id: file:PHAVU/LBA/LBA-uniprot.txt
+      supporting_text: &#34;facilitates the diffusion of oxygen to the bacteroids while preventing&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keywords &#34;Metal-binding&#34;
+      and &#34;Iron&#34;; snapshot-only, removed in the current GOA release. Leghemoglobin binds the
+      iron atom of its heme prosthetic group, so the term is correct but very broad.
+    action: MODIFY
+    reason: &gt;
+      GOA&#39;s removal of this generic keyword-derived term lost little, because the biology is
+      better captured by more specific terms. PvLba does bind a metal ion - the heme iron -
+      and only the ferrous (Fe2+) form binds O2 efficiently, consistent with canonical
+      globin chemistry. However, &#34;metal ion binding&#34; (the broad parent) is uninformative for
+      a globin: the precise, gene-relevant terms are &#34;heme binding&#34; (GO:0020037, already
+      present and ACCEPTed in current GOA, capturing binding of the heme b cofactor) and
+      &#34;iron ion binding&#34; (GO:0005506, capturing the coordinated heme iron). The annotation
+      should therefore be re-added but MODIFIED to these specific terms rather than retained
+      at the broad metal-ion level. Tier B (broad/over-annotated but not wrong).
+    proposed_replacement_terms:
+    - id: GO:0020037
+      label: heme binding
+    - id: GO:0005506
+      label: iron ion binding
+    supported_by:
+    - reference_id: file:PHAVU/LBA/LBA-uniprot.txt
+      supporting_text: &#34;Leghemoglobin that reversibly binds oxygen O(2) through a&#34;
+    - reference_id: file:PHAVU/LBA/LBA-uniprot.txt
+      supporting_text: &#34;pentacoordinated heme iron&#34;
+    - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+      supporting_text: &#34;**only ferrous (Fe²⁺) leghemoglobin binds O₂**, so maintenance of the reduced state is integral to function&#34;
+- term:
+    id: GO:0009877
+    label: nodulation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Nodulation&#34;;
+      snapshot-only, removed in the current GOA release. The keyword reflects that
+      leghemoglobin is a hallmark protein OF the nodule, not that the protein drives the
+      nodulation/organogenesis program.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GOA&#39;s removal of this annotation was JUSTIFIED. &#34;Nodulation&#34; denotes the developmental
+      process of nodule formation/organogenesis triggered by rhizobial symbiosis. PvLba is
+      not part of that developmental program; it is a highly abundant nodule-EXPRESSED
+      oxygen carrier whose function is O2 binding/transport and buffering within the
+      already-formed nodule. The keyword captures the nodule expression/localization context
+      (&#34;localized in host cells associated with the symbiosis&#34;; &#34;specialization for infected
+      nodule cells&#34;) rather than a developmental role - expression and location are not the
+      same as participation in the organogenesis process. The protein&#39;s genuine biological
+      contribution (nodule O2 homeostasis enabling symbiotic nitrogen fixation) is already
+      and better captured by &#34;oxygen transport&#34; (GO:0015671, re-added above) and is more
+      precisely described as symbiotic nitrogen fixation support. The bare &#34;nodulation&#34; term
+      is an over-broad/contextual over-annotation; its removal is appropriate. Tier A
+      (removal justified). If a process term beyond oxygen transport were desired, &#34;nitrogen
+      fixation&#34; (GO:0009399) would be the biologically apt downstream context.
+    proposed_replacement_terms:
+    - id: GO:0015671
+      label: oxygen transport
+    supported_by:
+    - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+      supporting_text: &#34;Lb is a **marker of functional (pink) nodules**&#34;
+    - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+      supporting_text: &#34;accumulate to very high levels in legume root nodules&#34;
+    - reference_id: PMID:25603991
+      supporting_text: &#34;essential role as an O2 transporter&#34;
+references:
+- id: PMID:25603991
+  title: Leghemoglobin is nitrated in functional legume nodules in a tyrosine residue
+    within the heme cavity by a nitrite/peroxide-dependent mechanism.
+  findings:
+  - statement: Primary Phaseolus vulgaris study (Sainz et al. 2015, Plant J). States that
+      leghemoglobin is an abundant hemeprotein of legume nodules whose essential role is
+      as an O2 transporter, and demonstrates in vivo nitration of PvLba at Tyr30 in the
+      distal heme pocket by a nitrite/peroxide-dependent (oxoferryl-Lb) mechanism.
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro globin/leghemoglobin signatures (IPR000971, IPR001032, IPR012292,
+      IPR019824) assign oxygen binding (GO:0019825) and heme binding (GO:0020037) to PvLba;
+      both are core molecular functions of a plant globin.
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings:
+  - statement: A nucleus localization was transferred to PvLba by sequence similarity (ISS)
+      from soybean leghemoglobin a (UniProtKB:P02240); it is not gene-specific experimental
+      evidence and is not the functional site of the O2 carrier.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+  - statement: Subcellular-location keyword mapping assigns cytosol (SL-0091) and nucleus
+      (SL-0191); the cytosol assignment matches the functional location of leghemoglobin in
+      infected nodule cells.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired
+      the keyword2GO pipeline for cellular organisms.
+  - statement: For PvLba, the keyword &#34;Oxygen transport&#34; mapped to BOTH a correct core
+      molecular function (oxygen carrier activity, GO:0005344) and a correct process
+      (oxygen transport, GO:0015671); removing these was collateral damage. The keywords
+      &#34;Metal-binding&#34;/&#34;Iron&#34; mapped to a broad term (metal ion binding) better replaced by
+      heme/iron binding, and &#34;Nodulation&#34; mapped to an over-broad contextual process term.
+- id: file:PHAVU/LBA/LBA-uniprot.txt
+  title: UniProtKB entry LGBA_PHAVU (P02234) - Leghemoglobin alpha, Phaseolus vulgaris.
+  findings:
+  - statement: FUNCTION - reversibly binds O2 through a pentacoordinated heme iron and, in
+      root nodules, facilitates diffusion of oxygen to the bacteroids while preventing the
+      bacterial nitrogenase from being inactivated by buffering dioxygen; essential for
+      symbiotic nitrogen fixation.
+  - statement: Subcellular location is cytoplasm/cytosol (and nucleus by similarity); tissue
+      specificity is root nodules; the protein is nitrated mainly at Tyr-31 (also Tyr-26,
+      Tyr-134) and phosphorylated at Ser-46; belongs to the plant globin family.
+- id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation
+    of Phaseolus vulgaris leghemoglobin alpha (PvLba, P02234).
+  findings:
+  - statement: PvLba is a nodule-localized plant globin whose primary role is to buffer and
+      transport O2 in infected nodule cells, enabling high respiratory flux to bacteroids
+      while keeping free O2 extremely low to protect the O2-labile nitrogenase (&#34;oxygen
+      paradox&#34;); free O2 in infected cells is held sub-micromolar (&lt;50 nM) and Lb occurs at
+      millimolar concentration in the host-cell cytosol.
+  - statement: Best-supported annotation - molecular function = oxygen-binding/oxygen-carrier
+      heme globin; process = oxygen transport / symbiotic nitrogen fixation support via
+      nodule O2 homeostasis; location = infected host-cell cytosol of root nodules in
+      proximity to symbiosomes.
+  - statement: Bean-specific PTM evidence - PvLba is nitrated in vivo at distal-pocket
+      tyrosines (mainly Tyr30 in the study numbering; UniProt Tyr-31) by a nitrite/peroxide
+      (ferryl-Lb) mechanism; the broader nodule hemoglobin network contributes to NO/ROS
+      homeostasis.
+core_functions:
+- description: &gt;
+    Leghemoglobin alpha is the abundant nodule hemoglobin whose core molecular function is
+    reversible, high-affinity binding of dioxygen at a pentacoordinated ferrous (Fe2+) heme
+    b iron. As an oxygen carrier it shuttles and buffers O2 in the cytosol of infected nodule
+    cells.
+  molecular_function:
+    id: GO:0005344
+    label: oxygen carrier activity
+  directly_involved_in:
+  - id: GO:0015671
+    label: oxygen transport
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:25603991
+    supporting_text: &#34;essential role as an O2 transporter&#34;
+  - reference_id: file:PHAVU/LBA/LBA-uniprot.txt
+    supporting_text: &#34;facilitates the diffusion of oxygen to the bacteroids while preventing&#34;
+- description: &gt;
+    By binding the heme b prosthetic group (and its coordinated iron), leghemoglobin acquires
+    the redox-active ferrous center required for O2 ligation; heme binding is the structural
+    basis of its oxygen-carrier activity.
+  molecular_function:
+    id: GO:0020037
+    label: heme binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PHAVU/LBA/LBA-uniprot.txt
+    supporting_text: &#34;Leghemoglobin that reversibly binds oxygen O(2) through a&#34;
+  - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+    supporting_text: &#34;**Leghemoglobins (Lbs)** are **heme-containing globins**&#34;
+- description: &gt;
+    Physiologically, leghemoglobin enables symbiotic nitrogen fixation by maintaining nodule
+    oxygen homeostasis: it delivers O2 toward the symbiosomes to sustain bacteroid respiration
+    while keeping free O2 low enough to protect the oxygen-labile nitrogenase (the &#34;oxygen
+    paradox&#34;).
+  molecular_function:
+    id: GO:0005344
+    label: oxygen carrier activity
+  directly_involved_in:
+  - id: GO:0015671
+    label: oxygen transport
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PHAVU/LBA/LBA-uniprot.txt
+    supporting_text: &#34;the bacterial nitrogenase from being inactivated by buffering dioxygen,&#34;
+  - reference_id: file:PHAVU/LBA/LBA-deep-research-falcon.md
+    supporting_text: &#34;PvLba supports this by **delivering O₂ at low free concentrations** (oxygen buffering/transport) to infected nodule cells and symbiosomes&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Are the millimolar levels of leghemoglobin in bean nodules rate-limiting for
+    symbiotic nitrogen fixation, and does natural genotype variation in PvLba abundance
+    correlate with fixation performance?
+  experts:
+  - Manuel Becana
+  - Michael Udvardi
+- question: What is the in vivo functional consequence of distal-pocket tyrosine nitration
+    (Tyr-31/Tyr-26/Tyr-134) and Ser-46 phosphorylation for the O2 affinity and oxygen-carrier
+    activity of PvLba during nodule development and senescence?
+  experts:
+  - Manuel Becana
+suggested_experiments:
+- description: Generate PvLba loss-of-function (RNAi or CRISPR) bean nodules and measure free
+    O2 concentration, bacteroid respiration, nitrogenase activity and nitro-oxidative stress
+    markers, to test whether bean leghemoglobin is required for nodule O2 homeostasis as
+    shown for Lotus leghemoglobins.
+  hypothesis: Loss of PvLba elevates free O2 and accumulates ROS/NO in infected cells,
+    impairing nitrogenase activity and symbiotic nitrogen fixation.
+  experiment_type: reverse-genetics phenotyping of symbiotic nitrogen fixation
+- description: Measure O2 association/dissociation kinetics and equilibrium affinity of
+    recombinant wild-type PvLba versus Tyr31-nitrated and Ser46-phosphomimic variants, and
+    determine whether these PTMs shift the protein between O2-buffering and O2-delivery modes.
+  hypothesis: Distal-pocket nitration and Ser-46 phosphorylation modulate heme-pocket
+    chemistry and thereby tune leghemoglobin between buffering and delivering O2 to
+    symbiosomes.
+  experiment_type: in vitro ligand-binding kinetics on modified protein
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

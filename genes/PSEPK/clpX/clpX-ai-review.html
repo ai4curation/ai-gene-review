@@ -1,0 +1,2532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clpX - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>clpX</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KI9" target="_blank" class="term-link">
+                        Q88KI9
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "clpX";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KI9" data-a="DESCRIPTION: ClpX is the AAA+ ATPase (unfoldase) subunit of the..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ClpX is the AAA+ ATPase (unfoldase) subunit of the ATP-dependent ClpXP protease in Pseudomonas putida KT2440. It is the ATP-dependent specificity factor of the Clp protease that recognizes specific substrate proteins, uses cycles of ATP binding and hydrolysis to mechanically unfold them, and translocates the unfolded polypeptides through its central pore into the associated ClpP peptidase chamber for degradation. ClpX assembles into a homohexameric ring; in the presence of ATP this ring docks onto one or two heptameric ClpP rings (fourteen ClpP subunits) to form the barrel-shaped ClpXP protease whose internal proteolytic chamber resembles the architecture of the eukaryotic proteasome. The protein has an N-terminal C4-type zinc-binding (ZB) domain that coordinates a structural zinc ion through four cysteines and mediates substrate and adaptor recognition, and a central AAA+ module with a P-loop/Walker A nucleotide-binding site that binds and hydrolyzes ATP to power unfolding and translocation. In the absence of ClpP, ClpX can act as a stand-alone molecular chaperone. Through regulated, ATP-driven proteolysis of specific cellular substrates, ClpXP contributes broadly to protein quality control and to the turnover of regulatory proteins.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KI9" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ClpX binds ATP at its AAA+ Walker A (P-loop) motif. This is a real molecular capability, but it is a broad term that is subsumed by the more informative ATP hydrolysis activity annotation (GO:0016887), which captures the catalytic function that powers unfolding and translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is correct but broad; the specific catalytic term GO:0016887 (ATP hydrolysis activity) is also annotated and better represents the core function. The Walker A ATP-binding motif is present in the sequence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/clpX/clpX-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">BINDING         137..144</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KI9" data-a="GO:0006457" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ClpX is an ATP-dependent unfoldase that recognizes substrates and feeds them to ClpP for degradation; its dominant cellular role is protein catabolism/quality control, not folding. The protein folding term is imprecise for the unfoldase/proteolytic activity and should be replaced with a protein catabolic process term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ClpX directs proteolytic degradation rather than folding. The biological process is better captured by protein catabolic process; ClpX unfolds substrates for ClpP rather than folding them.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030163" target="_blank" class="term-link">
+                                    protein catabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/clpX/clpX-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">It directs the protease to specific substrates.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KI9" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ClpX contains an N-terminal C4-type zinc-binding (ZB) domain that coordinates a structural zinc ion via four cysteine residues (positions 31, 34, 53, 56), involved in substrate/adaptor recognition. Zinc binding is well supported by the conserved domain and binding-site features.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The C4-type zinc finger with four cysteine zinc ligands is a defining, conserved feature of ClpX and is a genuine molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/clpX/clpX-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN          19..72</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/clpX/clpX-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">/ligand=&#34;Zn(2+)&#34;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009376" target="_blank" class="term-link">
+                                    GO:0009376
+                                </a>
+                            </span>
+                            <span class="term-label">HslUV protease complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KI9" data-a="GO:0009376" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ClpX forms the ClpXP (endopeptidase Clp) complex with ClpP, not the HslUV protease complex (which uses the distinct AAA+ ATPase HslU and the peptidase HslV). This TreeGrafter annotation mis-grafts across the AAA+ ATPase family; the correct complex term is the endopeptidase Clp complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The HslUV protease complex is a different protease (HslU/HslV); ClpX is a component of the ClpX-ClpP complex. The cellular component should be corrected to the endopeptidase Clp complex.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009368" target="_blank" class="term-link">
+                                    endopeptidase Clp complex
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/clpX/clpX-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Component of the ClpX-ClpP complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KI9" data-a="GO:0016887" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ClpX hydrolyzes ATP via its AAA+ module to drive substrate unfolding and translocation into ClpP. This is a core enzymatic activity of the protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP hydrolysis is the central enzymatic activity that powers the ClpX unfoldase/translocase machine and is a defining molecular function of the AAA+ ATPase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/clpX/clpX-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Forms a hexameric ring that, in the presence of ATP, binds to fourteen ClpP subunits</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                                    GO:0046983
+                                </a>
+                            </span>
+                            <span class="term-label">protein dimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KI9" data-a="GO:0046983" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ClpX assembles into a homohexameric ring, not a dimer. Protein dimerization activity is an imprecise InterPro-derived call that does not accurately describe the hexameric oligomerization of ClpX.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ClpX forms a homohexamer rather than a dimer; the dimerization term is an over-annotation derived from a generic InterPro signature and does not represent a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/clpX/clpX-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Forms a hexameric ring</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051301" target="_blank" class="term-link">
+                                    GO:0051301
+                                </a>
+                            </span>
+                            <span class="term-label">cell division</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KI9" data-a="GO:0051301" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In several bacteria ClpXP influences cell division indirectly by degrading regulatory proteins (e.g. cell-division inhibitors and FtsZ-associated factors). This is a pleiotropic downstream consequence of ClpXP proteolysis rather than the core proteolytic function, and there is no P. putida-specific experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cell division is an indirect, pleiotropic effect of ClpXP-mediated proteolysis of regulators, not the core molecular/biological function of ClpX. Retain as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/clpX/clpX-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">It directs the protease to specific substrates.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140662" target="_blank" class="term-link">
+                                    GO:0140662
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-dependent protein folding chaperone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KI9" data-a="GO:0140662" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ClpX is an ATP-dependent unfoldase/chaperone; UniProt notes it can perform chaperone functions in the absence of ClpP. This is the best available active molecular-function term capturing the ATP-dependent unfolding/chaperone activity of ClpX.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Best available active MF term for the ATP-dependent unfoldase/chaperone activity of ClpX; the stand-alone chaperone function is documented in UniProt. PANTHER subfamily PTHR48102:SF7 (the ClpX-like ATP-binding subunit subfamily) corroborates that this protein is the ClpX AAA+ unfoldase, despite the eukaryote-derived &#34;, MITOCHONDRIAL&#34; naming tag on the subfamily.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/clpX/clpX-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Can perform chaperone functions in the absence of ClpP.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/clpX/clpX-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTHR48102:SF7; ATP-DEPENDENT CLP PROTEASE ATP-BINDING SUBUNIT CLPX-LIKE, MITOCHONDRIAL</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent protein unfoldase/chaperone activity that, powered by ATP hydrolysis, recognizes, unfolds, and translocates substrate proteins for degradation as the regulatory ATPase subunit of the ClpXP protease.</h3>
+                <span class="vote-buttons" data-g="Q88KI9" data-a="FUNCTION: ATP-dependent protein unfoldase/chaperone activity..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140662" target="_blank" class="term-link">
+                            ATP-dependent protein folding chaperone
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030163" target="_blank" class="term-link">
+                                protein catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009368" target="_blank" class="term-link">
+                            endopeptidase Clp complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/clpX/clpX-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Can perform chaperone functions in the absence of ClpP.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP hydrolysis activity of the AAA+ module that provides the mechanical energy for substrate unfolding and translocation into the ClpP peptidase chamber.</h3>
+                <span class="vote-buttons" data-g="Q88KI9" data-a="FUNCTION: ATP hydrolysis activity of the AAA+ module that pr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                            ATP hydrolysis activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030163" target="_blank" class="term-link">
+                                protein catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/clpX/clpX-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Forms a hexameric ring that, in the presence of ATP, binds to fourteen ClpP subunits</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequencing report for P. putida KT2440; provides the genomic context for PP_2301 (clpX) but contains no ClpX-specific functional characterization.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/clpX/clpX-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry CLPX_PSEPK (Q88KI9)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ClpX is the ATP-dependent specificity component of the Clp protease that directs the protease to specific substrates and can act as a chaperone in the absence of ClpP; it forms a hexameric ring that, with ATP, binds fourteen ClpP subunits to form the ClpXP protease.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/clpX/clpX-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator review notes for clpX (Q88KI9)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesized functional summary and annotation-by-annotation reasoning for clpX based on the UniProt HAMAP-derived record and conserved ClpX/ClpXP biology.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:interpro/panther/PTHR48102/PTHR48102-metadata.yaml
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PANTHER family PTHR48102 (ATP-dependent Clp protease ATP-binding subunit ClpX-like) subfamily PTHR48102:SF7 (ATP-dependent Clp protease ATP-binding subunit ClpX-like, mitochondrial)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">clpX (Q88KI9) is classified by PANTHER into family PTHR48102 and subfamily PTHR48102:SF7, the ClpX-like ATP-binding subunit subfamily.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The &#34;, MITOCHONDRIAL&#34; tag on subfamily SF7 is a eukaryote-biased naming artifact reflecting the well-characterized eukaryotic mitochondrial ClpX members; this P. putida protein is the bacterial cytoplasmic ClpX unfoldase subunit of the ClpXP protease, and the subfamily assignment correctly identifies the ClpX AAA+ unfoldase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which specific substrate proteins are recognized and degraded by ClpXP in Pseudomonas putida, and do any depend on adaptor proteins such as SspB?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88KI9" data-a="Q: Which specific substrate proteins are recognized a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the N-terminal C4-type zinc-binding domain of P. putida ClpX mediate adaptor and degradation-tag recognition as it does in other bacteria?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88KI9" data-a="Q: Does the N-terminal C4-type zinc-binding domain of..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the contribution of ClpXP-mediated proteolysis to stress tolerance, biofilm formation, or solvent/xenobiotic resistance phenotypes characteristic of P. putida?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88KI9" data-a="Q: What is the contribution of ClpXP-mediated proteol..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a clpX deletion (and clpP deletion) in P. putida KT2440 and characterize growth, stress survival (heat, oxidative), and biofilm phenotypes to define the in vivo roles of the ClpXP protease.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic knockout and phenotypic profiling</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88KI9" data-a="EXPERIMENT: Construct a clpX deletion (and clpP deletion) in P..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare the proteomes of wild-type and clpX-deletion strains (e.g. by SILAC/TMT quantitative mass spectrometry) to identify accumulating substrate proteins and infer the ClpXP degradome in P. putida.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: quantitative proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88KI9" data-a="EXPERIMENT: Compare the proteomes of wild-type and clpX-deleti..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify recombinant P. putida ClpX and ClpP, reconstitute the ClpXP protease, and measure ATP-dependent unfolding and degradation of model substrates (e.g. SsrA-tagged GFP) to confirm ATPase-driven unfoldase activity and zinc dependence.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro reconstitution and degradation assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88KI9" data-a="EXPERIMENT: Purify recombinant P. putida ClpX and ClpP, recons..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(clpX-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KI9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="clpx-q88ki9-pseudomonas-putida-kt2440-review-notes">clpX (Q88KI9) — Pseudomonas putida KT2440 — review notes</h1>
+<p>Gene: clpX / PP_2301<br />
+Protein: ATP-dependent Clp protease ATP-binding subunit ClpX<br />
+UniProt: Q88KI9 (CLPX_PSEPK), 442 aa, Reviewed/Swiss-Prot, evidence PE 3 (inferred from homology)<br />
+HAMAP rule: MF_00175 (ClpX)</p>
+<h2 id="function">FUNCTION</h2>
+<p>ClpX is the AAA+ ATPase (unfoldase) component of the ClpXP protease. It is the<br />
+ATP-dependent specificity/recognition factor that selects substrate proteins,<br />
+unfolds them, and translocates them into the ClpP peptidase chamber for<br />
+degradation. In the absence of ClpP it can act as a standalone chaperone.</p>
+<ul>
+<li>[UniProt "ATP-dependent specificity component of the Clp protease. It directs the protease to specific substrates. Can perform chaperone functions in the absence of ClpP."]</li>
+</ul>
+<p>The protein contains an N-terminal C4-type zinc-binding domain (ZB domain),<br />
+involved in substrate/adaptor recognition, and a central AAA+ ATPase module with<br />
+a P-loop / Walker A nucleotide-binding site that binds and hydrolyzes ATP to<br />
+power unfolding and translocation.</p>
+<ul>
+<li>ZB domain: [UniProt "DOMAIN          19..72 /note=\"ClpX-type ZB\""]</li>
+<li>ATP-binding (Walker A) site: [UniProt "BINDING         137..144 /ligand=\"ATP\""]</li>
+</ul>
+<h2 id="subunit">SUBUNIT</h2>
+<p>ClpX assembles into a homohexameric ring. In the presence of ATP this ring docks<br />
+onto one or two heptameric ClpP rings (14 ClpP subunits) to form the ClpXP<br />
+protease, a barrel-like structure with an internal proteolytic chamber that<br />
+resembles the architecture of the eukaryotic proteasome.</p>
+<ul>
+<li>[UniProt "Component of the ClpX-ClpP complex. Forms a hexameric ring that, in the presence of ATP, binds to fourteen ClpP subunits assembled into a disk-like structure with a central cavity, resembling the structure of eukaryotic proteasomes."]</li>
+</ul>
+<h2 id="cofactor">COFACTOR</h2>
+<ul>
+<li>Zinc: N-terminal C4-type zinc finger coordinated by four cysteines.</li>
+<li>[UniProt "BINDING         31 /ligand=\"Zn(2+)\""]</li>
+<li>[UniProt "BINDING         34 /ligand=\"Zn(2+)\""]</li>
+<li>[UniProt "BINDING         53 /ligand=\"Zn(2+)\""]</li>
+<li>[UniProt "BINDING         56 /ligand=\"Zn(2+)\""]</li>
+<li>ATP: bound and hydrolyzed at the AAA+ Walker A P-loop (residues 137-144).</li>
+<li>[UniProt "BINDING         137..144 /ligand=\"ATP\""]</li>
+</ul>
+<h2 id="similarity-classification">SIMILARITY / CLASSIFICATION</h2>
+<ul>
+<li>[UniProt "Belongs to the ClpX chaperone family."]</li>
+<li>Keywords: [UniProt "ATP-binding; Chaperone; Metal-binding; Nucleotide-binding; Reference proteome; Zinc."]</li>
+<li>Domains/families: AAA+ ATPase core (Pfam PF07724 AAA_2), ClpB_D2-small<br />
+  (PF10431), zf-C4_ClpX zinc finger (PF06689); NCBIfam TIGR00382 clpX.</li>
+</ul>
+<h2 id="review-reasoning-annotation-by-annotation">REVIEW REASONING (annotation-by-annotation)</h2>
+<p>All 8 GOA annotations are IEA (electronic). The only cited primary reference<br />
+(PMID:12534463) is the KT2440 genome sequencing paper and contains no<br />
+ClpX-specific functional data; functional inferences here rest on the UniProt<br />
+HAMAP-derived record and conserved ClpX/ClpXP biology.</p>
+<ul>
+<li>GO:0005524 ATP binding (F, IEA) — real, but broad relative to the specific<br />
+  GO:0016887 ATP hydrolysis activity that is also annotated. Mark as<br />
+  over-annotated. The Walker A motif is present (FT BINDING 137..144).</li>
+<li>GO:0006457 protein folding (F? actually BP, IEA) — imprecise. ClpX is an<br />
+  unfoldase that feeds substrates to ClpP for degradation; the dominant cellular<br />
+  role is protein catabolism/quality control, not folding. MODIFY to<br />
+  GO:0030163 protein catabolic process.</li>
+<li>GO:0008270 zinc ion binding (F, IEA) — ACCEPT; supported by the C4 ZB domain<br />
+  with four cysteine Zn ligands.</li>
+<li>GO:0009376 HslUV protease complex (C, IEA TreeGrafter) — REMOVE. ClpX forms<br />
+  the ClpXP (endopeptidase Clp) complex, not the HslUV complex (which uses HslU,<br />
+  a distinct AAA+ ATPase). This is a TreeGrafter mis-graft across the AAA+ family.<br />
+  Correct complex is GO:0009368 endopeptidase Clp complex.</li>
+<li>GO:0016887 ATP hydrolysis activity (F, IEA) — ACCEPT; core enzymatic activity<br />
+  that powers unfolding/translocation.</li>
+<li>GO:0046983 protein dimerization activity (F, IEA) — over-annotation. ClpX forms<br />
+  a homohexamer, not a dimer; "dimerization" is an imprecise InterPro-derived<br />
+  call. MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0051301 cell division (P, IEA TreeGrafter) — KEEP_AS_NON_CORE. ClpXP<br />
+  influences division indirectly by degrading regulators (e.g. cell-division<br />
+  inhibitors / FtsZ-related factors) in other bacteria; pleiotropic downstream<br />
+  effect, not the core proteolytic function.</li>
+<li>GO:0140662 ATP-dependent protein folding chaperone (F, IEA) — ACCEPT as the<br />
+  best available MF for the ATP-dependent unfoldase/chaperone activity (UniProt<br />
+  notes chaperone function in the absence of ClpP).</li>
+</ul>
+<h2 id="open-issues">OPEN ISSUES</h2>
+<ul>
+<li>There is no current GO MF term that cleanly captures "ATP-dependent protein<br />
+  unfoldase / translocase" activity; GO:0140662 (ATP-dependent protein folding<br />
+  chaperone) is the nearest active MF used here. (Note: GO:0051082, unfolded<br />
+  protein binding, is an active term but describes passive holdase binding rather<br />
+  than the ATP-driven unfoldase/translocase activity of ClpX, so it is not used as<br />
+  the core MF for ClpX.)</li>
+<li>No P. putida-specific experimental characterization of ClpXP substrates was<br />
+  found; all evidence is homology-based.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KI9
+gene_symbol: clpX
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ClpX is the AAA+ ATPase (unfoldase) subunit of the ATP-dependent ClpXP
+  protease in Pseudomonas putida KT2440. It is the ATP-dependent specificity
+  factor of the Clp protease that recognizes specific substrate proteins, uses
+  cycles of ATP binding and hydrolysis to mechanically unfold them, and
+  translocates the unfolded polypeptides through its central pore into the
+  associated ClpP peptidase chamber for degradation. ClpX assembles into a
+  homohexameric ring; in the presence of ATP this ring docks onto one or two
+  heptameric ClpP rings (fourteen ClpP subunits) to form the barrel-shaped
+  ClpXP protease whose internal proteolytic chamber resembles the architecture
+  of the eukaryotic proteasome. The protein has an N-terminal C4-type
+  zinc-binding (ZB) domain that coordinates a structural zinc ion through four
+  cysteines and mediates substrate and adaptor recognition, and a central AAA+
+  module with a P-loop/Walker A nucleotide-binding site that binds and
+  hydrolyzes ATP to power unfolding and translocation. In the absence of ClpP,
+  ClpX can act as a stand-alone molecular chaperone. Through regulated,
+  ATP-driven proteolysis of specific cellular substrates, ClpXP contributes
+  broadly to protein quality control and to the turnover of regulatory
+  proteins.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile
+    Pseudomonas putida KT2440.
+  findings:
+  - statement: Genome sequencing report for P. putida KT2440; provides the genomic
+      context for PP_2301 (clpX) but contains no ClpX-specific functional characterization.
+- id: file:PSEPK/clpX/clpX-uniprot.txt
+  title: UniProt entry CLPX_PSEPK (Q88KI9)
+  findings:
+  - statement: ClpX is the ATP-dependent specificity component of the Clp protease
+      that directs the protease to specific substrates and can act as a chaperone
+      in the absence of ClpP; it forms a hexameric ring that, with ATP, binds fourteen
+      ClpP subunits to form the ClpXP protease.
+- id: file:PSEPK/clpX/clpX-notes.md
+  title: Curator review notes for clpX (Q88KI9)
+  findings:
+  - statement: Synthesized functional summary and annotation-by-annotation reasoning
+      for clpX based on the UniProt HAMAP-derived record and conserved ClpX/ClpXP
+      biology.
+- id: file:interpro/panther/PTHR48102/PTHR48102-metadata.yaml
+  title: PANTHER family PTHR48102 (ATP-dependent Clp protease ATP-binding subunit
+    ClpX-like) subfamily PTHR48102:SF7 (ATP-dependent Clp protease ATP-binding subunit
+    ClpX-like, mitochondrial)
+  findings:
+  - statement: clpX (Q88KI9) is classified by PANTHER into family PTHR48102 and subfamily
+      PTHR48102:SF7, the ClpX-like ATP-binding subunit subfamily.
+  - statement: The &#34;, MITOCHONDRIAL&#34; tag on subfamily SF7 is a eukaryote-biased naming
+      artifact reflecting the well-characterized eukaryotic mitochondrial ClpX members;
+      this P. putida protein is the bacterial cytoplasmic ClpX unfoldase subunit of
+      the ClpXP protease, and the subfamily assignment correctly identifies the ClpX
+      AAA+ unfoldase.
+existing_annotations:
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: ClpX binds ATP at its AAA+ Walker A (P-loop) motif. This is a real molecular
+      capability, but it is a broad term that is subsumed by the more informative
+      ATP hydrolysis activity annotation (GO:0016887), which captures the catalytic
+      function that powers unfolding and translocation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: ATP binding is correct but broad; the specific catalytic term GO:0016887
+      (ATP hydrolysis activity) is also annotated and better represents the core function.
+      The Walker A ATP-binding motif is present in the sequence.
+    supported_by:
+    - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+      supporting_text: BINDING         137..144
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: ClpX is an ATP-dependent unfoldase that recognizes substrates and feeds
+      them to ClpP for degradation; its dominant cellular role is protein catabolism/quality
+      control, not folding. The protein folding term is imprecise for the unfoldase/proteolytic
+      activity and should be replaced with a protein catabolic process term.
+    action: MODIFY
+    reason: ClpX directs proteolytic degradation rather than folding. The biological
+      process is better captured by protein catabolic process; ClpX unfolds substrates
+      for ClpP rather than folding them.
+    proposed_replacement_terms:
+    - id: GO:0030163
+      label: protein catabolic process
+    supported_by:
+    - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+      supporting_text: It directs the protease to specific substrates.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: ClpX contains an N-terminal C4-type zinc-binding (ZB) domain that coordinates
+      a structural zinc ion via four cysteine residues (positions 31, 34, 53, 56),
+      involved in substrate/adaptor recognition. Zinc binding is well supported by
+      the conserved domain and binding-site features.
+    action: ACCEPT
+    reason: The C4-type zinc finger with four cysteine zinc ligands is a defining,
+      conserved feature of ClpX and is a genuine molecular function.
+    supported_by:
+    - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+      supporting_text: DOMAIN          19..72
+    - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+      supporting_text: /ligand=&#34;Zn(2+)&#34;
+- term:
+    id: GO:0009376
+    label: HslUV protease complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: part_of
+  review:
+    summary: ClpX forms the ClpXP (endopeptidase Clp) complex with ClpP, not the HslUV
+      protease complex (which uses the distinct AAA+ ATPase HslU and the peptidase
+      HslV). This TreeGrafter annotation mis-grafts across the AAA+ ATPase family;
+      the correct complex term is the endopeptidase Clp complex.
+    action: MODIFY
+    reason: The HslUV protease complex is a different protease (HslU/HslV); ClpX is
+      a component of the ClpX-ClpP complex. The cellular component should be corrected
+      to the endopeptidase Clp complex.
+    proposed_replacement_terms:
+    - id: GO:0009368
+      label: endopeptidase Clp complex
+    supported_by:
+    - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+      supporting_text: Component of the ClpX-ClpP complex.
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: ClpX hydrolyzes ATP via its AAA+ module to drive substrate unfolding and
+      translocation into ClpP. This is a core enzymatic activity of the protein.
+    action: ACCEPT
+    reason: ATP hydrolysis is the central enzymatic activity that powers the ClpX unfoldase/translocase
+      machine and is a defining molecular function of the AAA+ ATPase.
+    supported_by:
+    - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+      supporting_text: Forms a hexameric ring that, in the presence of ATP, binds to
+        fourteen ClpP subunits
+- term:
+    id: GO:0046983
+    label: protein dimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: ClpX assembles into a homohexameric ring, not a dimer. Protein dimerization
+      activity is an imprecise InterPro-derived call that does not accurately describe
+      the hexameric oligomerization of ClpX.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: ClpX forms a homohexamer rather than a dimer; the dimerization term is
+      an over-annotation derived from a generic InterPro signature and does not represent
+      a core function.
+    supported_by:
+    - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+      supporting_text: Forms a hexameric ring
+- term:
+    id: GO:0051301
+    label: cell division
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: In several bacteria ClpXP influences cell division indirectly by degrading
+      regulatory proteins (e.g. cell-division inhibitors and FtsZ-associated factors).
+      This is a pleiotropic downstream consequence of ClpXP proteolysis rather than
+      the core proteolytic function, and there is no P. putida-specific experimental
+      evidence.
+    action: KEEP_AS_NON_CORE
+    reason: Cell division is an indirect, pleiotropic effect of ClpXP-mediated proteolysis
+      of regulators, not the core molecular/biological function of ClpX. Retain as
+      non-core.
+    supported_by:
+    - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+      supporting_text: It directs the protease to specific substrates.
+- term:
+    id: GO:0140662
+    label: ATP-dependent protein folding chaperone
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: ClpX is an ATP-dependent unfoldase/chaperone; UniProt notes it can perform
+      chaperone functions in the absence of ClpP. This is the best available active
+      molecular-function term capturing the ATP-dependent unfolding/chaperone activity
+      of ClpX.
+    action: ACCEPT
+    reason: Best available active MF term for the ATP-dependent unfoldase/chaperone
+      activity of ClpX; the stand-alone chaperone function is documented in UniProt.
+      PANTHER subfamily PTHR48102:SF7 (the ClpX-like ATP-binding subunit subfamily)
+      corroborates that this protein is the ClpX AAA+ unfoldase, despite the
+      eukaryote-derived &#34;, MITOCHONDRIAL&#34; naming tag on the subfamily.
+    supported_by:
+    - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+      supporting_text: Can perform chaperone functions in the absence of ClpP.
+    - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+      supporting_text: PTHR48102:SF7; ATP-DEPENDENT CLP PROTEASE ATP-BINDING SUBUNIT
+        CLPX-LIKE, MITOCHONDRIAL
+core_functions:
+- description: ATP-dependent protein unfoldase/chaperone activity that, powered by
+    ATP hydrolysis, recognizes, unfolds, and translocates substrate proteins for degradation
+    as the regulatory ATPase subunit of the ClpXP protease.
+  molecular_function:
+    id: GO:0140662
+    label: ATP-dependent protein folding chaperone
+  directly_involved_in:
+  - id: GO:0030163
+    label: protein catabolic process
+  in_complex:
+    id: GO:0009368
+    label: endopeptidase Clp complex
+  supported_by:
+  - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+    supporting_text: Can perform chaperone functions in the absence of ClpP.
+- description: ATP hydrolysis activity of the AAA+ module that provides the mechanical
+    energy for substrate unfolding and translocation into the ClpP peptidase chamber.
+  molecular_function:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  directly_involved_in:
+  - id: GO:0030163
+    label: protein catabolic process
+  supported_by:
+  - reference_id: file:PSEPK/clpX/clpX-uniprot.txt
+    supporting_text: Forms a hexameric ring that, in the presence of ATP, binds to
+      fourteen ClpP subunits
+proposed_new_terms: []
+suggested_questions:
+- question: Which specific substrate proteins are recognized and degraded by ClpXP
+    in Pseudomonas putida, and do any depend on adaptor proteins such as SspB?
+- question: Does the N-terminal C4-type zinc-binding domain of P. putida ClpX mediate
+    adaptor and degradation-tag recognition as it does in other bacteria?
+- question: What is the contribution of ClpXP-mediated proteolysis to stress tolerance,
+    biofilm formation, or solvent/xenobiotic resistance phenotypes characteristic
+    of P. putida?
+suggested_experiments:
+- experiment_type: genetic knockout and phenotypic profiling
+  description: Construct a clpX deletion (and clpP deletion) in P. putida KT2440 and
+    characterize growth, stress survival (heat, oxidative), and biofilm phenotypes
+    to define the in vivo roles of the ClpXP protease.
+- experiment_type: quantitative proteomics
+  description: Compare the proteomes of wild-type and clpX-deletion strains (e.g. by
+    SILAC/TMT quantitative mass spectrometry) to identify accumulating substrate proteins
+    and infer the ClpXP degradome in P. putida.
+- experiment_type: in vitro reconstitution and degradation assay
+  description: Purify recombinant P. putida ClpX and ClpP, reconstitute the ClpXP protease,
+    and measure ATP-dependent unfolding and degradation of model substrates (e.g. SsrA-tagged
+    GFP) to confirm ATPase-driven unfoldase activity and zinc dependence.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

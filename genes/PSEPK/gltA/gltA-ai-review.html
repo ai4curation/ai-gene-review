@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gltA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gltA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FA4" target="_blank" class="term-link">
+                        Q88FA4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gltA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FA4" data-a="DESCRIPTION: gltA (PP_4194) encodes citrate synthase (EC 2.3.3...." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>gltA (PP_4194) encodes citrate synthase (EC 2.3.3.16), the enzyme that catalyzes the committed, first step of the tricarboxylic acid (TCA) cycle. It catalyzes the Claisen-type condensation of acetyl-CoA and oxaloacetate with hydrolysis of the resulting citryl-CoA thioester to yield citrate and free CoA. The protein is a 429-residue type I (large, bacterial) citrate synthase of the citrate synthase family (PIRSF001369; TIGR01798 cit_synth_I), typically assembling as a homohexamer (trimer of dimers), with the canonical His/His/Asp catalytic machinery (active-site residues His306 and Asp364 in this sequence). It is a soluble cytoplasmic enzyme. By channeling acetyl-CoA into the TCA cycle, GltA sits at a central node of carbon and energy metabolism, governing the entry of acetyl-CoA (derived from glycolysis, fatty acid oxidation, or acetate assimilation) into oxidative metabolism and balancing respiratory energy generation against the use of acetyl-CoA for biosynthesis. In P. putida it is central to aerobic central metabolism and acetate assimilation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA4" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Citrate synthase is a soluble cytoplasmic enzyme; this localization is consistent with the enzyme class and with experimental detection of GltA in the soluble cell lysate fraction of P. putida KT2440.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bacterial citrate synthases are soluble cytosolic enzymes with no membrane anchor or signal peptide; the IEA assignment is correct and informative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA4" data-a="GO:0006099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Citrate synthase catalyzes the entry/committed step of the TCA cycle (condensation of acetyl-CoA and oxaloacetate to citrate). This is the canonical biological process for the gene and is strongly supported by family membership and the UniPathway TCA assignment (UPA00223; isocitrate from oxaloacetate, step 1/2).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process of the gene; directly supported by enzyme function and pathway assignment.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036440" target="_blank" class="term-link">
+                                    GO:0036440
+                                </a>
+                            </span>
+                            <span class="term-label">citrate synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA4" data-a="GO:0036440" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the precise molecular function of the gene product. The UniProt catalytic activity (RHEA:16845, EC 2.3.3.16; oxaloacetate + acetyl-CoA + H2O = citrate + CoA + H+), the conserved catalytic triad, and the citrate synthase family assignment all support citrate synthase activity as the core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Represents the core molecular function of gltA; well supported by sequence, family, and pathway evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046912" target="_blank" class="term-link">
+                                    GO:0046912
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, acyl groups converted into alkyl on transfer</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA4" data-a="GO:0046912" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a broad parent class of citrate synthase activity (citrate synthase transfers an acetyl group with conversion to a carboxymethyl group). While not incorrect, it is far less informative than GO:0036440 citrate synthase activity, which is already annotated and captures the precise reaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant, less-specific ancestor of the already-annotated specific function GO:0036440; provides no additional information about gltA function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Citrate synthase catalyzing the committed first step of the TCA cycle, condensing acetyl-CoA and oxaloacetate to form citrate and CoA</h3>
+                <span class="vote-buttons" data-g="Q88FA4" data-a="FUNCTION: Citrate synthase catalyzing the committed first st..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036440" target="_blank" class="term-link">
+                            citrate synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">UniProt catalytic activity RHEA:16845 / EC 2.3.3.16 (oxaloacetate + acetyl-CoA + H2O = citrate + CoA + H+); citrate synthase family assignment.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gltA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FA4" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: **gltA** (UniProt **Q88FA4**) in *Pseudomonas putida* KT2440 (PSEPK)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">22 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T17:32:55.520811</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="gltA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="gltA-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000029 The requested information is found on page 8 of the document. 1. **Succinate titers (mM) vs pH for wild type vs gltA-KT**: This is </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-glta-uniprot-q88fa4-in-pseudomonas-putida-kt2440-psepk">Research report: <strong>gltA</strong> (UniProt <strong>Q88FA4</strong>) in <em>Pseudomonas putida</em> KT2440 (PSEPK)</h1>
+<h2 id="0-target-verification-mandatory-disambiguation">0) Target verification (mandatory disambiguation)</h2>
+<h3 id="verified-identity">Verified identity</h3>
+<p>The UniProt accession <strong>Q88FA4</strong> is annotated as <strong>citrate synthase</strong> (citrate synthase family) from <em>Pseudomonas putida</em> strain KT2440, with gene name <strong>gltA</strong> (ordered locus name PP_4194 per UniProt, provided by user). Within the retrieved KT2440-focused literature, <strong>gltA is explicitly treated as citrate synthase</strong> and is genetically perturbed (overexpression or deletion) in multiple studies, confirming that—here—<strong>gltA refers to citrate synthase, not glutamate synthase</strong> or other gltA usages in unrelated organisms. (mutyala2023citratesynthaseoverexpression pages 1-3, dong2024modificationofglucose pages 1-2, molina‐henares2010identificationofconditionally pages 3-4)</p>
+<h3 id="notes-on-pp_4194-mapping">Notes on PP_4194 mapping</h3>
+<p>In the retrieved full texts, an explicit sentence mapping <em>P. putida</em> KT2440 <strong>gltA → PP_4194</strong> was not captured by the evidence extraction, although PP_4194 appears as the <em>P. putida</em> locus identifier in the broader retrieved corpus (e.g., in KT2440 datasets) and is consistent with the user-provided UniProt context. Therefore, <strong>functional conclusions below are tied to “gltA/citrate synthase” in KT2440</strong>, and PP_4194 is used as the expected locus identifier with this caveat disclosed.</p>
+<h2 id="1-key-concepts-and-current-understanding">1) Key concepts and current understanding</h2>
+<h3 id="11-definition-and-primary-biochemical-function">1.1 Definition and primary biochemical function</h3>
+<p><strong>Citrate synthase (EC 2.3.3.1)</strong> catalyzes the committed entry step into the tricarboxylic acid (TCA) cycle by condensing <strong>acetyl‑CoA and oxaloacetate (OAA)</strong> to form <strong>citrate</strong> (and CoA-SH). In <em>Pseudomonas</em> spp., biochemical characterization of GltA confirms the canonical substrate pair <strong>acetyl‑CoA + OAA</strong> for citrate synthase activity. (dolan2022systemswidedissectionof pages 8-12)</p>
+<p>In <em>P. putida</em> KT2440 specifically, recent work frames acetate assimilation as being initiated by <strong>gltA (citrate synthase) converting acetyl‑CoA to citrate</strong>, i.e., channeling acetyl‑CoA into the TCA cycle. (mutyala2023citratesynthaseoverexpression pages 1-3)</p>
+<h3 id="12-enzyme-familystructure-and-regulatory-features-best-available-evidence">1.2 Enzyme family/structure and regulatory features (best-available evidence)</h3>
+<p>Direct structure/kinetic characterization of KT2440 GltA was not retrieved in full text. However, a high-quality <em>Pseudomonas aeruginosa</em> study provides close-genus evidence that GltA:</p>
+<ul>
+<li>is a ~429 aa enzyme assembling as a <strong>hexamer (“trimer of dimers”)</strong>,</li>
+<li>contains the canonical catalytic triad (His/His/Asp), and</li>
+<li>carries residues implicated in <strong>NADH binding</strong>, consistent with potential NADH regulation (not experimentally proven for KT2440 in the retrieved text). (dolan2022systemswidedissectionof pages 8-12)</li>
+</ul>
+<p>This same study reports <strong>no detectable 2‑methylcitrate synthase activity</strong> for GltA (i.e., it does not substitute for PrpC), which helps separate citrate synthase from paralogous methylcitrate synthases in related metabolism. (dolan2022systemswidedissectionof pages 8-12)</p>
+<h3 id="13-pathway-placement-and-cellular-role">1.3 Pathway placement and cellular role</h3>
+<p>In KT2440, gltA is positioned at a key metabolic “gate” controlling whether carbon enters oxidative metabolism via TCA:</p>
+<ul>
+<li><strong>Acetate → acetyl‑CoA → citrate (via GltA)</strong> is highlighted as a key step in acetate utilization and in engineered succinate formation under microaerobic conditions. (mutyala2023citratesynthaseoverexpression pages 1-3)</li>
+<li>Conversely, <strong>deleting gltA</strong> is used as a strategy to <strong>prevent acetyl‑CoA from entering the TCA cycle</strong>, thereby increasing availability of acetyl‑CoA for other biosynthetic objectives (e.g., malonyl‑CoA-dependent products). (favoino2024enhancedbiosynthesisof pages 2-4)</li>
+</ul>
+<h2 id="2-subcellular-localization-where-the-protein-functions">2) Subcellular localization (where the protein functions)</h2>
+<p>No paper in the retrieved set provides an explicit localization statement (e.g., “cytosolic enzyme”). However, in the KT2440 succinate engineering study, citrate synthase overexpression was evaluated by SDS-PAGE using <strong>“soluble fractions of the cell lysate”</strong>, consistent with GltA behaving as a <strong>soluble intracellular enzyme</strong> rather than a membrane protein. (mutyala2023citratesynthaseoverexpression pages 3-4)</p>
+<h2 id="3-essentiality-and-fitness-impact-in-p-putida-kt2440">3) Essentiality and fitness impact in <em>P. putida</em> KT2440</h2>
+<h3 id="31-evidence-suggesting-broad-essentiality-of-expression">3.1 Evidence suggesting broad essentiality of expression</h3>
+<p>A genome-wide mutant-library screen / conditional essentiality analysis in KT2440 (minimal medium contexts) uses <strong>gltA (citrate synthase)</strong> as a high-expression reference and states that gltA expression is <strong>“essential under all growth conditions for this strict aerobe”</strong> (as written in the extracted text). (molina‐henares2010identificationofconditionally pages 3-4)</p>
+<h3 id="32-evidence-that-glta-can-be-viable-under-some-engineered-conditions">3.2 Evidence that ΔgltA can be viable under some engineered conditions</h3>
+<p>In a 2024 metabolic engineering study (in a <em>P. putida</em> chassis closely related to KT2440, using KT2440-derived promoters/parts), <strong>markerless ΔgltA mutants</strong> were constructed and exhibited <strong>similar growth and glucose consumption</strong> to the parent strain under batch cultivation on glucose (20 g/L), implying that <strong>gltA is not strictly essential under those specific conditions</strong>. (dong2024modificationofglucose pages 5-7)</p>
+<h3 id="33-interpretation">3.3 Interpretation</h3>
+<p>The evidence supports a <strong>context-dependent essentiality/fitness role</strong>:</p>
+<ul>
+<li>GltA is central to aerobic energy metabolism and anabolic precursor supply, and can be “essential” in some physiological definitions/conditions (e.g., strict aerobic growth in certain minimal contexts). (molina‐henares2010identificationofconditionally pages 3-4)</li>
+<li>Yet engineered strains can tolerate gltA deletion under some cultivation regimes, likely via metabolic rerouting, medium composition, or strain background differences. (dong2024modificationofglucose pages 5-7)</li>
+</ul>
+<p>Because the retrieved texts do not reconcile these findings experimentally in KT2440 side-by-side, essentiality should be treated as <strong>conditional</strong> rather than absolute.</p>
+<h2 id="4-recent-developments-prioritized-20232024">4) Recent developments (prioritized 2023–2024)</h2>
+<h3 id="41-2023-glta-overexpression-increases-succinate-production-from-acetate-microaerobic">4.1 2023: gltA overexpression increases succinate production from acetate (microaerobic)</h3>
+<p>Mutyala et al. (published <strong>July 2023</strong>) engineered <em>P. putida</em> KT2440 to overexpress <strong>gltA</strong> (IPTG-inducible plasmid), motivated by the view that citrate synthase is a bottleneck for acetate assimilation into the TCA cycle. (mutyala2023citratesynthaseoverexpression pages 3-4)</p>
+<p>Key quantitative findings:</p>
+<ul>
+<li>Under controlled pH, the gltA-overexpression strain (gltA-KT) produced <strong>4.73 ± 0.63 mM succinate</strong> at <strong>pH 7.5</strong>, vs <strong>0.99 ± 0.13 mM</strong> in WT (~4.7×). (mutyala2023citratesynthaseoverexpression pages 7-9, mutyala2023citratesynthaseoverexpression media 7beed0b4)</li>
+<li>Resting (nitrogen-limited) cells produced <strong>4.94 ± 0.04 mM succinate</strong> from <strong>200 mM acetate</strong>. (mutyala2023citratesynthaseoverexpression pages 7-9)</li>
+<li>Carbon recovery (acetate → products) was estimated at <strong>~85.8%</strong>, with the carbon balance table indicating substantial carbon flow to <strong>biomass and CO2</strong> relative to succinate (Table 3). (mutyala2023citratesynthaseoverexpression pages 7-9, mutyala2023citratesynthaseoverexpression media d07f77bb)</li>
+</ul>
+<p>Mechanistic framing:</p>
+<ul>
+<li>The authors explicitly state that acetate metabolism is initiated by <strong>gltA converting acetyl‑CoA to citrate</strong>, i.e., increasing entry flux into TCA to support downstream succinate accumulation under microaerobic conditions. (mutyala2023citratesynthaseoverexpression pages 1-3)</li>
+</ul>
+<p><strong>Real-world implementation angle:</strong> the study targets <strong>bioconversion of acetate</strong> (a common waste/byproduct stream) into <strong>succinate</strong> in a robust soil bacterium, under microaerobic process conditions. (mutyala2023citratesynthaseoverexpression pages 1-3)</p>
+<h3 id="42-2024-glta-deletion-as-a-carbon-redirection-strategy-for-pha-overproduction">4.2 2024: gltA deletion as a carbon-redirection strategy for PHA overproduction</h3>
+<p>Dong et al. (published <strong>Nov 2024</strong>) knocked out <strong>gltA (citrate synthase)</strong> to reduce competing TCA flux and redirect carbon to <strong>medium-chain-length PHA (mcl‑PHA)</strong> in <em>P. putida</em>. (dong2024modificationofglucose pages 1-2)</p>
+<p>Key quantitative findings (batch glucose cultivation; 20 g/L glucose):</p>
+<ul>
+<li><strong>ΔgltA</strong> increased mcl‑PHA content to <strong>32.6 wt%</strong> (vs <strong>27.3 wt%</strong> in parent) and titer to <strong>1.2 g/L</strong> (vs <strong>1.0 g/L</strong>). (dong2024modificationofglucose pages 5-7)</li>
+<li>Combinatorial knockouts amplified gains, with <strong>ΔhexR Δgcd ΔgltA</strong> reaching <strong>49.1 wt%</strong> mcl‑PHA and <strong>2.1 g/L</strong> titer. (dong2024modificationofglucose pages 5-7)</li>
+</ul>
+<p><strong>Real-world implementation angle:</strong> mcl-PHAs are biodegradable polymers with medical and industrial applications; the work explicitly uses pathway truncation/rewiring as a chassis-improvement strategy. (dong2024modificationofglucose pages 1-2, dong2024modificationofglucose pages 5-7)</p>
+<h3 id="43-2024-glta-perturbation-in-malonylcoa-engineering-qualitative-in-retrieved-pages">4.3 2024: gltA perturbation in malonyl‑CoA engineering (qualitative in retrieved pages)</h3>
+<p>Favoino et al. (published <strong>Nov 2024</strong>) describe <strong>gltA deletion</strong> as a strategy to <strong>prevent acetyl‑CoA entry into the TCA cycle</strong> to increase precursor availability (acetyl‑CoA/malonyl‑CoA) for value-added products, including PHB via a non-canonical pathway. The retrieved pages provide qualitative outcomes (enhanced biopolymer accumulation; growth penalties) but do not give gltA-specific numeric titers in the captured excerpts. (favoino2024enhancedbiosynthesisof pages 2-4)</p>
+<h2 id="5-applications-and-real-world-implementations">5) Applications and real-world implementations</h2>
+<h3 id="51-bioproduction-from-acetate-succinate">5.1 Bioproduction from acetate (succinate)</h3>
+<p>Overexpressing citrate synthase (gltA) is used as a <strong>single-gene intervention</strong> to improve conversion of acetate carbon into succinate under microaerobic cultivation in KT2440, with measurable gains in succinate titers and clear dependence on induction (IPTG) and pH control. (mutyala2023citratesynthaseoverexpression pages 7-9, mutyala2023citratesynthaseoverexpression pages 9-10, mutyala2023citratesynthaseoverexpression media 7beed0b4)</p>
+<h3 id="52-bioplastics-and-chassis-optimization-phas">5.2 Bioplastics and chassis optimization (PHAs)</h3>
+<p>Deleting citrate synthase is used to <strong>reduce TCA-cycle drain</strong> of acetyl‑CoA and increase polymer synthesis capacity; this is implemented in multi-gene strategies improving both PHA content (%CDW) and titer (g/L). (dong2024modificationofglucose pages 5-7)</p>
+<h2 id="6-expert-interpretation-and-analysis-from-authoritative-sources">6) Expert interpretation and analysis (from authoritative sources)</h2>
+<h3 id="61-why-glta-is-a-high-leverage-node">6.1 Why gltA is a high-leverage node</h3>
+<p>Across the engineering studies, gltA is treated as a flux-control point for acetyl‑CoA allocation:</p>
+<ul>
+<li>For <strong>catabolic oxidation / energy</strong>: increasing gltA can raise acetyl‑CoA entry into TCA, supporting downstream succinate accumulation under oxygen limitation. (mutyala2023citratesynthaseoverexpression pages 1-3, mutyala2023citratesynthaseoverexpression pages 9-10)</li>
+<li>For <strong>anabolic diversion</strong>: decreasing/removing gltA limits acetyl‑CoA oxidation and can favor acetyl‑CoA (and malonyl‑CoA) availability for product pathways (PHA/PHB). (favoino2024enhancedbiosynthesisof pages 2-4, dong2024modificationofglucose pages 5-7)</li>
+</ul>
+<p>This “push/pull” around citrate synthase is consistent with its biochemical position as the TCA entry step.</p>
+<h3 id="62-tradeoffs-noted-in-the-literature">6.2 Tradeoffs noted in the literature</h3>
+<p>The succinate study reports that gltA overexpression can incur <strong>growth penalties</strong> and acetate assimilation complexities (e.g., limited conversion of consumed acetate carbon to succinate, with substantial carbon ending in biomass/CO2), underscoring that single-enzyme overexpression may expose other bottlenecks (electron acceptor limitation, competing pathways, succinate reassimilation). (mutyala2023citratesynthaseoverexpression pages 9-10, mutyala2023citratesynthaseoverexpression media d07f77bb)</p>
+<p>The malonyl‑CoA strategy study highlights <strong>reduced growth rate and longer lag phases</strong> in strains with deletions including gltA, indicating typical growth–production tradeoffs when restricting central energy metabolism. (favoino2024enhancedbiosynthesisof pages 2-4)</p>
+<h2 id="7-key-statistics-and-data-recent-studies">7) Key statistics and data (recent studies)</h2>
+<p><em>Succinate from acetate (KT2440; 2023):</em></p>
+<ul>
+<li>4.73 ± 0.63 mM succinate (gltA overexpression, pH 7.5) vs 0.99 ± 0.13 mM (WT). (mutyala2023citratesynthaseoverexpression pages 7-9, mutyala2023citratesynthaseoverexpression media 7beed0b4)</li>
+<li>Carbon recovery reported as ~85.8% with carbon distribution quantified among succinate, biomass, and CO2 (Table 3). (mutyala2023citratesynthaseoverexpression media d07f77bb)</li>
+</ul>
+<p><em>mcl‑PHA from glucose (2024):</em></p>
+<ul>
+<li>ΔgltA: 32.6 wt% and 1.2 g/L vs parent 27.3 wt% and 1.0 g/L. (dong2024modificationofglucose pages 5-7)</li>
+<li>ΔhexR Δgcd ΔgltA: 49.1 wt% and 2.1 g/L. (dong2024modificationofglucose pages 5-7)</li>
+</ul>
+<h2 id="8-summary-of-evidence-for-functional-annotation-recommended-gene-ontology-style-statements">8) Summary of evidence for functional annotation (recommended Gene Ontology-style statements)</h2>
+<ol>
+<li><strong>Molecular function:</strong> citrate synthase activity; catalyzes condensation of acetyl‑CoA and oxaloacetate to citrate. (dolan2022systemswidedissectionof pages 8-12, mutyala2023citratesynthaseoverexpression pages 1-3)</li>
+<li><strong>Biological process:</strong> tricarboxylic acid cycle; acetate assimilation into central metabolism; controls acetyl‑CoA entry into TCA and affects carbon partitioning between respiration and biosynthesis. (mutyala2023citratesynthaseoverexpression pages 1-3, mutyala2023citratesynthaseoverexpression pages 9-10, favoino2024enhancedbiosynthesisof pages 2-4)</li>
+<li><strong>Cellular component/localization:</strong> intracellular soluble fraction (inferred from soluble lysate fraction used for protein detection); no explicit cellular compartment assignment in retrieved text. (mutyala2023citratesynthaseoverexpression pages 3-4)</li>
+</ol>
+<h2 id="9-evidence-table-quick-reference">9) Evidence table (quick reference)</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Evidence/Findings (concise)</th>
+<th>Organism/Strain</th>
+<th>Quantitative data (if any)</th>
+<th>Primary source (author year journal)</th>
+<th>DOI/URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>gltA is explicitly identified as the gene encoding citrate synthase in <em>Pseudomonas putida</em>; in KT2440 studies it was the target for overexpression or deletion as a central-carbon enzyme (mutyala2023citratesynthaseoverexpression pages 1-3, mutyala2023citratesynthaseoverexpression pages 4-5, dong2024modificationofglucose pages 1-2)</td>
+<td><em>P. putida</em> KT2440; derived strains gltA-KT, QSRZ602/QSRZ603/QSRZ606/QSRZ607</td>
+<td>—</td>
+<td>Mutyala et al. 2023, <em>ACS Omega</em>; Dong et al. 2024, <em>Current Issues in Molecular Biology</em></td>
+<td>https://doi.org/10.1021/acsomega.3c02520 ; https://doi.org/10.3390/cimb46110761</td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>In pathway context, citrate synthase GltA initiates acetate metabolism by converting acetyl-CoA to citrate; related <em>Pseudomonas</em> biochemical work assayed GltA with acetyl-CoA + oxaloacetate and found no detectable 2-methylcitrate synthase activity (mutyala2023citratesynthaseoverexpression pages 1-3, dolan2022systemswidedissectionof pages 8-12)</td>
+<td><em>P. putida</em> KT2440; <em>P. aeruginosa</em> GltA (comparative evidence)</td>
+<td>Substrates/products stated: acetyl-CoA → citrate in KT2440 pathway context; acetyl-CoA + OAA assayed in <em>P. aeruginosa</em></td>
+<td>Mutyala et al. 2023, <em>ACS Omega</em>; Dolan et al. 2022, <em>mBio</em></td>
+<td>https://doi.org/10.1021/acsomega.3c02520 ; https://doi.org/10.1128/mbio.02541-22</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>GltA sits at the entry of acetyl-CoA into the TCA cycle and is described as a bottleneck for acetate assimilation into the TCA cycle; deleting gltA is used to prevent acetyl-CoA from entering the TCA cycle and increase malonyl-CoA availability (mutyala2023citratesynthaseoverexpression pages 1-3, favoino2024enhancedbiosynthesisof pages 2-4)</td>
+<td><em>P. putida</em> KT2440 / SEM11-derived engineering strains</td>
+<td>gltA overexpression alone gave 9.5% of maximum theoretical succinate yield from acetate (mutyala2023citratesynthaseoverexpression pages 1-3)</td>
+<td>Mutyala et al. 2023, <em>ACS Omega</em>; Favoino et al. 2024, <em>Microbial Biotechnology</em></td>
+<td>https://doi.org/10.1021/acsomega.3c02520 ; https://doi.org/10.1111/1751-7915.70044</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>No explicit subcellular localization for KT2440 GltA was reported in the gathered evidence; available studies discuss it as a central metabolic enzyme without localization data (mutyala2023citratesynthaseoverexpression pages 1-3, mutyala2023citratesynthaseoverexpression pages 3-4, dong2024modificationofglucose pages 5-7)</td>
+<td><em>P. putida</em> KT2440</td>
+<td>—</td>
+<td>Mutyala et al. 2023, <em>ACS Omega</em>; Dong et al. 2024, <em>Current Issues in Molecular Biology</em></td>
+<td>https://doi.org/10.1021/acsomega.3c02520 ; https://doi.org/10.3390/cimb46110761</td>
+</tr>
+<tr>
+<td>Essentiality</td>
+<td>A KT2440 conditional-essentiality study used gltA as a highly expressed internal calibrator and stated that gltA expression is essential under all growth conditions for this strict aerobe; however, later engineering studies successfully constructed ΔgltA mutants that grew on glucose batch cultures, implying gltA is not absolutely essential under those tested conditions (expression-essentiality statement vs knockout viability under specific conditions) (molina‐henares2010identificationofconditionally pages 3-4, dong2024modificationofglucose pages 5-7)</td>
+<td><em>P. putida</em> KT2440; QSRZ602/QSRZ603 derivatives</td>
+<td>gltA relative expression benchmark: 14,500 units (molina‐henares2010identificationofconditionally pages 3-4); ΔgltA single mutant had similar growth/glucose consumption to parent on 20 g/L glucose (dong2024modificationofglucose pages 5-7)</td>
+<td>Molina-Henares et al. 2010, <em>Environmental Microbiology</em>; Dong et al. 2024, <em>Current Issues in Molecular Biology</em></td>
+<td>https://doi.org/10.1111/j.1462-2920.2010.02166.x ; https://doi.org/10.3390/cimb46110761</td>
+</tr>
+<tr>
+<td>Engineering perturbation: overexpression for succinate</td>
+<td>IPTG-inducible gltA overexpression (gltA-KT) increased succinate production from acetate under microaerobic conditions; pH control improved output further (mutyala2023citratesynthaseoverexpression pages 7-9, mutyala2023citratesynthaseoverexpression pages 9-10)</td>
+<td><em>P. putida</em> KT2440 gltA-KT</td>
+<td>4.73 ± 0.63 mM succinate at pH 7.5 vs WT 0.99 ± 0.13 mM (~4.7×); 3.35 ± 0.27 mM at pH 8.0; 2.64 ± 0.11 mM from 100 mM acetate without pH control; ~50% higher succinate from acetate than glucose (4.73 ± 0.63 vs 2.3 ± 0.05 mM); resting cells 4.94 ± 0.04 mM; WT microaerobic baseline 1.24 ± 0.17 mM from 100 mM acetate (mutyala2023citratesynthaseoverexpression pages 7-9, mutyala2023citratesynthaseoverexpression pages 9-10, mutyala2023citratesynthaseoverexpression pages 4-5)</td>
+<td>Mutyala et al. 2023, <em>ACS Omega</em></td>
+<td>https://doi.org/10.1021/acsomega.3c02520</td>
+</tr>
+<tr>
+<td>Engineering perturbation: deletion for mcl-PHA</td>
+<td>Deleting gltA redirected carbon from the TCA cycle to mcl-PHA synthesis; single and combinatorial mutants improved polymer accumulation (dong2024modificationofglucose pages 5-7)</td>
+<td><em>P. putida</em> QSRZ6 derivatives</td>
+<td>ΔgltA (QSRZ602): 32.6 wt% mcl-PHA and 1.2 g/L vs parent 27.3 wt% and 1.0 g/L; ΔgcdΔgltA (QSRZ603): 37.6 wt%, 1.3 g/L; ΔhexRΔgltA (QSRZ606): 39.5 wt%, 1.4 g/L; ΔhexRΔgcdΔgltA (QSRZ607): 49.1 wt%, 2.1 g/L (dong2024modificationofglucose pages 5-7)</td>
+<td>Dong et al. 2024, <em>Current Issues in Molecular Biology</em></td>
+<td>https://doi.org/10.3390/cimb46110761</td>
+</tr>
+<tr>
+<td>Engineering perturbation: deletion/CRISPRi for malonyl-CoA/PHB</td>
+<td>gltA deletion or repression was used as a design strategy to prevent acetyl-CoA entry into the TCA cycle and increase malonyl-CoA availability for PHB/PHA pathways; pages retrieved reported qualitative benefit but not a gltA-specific numeric titer (favoino2024enhancedbiosynthesisof pages 2-4)</td>
+<td><em>P. putida</em> SEM11-derived engineered strains</td>
+<td>Qualitative: increased malonyl-CoA/biopolymer accumulation, but reduced μmax and longer lag phases; no gltA-specific numeric titer in retrieved pages (favoino2024enhancedbiosynthesisof pages 2-4)</td>
+<td>Favoino et al. 2024, <em>Microbial Biotechnology</em></td>
+<td>https://doi.org/10.1111/1751-7915.70044</td>
+</tr>
+<tr>
+<td>Comparative structural/biochemical evidence</td>
+<td>In related <em>Pseudomonas</em>, GltA is a type II-like bacterial citrate synthase with canonical catalytic triad and likely NADH regulation; forms a hexameric trimer of dimers and lacks detectable 2-methylcitrate synthase activity (useful for family-level inference, not direct KT2440 proof) (dolan2022systemswidedissectionof pages 8-12)</td>
+<td><em>P. aeruginosa</em> GltA (comparative family evidence)</td>
+<td>429 aa; hexameric trimer of dimers; catalytic triad His-265/His-306/Asp-363 (dolan2022systemswidedissectionof pages 8-12)</td>
+<td>Dolan et al. 2022, <em>mBio</em></td>
+<td>https://doi.org/10.1128/mbio.02541-22</td>
+</tr>
+<tr>
+<td>Broader physiological significance outside KT2440</td>
+<td>In <em>Pseudomonas fluorescens</em> 2P24, gltA mutation reduced 2,4-DAPG biosynthesis and biocontrol capacity, supporting a broader role for citrate synthase-derived citrate in regulatory physiology across pseudomonads (comparative evidence) (yang2023citratesynthaseglta pages 6-8)</td>
+<td><em>P. fluorescens</em> 2P24</td>
+<td>946 DEGs; disease index 84.9% in gltA mutant vs 45.7% WT; plant survival 15.1% vs 54.3% WT (yang2023citratesynthaseglta pages 6-8)</td>
+<td>Yang et al. 2023, <em>Journal of Agricultural and Food Chemistry</em></td>
+<td>https://doi.org/10.1021/acs.jafc.3c03051</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes core functional annotation facts for </em>Pseudomonas putida<em> KT2440 gltA/Q88FA4 using only the gathered evidence. It highlights identity, catalytic role, pathway placement, unresolved localization, nuanced essentiality evidence, and quantitative outcomes from recent metabolic engineering studies.</em></p>
+<h2 id="references-urls-publication-dates">References (URLs / publication dates)</h2>
+<ul>
+<li>Mutyala S. et al. <strong>Citrate Synthase Overexpression of <em>Pseudomonas putida</em> Increases Succinate Production from Acetate in Microaerobic Cultivation.</strong> <em>ACS Omega</em> (Published <strong>July 2023</strong>). https://doi.org/10.1021/acsomega.3c02520 (mutyala2023citratesynthaseoverexpression pages 1-3)</li>
+<li>Dong Y. et al. <strong>Modification of Glucose Metabolic Pathway to Enhance Polyhydroxyalkanoate Synthesis in <em>Pseudomonas putida</em>.</strong> <em>Current Issues in Molecular Biology</em> (Published <strong>Nov 2024</strong>). https://doi.org/10.3390/cimb46110761 (dong2024modificationofglucose pages 1-2)</li>
+<li>Favoino G. et al. <strong>Enhanced biosynthesis of poly(3-hydroxybutyrate) in engineered strains of <em>Pseudomonas putida</em> via increased malonyl-CoA availability.</strong> <em>Microbial Biotechnology</em> (Published <strong>Nov 2024</strong>). https://doi.org/10.1111/1751-7915.70044 (favoino2024enhancedbiosynthesisof pages 2-4)</li>
+<li>Molina-Henares M.A. et al. <strong>Identification of conditionally essential genes for growth of <em>Pseudomonas putida</em> KT2440 on minimal medium…</strong> <em>Environmental Microbiology</em> (Published <strong>June 2010</strong>). https://doi.org/10.1111/j.1462-2920.2010.02166.x (molina‐henares2010identificationofconditionally pages 3-4)</li>
+<li>Dolan S.K. et al. <strong>Systems-wide dissection of organic acid assimilation in <em>Pseudomonas aeruginosa</em>…</strong> <em>mBio</em> (Published <strong>Dec 2022</strong>). https://doi.org/10.1128/mbio.02541-22 (dolan2022systemswidedissectionof pages 8-12)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(mutyala2023citratesynthaseoverexpression pages 1-3): Sakuntala Mutyala, Shuwei Li, Himanshu Khandelwal, Da Seul Kong, and Jung Rae Kim. Citrate synthase overexpression of <i>pseudomonas putida</i> increases succinate production from acetate in microaerobic cultivation. ACS Omega, 8:26231-26242, Jul 2023. URL: https://doi.org/10.1021/acsomega.3c02520, doi:10.1021/acsomega.3c02520. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dong2024modificationofglucose pages 1-2): Yue Dong, Keyao Zhai, Yatao Li, Zhen Lv, Mengyao Zhao, Tian Gan, and Yuchao Ma. Modification of glucose metabolic pathway to enhance polyhydroxyalkanoate synthesis in pseudomonas putida. Current Issues in Molecular Biology, 46:12784-12799, Nov 2024. URL: https://doi.org/10.3390/cimb46110761, doi:10.3390/cimb46110761. This article has 4 citations.</p>
+</li>
+<li>
+<p>(molina‐henares2010identificationofconditionally pages 3-4): M. Antonia Molina‐Henares, Jesús De La Torre, Adela García‐Salamanca, A. Jesús Molina‐Henares, M. Carmen Herrera, Juan L. Ramos, and Estrella Duque. Identification of conditionally essential genes for growth of <i>pseudomonas putida</i> kt2440 on minimal medium through the screening of a genome‐wide mutant library. Environmental Microbiology, 12:1468-1485, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2010.02166.x, doi:10.1111/j.1462-2920.2010.02166.x. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dolan2022systemswidedissectionof pages 8-12): Stephen K. Dolan, Andre Wijaya, Michael Kohlstedt, Lars Gläser, Paul Brear, Rafael Silva-Rocha, Christoph Wittmann, and Martin Welch. Systems-wide dissection of organic acid assimilation in pseudomonas aeruginosa reveals a novel path to underground metabolism. Dec 2022. URL: https://doi.org/10.1128/mbio.02541-22, doi:10.1128/mbio.02541-22. This article has 18 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(favoino2024enhancedbiosynthesisof pages 2-4): Giusi Favoino, Nicolas Krink, Tobias Schwanemann, Nick Wierckx, and Pablo I. Nikel. Enhanced biosynthesis of poly(3‐hydroxybutyrate) in engineered strains of pseudomonas putida via increased malonyl‐coa availability. Microbial Biotechnology, Nov 2024. URL: https://doi.org/10.1111/1751-7915.70044, doi:10.1111/1751-7915.70044. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mutyala2023citratesynthaseoverexpression pages 3-4): Sakuntala Mutyala, Shuwei Li, Himanshu Khandelwal, Da Seul Kong, and Jung Rae Kim. Citrate synthase overexpression of <i>pseudomonas putida</i> increases succinate production from acetate in microaerobic cultivation. ACS Omega, 8:26231-26242, Jul 2023. URL: https://doi.org/10.1021/acsomega.3c02520, doi:10.1021/acsomega.3c02520. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dong2024modificationofglucose pages 5-7): Yue Dong, Keyao Zhai, Yatao Li, Zhen Lv, Mengyao Zhao, Tian Gan, and Yuchao Ma. Modification of glucose metabolic pathway to enhance polyhydroxyalkanoate synthesis in pseudomonas putida. Current Issues in Molecular Biology, 46:12784-12799, Nov 2024. URL: https://doi.org/10.3390/cimb46110761, doi:10.3390/cimb46110761. This article has 4 citations.</p>
+</li>
+<li>
+<p>(mutyala2023citratesynthaseoverexpression pages 7-9): Sakuntala Mutyala, Shuwei Li, Himanshu Khandelwal, Da Seul Kong, and Jung Rae Kim. Citrate synthase overexpression of <i>pseudomonas putida</i> increases succinate production from acetate in microaerobic cultivation. ACS Omega, 8:26231-26242, Jul 2023. URL: https://doi.org/10.1021/acsomega.3c02520, doi:10.1021/acsomega.3c02520. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mutyala2023citratesynthaseoverexpression media 7beed0b4): Sakuntala Mutyala, Shuwei Li, Himanshu Khandelwal, Da Seul Kong, and Jung Rae Kim. Citrate synthase overexpression of <i>pseudomonas putida</i> increases succinate production from acetate in microaerobic cultivation. ACS Omega, 8:26231-26242, Jul 2023. URL: https://doi.org/10.1021/acsomega.3c02520, doi:10.1021/acsomega.3c02520. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mutyala2023citratesynthaseoverexpression media d07f77bb): Sakuntala Mutyala, Shuwei Li, Himanshu Khandelwal, Da Seul Kong, and Jung Rae Kim. Citrate synthase overexpression of <i>pseudomonas putida</i> increases succinate production from acetate in microaerobic cultivation. ACS Omega, 8:26231-26242, Jul 2023. URL: https://doi.org/10.1021/acsomega.3c02520, doi:10.1021/acsomega.3c02520. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mutyala2023citratesynthaseoverexpression pages 9-10): Sakuntala Mutyala, Shuwei Li, Himanshu Khandelwal, Da Seul Kong, and Jung Rae Kim. Citrate synthase overexpression of <i>pseudomonas putida</i> increases succinate production from acetate in microaerobic cultivation. ACS Omega, 8:26231-26242, Jul 2023. URL: https://doi.org/10.1021/acsomega.3c02520, doi:10.1021/acsomega.3c02520. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mutyala2023citratesynthaseoverexpression pages 4-5): Sakuntala Mutyala, Shuwei Li, Himanshu Khandelwal, Da Seul Kong, and Jung Rae Kim. Citrate synthase overexpression of <i>pseudomonas putida</i> increases succinate production from acetate in microaerobic cultivation. ACS Omega, 8:26231-26242, Jul 2023. URL: https://doi.org/10.1021/acsomega.3c02520, doi:10.1021/acsomega.3c02520. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2023citratesynthaseglta pages 6-8): Qingqing Yang, Qing Yan, Bo Zhang, Li-qun Zhang, and Xiaogang Wu. Citrate synthase glta modulates the 2,4-diacetylphloroglucinol biosynthesis of pseudomonas fluorescens 2p24 and is essential for the biocontrol capacity. Journal of Agricultural and Food Chemistry, 71:11892-11901, Jul 2023. URL: https://doi.org/10.1021/acs.jafc.3c03051, doi:10.1021/acs.jafc.3c03051. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="gltA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000029 The requested information is found on page 8 of the document. 1. **Succinate titers (mM) vs pH for wild type vs gltA-KT**: This is " src="gltA-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>dolan2022systemswidedissectionof pages 8-12</li>
+<li>mutyala2023citratesynthaseoverexpression pages 1-3</li>
+<li>favoino2024enhancedbiosynthesisof pages 2-4</li>
+<li>mutyala2023citratesynthaseoverexpression pages 3-4</li>
+<li>dong2024modificationofglucose pages 5-7</li>
+<li>mutyala2023citratesynthaseoverexpression pages 7-9</li>
+<li>dong2024modificationofglucose pages 1-2</li>
+<li>yang2023citratesynthaseglta pages 6-8</li>
+<li>mutyala2023citratesynthaseoverexpression pages 9-10</li>
+<li>mutyala2023citratesynthaseoverexpression pages 4-5</li>
+<li>https://doi.org/10.1021/acsomega.3c02520</li>
+<li>https://doi.org/10.3390/cimb46110761</li>
+<li>https://doi.org/10.1128/mbio.02541-22</li>
+<li>https://doi.org/10.1111/1751-7915.70044</li>
+<li>https://doi.org/10.1111/j.1462-2920.2010.02166.x</li>
+<li>https://doi.org/10.1021/acs.jafc.3c03051</li>
+<li>https://doi.org/10.1021/acsomega.3c02520,</li>
+<li>https://doi.org/10.3390/cimb46110761,</li>
+<li>https://doi.org/10.1111/j.1462-2920.2010.02166.x,</li>
+<li>https://doi.org/10.1128/mbio.02541-22,</li>
+<li>https://doi.org/10.1111/1751-7915.70044,</li>
+<li>https://doi.org/10.1021/acs.jafc.3c03051,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FA4
+gene_symbol: gltA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  gltA (PP_4194) encodes citrate synthase (EC 2.3.3.16), the enzyme that
+  catalyzes the committed, first step of the tricarboxylic acid (TCA) cycle. It
+  catalyzes the Claisen-type condensation of acetyl-CoA and oxaloacetate with
+  hydrolysis of the resulting citryl-CoA thioester to yield citrate and free
+  CoA. The protein is a 429-residue type I (large, bacterial) citrate synthase
+  of the citrate synthase family (PIRSF001369; TIGR01798 cit_synth_I), typically
+  assembling as a homohexamer (trimer of dimers), with the canonical His/His/Asp
+  catalytic machinery (active-site residues His306 and Asp364 in this sequence).
+  It is a soluble cytoplasmic enzyme. By channeling acetyl-CoA into the TCA
+  cycle, GltA sits at a central node of carbon and energy metabolism, governing
+  the entry of acetyl-CoA (derived from glycolysis, fatty acid oxidation, or
+  acetate assimilation) into oxidative metabolism and balancing respiratory
+  energy generation against the use of acetyl-CoA for biosynthesis. In
+  P. putida it is central to aerobic central metabolism and acetate
+  assimilation.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Citrate synthase is a soluble cytoplasmic enzyme; this localization is
+      consistent with the enzyme class and with experimental detection of GltA
+      in the soluble cell lysate fraction of P. putida KT2440.
+    action: ACCEPT
+    reason: &gt;-
+      Bacterial citrate synthases are soluble cytosolic enzymes with no membrane
+      anchor or signal peptide; the IEA assignment is correct and informative.
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Citrate synthase catalyzes the entry/committed step of the TCA cycle
+      (condensation of acetyl-CoA and oxaloacetate to citrate). This is the
+      canonical biological process for the gene and is strongly supported by
+      family membership and the UniPathway TCA assignment (UPA00223; isocitrate
+      from oxaloacetate, step 1/2).
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process of the gene; directly supported by enzyme function
+      and pathway assignment.
+- term:
+    id: GO:0036440
+    label: citrate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is the precise molecular function of the gene product. The UniProt
+      catalytic activity (RHEA:16845, EC 2.3.3.16; oxaloacetate + acetyl-CoA +
+      H2O = citrate + CoA + H+), the conserved catalytic triad, and the citrate
+      synthase family assignment all support citrate synthase activity as the
+      core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Represents the core molecular function of gltA; well supported by
+      sequence, family, and pathway evidence.
+- term:
+    id: GO:0046912
+    label: acyltransferase activity, acyl groups converted into alkyl on transfer
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is a broad parent class of citrate synthase activity (citrate
+      synthase transfers an acetyl group with conversion to a carboxymethyl
+      group). While not incorrect, it is far less informative than GO:0036440
+      citrate synthase activity, which is already annotated and captures the
+      precise reaction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Redundant, less-specific ancestor of the already-annotated specific
+      function GO:0036440; provides no additional information about gltA
+      function.
+core_functions:
+- description: &gt;-
+    Citrate synthase catalyzing the committed first step of the TCA cycle,
+    condensing acetyl-CoA and oxaloacetate to form citrate and CoA
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: &gt;-
+      UniProt catalytic activity RHEA:16845 / EC 2.3.3.16 (oxaloacetate +
+      acetyl-CoA + H2O = citrate + CoA + H+); citrate synthase family
+      assignment.
+  molecular_function:
+    id: GO:0036440
+    label: citrate synthase activity
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: KT2440 genome reference (Nelson et al. 2002, Environ Microbiol) establishing the locus/gene assignment.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

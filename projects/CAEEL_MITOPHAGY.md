@@ -1,3 +1,10 @@
+---
+title: "C. elegans Mitophagy & Mitochondrial Quality Control Project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [worm]
+---
+
 # C. elegans Mitophagy & Mitochondrial Quality Control Project
 
 ## Overview

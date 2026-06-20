@@ -1,3 +1,9 @@
+---
+title: "UniProt Proteome Removal Impact Assessment"
+maturity: SCOPING
+tags: [PIPELINE]
+---
+
 # UniProt Proteome Removal Impact Assessment
 
 ## Overview

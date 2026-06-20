@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>icd - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>icd</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FS2" target="_blank" class="term-link">
+                        Q88FS2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "icd";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FS2" data-a="DESCRIPTION: NADP-dependent isocitrate dehydrogenase (EC 1.1.1...." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NADP-dependent isocitrate dehydrogenase (EC 1.1.1.42) of Pseudomonas putida KT2440 (locus PP_4011). It catalyzes the divalent-metal-dependent (Mg2+/Mn2+) oxidative decarboxylation of D-threo-isocitrate to 2-oxoglutarate and CO2 with the concomitant reduction of NADP+ to NADPH. The enzyme is a soluble cytoplasmic homodimer belonging to the isocitrate/isopropylmalate dehydrogenase family. It acts at the isocitrate node of the tricarboxylic acid cycle, where it both supplies 2-oxoglutarate for amino-acid biosynthesis and is a major source of anabolic reducing power (NADPH) for central metabolism and redox balance. In KT2440, biochemical assays of cell-free extracts show a strong (~89%) preference for NADP+ over NAD+. Activity at this branch point is subject to post-translational regulation (phosphorylation of a conserved serine), partitioning carbon between the TCA cycle and the glyoxylate shunt.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FS2" data-a="GO:0000287" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADP-IDH requires a divalent metal ion (Mg2+ or Mn2+) per subunit for catalysis, and UniProt annotates a Mg2+-binding residue (position 309). Magnesium ion binding is well supported for this family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the IDH/IMDH family requirement for a divalent metal cofactor; UniProt records both Mg2+ and Mn2+ cofactors and a Mg2+-binding site.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004450" target="_blank" class="term-link">
+                                    GO:0004450
+                                </a>
+                            </span>
+                            <span class="term-label">isocitrate dehydrogenase (NADP+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FS2" data-a="GO:0004450" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function. The enzyme catalyzes oxidative decarboxylation of D-threo-isocitrate to 2-oxoglutarate + CO2 with reduction of NADP+ (EC 1.1.1.42, RHEA:19629). KT2440-specific biochemistry confirms strong NADP+ preference (~89% NADP+ vs ~11% NAD+ in cell-free extracts).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly matches UniProt catalytic activity and is corroborated by organism-specific biochemical measurements of NADP cofactor preference (Nikel et al. 2015, PMID:26350459).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FS2" data-a="GO:0006099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Isocitrate dehydrogenase catalyzes the isocitrate to 2-oxoglutarate step of the TCA cycle. This is the appropriate biological process for the core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Standard, well-supported placement of IDH within the TCA cycle; consistent with central carbon metabolism studies in KT2440.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016616" target="_blank" class="term-link">
+                                    GO:0016616
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FS2" data-a="GO:0016616" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a generic parent term of the specific and more informative GO:0004450 (isocitrate dehydrogenase (NADP+) activity), which is already annotated. It is not incorrect but adds no information beyond the specific child.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant grandparent of the specific MF term GO:0004450 that is already present; provides no additional specificity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FS2" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This enzyme is NADP+-specific, not NAD+-binding. UniProt annotates multiple NADP(+)-binding residues (positions 106, 341-347, 354, 393, 397) and no NAD-binding site, and KT2440 biochemistry shows ~89% NADP+ preference. The InterPro2GO mapping to NAD binding is a mis-propagation for this NADP-specific family member; the correct cofactor binding is NADP, not NAD.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Contradicted by cofactor specificity. The enzyme binds NADP+, not NAD+; this is an over-propagated InterPro IEA inference. NADP binding (GO:0050661) would be the correct term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050661" target="_blank" class="term-link">
+                                    NADP binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NADP-dependent isocitrate dehydrogenase that catalyzes the divalent-metal-dependent oxidative decarboxylation of D-threo-isocitrate to 2-oxoglutarate and CO2, reducing NADP+ to NADPH, within the TCA cycle.</h3>
+                <span class="vote-buttons" data-g="Q88FS2" data-a="FUNCTION: NADP-dependent isocitrate dehydrogenase that catal..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004450" target="_blank" class="term-link">
+                            isocitrate dehydrogenase (NADP+) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26350459" target="_blank" class="term-link">
+                                PMID:26350459
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">KT2440 cell-free extract assays show isocitrate dehydrogenase with strong (~89%) preference for NADP+ over NAD+, identifying it as an NADPH-forming dehydrogenase in central carbon metabolism.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26350459" target="_blank" class="term-link">
+                            PMID:26350459
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pseudomonas putida KT2440 strain metabolizes glucose through a cycle formed by enzymes of the Entner-Doudoroff, Embden-Meyerhof-Parnas, and pentose phosphate pathways</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In KT2440 cell-free extracts, isocitrate dehydrogenase (Icd/PP_4011) shows ~89% activity with NADP+ versus ~11% with NAD+, confirming NADP+ specificity and a role in NADPH supply.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30936206" target="_blank" class="term-link">
+                            PMID:30936206
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Multi-omics analysis unravels a segregated metabolic flux network that tunes co-utilization of sugar and aromatic carbons in Pseudomonas putida</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phosphorylation of the ICD-associated protein PP_4011 changes with carbon source, consistent with post-translational tuning of flux at the TCA/glyoxylate branch point.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(icd-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FS2" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **icd** (UniProt **Q88FS2**, locus **PP_4011**) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">22 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:22:31.319845</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="icd-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="icd-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000004 The table reporting cofactor specificity for dehydrogenases in Pseudomonas putida KT2440 is Table 3 on page 21. For isocitrate dehy</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-icd-uniprot-q88fs2-locus-pp_4011-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>icd</strong> (UniProt <strong>Q88FS2</strong>, locus <strong>PP_4011</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-scope-identity-verification-and-ambiguity-control">0. Scope, identity verification, and ambiguity control</h2>
+<p>This report concerns <strong>icd (PP_4011)</strong> from <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054/DSM 6125/NCIMB 11950), UniProt accession <strong>Q88FS2</strong>, annotated as <strong>isocitrate dehydrogenase [NADP] (EC 1.1.1.42)</strong>.</p>
+<p>The gene/protein identity is supported by <em>P. putida</em> KT2440-specific literature that explicitly labels <strong>icd/PP_4011</strong> as isocitrate dehydrogenase and measures its NADP vs NAD cofactor preference in KT2440 extracts (nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 media 99f494ff). A separate KT2440 multi-omics study also refers to <strong>PP_4011</strong> as an “ICD-associated protein” in phosphorylation analyses (kukurugya2019multiomicsanalysisunravels pages 10-11). These match the UniProt-provided description (NADP-IDH; EC 1.1.1.42; central carbon metabolism enzyme), so the report does <strong>not</strong> conflate this icd with similarly named genes from other organisms.</p>
+<h2 id="1-key-concepts-and-current-understanding">1. Key concepts and current understanding</h2>
+<h3 id="11-definition-and-primary-biochemical-function">1.1 Definition and primary biochemical function</h3>
+<p><strong>Isocitrate dehydrogenase (IDH/ICD; NADP-dependent; EC 1.1.1.42)</strong> catalyzes the oxidative decarboxylation of isocitrate to 2-oxoglutarate (α-ketoglutarate), producing CO2 and reduced pyridine nucleotide. In the NADP-dependent form, the physiological product is <strong>NADPH</strong>, linking the TCA cycle to anabolic reducing power.</p>
+<p>In KT2440, ICD is treated as a major intracellular dehydrogenase contributing to redox metabolism; a systematic enzyme survey concluded ICD has <strong>&gt;80% specificity for NADP+ over NAD+</strong> (nikel2015pseudomonasputidakt2440 pages 7-8).</p>
+<h3 id="12-cofactor-specificity-determinants-conceptual-background">1.2 Cofactor specificity determinants (conceptual background)</h3>
+<p>Bacterial “type I” homodimeric IDHs vary in cofactor usage (NADP-specific, NAD-specific, or dual-specific). Sequence/structure comparisons indicate that <strong>specific residues in the coenzyme-binding pocket</strong> determine whether NADP’s 2′-phosphate is stabilized (favoring NADP) or disfavored (favoring NAD). Romkina &amp; Kiriukhin (2017) summarize motifs associated with NADP specificity (e.g., Lys/Tyr/Val positions) and how substitutions (e.g., Lys→Asp) can shift preference toward NAD (romkina2017biochemicalandmolecular pages 7-9).</p>
+<h3 id="13-canonical-regulation-at-the-tcaglyoxylate-branchpoint">1.3 Canonical regulation at the TCA–glyoxylate branchpoint</h3>
+<p>In several bacteria (classically <em>E. coli</em>), ICD activity can be reversibly controlled by <strong>AceK (isocitrate dehydrogenase kinase/phosphatase)</strong>, which phosphorylates a <strong>conserved serine</strong> on ICD, decreasing activity and redirecting carbon from the TCA cycle into the <strong>glyoxylate shunt</strong>. This mechanism is summarized in Romkina &amp; Kiriukhin (2017) as an established post-translational switch controlling flux partitioning (romkina2017biochemicalandmolecular pages 7-9).</p>
+<h2 id="2-geneprotein-function-in-p-putida-kt2440">2. Gene/protein function in <em>P. putida</em> KT2440</h2>
+<h3 id="21-reaction-and-substrate-specificity">2.1 Reaction and substrate specificity</h3>
+<p>The <strong>substrate</strong> is isocitrate; the product is 2-oxoglutarate (α-ketoglutarate), with concurrent CO2 release and reduction of NADP+ to NADPH. While the retrieved KT2440-focused texts emphasize <strong>cofactor preference</strong> rather than Km/kcat values, they repeatedly interpret ICD as an NADPH-forming dehydrogenase within central metabolism and redox balance (nikel2015pseudomonasputidakt2440 pages 7-8, kukurugya2019multiomicsanalysisunravels pages 10-11).</p>
+<h3 id="22-cofactor-specificity-quantitative-measurements-in-kt2440">2.2 Cofactor specificity: quantitative measurements in KT2440</h3>
+<p>In cell-free extracts of <strong>exponentially growing KT2440 on glucose</strong>, Icd (PP_4011) shows strong NADP preference. Under saturating conditions, relative activity was <strong>88.5 ± 6.6% with NADP+</strong> vs <strong>11.5 ± 1.9% with NAD+</strong>; under non-saturating “quasi in vivo” conditions, <strong>88.9 ± 2.3% (NADP+)</strong> vs <strong>11.1 ± 0.9% (NAD+)</strong> (nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 media 99f494ff). This supports annotation as <strong>NADP-dependent</strong> and indicates its principal physiological role is NADPH generation.</p>
+<h3 id="23-cellular-localization">2.3 Cellular localization</h3>
+<p>ICD (Icd/PP_4011) is treated as a <strong>soluble intracellular enzyme</strong> in central metabolism: it is assayed from <strong>cell-free extracts</strong> and discussed as part of cytosolic flux through the TCA/glyoxylate node rather than periplasmic oxidation (nikel2015pseudomonasputidakt2440 pages 21-25, kukurugya2019multiomicsanalysisunravels pages 10-11). Thus, the most evidence-supported localization is <strong>cytoplasmic</strong>.</p>
+<h3 id="24-pathway-context-tca-cycle-glyoxylate-shunt-and-redox-balance">2.4 Pathway context: TCA cycle, glyoxylate shunt, and redox balance</h3>
+<p>A KT2440 ^13C/enzymology study describes a cyclic architecture integrating ED/EMP/PPP (“EDEMP cycle”) for glucose catabolism and provides cofactor-specificity measurements for multiple dehydrogenases including ICD (nikel2015pseudomonasputidakt2440 pages 7-8, nikel2015pseudomonasputidakt2440 pages 21-25). In this framework, ICD is one of the intracellular nodes contributing to <strong>NADPH supply</strong>, complementing NADPH generation in oxidative PPP and other dehydrogenase steps (nikel2015pseudomonasputidakt2440 pages 7-8).</p>
+<p>A multi-omics study on glucose plus benzoate co-utilization highlighted the ICD node as a regulatory point in mixed-substrate metabolism, noting changes in phosphorylation of PP_4011 and interpreting these changes as part of maintaining flux directionality/magnitude and redox demands around the TCA–glyoxylate branch (kukurugya2019multiomicsanalysisunravels pages 10-11).</p>
+<h2 id="3-regulation-and-control-of-icd-activity-in-kt2440">3. Regulation and control of ICD activity in KT2440</h2>
+<h3 id="31-phosphorylation-based-regulation-in-mixed-substrate-metabolism-primary-evidence">3.1 Phosphorylation-based regulation in mixed-substrate metabolism (primary evidence)</h3>
+<p>Kukurugya et al. (2019) report a <strong>decrease in phosphorylation</strong> of an “ICD-associated protein (PP_4011)” in KT2440 during growth on a glucose:benzoate mixture vs glucose alone (kukurugya2019multiomicsanalysisunravels pages 10-11). They suggest this phosphorylation change may help counteract “overwhelming metabolite-level inhibition” of ICD activity expected from glyoxylate shunt metabolites and pyruvate accumulation (kukurugya2019multiomicsanalysisunravels pages 10-11). This provides <strong>direct organism-specific evidence</strong> that phosphorylation state at/around PP_4011 changes with carbon source context.</p>
+<h3 id="32-acek-mediated-routing-hypothesis-in-2024-electrogenicanoxic-systems-biology">3.2 AceK-mediated routing hypothesis in 2024 electrogenic/anoxic systems biology</h3>
+<p>A 2024 systems metabolic engineering analysis of electrogenic/anoxic KT2440 links elevated acetyl-CoA to <strong>AceK activity</strong>, describing AceK as phosphorylating and <strong>partially inactivating ICD</strong>, thereby redirecting carbon flux toward the glyoxylate shunt (weimer2024systemsmetabolicengineeringa pages 69-74). This is presented as a mechanistic interpretation of multi-omics shifts under bio-electrochemical conditions and places icd/ICD within modern regulatory models for non-canonical growth/production states (weimer2024systemsmetabolicengineeringa pages 69-74).</p>
+<h2 id="4-recent-developments-prioritizing-20232024">4. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="41-2024-adaptation-to-non-native-xylose-and-redox-mapping-that-includes-icd">4.1 2024: Adaptation to non-native xylose and redox mapping that includes ICD</h3>
+<p>Dvořák et al. (Nature Communications, <strong>March 2024</strong>) investigated engineered/ALE adaptation of <em>P. putida</em> to D-xylose and mapped redox-producing steps. Their analysis explicitly treats overproduction of reducing cofactors (NAD(P)H) as a driver of pathway routing; ICD is included in the central carbon metabolism mapping and annotated as producing “CO2 NADPH” at the isocitrate node (dvorak2024syntheticallyprimedadaptationof pages 3-4). While the excerpted text does not give an explicit icd fold-change, it situates ICD within current (2024) systems-level understanding of how redox supply constrains pathway use in engineered KT2440 backgrounds (dvorak2024syntheticallyprimedadaptationof pages 3-4).</p>
+<h3 id="42-2024-electrogenicanoxic-bioprocessing-and-icd-linked-flux-partitioning">4.2 2024: Electrogenic/anoxic bioprocessing and ICD-linked flux partitioning</h3>
+<p>Weimer et al. (Microbial Cell Factories, <strong>September 2024</strong>) reported systems-level characterization of an electrogenic anoxic phenotype of KT2440 and engineered improved 2-ketogluconate (2KG) production. They report a best-case 2KG yield of <strong>0.96 mol/mol</strong> glucose in an engineered mutant background under these conditions (weimer2024systemsmetabolicengineeringa pages 17-21). A related 2024 systems metabolic engineering narrative links this regime to glyoxylate shunt routing via AceK–ICD modulation (weimer2024systemsmetabolicengineeringa pages 69-74).</p>
+<h2 id="5-current-applications-and-real-world-implementations">5. Current applications and real-world implementations</h2>
+<h3 id="51-metabolic-engineering-target-for-biopolymer-pha-production">5.1 Metabolic engineering target for biopolymer (PHA) production</h3>
+<p>Zhou et al. (Communications Biology, <strong>March 2020</strong>) used <strong>icd (PP_4011)</strong> as a genome-editing demonstration target in a CRISPR/Cas9n-λ-Red method for KT2440. They note prior proposals that icd inactivation could increase acetyl-CoA flux into fatty-acid biosynthesis (a rationale relevant to PHA synthesis) (zhou2020developmentofa pages 7-9). In their specific engineered background, however, they report that <strong>icd deletion did not contribute to mcl-PHA synthesis</strong> (zhou2020developmentofa pages 7-9). Importantly for functional annotation, they achieved <strong>scarless deletion</strong> and sequencing confirmation for the icd locus in multiple isolates, indicating genetic tractability and viability under their lab conditions (zhou2020developmentofa pages 4-6).</p>
+<h3 id="52-systems-level-strain-design-and-redox-intensive-bioprocess-states">5.2 Systems-level strain design and redox-intensive bioprocess states</h3>
+<p>Recent KT2440 engineering efforts often aim to exploit or reshape NADPH supply. ICD is repeatedly positioned as a key NADPH-forming step connected to the TCA/glyoxylate switch, relevant to redox balance during mixed-substrate utilization and specialized production regimes (kukurugya2019multiomicsanalysisunravels pages 10-11, weimer2024systemsmetabolicengineeringa pages 69-74).</p>
+<h2 id="6-expert-interpretation-and-analysis-grounded-in-cited-sources">6. Expert interpretation and analysis (grounded in cited sources)</h2>
+<ol>
+<li><strong>Primary functional role:</strong> The strongest KT2440-specific evidence supports ICD (PP_4011) as an <strong>NADP-preferring intracellular IDH</strong> whose physiological output is <strong>NADPH</strong> (nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 media 99f494ff). This aligns with its expected central metabolic role at the isocitrate→2-oxoglutarate step.</li>
+<li><strong>Regulatory importance:</strong> Multi-omics evidence indicates that phosphorylation state at/around PP_4011 changes with carbon-source context, consistent with the broader concept that phosphorylation-based switches at ICD tune flux at the TCA/glyoxylate branchpoint (kukurugya2019multiomicsanalysisunravels pages 10-11, romkina2017biochemicalandmolecular pages 7-9).</li>
+<li><strong>Engineering relevance:</strong> Although icd deletion was feasible and historically proposed as a lever to redirect acetyl-CoA to lipid/PHA synthesis, at least one KT2440 engineering study found no benefit for mcl-PHA under its conditions, illustrating that icd’s effect is <strong>context-dependent</strong> and likely buffered by network-level redox/flux control (zhou2020developmentofa pages 7-9).</li>
+</ol>
+<h2 id="7-key-statistics-and-data-points-recent-and-foundational">7. Key statistics and data points (recent and foundational)</h2>
+<ul>
+<li><strong>Cofactor specificity (KT2440 Icd/PP_4011):</strong> ~<strong>89% NADP</strong> vs ~<strong>11% NAD</strong> activity in extracts (both saturating and quasi in vivo assays) (nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 media 99f494ff).</li>
+<li><strong>Mixed-substrate (glucose:benzoate) systems data around ICD node:</strong> <strong>&gt;10-fold increase in acetyl-CoA</strong> reported in the same study that observed reduced phosphorylation of PP_4011; and a <strong>37% increase in NAD(P)H yield</strong> in glucose-only versus glucose:benzoate condition (kukurugya2019multiomicsanalysisunravels pages 10-11).</li>
+<li><strong>2024 electrogenic/anoxic bioprocess metric:</strong> 2KG yield reported up to <strong>0.96 mol/mol</strong> in engineered KT2440 under bio-electrochemical anoxic conditions (weimer2024systemsmetabolicengineeringa pages 17-21).</li>
+<li><strong>CRISPR/Cas9n engineering statistic:</strong> For the icd locus, authors report <strong>precise scarless deletion confirmed by sequencing of 15/15 tested mutants</strong> (zhou2020developmentofa pages 4-6).</li>
+</ul>
+<h2 id="8-evidence-summary-table">8. Evidence summary table</h2>
+<p>The following table consolidates key annotation-relevant facts and quantitative measurements.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Summary for <em>Pseudomonas putida</em> KT2440 icd (PP_4011; UniProt Q88FS2)</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene/protein identity</td>
+<td><strong>icd / PP_4011</strong> encodes <strong>isocitrate dehydrogenase [NADP]</strong>, a bacterial type I IDH/ICD in central carbon metabolism; the literature explicitly maps <strong>icd/PP_4011</strong> to isocitrate dehydrogenase in <em>P. putida</em> KT2440.</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 21-25)</td>
+</tr>
+<tr>
+<td>Enzyme name and EC</td>
+<td><strong>Isocitrate dehydrogenase (NADP-dependent), EC 1.1.1.42</strong>. This enzyme belongs to the TCA-cycle oxidative decarboxylation step that converts isocitrate to 2-oxoglutarate while reducing NADP+.</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 7-8, nikel2015pseudomonasputidakt2440 pages 21-25)</td>
+</tr>
+<tr>
+<td>Reaction catalyzed</td>
+<td>Catalyzes the oxidative decarboxylation of <strong>isocitrate + NADP+ → 2-oxoglutarate + CO2 + NADPH</strong>; in KT2440 it is discussed as a major <strong>NADPH-generating</strong> dehydrogenase connected to the TCA cycle and redox balance.</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 7-8, kukurugya2019multiomicsanalysisunravels pages 10-11)</td>
+</tr>
+<tr>
+<td>Cofactor specificity</td>
+<td>Strongly <strong>NADP-preferring</strong> rather than NAD-specific. A broader biochemical survey of KT2440 dehydrogenases states that isocitrate dehydrogenase shows <strong>&gt;80% specificity for NADP+ over NAD+</strong>.</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 7-8)</td>
+</tr>
+<tr>
+<td>Quantitative cofactor data</td>
+<td>In cell-free extracts from exponentially growing KT2440 on glucose, Icd activity was <strong>11.5 ± 1.9% with NAD+</strong> vs <strong>88.5 ± 6.6% with NADP+</strong> under saturating conditions, and <strong>11.1 ± 0.9% with NAD+</strong> vs <strong>88.9 ± 2.3% with NADP+</strong> under non-saturating quasi-<em>in vivo</em> conditions.</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 media 99f494ff)</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>Functional context and metabolic-network placement indicate a <strong>cytoplasmic soluble enzyme</strong> acting in the intracellular TCA-cycle/redox network; the cited studies analyze Icd activity in <strong>cell-free extracts</strong> and place it within central cytosolic carbon metabolism rather than in membrane/periplasmic oxidation routes.</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 21-25, kukurugya2019multiomicsanalysisunravels pages 10-11)</td>
+</tr>
+<tr>
+<td>Pathway context</td>
+<td>Icd sits at the branchpoint between the <strong>TCA cycle</strong> and the <strong>glyoxylate shunt</strong> and contributes reducing power to KT2440’s redox economy. In glucose-grown KT2440, central metabolism is organized through the <strong>EDEMP cycle</strong>, with redox management quantified by ^13C flux analysis.</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 7-8, kukurugya2019multiomicsanalysisunravels pages 10-11)</td>
+</tr>
+<tr>
+<td>Regulation: phosphorylation / AceK mention</td>
+<td>A KT2440 multi-omics study reported a <strong>decrease in phosphorylation of the ICD-associated protein PP_4011</strong> during growth on glucose:benzoate versus glucose alone, suggesting post-translational tuning of flux around the ICD/glyoxylate-shunt node. A 2024 systems-biology study further mentions <strong>AceK</strong>-mediated phosphorylation and partial inactivation of isocitrate dehydrogenase in KT2440 metabolic interpretation.</td>
+<td>(kukurugya2019multiomicsanalysisunravels pages 10-11)</td>
+</tr>
+<tr>
+<td>Quantitative systems data linked to function</td>
+<td>In mixed-substrate growth, the ICD/glyoxylate node was associated with a <strong>&gt;10-fold increase in acetyl-CoA</strong> and a <strong>37% increase in NAD(P)H yield</strong> in glucose-only cells relative to glucose:benzoate conditions, supporting the view that ICD helps coordinate redox output with carbon-source-dependent flux partitioning.</td>
+<td>(kukurugya2019multiomicsanalysisunravels pages 10-11)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core functional-annotation points for </em>Pseudomonas putida<em> KT2440 icd/PP_4011, including identity, reaction, cofactor preference, localization, regulatory context, and quantitative measurements. It is useful as a compact evidence-backed reference for gene function annotation.</em></p>
+<h2 id="9-key-figuretable-extracted-from-the-literature">9. Key figure/table extracted from the literature</h2>
+<p>A cropped table image (Table 3 from Nikel et al., 2015) directly reports the NADP/NAD cofactor specificity values for Icd/PP_4011 used above (nikel2015pseudomonasputidakt2440 media 99f494ff).</p>
+<h2 id="10-source-list-with-urls-and-publication-dates">10. Source list (with URLs and publication dates)</h2>
+<ul>
+<li>Nikel PI et al. <strong>Pseudomonas putida KT2440 strain metabolizes glucose through a cycle formed by enzymes of the Entner-Doudoroff, Embden-Meyerhof-Parnas, and pentose phosphate pathways.</strong> <em>Journal of Biological Chemistry</em> (Publication date: <strong>Oct 2015</strong>). https://doi.org/10.1074/jbc.m115.687749 (nikel2015pseudomonasputidakt2440 pages 7-8, nikel2015pseudomonasputidakt2440 pages 21-25, nikel2015pseudomonasputidakt2440 media 99f494ff)</li>
+<li>Kukurugya MA et al. <strong>Multi-omics analysis unravels a segregated metabolic flux network that tunes co-utilization of sugar and aromatic carbons in Pseudomonas putida.</strong> <em>Journal of Biological Chemistry</em> (Publication date: <strong>May 2019</strong>). https://doi.org/10.1074/jbc.ra119.007885 (kukurugya2019multiomicsanalysisunravels pages 10-11)</li>
+<li>Zhou Y et al. <strong>Development of a CRISPR/Cas9n-based tool for metabolic engineering of Pseudomonas putida for ferulic acid-to-polyhydroxyalkanoate bioconversion.</strong> <em>Communications Biology</em> (Publication date: <strong>Mar 2020</strong>). https://doi.org/10.1038/s42003-020-0824-5 (zhou2020developmentofa pages 4-6, zhou2020developmentofa pages 7-9, zhou2020developmentofa pages 3-4)</li>
+<li>Dvořák P et al. <strong>Synthetically-primed adaptation of Pseudomonas putida to a non-native substrate D-xylose.</strong> <em>Nature Communications</em> (Publication date: <strong>Mar 2024</strong>). https://doi.org/10.1038/s41467-024-46812-9 (dvorak2024syntheticallyprimedadaptationof pages 3-4)</li>
+<li>Weimer A et al. <strong>Systems biology of electrogenic Pseudomonas putida - multi-omics insights and metabolic engineering for enhanced 2-ketogluconate production.</strong> <em>Microbial Cell Factories</em> (Publication date: <strong>Sep 2024</strong>). https://doi.org/10.1186/s12934-024-02509-8 (weimer2024systemsmetabolicengineeringa pages 17-21)</li>
+<li>Weimer ALA. <strong>Systems metabolic engineering of electrogenic anaerobic Pseudomonas putida for enhanced 2-ketogluconate production.</strong> (2024; journal metadata not available in retrieved record) (weimer2024systemsmetabolicengineeringa pages 69-74, weimer2024systemsmetabolicengineering pages 17-21)</li>
+<li>Romkina AY, Kiriukhin MY. <strong>Biochemical and molecular characterization of the isocitrate dehydrogenase with dual coenzyme specificity from the obligate methylotroph Methylobacillus flagellatus.</strong> <em>PLOS ONE</em> (Publication date: <strong>Apr 2017</strong>). https://doi.org/10.1371/journal.pone.0176056 (romkina2017biochemicalandmolecular pages 7-9, romkina2017biochemicalandmolecular pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 21-25): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 media 99f494ff): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kukurugya2019multiomicsanalysisunravels pages 10-11): Matthew A. Kukurugya, Caroll M. Mendonca, Mina Solhtalab, Rebecca A. Wilkes, Theodore W. Thannhauser, and Ludmilla Aristilde. Multi-omics analysis unravels a segregated metabolic flux network that tunes co-utilization of sugar and aromatic carbons in pseudomonas putida. Journal of Biological Chemistry, 294:8464-8479, May 2019. URL: https://doi.org/10.1074/jbc.ra119.007885, doi:10.1074/jbc.ra119.007885. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 7-8): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(romkina2017biochemicalandmolecular pages 7-9): Anastasia Y. Romkina and Michael Y. Kiriukhin. Biochemical and molecular characterization of the isocitrate dehydrogenase with dual coenzyme specificity from the obligate methylotroph methylobacillus flagellatus. PLoS ONE, 12:e0176056, Apr 2017. URL: https://doi.org/10.1371/journal.pone.0176056, doi:10.1371/journal.pone.0176056. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weimer2024systemsmetabolicengineeringa pages 69-74): ALA Weimer. Systems metabolic engineering of electrogenic anaerobic pseudomonas putida for enhanced 2-ketogluconate production. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(dvorak2024syntheticallyprimedadaptationof pages 3-4): Pavel Dvořák, Barbora Burýšková, Barbora Popelářová, Birgitta Elisabeth Ebert, Tibor Botka, Dalimil Bujdoš, Alberto Sánchez-Pascuala, Hannah Schöttler, Heiko Hayen, Víctor de Lorenzo, Lars M. Blank, and Martin Benešík. Synthetically-primed adaptation of pseudomonas putida to a non-native substrate d-xylose. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46812-9, doi:10.1038/s41467-024-46812-9. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weimer2024systemsmetabolicengineeringa pages 17-21): ALA Weimer. Systems metabolic engineering of electrogenic anaerobic pseudomonas putida for enhanced 2-ketogluconate production. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(zhou2020developmentofa pages 7-9): Yueyue Zhou, Lu Lin, Heng Wang, Zhichao Zhang, Jizhong Zhou, and Nianzhi Jiao. Development of a crispr/cas9n-based tool for metabolic engineering of pseudomonas putida for ferulic acid-to-polyhydroxyalkanoate bioconversion. Communications Biology, Mar 2020. URL: https://doi.org/10.1038/s42003-020-0824-5, doi:10.1038/s42003-020-0824-5. This article has 101 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2020developmentofa pages 4-6): Yueyue Zhou, Lu Lin, Heng Wang, Zhichao Zhang, Jizhong Zhou, and Nianzhi Jiao. Development of a crispr/cas9n-based tool for metabolic engineering of pseudomonas putida for ferulic acid-to-polyhydroxyalkanoate bioconversion. Communications Biology, Mar 2020. URL: https://doi.org/10.1038/s42003-020-0824-5, doi:10.1038/s42003-020-0824-5. This article has 101 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2020developmentofa pages 3-4): Yueyue Zhou, Lu Lin, Heng Wang, Zhichao Zhang, Jizhong Zhou, and Nianzhi Jiao. Development of a crispr/cas9n-based tool for metabolic engineering of pseudomonas putida for ferulic acid-to-polyhydroxyalkanoate bioconversion. Communications Biology, Mar 2020. URL: https://doi.org/10.1038/s42003-020-0824-5, doi:10.1038/s42003-020-0824-5. This article has 101 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weimer2024systemsmetabolicengineering pages 17-21): ALA Weimer. Systems metabolic engineering of electrogenic anaerobic pseudomonas putida for enhanced 2-ketogluconate production. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(romkina2017biochemicalandmolecular pages 1-2): Anastasia Y. Romkina and Michael Y. Kiriukhin. Biochemical and molecular characterization of the isocitrate dehydrogenase with dual coenzyme specificity from the obligate methylotroph methylobacillus flagellatus. PLoS ONE, 12:e0176056, Apr 2017. URL: https://doi.org/10.1371/journal.pone.0176056, doi:10.1371/journal.pone.0176056. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="icd-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000004 The table reporting cofactor specificity for dehydrogenases in Pseudomonas putida KT2440 is Table 3 on page 21. For isocitrate dehy" src="icd-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kukurugya2019multiomicsanalysisunravels pages 10-11</li>
+<li>romkina2017biochemicalandmolecular pages 7-9</li>
+<li>weimer2024systemsmetabolicengineeringa pages 69-74</li>
+<li>dvorak2024syntheticallyprimedadaptationof pages 3-4</li>
+<li>weimer2024systemsmetabolicengineeringa pages 17-21</li>
+<li>zhou2020developmentofa pages 7-9</li>
+<li>zhou2020developmentofa pages 4-6</li>
+<li>zhou2020developmentofa pages 3-4</li>
+<li>weimer2024systemsmetabolicengineering pages 17-21</li>
+<li>romkina2017biochemicalandmolecular pages 1-2</li>
+<li>NADP</li>
+<li>https://doi.org/10.1074/jbc.m115.687749</li>
+<li>https://doi.org/10.1074/jbc.ra119.007885</li>
+<li>https://doi.org/10.1038/s42003-020-0824-5</li>
+<li>https://doi.org/10.1038/s41467-024-46812-9</li>
+<li>https://doi.org/10.1186/s12934-024-02509-8</li>
+<li>https://doi.org/10.1371/journal.pone.0176056</li>
+<li>https://doi.org/10.1074/jbc.m115.687749,</li>
+<li>https://doi.org/10.1074/jbc.ra119.007885,</li>
+<li>https://doi.org/10.1371/journal.pone.0176056,</li>
+<li>https://doi.org/10.1038/s41467-024-46812-9,</li>
+<li>https://doi.org/10.1038/s42003-020-0824-5,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FS2
+gene_symbol: icd
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: NADP-dependent isocitrate dehydrogenase (EC 1.1.1.42) of Pseudomonas putida KT2440 (locus PP_4011). It catalyzes the divalent-metal-dependent (Mg2+/Mn2+) oxidative decarboxylation of D-threo-isocitrate to 2-oxoglutarate and CO2 with the concomitant reduction of NADP+ to NADPH. The enzyme is a soluble cytoplasmic homodimer belonging to the isocitrate/isopropylmalate dehydrogenase family. It acts at the isocitrate node of the tricarboxylic acid cycle, where it both supplies 2-oxoglutarate for amino-acid biosynthesis and is a major source of anabolic reducing power (NADPH) for central metabolism and redox balance. In KT2440, biochemical assays of cell-free extracts show a strong (~89%) preference for NADP+ over NAD+. Activity at this branch point is subject to post-translational regulation (phosphorylation of a conserved serine), partitioning carbon between the TCA cycle and the glyoxylate shunt.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: NADP-IDH requires a divalent metal ion (Mg2+ or Mn2+) per subunit for catalysis, and UniProt annotates a Mg2+-binding residue (position 309). Magnesium ion binding is well supported for this family.
+    action: ACCEPT
+    reason: Consistent with the IDH/IMDH family requirement for a divalent metal cofactor; UniProt records both Mg2+ and Mn2+ cofactors and a Mg2+-binding site.
+- term:
+    id: GO:0004450
+    label: isocitrate dehydrogenase (NADP+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the core molecular function. The enzyme catalyzes oxidative decarboxylation of D-threo-isocitrate to 2-oxoglutarate + CO2 with reduction of NADP+ (EC 1.1.1.42, RHEA:19629). KT2440-specific biochemistry confirms strong NADP+ preference (~89% NADP+ vs ~11% NAD+ in cell-free extracts).
+    action: ACCEPT
+    reason: Directly matches UniProt catalytic activity and is corroborated by organism-specific biochemical measurements of NADP cofactor preference (Nikel et al. 2015, PMID:26350459).
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Isocitrate dehydrogenase catalyzes the isocitrate to 2-oxoglutarate step of the TCA cycle. This is the appropriate biological process for the core function.
+    action: ACCEPT
+    reason: Standard, well-supported placement of IDH within the TCA cycle; consistent with central carbon metabolism studies in KT2440.
+- term:
+    id: GO:0016616
+    label: oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This is a generic parent term of the specific and more informative GO:0004450 (isocitrate dehydrogenase (NADP+) activity), which is already annotated. It is not incorrect but adds no information beyond the specific child.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Redundant grandparent of the specific MF term GO:0004450 that is already present; provides no additional specificity.
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This enzyme is NADP+-specific, not NAD+-binding. UniProt annotates multiple NADP(+)-binding residues (positions 106, 341-347, 354, 393, 397) and no NAD-binding site, and KT2440 biochemistry shows ~89% NADP+ preference. The InterPro2GO mapping to NAD binding is a mis-propagation for this NADP-specific family member; the correct cofactor binding is NADP, not NAD.
+    action: REMOVE
+    reason: Contradicted by cofactor specificity. The enzyme binds NADP+, not NAD+; this is an over-propagated InterPro IEA inference. NADP binding (GO:0050661) would be the correct term.
+    proposed_replacement_terms:
+    - id: GO:0050661
+      label: NADP binding
+core_functions:
+- description: NADP-dependent isocitrate dehydrogenase that catalyzes the divalent-metal-dependent oxidative decarboxylation of D-threo-isocitrate to 2-oxoglutarate and CO2, reducing NADP+ to NADPH, within the TCA cycle.
+  supported_by:
+  - reference_id: PMID:26350459
+    supporting_text: KT2440 cell-free extract assays show isocitrate dehydrogenase with strong (~89%) preference for NADP+ over NAD+, identifying it as an NADPH-forming dehydrogenase in central carbon metabolism.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0004450
+    label: isocitrate dehydrogenase (NADP+) activity
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:26350459
+  title: Pseudomonas putida KT2440 strain metabolizes glucose through a cycle formed by enzymes of the Entner-Doudoroff, Embden-Meyerhof-Parnas, and pentose phosphate pathways
+  findings:
+  - statement: In KT2440 cell-free extracts, isocitrate dehydrogenase (Icd/PP_4011) shows ~89% activity with NADP+ versus ~11% with NAD+, confirming NADP+ specificity and a role in NADPH supply.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified (PMID:26350459). Provides organism-specific biochemical evidence for NADP cofactor preference of KT2440 Icd.
+- id: PMID:30936206
+  title: Multi-omics analysis unravels a segregated metabolic flux network that tunes co-utilization of sugar and aromatic carbons in Pseudomonas putida
+  findings:
+  - statement: Phosphorylation of the ICD-associated protein PP_4011 changes with carbon source, consistent with post-translational tuning of flux at the TCA/glyoxylate branch point.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PubMed-verified (PMID:30936206). Supports phosphorylation-based regulation of the Icd node in KT2440.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

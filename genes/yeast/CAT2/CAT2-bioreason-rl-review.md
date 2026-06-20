@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: CAT2 (S. cerevisiae)
 
-Source: CAT2-deep-research-bioreason-rl.md
+Source: CAT2-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

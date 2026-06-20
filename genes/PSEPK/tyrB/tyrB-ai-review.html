@@ -1,0 +1,2369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tyrB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tyrB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88LG1" target="_blank" class="term-link">
+                        Q88LG1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tyrB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88LG1" data-a="DESCRIPTION: tyrB (PP_1972; also referred to as tyrB-1) is a cy..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>tyrB (PP_1972; also referred to as tyrB-1) is a cytoplasmic, pyridoxal 5&#39;-phosphate (PLP)-dependent aminotransferase of the class-I (fold-type I) aspartate aminotransferase superfamily. It catalyzes reversible transamination in which an amino group is transferred from an amino acid donor to a 2-oxoacid acceptor (commonly 2-oxoglutarate, yielding L-glutamate). It is annotated as an aromatic-amino-acid aminotransferase, interconverting aromatic amino acids (L-tyrosine, L-phenylalanine) and their cognate aromatic 2-oxoacids (4-hydroxyphenylpyruvate, phenylpyruvate), and contributes to aromatic amino acid biosynthesis and catabolism. Like many class-I PLP aminotransferases it is a homodimer with active sites formed at the subunit interface. In P. putida KT2440 it is one of several aminotransferase isozymes acting on aromatic amino acids; genetic studies show that loss of tyrB alone causes only mild aromatic-amino-acid utilization phenotypes because of redundancy with paralogous aminotransferases (notably PP_3590/AmaC and tyrB-2/phhC), so its physiological role overlaps with those enzymes.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LG1" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic root-level molecular function term. tyrB is an enzyme, so this is not wrong, but it is uninformatively general and is fully subsumed by the more specific transaminase/aminotransferase activity terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;catalytic activity&#34; is the MF root and conveys no specific information. The more precise terms GO:0008483 (transaminase activity) and GO:0004838 (L-tyrosine:2-oxoglutarate transaminase activity) capture the actual function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004838" target="_blank" class="term-link">
+                                    GO:0004838
+                                </a>
+                            </span>
+                            <span class="term-label">L-tyrosine:2-oxoglutarate transaminase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LG1" data-a="GO:0004838" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific aromatic (tyrosine) aminotransferase activity assigned by TreeGrafter from the PTHR11879:SF37 &#34;aromatic-amino-acid aminotransferase&#34; subfamily. This is consistent with the protein family, the COG1448 assignment, and with biochemical/genetic characterization of P. putida aromatic aminotransferases. This is the best representation of the gene&#39;s core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Domain/family evidence (class-I PLP aminotransferase, PANTHER ArAT subfamily SF37) plus genetic evidence in KT2440 (tyrB mutants show a tyrosine-utilization phenotype; PMID:20050871) support tyrosine aminotransferase activity. The enzyme is likely promiscuous across aromatic amino acids (also acting on phenylalanine), but this term well captures the central characterized activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LG1" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization predicted by TreeGrafter. Soluble class-I PLP aminotransferases acting in amino acid metabolism are cytoplasmic enzymes; the sequence has no signal peptide or transmembrane region. Consistent with the expected localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Aromatic aminotransferases in this family are soluble cytoplasmic enzymes. No experimental KT2440 localization data exist, but the prediction is biologically appropriate and there is no evidence for periplasmic/membrane localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006520" target="_blank" class="term-link">
+                                    GO:0006520
+                                </a>
+                            </span>
+                            <span class="term-label">amino acid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LG1" data-a="GO:0006520" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad biological process term. tyrB participates in (aromatic) amino acid metabolism, so this is correct but general. A more specific process such as aromatic amino acid family metabolism / phenylalanine or tyrosine biosynthesis or catabolism would be more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct in essence but too high-level. tyrB acts specifically on aromatic amino acids (Tyr/Phe), so the more specific &#34;aromatic amino acid family metabolic process&#34; better reflects the characterized role while remaining defensible from family + genetic evidence. (Chorismate metabolic process is not appropriate: tyrB acts downstream of chorismate on the aromatic amino acids/2-oxoacids, not on chorismate itself.)
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009072" target="_blank" class="term-link">
+                                    aromatic amino acid family metabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008483" target="_blank" class="term-link">
+                                    GO:0008483
+                                </a>
+                            </span>
+                            <span class="term-label">transaminase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LG1" data-a="GO:0008483" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General transaminase (aminotransferase) activity. Correct and well supported by the class-I PLP-dependent aminotransferase family assignment, but less specific than GO:0004838. Useful as a parent term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurately describes the enzymatic class but is a parent of the more specific aromatic aminotransferase term that represents the core function. Retain as supporting/non-core rather than as the primary MF.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LG1" data-a="GO:0030170" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PLP cofactor binding. tyrB is a PLP-dependent enzyme (UniProt COFACTOR: pyridoxal 5&#39;-phosphate; conserved PROSITE PS00105 class-I aminotransferase PLP-binding motif). This is a well-supported and informative molecular function annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong family/motif evidence (IPR004838/IPR004839, PROSITE AA_TRANSFER_ CLASS_1, UniProt cofactor annotation) for PLP binding, which is essential for the transamination mechanism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LG1" data-a="GO:0042802" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-association annotation reflecting the homodimeric quaternary structure typical of class-I aminotransferases (UniProt SUBUNIT: Homodimer). While the homodimer assignment is reasonable, &#34;identical protein binding&#34; is an uninformative interaction term that does not convey biological function and is a frequent TreeGrafter over-propagation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Homodimerization is a structural property rather than a distinct molecular function; the term adds little and is propagated electronically without direct evidence for this protein. Per curation guidance, generic &#34;protein binding&#34;-type terms are discouraged.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PLP-dependent aromatic-amino-acid aminotransferase catalyzing reversible transamination between aromatic amino acids (L-tyrosine, L-phenylalanine) and their 2-oxoacids using 2-oxoglutarate/L-glutamate as the amino acceptor/donor pair, functioning in aromatic amino acid biosynthesis and catabolism.</h3>
+                <span class="vote-buttons" data-g="Q88LG1" data-a="FUNCTION: PLP-dependent aromatic-amino-acid aminotransferase..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004838" target="_blank" class="term-link">
+                            L-tyrosine:2-oxoglutarate transaminase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009072" target="_blank" class="term-link">
+                                aromatic amino acid metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23685963" target="_blank" class="term-link">
+                                PMID:23685963
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20050871" target="_blank" class="term-link">
+                                PMID:20050871
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23685963" target="_blank" class="term-link">
+                            PMID:23685963
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">tyrB-2 and phhC genes of Pseudomonas putida encode aromatic amino acid aminotransferase isozymes: evidence at the protein level</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida aromatic aminotransferase isozymes preferentially transaminate aromatic amino acids and aromatic 2-oxoacids (best substrates L-phenylalanine and phenylpyruvate), using PLP cofactor and 2-oxoglutarate as amino acceptor.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20050871" target="_blank" class="term-link">
+                            PMID:20050871
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification and characterization of the PhhR regulon in Pseudomonas putida</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genetic study of aromatic amino acid catabolism in P. putida KT2440; tyrB-1 (PP_1972) and tyrB-2 mutants show altered doubling times on tyrosine and phenylalanine as nitrogen sources, implicating tyrB-family aminotransferases in aromatic amino acid utilization.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38323821" target="_blank" class="term-link">
+                            PMID:38323821
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Machine learning analysis of RB-TnSeq fitness data predicts functional gene modules in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Disruption of tyrB (PP_1972) did not inhibit growth on L-phenylalanine or L-tyrosine as sole nitrogen sources, whereas disruption of AmaC (PP_3590) abolished growth; the authors propose PP_3590 as the dominant L-tyrosine aminotransferase, indicating PP_1972 is functionally redundant under those conditions.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35285712" target="_blank" class="term-link">
+                            PMID:35285712
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Nitrogen metabolism in Pseudomonas putida: functional analysis using random barcode transposon sequencing</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RB-TnSeq fitness data show only weak single-gene fitness effects for PP_1972 on aromatic nitrogen sources, and a PP_3590/PP_1972 double knockout did not cause phenylalanine auxotrophy, consistent with redundancy among aromatic aminotransferases.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the in vitro substrate range and kinetic preference of purified PP_1972 (Tyr vs Phe vs Trp; 2-oxoglutarate vs pyruvate as acceptor), given that direct enzymology exists for the paralogs but not for PP_1972 itself?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88LG1" data-a="Q: What is the in vitro substrate range and kinetic p..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the division of labor among the P. putida KT2440 aromatic aminotransferase isozymes (PP_1972/tyrB-1, PP_3590/AmaC, tyrB-2/phhC) in aromatic amino acid biosynthesis versus catabolism, and under what conditions is PP_1972 non-redundant?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88LG1" data-a="Q: What is the division of labor among the P. putida ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant PP_1972 and determine kinetic constants (Km/kcat) against a panel of amino donors (Tyr, Phe, Trp, Asp) and 2-oxoacid acceptors to define substrate specificity directly.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88LG1" data-a="EXPERIMENT: Express and purify recombinant PP_1972 and determi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct single and combinatorial in-frame deletions of PP_1972, PP_3590, and tyrB-2/phhC and assay growth on aromatic amino acids as sole nitrogen and carbon sources to resolve the redundancy network and any condition-specific, non-redundant role of PP_1972.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88LG1" data-a="EXPERIMENT: Construct single and combinatorial in-frame deleti..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tyrB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LG1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: **tyrB (PP_1972; UniProt Q88LG1)** in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">19 citations</span>
+                    
+                    
+                    <span class="report-badge">3 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:05:14.247139</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="tyrB-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="tyrB-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000009 Table 3 on page 5 reports the doubling times (growth phenotypes) of P. putida KT2440 and its isogenic mutants, including the `tyrB-</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="tyrB-deep-research-falcon_artifacts/image-2.png" class="term-link">## Context ID: pqac-00000026 The substrate specificity for ArAT I (tyrB-2) and ArAT II (phhC), including activities with aromatic amino acids and various 2-oxoa</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-tyrb-pp_1972-uniprot-q88lg1-in-pseudomonas-putida-kt2440">Research report: <strong>tyrB (PP_1972; UniProt Q88LG1)</strong> in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-target-verification-geneprotein-identity">0) Target verification (gene/protein identity)</h2>
+<p>The requested UniProt entry <strong>Q88LG1</strong> corresponds to <em>Pseudomonas putida</em> KT2440 gene <strong>tyrB</strong> with locus tag <strong>PP_1972</strong>. In KT2440-focused literature analyzing aromatic amino acid catabolism, <strong>PP1972 is explicitly referred to as tyrB-1</strong>, while a paralogous aminotransferase gene (<strong>tyrB-2</strong>) is associated with <strong>PP_3590</strong> (also discussed as <strong>amaC</strong> in later work), confirming that the report targets the correct gene/protein in the correct organism/strain (ATCC 47054/KT2440) and not a different “tyrB” from another organism. (herrera2010identificationandcharacterization pages 1-2, borchert2024machinelearninganalysis pages 7-11)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-what-tyrb-typically-denotes-in-bacteria">1.1 What “TyrB” typically denotes in bacteria</h3>
+<p>In many bacteria, <strong>TyrB</strong> denotes a <strong>PLP-dependent aminotransferase</strong> that catalyzes reversible <strong>transamination</strong> reactions, transferring an amino group between an amino acid and an α-keto acid. In <em>Pseudomonas</em>, enzymes annotated as TyrB-family aminotransferases have been studied primarily in the context of <strong>aromatic amino acid transformations</strong>, i.e., interconversion between aromatic amino acids (phenylalanine/tyrosine/tryptophan) and their corresponding aromatic 2-oxoacids. (szkop2013tyrb2andphhc pages 1-2)</p>
+<h3 id="12-general-plp-aminotransferase-chemistry-mechanism-level-view">1.2 General PLP-aminotransferase chemistry (mechanism-level view)</h3>
+<p>PLP-dependent transaminases operate through <strong>two half-reactions</strong> in which the cofactor cycles between <strong>pyridoxal-5′-phosphate (PLP)</strong> and <strong>pyridoxamine phosphate (PMP)</strong>, with key intermediates (external aldimine, quinonoid, ketimine) formed during amino-group transfer. A frequent structural theme is an <strong>oligomeric enzyme (often a homodimer)</strong> with active sites formed by residues from both subunits. (menke2024proteinengineeringof pages 22-25, menke2024proteinengineeringof pages 25-28)</p>
+<p>This mechanism-level understanding is important for functional annotation because it explains (i) why <strong>PLP is required</strong>, (ii) why <strong>α-keto acids such as 2-oxoglutarate or pyruvate</strong> commonly serve as amino acceptors, and (iii) why these enzymes can show <strong>substrate promiscuity</strong> that complicates gene-to-function assignment by annotation alone. (menke2024proteinengineeringof pages 22-25, menke2024proteinengineeringof pages 25-28)</p>
+<h2 id="2-molecular-function-of-pp_1972-tyrb-q88lg1">2) Molecular function of <strong>PP_1972 (tyrB; Q88LG1)</strong></h2>
+<h3 id="21-enzyme-class-and-likely-reaction">2.1 Enzyme class and likely reaction</h3>
+<p>Direct purified-enzyme biochemistry for <strong>PP_1972/Q88LG1</strong> was not found in the retrieved full texts; however, multiple KT2440 studies place PP_1972 among <strong>aromatic/tyrosine aminotransferase-like genes</strong> and test its role genetically. (herrera2010identificationandcharacterization pages 1-2, herrera2010identificationandcharacterization pages 4-5, borchert2024machinelearninganalysis pages 7-11)</p>
+<p>The reaction class most consistent with the TyrB annotation in this KT2440 context is an aromatic amino acid transamination such as:</p>
+<ul>
+<li><strong>L-tyrosine + 2-oxoglutarate ⇌ 4-hydroxyphenylpyruvate + L-glutamate</strong></li>
+<li><strong>L-phenylalanine + 2-oxoglutarate ⇌ phenylpyruvate + L-glutamate</strong></li>
+</ul>
+<p>Support for this reaction type comes from protein-level characterization of closely related <em>P. putida</em> aromatic aminotransferases (encoded by <strong>tyrB-2</strong> and <strong>phhC</strong>), which preferentially catalyze transamination involving aromatic amino acids and aromatic 2-oxoacids, with <strong>PLP</strong> included as cofactor and <strong>2-oxoglutarate</strong> used as amino acceptor in assays. (szkop2013tyrb2andphhc pages 1-2, szkop2013tyrb2andphhc media f8f3824d)</p>
+<h3 id="22-substrate-specificity-direct-evidence-from-p-putida-aromatic-aminotransferases">2.2 Substrate specificity (direct evidence from <em>P. putida</em> aromatic aminotransferases)</h3>
+<p>While the enzyme characterized biochemically in <em>P. putida</em> was not PP_1972, <strong>Table 2</strong> from Szkop &amp; Bielawski (2013) provides detailed substrate profiles for two <em>P. putida</em> aromatic aminotransferase isozymes, showing that they most efficiently catalyze reactions involving <strong>aromatic amino acids and aromatic 2-oxoacids</strong>, with <strong>L-phenylalanine and phenylpyruvate</strong> being the best substrates reported. Assays used <strong>0.1 M phosphate buffer (pH 8.0)</strong>, <strong>3 mM 2-oxoglutarate</strong>, <strong>10 µM PLP</strong>, and 35 °C—conditions consistent with fold-type I PLP aminotransferase enzymology. (szkop2013tyrb2andphhc pages 1-2, szkop2013tyrb2andphhc media f8f3824d)</p>
+<p>These data support that TyrB-like enzymes in <em>P. putida</em> are plausibly <strong>aromatic aminotransferases</strong> rather than strictly tyrosine-specific enzymes, and that substrate promiscuity and isozyme redundancy should be expected in vivo. (szkop2013tyrb2andphhc pages 1-2, szkop2013tyrb2andphhc media f8f3824d)</p>
+<h2 id="3-biological-role-and-pathways-in-p-putida-kt2440">3) Biological role and pathways in <em>P. putida</em> KT2440</h2>
+<h3 id="31-phenylalanine-utilization-routes-and-phhr-controlled-regulon">3.1 Phenylalanine utilization routes and PhhR-controlled regulon</h3>
+<p>A central KT2440 pathway context is phenylalanine assimilation/catabolism regulated by <strong>PhhR</strong>, which induces the <strong>phhAB operon</strong> encoding a pterin-dependent <strong>phenylalanine hydroxylase system</strong> (PhhA catalytic hydroxylase; PhhB pterin cofactor regeneration). This provides a route for conversion of <strong>L-phenylalanine to L-tyrosine</strong>. (herrera2010identificationandcharacterization pages 1-2)</p>
+<p>Herrera et al. (2010) place phenylalanine/tyrosine degradation into a larger catabolic funnel via <strong>p-hydroxyphenylpyruvate</strong> and <strong>homogentisate</strong> (hpd/hmg genes), which then feeds into central metabolism. (herrera2010identificationandcharacterization pages 4-5)</p>
+<h3 id="32-genetic-evidence-for-tyrb-family-involvement-in-phenylalaninetyrosine-catabolism">3.2 Genetic evidence for tyrB-family involvement in phenylalanine/tyrosine catabolism</h3>
+<p>In KT2440, mutants in TyrB-like genes exhibit measurable growth phenotypes on aromatic amino acids as nitrogen sources.</p>
+<ul>
+<li>Wild-type KT2440 doubling time: ~<strong>8 h</strong> on <strong>phenylalanine</strong>; ~<strong>1.8 h</strong> on <strong>tyrosine</strong>.</li>
+<li><strong>tyrB-1 (PP_1972)</strong> mutant: phenylalanine growth near WT, but slower on tyrosine (~<strong>3.2 h</strong>).</li>
+<li><strong>tyrB-2</strong> mutant: slower on phenylalanine (~<strong>12 h</strong>) and slower on tyrosine (~<strong>3.0 h</strong>).</li>
+</ul>
+<p>This pattern supports that TyrB-family enzymes contribute to aromatic amino acid utilization, with a stronger phenotype for tyrB-2 in phenylalanine conditions in this dataset. (herrera2010identificationandcharacterization media d9fda959, herrera2010identificationandcharacterization pages 4-5)</p>
+<h3 id="33-redundancy-and-reassignment-of-primary-aromatic-aminotransferase-major-recent-development">3.3 Redundancy and reassignment of “primary” aromatic aminotransferase (major recent development)</h3>
+<p>A key development in 2024 is that machine-learning analysis of RB-TnSeq fitness compendia (ICA-derived “fModules”) was used to pinpoint genes involved in phenylalanine/tyrosine catabolism, followed by mutant validation.</p>
+<p>Borchert et al. (2024, published March 2024; https://doi.org/10.1128/msystems.00942-23) report that disruption of <strong>tyrB (PP_1972)</strong> <strong>did not inhibit</strong> growth on L-phenylalanine or L-tyrosine as sole nitrogen sources, whereas disruption of <strong>amaC (PP_3590; sometimes called tyrB2)</strong> <strong>completely abrogated</strong> growth on these substrates. The authors therefore propose <strong>re-annotation of AmaC (PP_3590) as an L-tyrosine aminotransferase</strong>, implying that <strong>PP_1972 is not the primary enzyme</strong> for these growth phenotypes under the tested conditions and that previous “tyrB” annotation may overstate its physiological importance. (borchert2024machinelearninganalysis pages 7-11)</p>
+<p>This reconciles earlier BarSeq-based observations that PP_1972 often shows <strong>weak fitness effects</strong> and that a <strong>PP_3590/PP_1972 double knockout did not cause phenylalanine auxotrophy</strong>, consistent with broader redundancy or alternative routes, while still allowing PP_1972 to contribute in specific environments or regulatory states. (schmidt2022nitrogenmetabolismin pages 8-10, schmidt2022nitrogenmetabolismin pages 10-12)</p>
+<h2 id="4-cellular-localization">4) Cellular localization</h2>
+<p>No retrieved KT2440 primary source in this corpus provided a direct experimental localization (cytosol/periplasm) for <strong>PP_1972/Q88LG1</strong>.</p>
+<p>For context on what localization evidence looks like for bacterial PLP-dependent aminotransferases, Ringel et al. (2017) show that a distinct <strong>periplasmic</strong> PLP-dependent transaminase (PtaA) can be demonstrated by subcellular fractionation and is a <strong>homodimer</strong> by SEC-MALS; however, this is a different enzyme in a different <em>Pseudomonas</em> species and should not be taken as evidence that PP_1972 is periplasmic. (ringel2017theperiplasmictransaminase pages 16-18)</p>
+<p><strong>Current best-supported statement from the retrieved KT2440 corpus:</strong> localization of PP_1972 remains <strong>unresolved</strong> here and should be taken from UniProt/InterPro experimental annotations if available, or validated experimentally.</p>
+<h2 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h2>
+<h3 id="51-functional-genomics-for-strain-engineering-and-annotation-2024">5.1 Functional genomics for strain engineering and annotation (2024)</h3>
+<p>The 2024 RB‑TnSeq + ICA framework provides a practical route to <strong>re-annotate metabolic genes</strong> and identify engineering targets for <em>P. putida</em> as a chassis. In particular, the ability to distinguish <strong>PP_1972 (tyrB)</strong> from <strong>PP_3590 (AmaC)</strong> as the functionally dominant aminotransferase for phenylalanine/tyrosine utilization under defined conditions is directly actionable for (i) redirecting aromatic amino acid flux, and (ii) avoiding incorrect knockouts when designing production strains. (borchert2024machinelearninganalysis pages 7-11)</p>
+<h3 id="52-engineering-relevance-via-aromatic-stress-tolerance-and-aromatic-feedstocks">5.2 Engineering relevance via aromatic-stress tolerance and aromatic feedstocks</h3>
+<p>Borchert et al. (2024) also connect aminotransferase-linked modules to tolerance phenotypes during growth with <strong>high concentrations of hydroxycinnamates</strong> (e.g., ~60 mM in glucose + hydroxycinnamate tests; and higher concentrations as carbon sources in some conditions). These results highlight that aromatic amino acid and aromatic acid metabolism genes can have roles in <strong>stress tolerance</strong>, a key trait for industrial bioprocessing on lignin-derived aromatics. (borchert2024machinelearninganalysis pages 7-11)</p>
+<h3 id="53-broader-industrial-deployment-of-plp-transaminases-expert-review">5.3 Broader industrial deployment of PLP-transaminases (expert review)</h3>
+<p>Menke (2024) reviews industrial and engineering aspects of PLP-dependent amine transaminases (ATAs), emphasizing (i) their use in stereoselective synthesis of chiral amines, (ii) the importance of addressing unfavorable equilibria (e.g., via coproduct removal or sacrificial donors), and (iii) the rise of machine-learning-guided engineering. The review notes an industrial benchmark: (R)-ATA-catalyzed synthesis of <strong>(R)-sitagliptin</strong> with <strong>&gt;99.95% optical purity</strong>, and also reports large engineering gains (e.g., up to <strong>2000-fold</strong> improved catalytic activity in one redesign example), illustrating the real-world value of understanding transaminase substrate specificity and engineering it rationally. (menke2024proteinengineeringof pages 61-71)</p>
+<p>Although this review is not specific to PP_1972, it provides authoritative context for why TyrB-family enzymes and related aminotransferases are frequently targeted in metabolic engineering and biocatalysis.</p>
+<h2 id="6-summary-of-key-quantitative-evidence-recent-and-classic">6) Summary of key quantitative evidence (recent and classic)</h2>
+<ol>
+<li><strong>Mutant growth phenotypes (KT2440; 2010):</strong> doubling times on phenylalanine and tyrosine as sole N sources show measurable aromatic-amino-acid-related phenotypes for tyrB mutants, with a stronger phenotype for tyrB-2 in phenylalanine conditions. (herrera2010identificationandcharacterization media d9fda959)</li>
+<li><strong>Functional genomics/fitness and redundancy (2022):</strong> PP_1972 shows weak fitness effects in some aromatic N-source conditions and is genetically redundant with other aminotransferases in some contexts. (schmidt2022nitrogenmetabolismin pages 8-10, schmidt2022nitrogenmetabolismin pages 10-12)</li>
+<li><strong>Reannotation-driven experimental validation (2024):</strong> PP_1972 knockout does not inhibit growth on L-Phe/L-Tyr as sole N sources, while PP_3590 (AmaC) knockout abolishes growth, supporting updated functional assignment of the dominant aromatic aminotransferase in those conditions. (borchert2024machinelearninganalysis pages 7-11)</li>
+<li><strong>Biochemical assay conditions and substrate profiles (2013):</strong> <em>P. putida</em> aromatic aminotransferase isozymes show strongest activity for aromatic amino acids/2-oxoacids (e.g., L-Phe/phenylpyruvate) in PLP + 2-oxoglutarate-dependent assays. (szkop2013tyrb2andphhc media f8f3824d)</li>
+</ol>
+<h2 id="7-practical-functional-annotation-conclusion-for-pp_1972-tyrb-q88lg1">7) Practical functional-annotation conclusion for <strong>PP_1972 (tyrB; Q88LG1)</strong></h2>
+<p><strong>Most defensible functional annotation from the retrieved evidence:</strong></p>
+<ul>
+<li><strong>Gene/protein:</strong> tyrB (PP_1972; UniProt Q88LG1) in <em>P. putida</em> KT2440.</li>
+<li><strong>Molecular function:</strong> PLP-dependent <strong>aminotransferase</strong> in the aromatic/tyrosine aminotransferase-like set of enzymes in <em>Pseudomonas</em>; likely catalyzes reversible transamination between aromatic amino acids (e.g., tyrosine/phenylalanine) and α-keto acids (commonly 2-oxoglutarate), but <strong>direct biochemical constants for PP_1972 are not established</strong> in the retrieved corpus. (herrera2010identificationandcharacterization pages 1-2, szkop2013tyrb2andphhc media f8f3824d)</li>
+<li><strong>Biological process/pathway:</strong> participates (directly or redundantly) in <strong>aromatic amino acid utilization/catabolism</strong> connected to phenylalanine → tyrosine conversion (PhhAB) and downstream degradation via p-hydroxyphenylpyruvate/homogentisate. Genetic data indicate PP_1972 contributes measurably to tyrosine growth in some conditions but is not the primary determinant of Phe/Tyr utilization in others. (herrera2010identificationandcharacterization pages 4-5, herrera2010identificationandcharacterization media d9fda959, borchert2024machinelearninganalysis pages 7-11)</li>
+<li><strong>Systems-level role:</strong> part of a <strong>redundant aminotransferase network</strong> in KT2440; recent (2024) work indicates that PP_3590 (AmaC) dominates growth phenotypes on Phe/Tyr as N sources, and PP_1972 disruption alone may not block those pathways under standard minimal-media conditions. (borchert2024machinelearninganalysis pages 7-11, schmidt2022nitrogenmetabolismin pages 10-12)</li>
+<li><strong>Cellular localization:</strong> <strong>not resolved</strong> from retrieved KT2440 evidence; should be verified experimentally or via curated UniProt localization annotations. (ringel2017theperiplasmictransaminase pages 16-18)</li>
+</ul>
+<h2 id="8-evidence-table-quick-reference">8) Evidence table (quick reference)</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Evidence summary</th>
+<th>Key quantitative data</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity</td>
+<td>UniProt Q88LG1 corresponds to <strong>tyrB / PP_1972</strong> in <em>Pseudomonas putida</em> KT2440; genome annotation in KT2440 literature lists <strong>PP1972</strong> as <strong>tyrB-1</strong>, one of two tyrosine/aromatic aminotransferase-like genes in this strain (herrera2010identificationandcharacterization pages 1-2, herrera2010identificationandcharacterization pages 9-10)</td>
+<td>Locus tags/names reported as <strong>PP1972 / tyrB-1</strong>; paralog also noted as <strong>PP3590 / tyrB-2</strong> (herrera2010identificationandcharacterization pages 1-2)</td>
+</tr>
+<tr>
+<td>Predicted molecular function/class</td>
+<td>TyrB/PP_1972 is an <strong>aminotransferase</strong> in the <strong>PLP-dependent aromatic amino acid aminotransferase</strong> class; related <em>P. putida</em> aromatic aminotransferases preferentially transaminate aromatic amino acids with 2-oxoglutarate, with best substrates including <strong>L-phenylalanine</strong> and <strong>phenylpyruvate</strong> (szkop2013tyrb2andphhc pages 2-4, szkop2013tyrb2andphhc pages 1-2)</td>
+<td>Assays for related <em>P. putida</em> ArAT enzymes used <strong>10 µM PLP</strong> and <strong>3 mM 2-oxoglutarate</strong>; activity measured as release of <strong>1 µmol IPyA min⁻¹</strong> in L-tryptophan:2-oxoglutarate assays (szkop2013tyrb2andphhc pages 2-4)</td>
+</tr>
+<tr>
+<td>Pathway role in aromatic amino acid metabolism</td>
+<td>In KT2440, phenylalanine can be degraded by the <strong>phenylalanine hydroxylase pathway</strong> (PhhAB → tyrosine → p-hydroxyphenylpyruvate → homogentisate), and KT2440 carries two TyrB-like aminotransferase genes. Mutant phenotypes support TyrB-family participation in <strong>phenylalanine/tyrosine catabolism</strong>, especially downstream aromatic transamination steps (herrera2010identificationandcharacterization pages 4-5, herrera2010identificationandcharacterization pages 1-2)</td>
+<td>Wild type doubling times on sole N source: <strong>phenylalanine ~8 h</strong>, <strong>tyrosine ~1.8 h</strong>; <strong>tyrB-1</strong> mutant: phenylalanine ~WT, tyrosine <strong>~3.2 h</strong>; <strong>tyrB-2</strong> mutant: phenylalanine <strong>~12 h</strong>, tyrosine <strong>~3.0 h</strong> (herrera2010identificationandcharacterization pages 4-5, herrera2010identificationandcharacterization media d9fda959)</td>
+</tr>
+<tr>
+<td>Evidence for redundancy</td>
+<td>Recent RB-TnSeq and prior knockout work indicate <strong>functional redundancy</strong> among aromatic aminotransferases in <em>P. putida</em> KT2440: PP_1972 has only weak single-gene phenotypes in some aromatic N-source conditions, and even combined loss with PP_3590 did not cause phenylalanine auxotrophy (schmidt2022nitrogenmetabolismin pages 8-10, schmidt2022nitrogenmetabolismin pages 10-12)</td>
+<td>BarSeq fitness effects for <strong>PP_1972</strong> were small: phenylalanine <strong>-0.35</strong> and pipecolate <strong>-0.15</strong> in one report; another excerpt summarizes similarly weak effects and cites no phenylalanine auxotrophy in the <strong>PP_3590 PP_1972</strong> double knockout (schmidt2022nitrogenmetabolismin pages 8-10, schmidt2022nitrogenmetabolismin pages 10-12)</td>
+</tr>
+<tr>
+<td>Strength/limits of direct evidence for Q88LG1</td>
+<td>Evidence for <strong>PP_1972/Q88LG1 specifically</strong> is mainly <strong>genetic/fitness-based</strong> in KT2440; direct biochemical characterization in <em>P. putida</em> has more clearly identified other aromatic aminotransferase isozymes (<strong>tyrB-2/phhC</strong>) than PP_1972 itself, so annotation of Q88LG1 is supported by homology plus mutant evidence rather than purified-enzyme kinetics (szkop2013tyrb2andphhc pages 1-2, schmidt2022nitrogenmetabolismin pages 10-12)</td>
+<td>No direct purified-enzyme kinetic constants for <strong>PP_1972/Q88LG1</strong> were extracted from the cited KT2440 sources; strongest KT2440-specific quantitative data are mutant doubling times and RB-TnSeq fitness values (schmidt2022nitrogenmetabolismin pages 10-12, herrera2010identificationandcharacterization media d9fda959)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest available evidence for functional annotation of </em>Pseudomonas putida<em> KT2440 tyrB (PP_1972; UniProt Q88LG1), including its identity, predicted aminotransferase role, pathway context, redundancy, and the key quantitative phenotypes available from mutant and fitness studies.</em></p>
+<h2 id="9-source-list-with-urls-and-publication-dates-where-available">9) Source list (with URLs and publication dates where available)</h2>
+<ul>
+<li>Herrera MC, Duque E, Rodríguez‑Herva JJ, Fernández‑Escamilla AM, Ramos JL. <strong>Identification and characterization of the PhhR regulon in <em>Pseudomonas putida</em>.</strong> <em>Environmental Microbiology</em> (Jun <strong>2010</strong>). https://doi.org/10.1111/j.1462-2920.2009.02124.x (herrera2010identificationandcharacterization pages 1-2, herrera2010identificationandcharacterization media d9fda959)</li>
+<li>Szkop M, Bielawski W. <strong>tyrB-2 and phhC genes of <em>Pseudomonas putida</em> encode aromatic amino acid aminotransferase isozymes: evidence at the protein level.</strong> <em>Amino Acids</em> (May <strong>2013</strong>). https://doi.org/10.1007/s00726-013-1508-y (szkop2013tyrb2andphhc pages 1-2, szkop2013tyrb2andphhc media f8f3824d)</li>
+<li>Schmidt M et al. <strong>Nitrogen metabolism in <em>Pseudomonas putida</em>: functional analysis using random barcode transposon sequencing.</strong> <em>Applied and Environmental Microbiology</em> (Apr <strong>2022</strong>). https://doi.org/10.1128/aem.02430-21 (schmidt2022nitrogenmetabolismin pages 8-10, schmidt2022nitrogenmetabolismin pages 10-12)</li>
+<li>Borchert AJ et al. <strong>Machine learning analysis of RB‑TnSeq fitness data predicts functional gene modules in <em>Pseudomonas putida</em> KT2440.</strong> <em>mSystems</em> (Mar <strong>2024</strong>). https://doi.org/10.1128/msystems.00942-23 (borchert2024machinelearninganalysis pages 7-11)</li>
+<li>Menke M. <strong>Protein Engineering of Amine Transaminases and Methyltransferases using Machine Learning and High-Throughput Screening Tools.</strong> (<strong>2024</strong>; journal not captured in retrieved metadata). (menke2024proteinengineeringof pages 61-71, menke2024proteinengineeringof pages 25-28)</li>
+</ul>
+<h2 id="10-key-limitations-and-recommended-next-steps">10) Key limitations and recommended next steps</h2>
+<ul>
+<li><strong>Direct PP_1972 enzymology:</strong> The retrieved corpus lacks purified-enzyme kinetics (Km/kcat) and direct substrate panels for <strong>PP_1972/Q88LG1</strong> specifically; current enzymatic claims for PP_1972 are therefore best stated as <strong>inference from gene context + mutant/fitness phenotypes</strong> and from biochemical characterization of close isozymes in <em>P. putida</em>. (borchert2024machinelearninganalysis pages 7-11, szkop2013tyrb2andphhc media f8f3824d)</li>
+<li><strong>Localization:</strong> No KT2440 localization evidence for PP_1972 was found here. If localization is critical (e.g., for pathway compartmentalization or cofactor supply), it should be determined experimentally (cell fractionation, fluorescence tagging) or taken from curated UniProt/InterPro annotations.</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(herrera2010identificationandcharacterization pages 1-2): M. Carmen Herrera, Estrella Duque, José J. Rodríguez‐Herva, Ana M. Fernández‐Escamilla, and Juan L. Ramos. Identification and characterization of the phhr regulon in pseudomonas putida. Environmental microbiology, 12 6:1427-38, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2009.02124.x, doi:10.1111/j.1462-2920.2009.02124.x. This article has 43 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(borchert2024machinelearninganalysis pages 7-11): Andrew J. Borchert, Alissa C. Bleem, Hyun Gyu Lim, Kevin Rychel, Keven D. Dooley, Zoe A. Kellermyer, Tracy L. Hodges, Bernhard O. Palsson, and Gregg T. Beckham. Machine learning analysis of rb-tnseq fitness data predicts functional gene modules in <i>pseudomonas putida</i> kt2440. Mar 2024. URL: https://doi.org/10.1128/msystems.00942-23, doi:10.1128/msystems.00942-23. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(szkop2013tyrb2andphhc pages 1-2): Michał Szkop and Wiesław Bielawski. Tyrb-2 and phhc genes of pseudomonas putida encode aromatic amino acid aminotransferase isozymes: evidence at the protein level. Amino Acids, 45:351-358, May 2013. URL: https://doi.org/10.1007/s00726-013-1508-y, doi:10.1007/s00726-013-1508-y. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(menke2024proteinengineeringof pages 22-25): M Menke. Protein engineering of amine transaminases and methyltransferases using machine learning and high-throughput screening tools. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(menke2024proteinengineeringof pages 25-28): M Menke. Protein engineering of amine transaminases and methyltransferases using machine learning and high-throughput screening tools. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(herrera2010identificationandcharacterization pages 4-5): M. Carmen Herrera, Estrella Duque, José J. Rodríguez‐Herva, Ana M. Fernández‐Escamilla, and Juan L. Ramos. Identification and characterization of the phhr regulon in pseudomonas putida. Environmental microbiology, 12 6:1427-38, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2009.02124.x, doi:10.1111/j.1462-2920.2009.02124.x. This article has 43 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(szkop2013tyrb2andphhc media f8f3824d): Michał Szkop and Wiesław Bielawski. Tyrb-2 and phhc genes of pseudomonas putida encode aromatic amino acid aminotransferase isozymes: evidence at the protein level. Amino Acids, 45:351-358, May 2013. URL: https://doi.org/10.1007/s00726-013-1508-y, doi:10.1007/s00726-013-1508-y. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herrera2010identificationandcharacterization media d9fda959): M. Carmen Herrera, Estrella Duque, José J. Rodríguez‐Herva, Ana M. Fernández‐Escamilla, and Juan L. Ramos. Identification and characterization of the phhr regulon in pseudomonas putida. Environmental microbiology, 12 6:1427-38, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2009.02124.x, doi:10.1111/j.1462-2920.2009.02124.x. This article has 43 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schmidt2022nitrogenmetabolismin pages 8-10): Matthias Schmidt, Allison N. Pearson, Matthew R. Incha, Mitchell G. Thompson, Edward E. K. Baidoo, Ramu Kakumanu, Aindrila Mukhopadhyay, Patrick M. Shih, Adam M. Deutschbauer, Lars M. Blank, and Jay D. Keasling. Nitrogen metabolism in pseudomonas putida: functional analysis using random barcode transposon sequencing. Applied and Environmental Microbiology, Apr 2022. URL: https://doi.org/10.1128/aem.02430-21, doi:10.1128/aem.02430-21. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schmidt2022nitrogenmetabolismin pages 10-12): Matthias Schmidt, Allison N. Pearson, Matthew R. Incha, Mitchell G. Thompson, Edward E. K. Baidoo, Ramu Kakumanu, Aindrila Mukhopadhyay, Patrick M. Shih, Adam M. Deutschbauer, Lars M. Blank, and Jay D. Keasling. Nitrogen metabolism in pseudomonas putida: functional analysis using random barcode transposon sequencing. Applied and Environmental Microbiology, Apr 2022. URL: https://doi.org/10.1128/aem.02430-21, doi:10.1128/aem.02430-21. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ringel2017theperiplasmictransaminase pages 16-18): Michael T. Ringel, Gerald Dräger, and Thomas Brüser. The periplasmic transaminase ptaa of pseudomonas fluorescens converts the glutamic acid residue at the pyoverdine fluorophore to α-ketoglutaric acid. Journal of Biological Chemistry, 292:18660-18671, Nov 2017. URL: https://doi.org/10.1074/jbc.m117.812545, doi:10.1074/jbc.m117.812545. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(menke2024proteinengineeringof pages 61-71): M Menke. Protein engineering of amine transaminases and methyltransferases using machine learning and high-throughput screening tools. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(herrera2010identificationandcharacterization pages 9-10): M. Carmen Herrera, Estrella Duque, José J. Rodríguez‐Herva, Ana M. Fernández‐Escamilla, and Juan L. Ramos. Identification and characterization of the phhr regulon in pseudomonas putida. Environmental microbiology, 12 6:1427-38, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2009.02124.x, doi:10.1111/j.1462-2920.2009.02124.x. This article has 43 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(szkop2013tyrb2andphhc pages 2-4): Michał Szkop and Wiesław Bielawski. Tyrb-2 and phhc genes of pseudomonas putida encode aromatic amino acid aminotransferase isozymes: evidence at the protein level. Amino Acids, 45:351-358, May 2013. URL: https://doi.org/10.1007/s00726-013-1508-y, doi:10.1007/s00726-013-1508-y. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="tyrB-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000009 Table 3 on page 5 reports the doubling times (growth phenotypes) of P. putida KT2440 and its isogenic mutants, including the `tyrB-" src="tyrB-deep-research-falcon_artifacts/image-1.png" /><br />
+<img alt="## Context ID: pqac-00000026 The substrate specificity for ArAT I (tyrB-2) and ArAT II (phhC), including activities with aromatic amino acids and various 2-oxoa" src="tyrB-deep-research-falcon_artifacts/image-2.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>herrera2010identificationandcharacterization pages 1-2</li>
+<li>herrera2010identificationandcharacterization pages 4-5</li>
+<li>borchert2024machinelearninganalysis pages 7-11</li>
+<li>ringel2017theperiplasmictransaminase pages 16-18</li>
+<li>menke2024proteinengineeringof pages 61-71</li>
+<li>menke2024proteinengineeringof pages 22-25</li>
+<li>menke2024proteinengineeringof pages 25-28</li>
+<li>schmidt2022nitrogenmetabolismin pages 8-10</li>
+<li>schmidt2022nitrogenmetabolismin pages 10-12</li>
+<li>herrera2010identificationandcharacterization pages 9-10</li>
+<li>https://doi.org/10.1128/msystems.00942-23</li>
+<li>https://doi.org/10.1111/j.1462-2920.2009.02124.x</li>
+<li>https://doi.org/10.1007/s00726-013-1508-y</li>
+<li>https://doi.org/10.1128/aem.02430-21</li>
+<li>https://doi.org/10.1111/j.1462-2920.2009.02124.x,</li>
+<li>https://doi.org/10.1128/msystems.00942-23,</li>
+<li>https://doi.org/10.1007/s00726-013-1508-y,</li>
+<li>https://doi.org/10.1128/aem.02430-21,</li>
+<li>https://doi.org/10.1074/jbc.m117.812545,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88LG1
+gene_symbol: tyrB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  tyrB (PP_1972; also referred to as tyrB-1) is a cytoplasmic, pyridoxal
+  5&#39;-phosphate (PLP)-dependent aminotransferase of the class-I (fold-type I)
+  aspartate aminotransferase superfamily. It catalyzes reversible transamination
+  in which an amino group is transferred from an amino acid donor to a 2-oxoacid
+  acceptor (commonly 2-oxoglutarate, yielding L-glutamate). It is annotated as an
+  aromatic-amino-acid aminotransferase, interconverting aromatic amino acids
+  (L-tyrosine, L-phenylalanine) and their cognate aromatic 2-oxoacids
+  (4-hydroxyphenylpyruvate, phenylpyruvate), and contributes to aromatic amino
+  acid biosynthesis and catabolism. Like many class-I PLP aminotransferases it is
+  a homodimer with active sites formed at the subunit interface. In P. putida
+  KT2440 it is one of several aminotransferase isozymes acting on aromatic amino
+  acids; genetic studies show that loss of tyrB alone causes only mild
+  aromatic-amino-acid utilization phenotypes because of redundancy with paralogous
+  aminotransferases (notably PP_3590/AmaC and tyrB-2/phhC), so its physiological
+  role overlaps with those enzymes.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic root-level molecular function term. tyrB is an enzyme, so this is
+      not wrong, but it is uninformatively general and is fully subsumed by the
+      more specific transaminase/aminotransferase activity terms.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      &#34;catalytic activity&#34; is the MF root and conveys no specific information.
+      The more precise terms GO:0008483 (transaminase activity) and GO:0004838
+      (L-tyrosine:2-oxoglutarate transaminase activity) capture the actual
+      function.
+- term:
+    id: GO:0004838
+    label: L-tyrosine:2-oxoglutarate transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Specific aromatic (tyrosine) aminotransferase activity assigned by
+      TreeGrafter from the PTHR11879:SF37 &#34;aromatic-amino-acid aminotransferase&#34;
+      subfamily. This is consistent with the protein family, the COG1448
+      assignment, and with biochemical/genetic characterization of P. putida
+      aromatic aminotransferases. This is the best representation of the gene&#39;s
+      core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Domain/family evidence (class-I PLP aminotransferase, PANTHER ArAT
+      subfamily SF37) plus genetic evidence in KT2440 (tyrB mutants show a
+      tyrosine-utilization phenotype; PMID:20050871) support tyrosine
+      aminotransferase activity. The enzyme is likely promiscuous across aromatic
+      amino acids (also acting on phenylalanine), but this term well captures the
+      central characterized activity.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization predicted by TreeGrafter. Soluble class-I PLP
+      aminotransferases acting in amino acid metabolism are cytoplasmic enzymes;
+      the sequence has no signal peptide or transmembrane region. Consistent with
+      the expected localization.
+    action: ACCEPT
+    reason: &gt;-
+      Aromatic aminotransferases in this family are soluble cytoplasmic enzymes.
+      No experimental KT2440 localization data exist, but the prediction is
+      biologically appropriate and there is no evidence for periplasmic/membrane
+      localization.
+- term:
+    id: GO:0006520
+    label: amino acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Broad biological process term. tyrB participates in (aromatic) amino acid
+      metabolism, so this is correct but general. A more specific process such as
+      aromatic amino acid family metabolism / phenylalanine or tyrosine
+      biosynthesis or catabolism would be more informative.
+    action: MODIFY
+    reason: &gt;-
+      The annotation is correct in essence but too high-level. tyrB acts
+      specifically on aromatic amino acids (Tyr/Phe), so the more specific
+      &#34;aromatic amino acid family metabolic process&#34; better reflects the
+      characterized role while remaining defensible from family + genetic
+      evidence. (Chorismate metabolic process is not appropriate: tyrB acts
+      downstream of chorismate on the aromatic amino acids/2-oxoacids, not on
+      chorismate itself.)
+    proposed_replacement_terms:
+    - id: GO:0009072
+      label: aromatic amino acid family metabolic process
+- term:
+    id: GO:0008483
+    label: transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      General transaminase (aminotransferase) activity. Correct and well
+      supported by the class-I PLP-dependent aminotransferase family assignment,
+      but less specific than GO:0004838. Useful as a parent term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurately describes the enzymatic class but is a parent of the more
+      specific aromatic aminotransferase term that represents the core function.
+      Retain as supporting/non-core rather than as the primary MF.
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      PLP cofactor binding. tyrB is a PLP-dependent enzyme (UniProt COFACTOR:
+      pyridoxal 5&#39;-phosphate; conserved PROSITE PS00105 class-I aminotransferase
+      PLP-binding motif). This is a well-supported and informative molecular
+      function annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Strong family/motif evidence (IPR004838/IPR004839, PROSITE AA_TRANSFER_
+      CLASS_1, UniProt cofactor annotation) for PLP binding, which is essential
+      for the transamination mechanism.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-association annotation reflecting the homodimeric quaternary structure
+      typical of class-I aminotransferases (UniProt SUBUNIT: Homodimer). While
+      the homodimer assignment is reasonable, &#34;identical protein binding&#34; is an
+      uninformative interaction term that does not convey biological function and
+      is a frequent TreeGrafter over-propagation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Homodimerization is a structural property rather than a distinct molecular
+      function; the term adds little and is propagated electronically without
+      direct evidence for this protein. Per curation guidance, generic
+      &#34;protein binding&#34;-type terms are discouraged.
+core_functions:
+- description: &gt;-
+    PLP-dependent aromatic-amino-acid aminotransferase catalyzing reversible
+    transamination between aromatic amino acids (L-tyrosine, L-phenylalanine) and
+    their 2-oxoacids using 2-oxoglutarate/L-glutamate as the amino acceptor/donor
+    pair, functioning in aromatic amino acid biosynthesis and catabolism.
+  molecular_function:
+    id: GO:0004838
+    label: L-tyrosine:2-oxoglutarate transaminase activity
+  supported_by:
+  - reference_id: PMID:23685963
+  - reference_id: PMID:20050871
+  directly_involved_in:
+  - id: GO:0009072
+    label: aromatic amino acid metabolic process
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What is the in vitro substrate range and kinetic preference of purified
+    PP_1972 (Tyr vs Phe vs Trp; 2-oxoglutarate vs pyruvate as acceptor), given
+    that direct enzymology exists for the paralogs but not for PP_1972 itself?
+- question: &gt;-
+    What is the division of labor among the P. putida KT2440 aromatic
+    aminotransferase isozymes (PP_1972/tyrB-1, PP_3590/AmaC, tyrB-2/phhC) in
+    aromatic amino acid biosynthesis versus catabolism, and under what conditions
+    is PP_1972 non-redundant?
+suggested_experiments:
+- description: &gt;-
+    Express and purify recombinant PP_1972 and determine kinetic constants
+    (Km/kcat) against a panel of amino donors (Tyr, Phe, Trp, Asp) and 2-oxoacid
+    acceptors to define substrate specificity directly.
+- description: &gt;-
+    Construct single and combinatorial in-frame deletions of PP_1972, PP_3590,
+    and tyrB-2/phhC and assay growth on aromatic amino acids as sole nitrogen and
+    carbon sources to resolve the redundancy network and any condition-specific,
+    non-redundant role of PP_1972.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:23685963
+  title: &#34;tyrB-2 and phhC genes of Pseudomonas putida encode aromatic amino acid aminotransferase isozymes: evidence at the protein level&#34;
+  findings:
+  - statement: &gt;-
+      P. putida aromatic aminotransferase isozymes preferentially transaminate
+      aromatic amino acids and aromatic 2-oxoacids (best substrates L-phenylalanine
+      and phenylpyruvate), using PLP cofactor and 2-oxoglutarate as amino acceptor.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID verified via PubMed (Szkop &amp; Bielawski, Amino Acids 2013). Establishes
+      aromatic aminotransferase activity for P. putida isozymes (paralogs of
+      PP_1972), supporting the family-level molecular function assignment.
+- id: PMID:20050871
+  title: &#34;Identification and characterization of the PhhR regulon in Pseudomonas putida&#34;
+  findings:
+  - statement: &gt;-
+      Genetic study of aromatic amino acid catabolism in P. putida KT2440; tyrB-1
+      (PP_1972) and tyrB-2 mutants show altered doubling times on tyrosine and
+      phenylalanine as nitrogen sources, implicating tyrB-family aminotransferases
+      in aromatic amino acid utilization.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID verified via PubMed (Herrera et al., Environ Microbiol 2010). Provides
+      KT2440-specific genetic evidence linking PP_1972 to aromatic amino acid
+      metabolism.
+- id: PMID:38323821
+  title: &#34;Machine learning analysis of RB-TnSeq fitness data predicts functional gene modules in Pseudomonas putida KT2440&#34;
+  findings:
+  - statement: &gt;-
+      Disruption of tyrB (PP_1972) did not inhibit growth on L-phenylalanine or
+      L-tyrosine as sole nitrogen sources, whereas disruption of AmaC (PP_3590)
+      abolished growth; the authors propose PP_3590 as the dominant L-tyrosine
+      aminotransferase, indicating PP_1972 is functionally redundant under those
+      conditions.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID verified via PubMed (Borchert et al., mSystems 2024). Important for
+      interpreting the in-vivo, non-core/redundant role of PP_1972.
+- id: PMID:35285712
+  title: &#34;Nitrogen metabolism in Pseudomonas putida: functional analysis using random barcode transposon sequencing&#34;
+  findings:
+  - statement: &gt;-
+      RB-TnSeq fitness data show only weak single-gene fitness effects for
+      PP_1972 on aromatic nitrogen sources, and a PP_3590/PP_1972 double knockout
+      did not cause phenylalanine auxotrophy, consistent with redundancy among
+      aromatic aminotransferases.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID verified via PubMed (Schmidt et al., Appl Environ Microbiol 2022).
+      Supports the redundancy interpretation; corroborating rather than primary.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

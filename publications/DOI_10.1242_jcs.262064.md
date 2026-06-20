@@ -10,6 +10,7 @@ journal: Journal of Cell Science
 year: '2024'
 doi: 10.1242/jcs.262064
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # HIV-1 assembly – when virology meets biophysics
