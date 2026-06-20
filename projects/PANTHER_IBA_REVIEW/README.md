@@ -13,6 +13,12 @@ propagation — rather than re-judging gene by gene.
   and its seeds (from the cached `interpro/panther/<FAM>/` tables); flags
   cross-subfamily and localization propagations and joins our curation action.
 - `iba_propagation.tsv` — the resulting per-IBA table (regenerate with the script).
+  Carries inline node-level (PAINT) columns joined from `IBD.gaf`:
+  `node_seed_count` (the authoritative canonical seed count curated at the source
+  node, vs. the few `n_seeds` echoed into the leaf), `node_evidence`
+  (IBD/IRD/IKR), and `node_loss`. New flags: `SINGLE_NODE_SEED` (≤1 canonical
+  seed — weak support), `NODE_LOSS` (an IRD/IKR loss at the source node), and
+  `NODE_NOT_IN_IBD`.
 - `extract_node_annotations.py` — pulls the **PTN node-level (PAINT) annotations**
   themselves from PANTHER's `IBD.gaf` (the IBD/IRD/IKR layer that is the *source*
   of every IBA). For each ancestral node our genes derive from, it lists the full
