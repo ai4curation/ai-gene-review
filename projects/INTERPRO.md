@@ -242,8 +242,11 @@ Notable findings:
 - **QC catch.** 3 of the 6 runs (sigma-54, pseudouridine synthase, GAPDH) silently
   returned **ungrounded** reports (exit 0, file written, but "no contexts were retrieved
   … not grounded in evidence", zero real citations) — likely Edison retrieval throttling
-  under 6-way parallel load. They are excluded from the SSSOM and being re-run
-  sequentially. (Detect with: grep for "no contexts were retrieved".)
+  under 6-way parallel load. A sequential re-run **also** failed fast (~3 s each, no
+  retrieval), so this is a transient Edison retrieval-backend outage, not a load issue —
+  these 3 entries are **deferred** (metadata cached) for re-running when the backend
+  recovers. Excluded from the SSSOM. (Detect with: grep for "no contexts were retrieved"
+  or `citation_count`/zero real refs — a groundedness guard worth adding to the wrapper.)
 
 **Batch 1 of family deep research (falcon/Edison).** Ran five more top entries: P450
 (`IPR001128`), Cu/Zn SOD (`IPR001424`), GPCR Class A (`IPR000276`), NRAMP/SLC11
