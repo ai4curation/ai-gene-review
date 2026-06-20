@@ -62,11 +62,14 @@ Design notes:
   claim that the annoton's function is inferred to have arisen at (or been
   present in) a PANTHER/PAINT ancestral node, and is therefore retained in
   extant descendants barring divergence, neofunctionalization, or loss of key
-  residues. Ground each with a `PANTHER:PTN...` id resolved from the IBA
-  `WITH/FROM` column of a representative member's `*-goa.tsv` (the node the
-  `GO_REF:0000033` annotation was propagated from) — never guess PTN ids. A
-  family may carry more than one node when extant members trace to distinct
-  PAINT subnodes.
+  residues. Ground each with a `PANTHER:PTN...` id taken from the canonical IBD
+  data in `interpro/panther/<PTHR>/<PTHR>-paint.tsv` (columns: `family`, `node`,
+  `go_id`, `aspect`, `evidence`, `negated`, `seeds`, `taxon`, `date`) — resolve
+  the node by matching a representative member's accession in the `seeds` column,
+  and record `GO_REF:0000033` as the IBD evidence. Never guess PTN ids. Note that
+  a node's `family` is the PANTHER family it actually belongs to, which may differ
+  from the descriptor's primary `PTHR` term (paralogous subfunctions are split
+  across families); a family may therefore carry more than one node.
 - Use `active_units` on complex descriptors when the complex has role-bearing
   components that should be visible to module reasoning.
 - Use PANTHER `PTHR` or `PTHR:SF` identifiers for family/subfamily descriptors
