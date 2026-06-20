@@ -133,6 +133,20 @@ fetch-descriptions organism gene:
 fetch-descriptions-bulk organism *args="":
     uv run ai-gene-review fetch-descriptions-bulk {{organism}} --output-dir . {{args}}
 
+# Fetch PANTHER PAINT (PTN node-level) annotations for a family.
+# Resolves the family's PTN tree nodes and slices the node-level IBD.gaf
+# (IBD/IRD/IKR, plus any IBA-on-node) into interpro/panther/<FAMILY>/<FAMILY>-paint.tsv.
+# Requires the family's <FAMILY>-entries.csv (fetch a member gene first).
+# Example: just fetch-panther-paint PTHR10177
+# Example: just fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
+fetch-panther-paint family *args="":
+    uv run ai-gene-review fetch-panther-paint {{family}} --output-dir . {{args}}
+
+# Bulk-generate PANTHER PAINT slices for every cached family (single leaf-GAF pass).
+# Families whose members resolve to no node-level annotations are skipped.
+fetch-panther-paint-all *args="":
+    uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
+
 # Report review status of gene description files
 # Example: just descriptions-status yeast
 # Example: just descriptions-status yeast --all
