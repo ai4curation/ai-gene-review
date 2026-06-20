@@ -1,5 +1,5 @@
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2026-06-14T17:46:30
+# Generation date: 2026-06-20T01:15:26
 # Schema: gene_review
 #
 # id: https://ai4curation.io/ai-gene-review
@@ -701,14 +701,39 @@ class FamilyDescriptor(Descriptor):
 
     preferred_term: str = None
     representative_members: Optional[Union[Union[dict, GeneProductDescriptor], list[Union[dict, GeneProductDescriptor]]]] = empty_list()
+    ancestral_nodes: Optional[Union[Union[dict, "AncestralNodeDescriptor"], list[Union[dict, "AncestralNodeDescriptor"]]]] = empty_list()
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if not isinstance(self.representative_members, list):
             self.representative_members = [self.representative_members] if self.representative_members is not None else []
         self.representative_members = [v if isinstance(v, GeneProductDescriptor) else GeneProductDescriptor(**as_dict(v)) for v in self.representative_members]
 
+        if not isinstance(self.ancestral_nodes, list):
+            self.ancestral_nodes = [self.ancestral_nodes] if self.ancestral_nodes is not None else []
+        self.ancestral_nodes = [v if isinstance(v, AncestralNodeDescriptor) else AncestralNodeDescriptor(**as_dict(v)) for v in self.ancestral_nodes]
+
         super().__post_init__(**kwargs)
 
+
+@dataclass(repr=False)
+class AncestralNodeDescriptor(Descriptor):
+    """
+    A PANTHER/PAINT ancestral node (a PTN identifier, e.g. PANTHER:PTN000299444) used to ground an evolutionary
+    inference about a function. Asserting an ancestral node states that the function associated with the enclosing
+    annoton is inferred to have arisen at, or been present in, the last common ancestor represented by this node, and
+    is therefore inferred to be retained in extant descendant proteins barring divergence, neofunctionalization, or
+    loss of key residues. This is a stronger, clade-level claim than a representative member. Such nodes can be
+    resolved from the IBA WITH/FROM column (GO_REF:0000033) of a representative member's GOA record rather than
+    guessed.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["AncestralNodeDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:AncestralNodeDescriptor"
+    class_name: ClassVar[str] = "AncestralNodeDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.AncestralNodeDescriptor
+
+    preferred_term: str = None
 
 @dataclass(repr=False)
 class DomainDescriptor(Descriptor):
@@ -3977,6 +4002,9 @@ slots.descriptor__notes = Slot(uri=GENE_REVIEW.notes, name="descriptor__notes", 
 
 slots.familyDescriptor__representative_members = Slot(uri=GENE_REVIEW.representative_members, name="familyDescriptor__representative_members", curie=GENE_REVIEW.curie('representative_members'),
                    model_uri=GENE_REVIEW.familyDescriptor__representative_members, domain=None, range=Optional[Union[Union[dict, GeneProductDescriptor], list[Union[dict, GeneProductDescriptor]]]])
+
+slots.familyDescriptor__ancestral_nodes = Slot(uri=GENE_REVIEW.ancestral_nodes, name="familyDescriptor__ancestral_nodes", curie=GENE_REVIEW.curie('ancestral_nodes'),
+                   model_uri=GENE_REVIEW.familyDescriptor__ancestral_nodes, domain=None, range=Optional[Union[Union[dict, AncestralNodeDescriptor], list[Union[dict, AncestralNodeDescriptor]]]])
 
 slots.proteinComplexDescriptor__active_units = Slot(uri=GENE_REVIEW.active_units, name="proteinComplexDescriptor__active_units", curie=GENE_REVIEW.curie('active_units'),
                    model_uri=GENE_REVIEW.proteinComplexDescriptor__active_units, domain=None, range=Optional[Union[Union[dict, ComplexUnit], list[Union[dict, ComplexUnit]]]])

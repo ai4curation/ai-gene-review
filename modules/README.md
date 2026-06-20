@@ -55,20 +55,25 @@ Design notes:
   gene, a complex, a family, a domain, a homolog/ortholog selector, or an
   abstract `ANY_WITH_FUNCTION` / `ANY_WITH_DOMAIN` selector.
 - Use `representative_members` on family descriptors when an abstract family or
-  evolutionary role needs a concrete exemplar without becoming species-specific.
-  Members are treated uniformly: an extant gene product is grounded with a
-  `UniProtKB:` id, and the corresponding PANTHER/PAINT ancestral node is listed
-  as a sibling member grounded with a `PANTHER:PTN...` id. Resolve PTN ids from
-  the IBA `WITH/FROM` column of a representative member's `*-goa.tsv` (the node
-  the `GO_REF:0000033` annotation was propagated from) rather than guessing.
+  evolutionary role needs a concrete extant exemplar (grounded with a
+  `UniProtKB:` id) without becoming species-specific. These are only orienting
+  examples, not a claim about where the function evolved.
+- Use `ancestral_nodes` on family descriptors to make the stronger, clade-level
+  claim that the annoton's function is inferred to have arisen at (or been
+  present in) a PANTHER/PAINT ancestral node, and is therefore retained in
+  extant descendants barring divergence, neofunctionalization, or loss of key
+  residues. Ground each with a `PANTHER:PTN...` id resolved from the IBA
+  `WITH/FROM` column of a representative member's `*-goa.tsv` (the node the
+  `GO_REF:0000033` annotation was propagated from) — never guess PTN ids. A
+  family may carry more than one node when extant members trace to distinct
+  PAINT subnodes.
 - Use `active_units` on complex descriptors when the complex has role-bearing
   components that should be visible to module reasoning.
 - Use PANTHER `PTHR` or `PTHR:SF` identifiers for family/subfamily descriptors
   when grounding to the local `interpro/panther/` cache. PAINT `PTN`
-  identifiers name a specific ancestral node and are used in two ways: as a
-  `representative_member` of a family descriptor (the ancestral exemplar
-  alongside the extant UniProt exemplars; see `representative_members` above),
-  as evidence/provenance for a specific ancestral-node assertion, or as the
+  identifiers name a specific ancestral node; list them under `ancestral_nodes`
+  (see above) for the evolutionary-inference claim, use them as
+  evidence/provenance for a specific ancestral-node assertion, or use one as the
   descriptor grounding when the selector is explicitly “descendants of this
   PAINT node”.
 - Use descriptor holders for terms. A descriptor always has `preferred_term`,
