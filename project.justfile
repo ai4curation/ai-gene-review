@@ -217,6 +217,17 @@ deep-research-openscientist organism gene_id *args="":
 deep-research-codex organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
 
+# Deep research on an InterPro entry (family/domain) behind InterPro2GO annotations.
+# Metadata is auto-fetched and cached under interpro/<database>/<ID>/ if absent.
+# Output: interpro/<database>/<ID>/<ID>-deep-research-<provider>.md
+# Provider defaults to falcon (Edison).
+# Examples:
+#   just deep-research-interpro-family IPR000719                    # falcon (Edison)
+#   just deep-research-interpro-family IPR001128 openai --fallback perplexity-lite
+#   just deep-research-interpro-family PTHR10314 perplexity --database panther
+deep-research-interpro-family interpro_id provider="falcon" *args="":
+    uv run python scripts/deep_research_interpro_family.py {{interpro_id}} {{provider}} {{args}}
+
 # Fetch Edison/Falcon artifacts for a deep research trajectory and attach them to a report
 # Example: just fetch-research-artifacts <trajectory-id> genes/human/TP53/TP53-deep-research-falcon.md
 fetch-research-artifacts trajectory_id research_file *args="":

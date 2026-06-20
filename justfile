@@ -77,6 +77,13 @@ validate-rhea-mappings:
 	uv run python projects/RHEA/sssom_to_terms.py projects/RHEA/rhea2go.sssom.yaml -o projects/RHEA/rhea2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/RHEA/rhea2go.terms.yaml -s src/ai_gene_review/schema/rhea_go_mapping.yaml -t RHEAGOMappingSet --labels -c conf/oak_config.yaml
 
+# Validate the curated InterPro2GO mapping review (projects/INTERPRO/interpro2go.sssom.yaml):
+# (1) SSSOM structural validation, then (2) GO term/label validation on the regenerated nested file.
+validate-interpro-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/INTERPRO/*.sssom.yaml
+	uv run python projects/INTERPRO/sssom_to_terms.py projects/INTERPRO/interpro2go.sssom.yaml -o projects/INTERPRO/interpro2go.terms.yaml
+	uv run linkml-term-validator validate-data projects/INTERPRO/interpro2go.terms.yaml -s src/ai_gene_review/schema/interpro_go_mapping.yaml -t InterProGOMappingSet --labels -c conf/oak_config.yaml
+
 # Apply the ARO->GO mapping: chain UniProt -> ARO (via DR CARD lines) -> GO across all genes.
 aro2go-pipeline: validate-mappings
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml 'genes/**/*-uniprot.txt'
