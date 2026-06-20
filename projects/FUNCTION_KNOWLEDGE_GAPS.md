@@ -810,10 +810,11 @@ The building blocks already exist and are reused, not replaced:
 | Unresolvable annotation | `action: UNDECIDED` | Often a curation gap (esp. literature inaccessible) |
 | `protein binding` avoidance rule | curation guideline | Flags MF-mechanism gaps |
 
-**Schema direction (deferred):** the cleanest long-term home would elevate `suggested_questions`
-into a provenance-bearing `knowledge_gaps` structure (gap statement + boundary + `supported_by`
-quotes + type) so gaps become first-class and queryable. We are *not* committing to a schema
-change here; this project first proves the unit and the method on curated examples.
+**Schema direction (implemented):** this has now been elevated into a provenance-bearing
+`knowledge_gaps` structure (gap statement + boundary + verbatim `provenance` quotes + kind/aspect/
+status typing) so gaps are first-class and queryable — see the *Structured curation* section above
+for the `KnowledgeGap` class. The project first proved the unit and method on the curated examples
+below; the schema element now makes them machine-tractable.
 
 ## Prioritization (curatorial, not computed)
 
@@ -908,7 +909,7 @@ human/SOCS4/SOCS5, human/RFT1, worm/pef-1, worm/fshr-1, SCHPO/alo1, and DESVH/Q7
 - [ ] Implement `validate-deep-research`: PMID resolution + title-match + per-file reliability score (extends `validate_pmid_references.py`)
 - [ ] Read-list deepening, batch 4: PUS3, CFAP418, SOCS4/SOCS5, RFT1, pef-1, fshr-1, alo1
 - [ ] Decide unit granularity (per-gap vs per-gene narrative)
-- [ ] Decide home: standalone register vs `knowledge_gaps` schema element (deferred)
+- [x] Decide home: standalone register vs `knowledge_gaps` schema element — **done**: added a first-class `KnowledgeGap` schema class (gene/annotation/core-function/module/module-node), with the structured register rendered from it
 - [ ] Conservation / disease prioritization pass over candidates
 
 ## Notes
