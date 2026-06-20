@@ -141,38 +141,46 @@ to refine the ~5k already-covered families — *not* by splitting lumped entries
 Realizing it means *authoring* mappings (curation or grounded model prediction) and
 validating them; `pfam2go` does none of this today.
 
-### Worked proposals: Pfam mappings where InterPro can't
+### Worked proposals: Pfam families curated as their own entries
 
-As a concrete demonstration, [`pfam2go.sssom.yaml`](PFAM/pfam2go.sssom.yaml) is a
-curated **SSSOM mapping set** of **11 proposed Pfam→GO mappings** (9 families,
-8 InterPro entries) — same format as the project's other curated mapping sets
-([RHEA rhea2go](RHEA/rhea2go.sssom.yaml),
-[AMR aro2go](ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml)). All are drawn from the
-sharpest "InterPro not viable" category: **heterogeneous InterPro entries** that
-group functionally *distinct* Pfam families under one shared fold. Because a
-function-specific term on the whole entry would be wrong for the sibling family,
-those entries carry **no** interpro2go term — but the individual Pfam is specific.
-Predicate `enables` (RO:0002327) for MF, `involved in` (RO:0002331) for BP. A
-human-readable writeup with rationale is in [PROPOSED_MAPPINGS.md](PFAM/PROPOSED_MAPPINGS.md).
-Examples:
+The concrete output is **9 Pfam families curated as their own entries** (11 proposed
+GO annotations) under `interpro/pfam/<PFAM>/<PFAM>-review.yaml` — sidecars to the
+machine-fetched `<PFAM>-metadata.yaml`, mirroring the existing
+`interpro/panther/<PTHR>/` layout. Each is drawn from the sharpest "InterPro not
+viable" category: **heterogeneous InterPro entries** that group functionally
+*distinct* Pfam families under one shared fold, so a function-specific term would be
+wrong on the whole entry (those entries carry **no** interpro2go term) but is correct
+for the individual Pfam. An index is in [PROPOSED_MAPPINGS.md](PFAM/PROPOSED_MAPPINGS.md).
 
 | Pfam | family | proposed GO | parent entry can't, because it also contains |
 |---|---|---|---|
-| PF14681 | UPRTase | uracil phosphoribosyltransferase activity (GO:0004845) | generic Pribosyltran (all PRTases) |
-| PF16363 | GDP_Man_Dehyd | GDP-mannose 4,6-dehydratase activity (GO:0008446) | generic NAD(P)-binding Rossmann |
-| PF09043 | Lys-AminoMut_A | D-lysine 5,6-aminomutase activity (GO:0047826) | D-ornithine 4,5-aminomutase (sibling) |
-| PF27512 | LeuD | 3-isopropylmalate dehydratase activity (GO:0003861) | aconitase swivel domain |
-| PF02431 | Chalcone | chalcone isomerase activity (GO:0045430) | non-catalytic chalcone-isomerase-like (CHIL) |
-| PF13360 | PQQ_2 (BamB) | Gram-negative OM assembly (GO:0043165) | quinoprotein-dehydrogenase β-propellers |
-| PF07228 | SpoIIE | sporulation (GO:0030435) | generic PP2C protein phosphatases |
+| [PF14681](../../interpro/pfam/PF14681/PF14681-review.yaml) | UPRTase | uracil phosphoribosyltransferase activity (GO:0004845) | generic Pribosyltran (all PRTases) |
+| [PF16363](../../interpro/pfam/PF16363/PF16363-review.yaml) | GDP_Man_Dehyd | GDP-mannose 4,6-dehydratase activity (GO:0008446) | generic NAD(P)-binding Rossmann |
+| [PF09043](../../interpro/pfam/PF09043/PF09043-review.yaml) | Lys-AminoMut_A | D-lysine 5,6-aminomutase activity (GO:0047826) | D-ornithine 4,5-aminomutase (sibling) |
+| [PF27512](../../interpro/pfam/PF27512/PF27512-review.yaml) | LeuD | 3-isopropylmalate dehydratase activity (GO:0003861) | aconitase swivel domain |
+| [PF02431](../../interpro/pfam/PF02431/PF02431-review.yaml) | Chalcone | chalcone isomerase activity (GO:0045430) | non-catalytic chalcone-isomerase-like (CHIL) |
+| [PF13360](../../interpro/pfam/PF13360/PF13360-review.yaml) | PQQ_2 (BamB) | Gram-negative OM assembly (GO:0043165) | quinoprotein-dehydrogenase β-propellers |
+| [PF07228](../../interpro/pfam/PF07228/PF07228-review.yaml) | SpoIIE | sporulation (GO:0030435) | generic PP2C protein phosphatases |
 
-These are produced by [`propose_mappings.py`](PFAM/propose_mappings.py), which
-**auto-verifies every structural claim** — GO id valid & non-obsolete, Pfam
-membership, parent entry heterogeneity, and that the parent entry carries no
-equivalent term (it aborts otherwise) — and the SSSOM file passes
-`just validate-pfam-mappings`. The *biological* assignment is a reviewer proposal
-grounded in the Pfam family definition; each is a **candidate needing curator /
-experimental validation**, not an asserted fact.
+**Why entry-centric rather than SSSOM.** An earlier iteration encoded these as an
+SSSOM mapping set, but a flat subject→predicate→object row (plus a free-text comment)
+cannot structurally hold what a curated review needs: the parent InterPro entry and
+its type/membership, the *sibling* families that make the entry heterogeneous, the
+`interpro_mapping_viability` judgement and its reason, and per-term relation, aspect,
+evidence, confidence and status. Each Pfam is therefore curated as a first-class
+**entry** (LinkML schema
+[`pfam_entry_review.yaml`](../../src/ai_gene_review/schema/pfam_entry_review.yaml)),
+the natural home being `interpro/pfam/` next to the fetched record. GO targets are
+id/label tuples bound to a GO-branch enum, so `linkml-term-validator` checks every
+proposed term resolves and its label matches.
+
+The reviews are seeded + structurally verified by
+[`seed_pfam_reviews.py`](PFAM/seed_pfam_reviews.py) (GO id non-obsolete, Pfam
+membership, parent entry heterogeneity, and parent-entry-has-no-equivalent-term — it
+aborts otherwise) and pass `just validate-pfam-reviews`. The *biological* assignment
+is a reviewer proposal grounded in the Pfam family definition; each annotation
+carries `status: PROPOSED` — a **candidate needing curator / experimental
+validation**, not an asserted fact.
 
 ## Implications for AIGR / GO annotation
 
@@ -209,9 +217,12 @@ See [PANTHER_IBA_REVIEW](PANTHER_IBA_REVIEW/) and
 cd projects/PFAM
 python3 analyze_pfam_go_gaps.py --download   # Part 1: existing pfam2go vs interpro2go
 python3 headroom_analysis.py                 # Part 2: headroom for new mappings
-python3 propose_mappings.py                  # Part 2: worked proposals -> pfam2go.sssom.yaml
-just validate-pfam-mappings                  # structural SSSOM validation + re-check
+python3 seed_pfam_reviews.py                 # Part 2: seed interpro/pfam/<PFAM>/<PFAM>-review.yaml
+just validate-pfam-reviews                   # structural + GO-label validation of the reviews
 ```
+
+(Pfam entry metadata is fetched separately with
+`just fetch-interpro-family pfam <PFAM>` into `interpro/pfam/<PFAM>/`.)
 
 Inputs (cached under `PFAM/data/`, git-ignored; reproducible via `--download`):
 
@@ -225,8 +236,9 @@ Outputs (committed):
 
 - [`RESULTS.md`](PFAM/RESULTS.md) — Part 1 summary (auto-generated)
 - [`HEADROOM.md`](PFAM/HEADROOM.md) — Part 2 summary (auto-generated)
-- [`pfam2go.sssom.yaml`](PFAM/pfam2go.sssom.yaml) — curated Pfam→GO proposals as an
-  SSSOM mapping set (where InterPro can't), + [`PROPOSED_MAPPINGS.md`](PFAM/PROPOSED_MAPPINGS.md) writeup
+- `interpro/pfam/<PFAM>/<PFAM>-review.yaml` — **curated Pfam entry reviews** (9 families),
+  schema [`pfam_entry_review.yaml`](../../src/ai_gene_review/schema/pfam_entry_review.yaml);
+  index in [`PROPOSED_MAPPINGS.md`](PFAM/PROPOSED_MAPPINGS.md), seeded by `seed_pfam_reviews.py`
 - `PFAM/pfam_go_precision_gaps.tsv` — Part 1 non-SAME classified assertions
 - `PFAM/unintegrated_pfam_with_go.tsv` — pfam2go terms for unintegrated families
 - `PFAM/lumped_entries_headroom.tsv` — multi-Pfam GO-bearing entries, ranked
