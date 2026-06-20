@@ -19,4 +19,6 @@ None &#8594;  <sub>0..\*</sub> [Reference](Reference.md)
 ## Used by
 
  * [GeneReview](GeneReview.md)
+ * [ModuleReview](ModuleReview.md)
+ * [PredictionReview](PredictionReview.md)
  * [RuleReview](RuleReview.md)

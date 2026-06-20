@@ -483,6 +483,11 @@ validate-files files:
 validate-deep-research:
     uv run python scripts/validate_deep_research.py
 
+# Aggregate all curated KnowledgeGap entries into a structured register
+# (reports/knowledge_gaps.tsv + projects/FUNCTION_KNOWLEDGE_GAPS/structured-gaps.md)
+aggregate-knowledge-gaps:
+    uv run python scripts/aggregate_knowledge_gaps.py
+
 # Validate module YAML files: (1) structural schema validation against
 # ModuleReview, and (2) ontology term-label validation (GO/CHEBI/PO/SBO/... ids
 # resolve and their labels match). The external linkml-term-validator only
