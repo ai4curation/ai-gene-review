@@ -483,7 +483,11 @@ validate-files files:
 validate-deep-research:
     uv run python scripts/validate_deep_research.py
 
-# Validate module YAML files against the ModuleReview schema
+# Validate module YAML files: (1) structural schema validation against
+# ModuleReview, and (2) ontology term-label validation (GO/CHEBI/PO/SBO/... ids
+# resolve and their labels match). The external linkml-term-validator only
+# checks enum-bound slots, which ModuleReview lacks, so module term labels are
+# checked by the project's module_validator instead.
 validate-modules:
     #!/usr/bin/env bash
     set -uo pipefail
@@ -494,9 +498,12 @@ validate-modules:
     fi
     rc=0
     while IFS= read -r f; do
-        echo "Validating $f"
+        echo "Schema-validating $f"
         uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f" || rc=1
     done <<< "$files"
+    echo "Validating module term labels..."
+    # shellcheck disable=SC2086
+    uv run python -m ai_gene_review.validation.module_validator $files || rc=1
     exit "$rc"
 
 # Full validation of a single gene file (schema + terms + references + best practices)

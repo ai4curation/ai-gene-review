@@ -56,6 +56,9 @@ jobs:
               - 'uv.lock'
             genes:
               - 'genes/**/*-ai-review.yaml'
+            modules:
+              - 'modules/**/*.yaml'
+              - 'modules/**/*.yml'
             # Anything that can change validation behaviour for ALL genes. If any of
             # these change we cannot trust per-gene scoping, so we validate everything.
             infra:
@@ -121,6 +124,18 @@ jobs:
           else
             echo "No gene-review or validation-infrastructure changes; skipping gene validation."
           fi
+
+      # Module YAMLs are validated against the ModuleReview schema. They are not
+      # covered by validate-all (which is gene-review scoped), so validate them
+      # whenever a module changes, the schema/validators change, or on the weekly
+      # full run.
+      - name: Validate modules (scoped)
+        if: >-
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' ||
+          steps.changes.outputs.infra == 'true' ||
+          steps.changes.outputs.modules == 'true'
+        run: just validate-modules
 
       - name: Test valid/invalid examples
         if: steps.changes.outputs.infra == 'true' || steps.changes.outputs.src == 'true'
