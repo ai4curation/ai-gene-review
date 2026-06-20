@@ -102,7 +102,9 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 - **DPYSL2 / CRMP1 / DPYSL3** — `GO:0016812` (metallo-hydrolase activity, cyclic amides): the CRMP/dihydropyrimidinase-like proteins are explicitly flagged by UniProt CAUTION — *"Lacks most of the conserved residues that are essential for binding the metal cofactor and hence for dihydropyrimidinase activity."* They are non-catalytic cytoskeletal regulators.
 - **AGO4** — `GO:0004521` (RNA endonuclease activity): UniProt FUNCTION states directly that AGO4 *"Lacks endonuclease activity and does not appear to cleave target mRNAs"* — only AGO2 is the catalytic slicer in humans.
 - **UBAC2** — `GO:0004252` (serine-type endopeptidase activity): UBAC2 has a rhomboid-**like** fold (a known inactive-rhomboid/pseudoprotease clan) but UniProt attributes no protease function — its curated roles are as an ERAD/ER-phagy adaptor. *(Caveat: the absence of catalytic residues is inferred from the inactive-rhomboid classification and the lack of any curated protease activity, not from an explicit UniProt CAUTION.)*
-- **Lesson**: a degenerate/absent active site, **independently documented**, is the strongest single signal that an enzymatic IBA is wrong. This pattern is now represented by Epe1 (demethylase), the CRMP family (amidohydrolase), AGO4 (slicer), and UBAC2 (protease).
+- **AKTIP** — `GO:0061631` (ubiquitin-conjugating enzyme activity): UniProt CAUTION states it *"Lacks the conserved Cys residue necessary for ubiquitin-[conjugating]"* activity. It is in the E2 PANTHER family (PTHR24067) and the IBA is inferred from many genuine UBE2 enzymes, but as a UEV-domain protein it is a catalytically dead pseudo-E2 (a component of the FTS/Hook/FHIP complex). A second annotation even records the NOT form.
+- **DPYSL4** — `GO:0016812`: a fourth CRMP-family member (Dihydropyrimidinase-related protein 4) carrying the same metallo-hydrolase IBA on the same basis as DPYSL2/3/CRMP1 — the whole CRMP/dihydropyrimidinase-*related* clade is non-catalytic; only true dihydropyrimidinase (DPYS) retains the activity.
+- **Lesson**: a degenerate/absent active site, **independently documented** (UniProt CAUTION/FUNCTION, missing catalytic residue), is the strongest single signal that an enzymatic IBA is wrong. Now represented by Epe1 (demethylase), the CRMP family DPYSL2/3/4/CRMP1 (amidohydrolase), AGO4 (slicer), UBAC2 (protease), and AKTIP (E2 ligase).
 
 ### 8. Partial Sub-Activity Loss Within a Multidomain Family
 
@@ -145,7 +147,28 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
   2. A second study: *"No evidence for phosphorylation of ceramide by the recently described multiple lipid kinase was found"* (PMID:16269826).
   3. UniProt's own FUNCTION line states *"Does not phosphorylate sphingosine (PubMed:15939762)"*; its sole ceramide claim is a weak **"By similarity"** tag (propagated from Q9ESW4), not direct evidence.
 - The dedicated ceramide kinase is the **separate** enzyme CERK. AGK's verified activity is MAG/DAG kinase (plus a kinase-independent TIM22 structural role).
-- **Lesson**: a "By similarity"/propagated annotation is weak evidence; when direct experimental papers in the target species report the activity is **absent**, the substrate-specific IBA is an over-propagation. This is also where phylogeny helps — a family node that mixes acylglycerol and sphingosine kinases will leak substrate terms across specificity boundaries.
+
+**Example - SAMD8/SMSr (human)** — `GO:0033188` (sphingomyelin synthase activity):
+- SAMD8 is in the sphingomyelin-synthase PANTHER family (PTHR21290), but UniProt's experimentally-supported FUNCTION says it makes **ceramide phosphoethanolamine (CPE)**, transferring a phospho**ethanolamine** head group from PE to ceramide — explicitly *not* the phospho**choline**-from-PC reaction that defines sphingomyelin synthases SMS1/SMS2: *"The larger PC prevents an efficient fit in the enzyme's catalytic pocket."* So the family-level sphingomyelin-synthase term is the wrong product/substrate; this is also accompanied by mislocalization IBAs (Golgi, plasma membrane) that belong to SMS1/SMS2, whereas SMSr is ER-retained.
+
+**Example - CPT1C (human)** — `GO:0006631` (fatty acid metabolic process), `GO:0009437` (carnitine metabolic process):
+- A **neofunctionalization** case: UniProt's RecName is literally *"Palmitoyl thioesterase CPT1C."* Although it sits in the carnitine O-acyltransferase family (PTHR22589) with CPT1A/B, experimental work shows CPT1C **lacks the canonical carnitine palmitoyltransferase activity** (it binds malonyl-CoA but does not catalyze carnitine-dependent acyl transfer). The IBA propagates the ancestral CPT1A/B fatty-acid/carnitine metabolism that CPT1C no longer performs.
+- **Lesson**: a "By similarity"/propagated annotation is weak evidence; when direct experimental papers in the target species report the activity is **absent or different in product** (AGK no ceramide; SAMD8 makes CPE not SM; CPT1C is a thioesterase not a transferase), the substrate/activity-specific IBA is an over-propagation. A family node that mixes substrate specificities (acylglycerol+sphingosine kinases; SM+CPE synthases) leaks substrate terms across specificity boundaries.
+
+### 12. Mis-Grouping Revealed by the WITH/FROM Column
+
+**The Problem**: The IBA `WITH/FROM` field names the exact source proteins the function was transferred *from*. Reading it frequently reveals the error directly — the source is either the **wrong family entirely** or the **wrong paralog**. This is the single most useful diagnostic in this whole catalog.
+
+**Tier A — wrong family / over-broad superfamily** (egregious; the source proteins are functionally unrelated):
+- **NTN1 / NTN3 (human)** — `GO:0000981`/`GO:0006357`/`GO:0000978` (DNA-binding transcription-factor activity, Pol II transcription regulation, cis-regulatory DNA binding): Netrins are **secreted** axon-guidance cues (UniProt: extracellular; PANTHER PTHR10574 Netrin/Laminin) with no DNA-binding domain — yet they carry nuclear **POU-domain transcription-factor** IBAs. The WITH/FROM proves it: the source list is POU-domain TFs (POU2F1 P14859, POU1F1 P28069, POU4F1 Q12837, POU4F3 Q15319, …). A secreted protein cannot be a Pol II transcription factor; this is a phylogenetic grouping error.
+- **NOTCH1 (human)** — `GO:0007411` (axon guidance): the WITH/FROM is **SLIT1/2/3** (O75093, O94813, O75094). NOTCH1 signals in neurogenesis but axon guidance is a SLIT function transferred across an over-broad node.
+- **IL23R (human)** — `GO:0004925` (prolactin receptor activity), `GO:0017046` (peptide hormone binding): the WITH/FROM is **PRLR** (P16471). IL23R is a type-I cytokine receptor that binds the cytokine IL-23, not the hormone prolactin; the superfamily node is too broad.
+
+**Tier B — wrong paralog** (subtle; the source is a close relative with a different function):
+- **ABRAXAS1 (human)** — `GO:0090307`/`GO:0008608`/`GO:0008017` (mitotic spindle assembly, spindle–kinetochore attachment, microtubule binding): every one of these IBAs traces via WITH/FROM to **`UniProtKB:Q15018` = ABRAXAS2** (ABRO1, the BRISC-complex paralog). ABRAXAS1 is a nuclear BRCA1-A DNA-damage scaffold; the spindle/MT biology belongs to ABRAXAS2.
+- **HINT2 (human)** — `GO:0005737` (cytoplasm): HINT2 has a mitochondrial targeting sequence and is mitochondrial; the cytoplasm term reflects the **HINT1** paralog.
+- **CPT1C** (above) similarly inherits CPT1A/B metabolism it no longer performs.
+- **Lesson**: **always read the WITH/FROM before flagging.** It tells you whether the IBA is a defensible family-level transfer or a traceable mis-grouping — and if a single paralog or out-of-family protein is the source, that is strong, near-mechanical evidence of error.
 
 ## Featured Examples
 
@@ -304,6 +327,15 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 | HMGCS2 | rat | Paralog-pathway over-annotation (ketogenic; FPP synthesis is HMGCS1) | MEDIUM | COMPLETE |
 | PEX2 | human | Complex over-transfer (peroxisomal E3, not Cdc73/Paf1 complex) | MEDIUM | COMPLETE |
 | AGK | human | Substrate over-propagation (no ceramide/sphingosine kinase activity; 2 papers) | MEDIUM | COMPLETE |
+| AKTIP | human | Pseudo-enzyme (UniProt CAUTION: lacks catalytic Cys for E2 activity) | HIGH | COMPLETE |
+| DPYSL4 | human | Pseudo-enzyme (CRMP-family metallo-hydrolase, non-catalytic) | HIGH | COMPLETE |
+| SAMD8 | human | Substrate neofunctionalization (CPE synthase, not sphingomyelin synthase) | MEDIUM | COMPLETE |
+| CPT1C | human | Neofunctionalization (palmitoyl thioesterase; lost carnitine transferase) | MEDIUM | COMPLETE |
+| NTN1/NTN3 | human | Wrong-family grouping (secreted Netrin → POU-domain TF activity) | HIGH | COMPLETE |
+| NOTCH1 | human | Wrong-source transfer (axon guidance from SLIT1-3) | MEDIUM | COMPLETE |
+| IL23R | human | Over-broad superfamily (prolactin-receptor activity from PRLR) | MEDIUM | COMPLETE |
+| ABRAXAS1 | human | Wrong-paralog (spindle/MT terms trace to ABRAXAS2) | MEDIUM | COMPLETE |
+| HINT2 | human | Wrong-paralog localization (cytoplasm term reflects HINT1) | LOW | COMPLETE |
 
 ## Recommendations for IBA Curation
 
@@ -320,6 +352,7 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 11. **Distinguish sub-activities**: capping vs severing, holdase vs foldase, slicing vs non-slicing — family-level IBA flattens these distinctions
 12. **Don't inherit a paralog's compartment/complex**: family members share folds but not localization or complex membership — verify the protein actually occupies the annotated complex/compartment (EIF4E2, ALDH1L1, PEX2)
 13. **Check the GO term's definition, not just its label, before calling an IBA directionally wrong**: e.g. "copper ion import" (GO:0015677) covers movement into a cell *or organelle*, so a Golgi-loading copper exporter can still satisfy it — a label that *looks* opposite may not be
+14. **Read the WITH/FROM column first**: it names the exact source proteins. If they are the wrong family (NTN1←POU TFs; NOTCH1←SLITs) or a single wrong paralog (ABRAXAS1←ABRAXAS2; HINT2←HINT1), that is near-mechanical evidence of error. If they are a broad, coherent set of true orthologs, the transfer is probably defensible — slow down before flagging
 
 ## Quality Indicators
 

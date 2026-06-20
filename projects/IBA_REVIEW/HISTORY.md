@@ -69,6 +69,55 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
    not a PAF1 gene. Separate "this is wrong" (provable) from "this is *why* it's
    wrong" (often a hypothesis).
 
+9. **Read the WITH/FROM column before anything else.** It names the exact source
+   proteins the IBA was transferred from. If they are the wrong family (NTN1's TF
+   terms came from POU2F1/POU1F1/POU4F1; NOTCH1's axon guidance from SLIT1/2/3) or
+   a single wrong paralog (ABRAXAS1's spindle terms from ABRAXAS2/Q15018; HINT2's
+   cytoplasm from HINT1), that is near-mechanical evidence of error. If they are a
+   broad, coherent set of true orthologs, the transfer is probably fine. I should
+   pull WITH/FROM on *every* candidate, not just the puzzling ones.
+
+10. **Uncertain ≠ wrong — leave the borderline ones (UQCRC1).** I nearly added
+    UQCRC1 as a "pseudo-peptidase," but UniProt says the bc1 core subunits *"seem to
+    have preserved their MPP processing properties (By similarity)"* and *"may be
+    involved in"* processing UQCRFS1. That is genuinely unresolved, so the right call
+    is UNDECIDED, not a confident REMOVE. Excluding it was the disciplined choice.
+
+---
+
+## 2026-06-20 (b) — Third pass: WITH/FROM-driven triage of the backlog
+
+Worked through more of the ~167 un-triaged REMOVE candidates, this time leading
+with the WITH/FROM column and confirming each against UniProt + family. Added 11
+verified examples and **two new patterns** (mis-grouping revealed by WITH/FROM;
+extended pseudo-enzyme + substrate/neofunctionalization sets).
+
+**Added (verified):**
+- **Pseudo-enzyme** — **AKTIP** (UniProt CAUTION: *"Lacks the conserved Cys residue
+  necessary for ubiquitin-[conjugation]"*; UEV pseudo-E2) and **DPYSL4** (fourth
+  CRMP-family member on the same non-catalytic basis as DPYSL2/3/CRMP1).
+- **Substrate / neofunctionalization** — **SAMD8/SMSr** (UniProt: makes ceramide
+  phosphoethanolamine from PE, not sphingomyelin from PC — *"The larger PC prevents
+  an efficient fit in the enzyme's catalytic pocket"*) and **CPT1C** (UniProt RecName
+  *"Palmitoyl thioesterase CPT1C"*; lost the ancestral carnitine-transferase activity).
+- **Mis-grouping (WITH/FROM-confirmed)** — Tier A wrong-family: **NTN1/NTN3** (secreted
+  Netrins carrying POU-domain TF terms; WITH/FROM = POU2F1 P14859, POU1F1 P28069,
+  POU4F1 Q12837, POU4F3 Q15319), **NOTCH1** (axon guidance from SLIT1/2/3
+  O75093/O94813/O75094), **IL23R** (prolactin-receptor activity from PRLR P16471).
+  Tier B wrong-paralog: **ABRAXAS1** (spindle/MT from ABRAXAS2 Q15018), **HINT2**
+  (cytoplasm reflects HINT1).
+
+**Examined and deliberately NOT added (insufficiently certain):**
+- **UQCRC1 / `GO:0017087` (MPP complex)** — UniProt: core subunits *"seem to have
+  preserved their MPP processing properties (By similarity)"* and *"may be involved
+  in"* UQCRFS1 processing. Residual activity is unresolved → UNDECIDED, not REMOVE.
+
+**Still in the backlog (not yet adjudicated):** many generic localization
+over-propagations (`GO:0005737` cytoplasm / `GO:0005634` nucleus on DHCR24, PIWIL1,
+BIRC6, EIF2AK3, GLA, GK5, SCGB1A1, …) — these look like a high-frequency "default
+compartment" category worth a dedicated future pass; CRY1/CRY2 photo-entrainment
+(contested); ankzf1 ERAD-vs-RQC; CALCOCO2 PML-body; BAIAP2L2 nucleoplasm.
+
 ---
 
 ## 2026-06-20 — Second corpus pass (+ verification)
