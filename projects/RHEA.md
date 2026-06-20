@@ -160,28 +160,36 @@ something EC does not. Detail and reproduction in
 
 ## Curated new mappings (SSSOM)
 
-Filling the gaps is a curation deliverable, not just an audit. The first curated
+Filling the gaps is a curation deliverable, not just an audit. The curated
 RHEA→GO mappings — reactions absent from `rhea2go` but with (or needing) a GO MF
 term — are recorded in [`rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml), the same
 **SSSOM YAML** format used by the [ANTIMICROBIAL_RESISTANCE](ANTIMICROBIAL_RESISTANCE.md)
-`aro2go` mapping set. The predicate encodes the specificity finding:
+`aro2go` mapping set. **40 mappings** so far, each backed by a review of a reviewed
+(Swiss-Prot) enzyme that carries the reaction
+([RHEA-MAPPING-REVIEWS.md](RHEA/RHEA-MAPPING-REVIEWS.md)). The predicate encodes
+the specificity finding:
 
-- **`skos:exactMatch`** (6 rows) — the GO term *is* the reaction's activity;
-  ready-to-add `rhea2go` entries. Most are **EC-bridge supported**: `ec2go` already
-  maps the reaction's EC to this exact GO term and `rhea2ec` maps the reaction to
-  that EC (e.g. SAMD8 RHEA:36079→`GO:0002950`; RHEA:13493→`GO:0004455` ketol-acid
-  reductoisomerase; RHEA:33751→`GO:0008962` phosphatidylglycerophosphatase).
-- **`skos:broadMatch`** (3 rows) — only a broader class term exists; the row
-  attaches the best current target and the comment names the narrower GO term to
-  request (PHYKPL RHEA:34091→`lyase activity`; B3GALNT2 RHEA:37667→
-  `acetylgalactosaminyltransferase activity`; SULT6B1 RHEA:26422→`aryl
-  sulfotransferase activity`).
+- **`skos:exactMatch`** (32 rows) — the GO term *is* the reaction's activity;
+  ready-to-add `rhea2go` entries. Most are **EC-bridge supported**: `ec2go` maps
+  the reaction's EC to this exact GO term and `rhea2ec` maps the reaction to that
+  EC. Backed by enzymes such as biotinidase (BTD, biotinidase deficiency), TPMT
+  (thiopurine pharmacogenomics), VKORC1L1 (warfarin), PYCR1, phosphoserine
+  aminotransferase (serC), mRNA-capping enzyme (RNGTT), and SAMD8/SMSr.
+- **`skos:broadMatch`** (4 rows) — only a broader class term exists; the comment
+  names the narrower GO term to request (PHYKPL→`lyase activity`; B3GALNT2→
+  `acetylgalactosaminyltransferase activity`; SULT6B1→`aryl sulfotransferase
+  activity`; DPEP2→`dipeptidase activity`).
+- **`sssom:NoTermFound`** (4 rows) — **new GO term suggestions**: reactions where
+  QuickGO returns no specific MF term at all (hppE fosfomycin epoxidase; a
+  trimethylaminoethylphosphonate dioxygenase; cellobionic-acid phosphorylase;
+  1,4-β-mannosyl-GlcNAc phosphorylase) — GO new-term-request candidates.
 
 Every GO id/label is verified non-obsolete against QuickGO; every RHEA id +
-equation comes from the UniProt catalytic-activity line. Validate with
+equation comes from the UniProt catalytic-activity line; every backing enzyme is
+reviewed (mostly PE1, with catalytic-activity PMIDs). Validate with
 `just validate-rhea-mappings` — SSSOM structural validation plus GO term/label
-validation (the GO objects are bound to the molecular-function branch; the
-generated nested view is [`rhea2go.terms.yaml`](RHEA/rhea2go.terms.yaml)).
+validation (GO objects bound to the molecular-function branch; generated nested
+view [`rhea2go.terms.yaml`](RHEA/rhea2go.terms.yaml)).
 
 ## Methods
 
@@ -258,8 +266,11 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
   (reverse gap), [`RHEA/rhea_ec_specificity.py`](RHEA/rhea_ec_specificity.py)
   (EC-masking, specificity, gaps), [`RHEA/rhea_gap_finder.py`](RHEA/rhea_gap_finder.py)
   (gap case selection)
-- **Curated mappings**: [`RHEA/rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml) — 9
-  SSSOM rows (6 exactMatch ready-to-add, 3 broadMatch); `just validate-rhea-mappings`
+- **Curated mappings**: [`RHEA/rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml) — 40
+  SSSOM rows (32 exactMatch ready-to-add, 4 broadMatch, 4 new-term suggestions),
+  each backed by a reviewed enzyme in
+  [`RHEA/RHEA-MAPPING-REVIEWS.md`](RHEA/RHEA-MAPPING-REVIEWS.md);
+  `just validate-rhea-mappings`
 - **Current conclusion**: RHEA is an active, reaction-grounded MF source whose
   most valuable contribution to this project is the **reverse direction** —
   surfacing UniProt-annotated enzyme activities that never propagate to GO — once
