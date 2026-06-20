@@ -61,7 +61,7 @@ def _review_with_gap_at(level: str) -> dict:
     the whole gene, a single existing annotation's review, and a core function.
     (ModuleReview / ModuleNode are validated under the ModuleReview target.)
     """
-    base = {
+    base: dict[str, object] = {
         "id": "Q12345",
         "gene_symbol": "TEST1",
         "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
