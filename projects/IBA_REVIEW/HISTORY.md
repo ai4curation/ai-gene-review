@@ -106,7 +106,7 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 **MSAs (finally — addressing the standing gap).** Through passes (a)–(d) I never built
 an alignment; "missing catalytic residue" rested on UniProt CAUTION text. Built a
-reproducible FAMSA pipeline ([msa/](msa/RESULTS.md), pyfamsa+biopython under `uv`) that
+reproducible FAMSA pipeline ([msa/](msa/RESULTS.md), `pyfamsa` under `uv`) that
 pulls catalytic-residue *positions* live from UniProt feature tables and inspects them:
 - **Argonautes**: AGO2 tetrad intact (D/D/H); AGO4 has **two** substitutions (D669G,
   H807R) → confirms no slicer activity. Bonus nuance: **AGO3 retains the tetrad**, so the
