@@ -1,0 +1,577 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode=true}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames*,x11names*}{xcolor}
+%
+\documentclass[11pt]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp}
+\else % if luatex or xelatex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{%
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath}
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{%
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{%
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{%
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{}
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={AUGR: an agentic, evidence-grounded framework for review and synthesis of gene-function annotations at scale},
+  colorlinks=true,
+  linkcolor=blue,
+  filecolor=Maroon,
+  citecolor=Blue,
+  urlcolor=blue,
+}
+\urlstyle{same}
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable,booktabs}
+\usepackage{array}
+\usepackage[numbers,sort&compress]{natbib}
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\emergencystretch}{3em}
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{4}
+
+\newcommand{\augr}{\textsc{augr}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\augr{}: an agentic, evidence-grounded framework for review and
+synthesis of gene-function annotations at scale}
+
+% NOTE: author list is a placeholder to be completed before submission.
+\author{The AI4Curation Project\thanks{Correspondence: Christopher J. Mungall.
+Author list is a placeholder pending finalization.}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Functional annotation databases such as the Gene Ontology (GO) underpin almost
+all high-throughput interpretation of molecular data, yet a substantial fraction
+of their content is over-annotated, under-specified, or propagated electronically
+without organism-specific scrutiny. Correcting this at scale is bottlenecked by
+\emph{synthesis}: deciding whether a single annotation is sound requires
+integrating primary literature, domain architecture, paralog and pathway context,
+and orthogonal evidence --- work that expert curators do well but cannot do for
+millions of annotations. We present \augr{} (Assessment via Unified Gene-evidence
+Review), an agentic, evidence-grounded framework that performs this synthesis gene
+by gene and records the outcome as a structured, schema-validated, human-readable
+review. \augr{} couples a large-language-model agent to a typed review schema
+(LinkML), a deterministic anti-hallucination validator that rejects fabricated
+ontology terms and unverifiable supporting quotations, and a library of
+specialized sub-pipelines for literature deep-research, ad-hoc bioinformatics,
+prediction assessment, annotation-rule review, and ontology-term obsoletion. We
+have applied \augr{} to a public corpus of 2{,}732 gene reviews spanning 165
+organism groupings and roughly 89{,}900 existing-annotation decisions: 52\% are
+accepted as core, 26\% retained as non-core, and 21\% flagged for change
+(over-annotated, removed, or re-termed), with over-annotation the single largest
+problem category. The same framework, applied to recent machine-learning function
+predictors --- including the BioReason-Pro protein-function reasoner used here as
+a running example --- shows that narrative and term-level predictions largely
+restate existing domain-based pipelines and fail in systematic, biologically
+diagnosable ways. \augr{} is designed as a scalable intermediate layer between
+aggregate prediction benchmarks and prospective experiment, and as a production
+tool for curators. All reviews, schema, validator, and pipelines are released
+openly.
+\end{abstract}
+
+\section{Introduction}
+
+Determining what each gene product does, where in the cell it acts, and in which
+biological processes it participates is a central task of molecular biology and
+the foundation of nearly every high-throughput analysis of omics data. The Gene
+Ontology (GO) provides the shared vocabulary and the annotation corpus that make
+such analyses possible \cite{ashburner2000,goconsortium2023}. GO annotations come
+from two broad sources: \textbf{literature-based expert curation}, in which
+professional curators read primary papers and encode findings as evidence-coded
+statements; and \textbf{computational inference}, which propagates function across
+the long tail of uncharacterized proteins through family signatures, phylogenetic
+trees, and orthology.
+
+Both sources accumulate error. A large literature documents systematic biases and
+over-annotation in GO: experimental annotation is concentrated on a small set of
+popular genes \cite{haynes2018,schnoes2013}, electronic inference is uneven in
+quality \cite{skunca2012}, and the ontology and its annotations drift over time so
+that legacy statements no longer reflect current understanding
+\cite{gaudet2017}. The consequences are not cosmetic: enrichment analyses, pathway
+reconstruction, and target identification all inherit whatever distortions are
+present in the annotation base.
+
+Correcting these problems is hard not because individual judgments are subtle in
+isolation, but because each judgment requires \textbf{synthesis}. Deciding whether
+``protein binding'' should be replaced by a specific adapter activity, whether a
+conserved-but-degenerate enzyme domain still carries catalytic activity, or
+whether a phenotype readout licenses a process annotation requires a reviewer to
+pull together domain architecture, paralog subfamily context, pathway presence or
+absence in the organism, genetic evidence, and orthogonal primary literature. This
+is the \textbf{synthesis bottleneck}. Human experts perform it routinely, but it
+does not scale to the hundreds of millions of annotations in current databases, nor
+to the growing stream of machine-generated predictions awaiting triage.
+
+The need for scalable synthesis has become especially acute with the rise of
+machine-learning function predictors. Deep models and protein language models
+\cite{lin2023,kulmanov2020} now emit GO terms, and a newer class of
+reasoner-style systems --- exemplified by BioReason-Pro \cite{fallahpour2026},
+which we use as a running example throughout this paper --- emit free-text
+rationales and functional summaries alongside term lists. Aggregate benchmarks
+such as CAFA \cite{radivojac2013,jiang2016,zhou2019} measure agreement with a
+biased GO snapshot and operate on the bag-of-terms projection of a prediction;
+they cannot say whether a model's biological rationale is mechanistically
+plausible, whether it ignored organism context, or whether it merely restated an
+existing domain-based inference. The most pointed recent demonstration is de
+Cr\'ecy-Lagard \emph{et al.} \cite{decrecylagard2025}, who manually reviewed all
+453 enzyme-function predictions made by a top-performing deep model for
+uncharacterized \emph{E. coli} proteins and found only a handful genuinely novel
+and correct; the rest fell into reproducible, biologically explicable error
+classes --- each rejection requiring exactly the multi-evidence synthesis
+described above.
+
+We present \augr{} (\emph{Assessment via Unified Gene-evidence Review}), an
+agentic curation framework that automates this synthesis at the granularity of a
+single gene and records every decision as a structured, validated, human-readable
+review. \augr{} is not a new predictor and not a replacement for CAFA-style
+metrics; it is a complementary review layer that (i) re-examines existing curated
+and electronic annotations against synthesized evidence, (ii) assesses
+machine-generated predictions for biological validity rather than corpus
+agreement, and (iii) feeds the resulting corrections back to ontology developers
+and annotation pipelines. Its defining commitment is that an agent operating over
+biological knowledge must be \emph{constrained}: every ontology term it uses and
+every quotation it cites is checked against external truth, so that scale does not
+come at the cost of fabrication.
+
+This paper makes four contributions. (1) We describe the \augr{} framework: its
+design principles, its typed review schema, its per-gene agentic pipeline, and the
+deterministic anti-hallucination validator that makes agentic curation trustworthy
+(Section~\ref{sec:framework}). (2) We describe a family of mature sub-pipelines
+built on the same substrate --- existing-annotation review, prediction review,
+annotation-rule review, ontology obsoletion, and ad-hoc bioinformatics ---
+grounded in real curation projects (Section~\ref{sec:pipelines}). (3) We report
+corpus-level results from applying \augr{} to 2{,}732 gene reviews across 165
+organism groupings, quantifying the action distribution and the dominant
+over-annotation patterns (Section~\ref{sec:results}). (4) We release all reviews,
+the schema, the validator, and the pipelines as open resources at
+\code{github.com/ai4curation/ai-gene-review}.
+
+\section{The \augr{} framework}
+\label{sec:framework}
+
+\subsection{Design principles}
+
+\augr{} is built around five principles that distinguish trustworthy agentic
+curation from unconstrained generation.
+
+\begin{enumerate}
+\tightlist
+\item \textbf{Evidence-grounded.} Every retained or proposed annotation must be
+tied to a verifiable source --- a primary publication with a verbatim supporting
+quotation, an explicit bioinformatic analysis, or a named upstream pipeline.
+\item \textbf{Schema-constrained.} Reviews conform to a typed LinkML schema
+\cite{linkml} with controlled vocabularies for actions, evidence, and assessment
+categories, so that outputs are machine-validatable and aggregatable rather than
+free prose.
+\item \textbf{Anti-hallucination by construction.} A deterministic validator,
+external to the agent, rejects fabricated ontology terms and unverifiable
+quotations before a review is accepted (Section~\ref{sec:validation}).
+\item \textbf{Auditable and reversible.} Each decision carries a rationale and
+provenance, mirroring the transparency of family- and phylogeny-based pipelines,
+so a curator can trace and overturn any call.
+\item \textbf{Human-in-the-loop, not human-out.} \augr{} is designed to defer to
+expert curators where evidence is incomplete (an explicit \code{UNDECIDED}
+action), and its outputs are surfaced for community feedback rather than written
+silently to a database.
+\end{enumerate}
+
+\subsection{The review unit and schema}
+
+The unit of review is a single gene (and its corresponding UniProt entry),
+captured as a \code{GeneReview} object. The schema's principal components are:
+
+\begin{itemize}
+\tightlist
+\item a \textbf{description}: a project-independent biological summary of the gene
+product;
+\item \textbf{existing\_annotations}: a review of every current GO annotation
+(drawn from GOA via QuickGO \cite{quickgo}), each assigned one of a small set of
+controlled \emph{actions} (Table~\ref{tab:actions}) together with a reason and, where
+applicable, a proposed replacement term;
+\item \textbf{core\_functions}: a synthesized set of GO-CAM-like
+\cite{thomas2019} ``annotons'' capturing the gene product's essential, evolved
+molecular functions in context (molecular function, the process and location it
+acts in, and complex membership);
+\item \textbf{references}: literature and bioinformatics sources, each optionally
+carrying a reviewer-supplied \code{reference\_review} that records relevance and
+citation correctness (e.g.\ flagging a well-formed identifier that points to the
+wrong paper);
+\item \textbf{proposed\_new\_terms}, \textbf{suggested\_questions}, and
+\textbf{suggested\_experiments}.
+\end{itemize}
+
+The action vocabulary is deliberately richer than accept/reject. Beyond
+\code{ACCEPT} and \code{REMOVE}, \augr{} distinguishes \code{KEEP\_AS\_NON\_CORE}
+(valid but peripheral to the gene's core function --- important for pleiotropic
+genes), \code{MARK\_AS\_OVER\_ANNOTATED} (not wrong but over-reaching),
+\code{MODIFY} (right essence, better term available --- paired with a replacement),
+\code{UNDECIDED} (insufficient accessible evidence; the mandated action when the
+agent cannot verify the source), and \code{NEW} (a proposed annotation not present
+in GOA). Isoform-specific and negated (\code{NOT}) annotations are tracked
+explicitly.
+
+\begin{table}[htbp]
+\centering
+\caption{The controlled action vocabulary applied to each existing annotation.}
+\label{tab:actions}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.30\linewidth}>{\raggedright\arraybackslash}p{0.62\linewidth}@{}}
+\toprule
+\textbf{Action} & \textbf{Meaning} \\
+\midrule
+\code{ACCEPT} & Correct and well supported; retained as a core function. \\
+\code{KEEP\_AS\_NON\_CORE} & Valid but not central (e.g.\ developmental or contextual roles of a pleiotropic gene). \\
+\code{MARK\_AS\_OVER\_ANNOTATED} & Not strictly wrong, but an over-reach given the evidence. \\
+\code{MODIFY} & Essence is sound but a better (more/less specific) term exists; a replacement is proposed. \\
+\code{REMOVE} & Unlikely correct on combined evidence (e.g.\ a demonstrably wrong mapping or over-propagated inference). \\
+\code{UNDECIDED} & Evidence cannot be accessed or adjudicated; defer to expert curators. \\
+\code{NEW} & A function supported by evidence but absent from GOA; proposed as a new annotation. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The per-gene agentic pipeline}
+
+For each gene, \augr{} runs a reproducible sequence of steps, most of which are
+delegated to specialized agents or deterministic tools rather than to a single
+monolithic prompt:
+
+\begin{enumerate}
+\tightlist
+\item \textbf{Fetch.} Deterministic retrieval of the UniProt record, the GOA
+annotation set, and the cited publications, plus a seeded review stub
+(\code{just fetch-gene <organism> <gene>}). The corpus currently caches 20{,}690
+publications and 4{,}895 Reactome entries locally.
+\item \textbf{Deep research.} A literature-synthesis agent produces a cited notes
+document (\code{GENE-notes.md} / \code{GENE-deep-research-*.md}) in which every
+assertion is tied to a source and a verbatim supporting quotation. Multiple
+research providers can be used; the resulting summaries are treated as preliminary
+evidence, not ground truth.
+\item \textbf{Annotation-by-annotation review.} An agent evaluates each existing
+annotation against the synthesized evidence and assigns an action, a reason, and
+where needed a replacement term, following GO curation guidelines (including the
+True Path Rule and ECO evidence hierarchy \cite{giglio2019}). Crucially, the agent
+is instructed \emph{not} to overturn an experimental annotation merely because the
+cached abstract foregrounds a paralog --- the full text the curator read is often
+not in cache --- defaulting instead to \code{UNDECIDED}.
+\item \textbf{Ad-hoc bioinformatics (optional).} Where database lookups are
+insufficient, a bioinformatics sub-agent writes and executes reproducible analysis
+code (active-site residue checks, domain architecture, signal-peptide and
+transmembrane prediction, cross-species comparison) in a per-gene, dependency-pinned
+workspace, and reports results --- including inconclusive results --- without
+fabrication.
+\item \textbf{Core-function synthesis.} A synthesis agent distills the accepted and
+modified annotations into a small set of GO-CAM-like core functions.
+\item \textbf{Validation.} The review is checked against the schema and the
+anti-hallucination validator (\code{just validate <organism> <gene>}); failures
+block acceptance.
+\end{enumerate}
+
+\subsection{Anti-hallucination validation}
+\label{sec:validation}
+
+The central technical enabler of trustworthy scale is a deterministic validator
+that runs \emph{outside} the agent and treats the agent's output as untrusted. It
+enforces several independent checks:
+
+\begin{itemize}
+\tightlist
+\item \textbf{ID/label tuple checksums.} Every ontology term must carry both an
+identifier and a label, and the pair must match the canonical term in the source
+ontology, resolved live via OAK/OLS \cite{oak}. A fabricated identifier, or a real
+identifier with the wrong label, is rejected.
+\item \textbf{Verbatim supporting text.} Every \code{supporting\_text} quotation
+must be an exact substring of the cited cached publication. A paraphrased,
+invented, or wrong-paper quotation fails automatically.
+\item \textbf{Citation--title consistency.} Each reference's stored title must
+match the fetched record, catching transposed or wrong PMIDs.
+\item \textbf{Branch reachability.} Author-supplied terms in \code{core\_functions}
+are bound to dynamic enums by GO aspect: a cellular-component term placed in a
+molecular-function slot is a blocking error.
+\end{itemize}
+
+A deliberate design choice is \textbf{two-tier trust}: machine-sourced identifiers
+that arrive from GOA (the \code{existing\_annotations} term ids) are \emph{not}
+hard-validated, because they carry no hallucination risk and GOA legitimately leads
+or lags the ontology release used for validation; author-supplied identifiers (the
+core-function terms the agent invents) \emph{are} strictly validated. The
+validator thus concentrates scrutiny exactly where fabrication can occur. Because
+these checks are mechanical, they catch the citation failures that no amount of
+fluent prose can hide --- and they free human review to focus on the substantive
+question of whether a correctly-cited paper actually \emph{supports} the claim.
+
+\section{Pipelines}
+\label{sec:pipelines}
+
+The same review substrate supports a family of pipelines, each matured through a
+concrete curation project. We summarize the five most developed.
+
+\subsection{Existing-annotation review}
+
+The core pipeline re-examines the curated and electronic annotations already in
+GOA. At corpus scale it surfaces recurring, source-attributable failure modes that
+individual annotations hide. Several have been worked up as standalone analyses:
+
+\begin{itemize}
+\tightlist
+\item \textbf{Uninformative terms.} ``Protein binding'' (GO:0005515) and similarly
+generic terms are systematically flagged for \code{MODIFY} toward a specific
+molecular function (e.g.\ an adapter or scaffold activity) where evidence permits.
+\item \textbf{IBA over-propagation.} Phylogenetically inferred (IBA) annotations
+transfer function from characterized orthologs, but break for pseudo-enzymes,
+functionally diverged orthologs, and over-general parent terms --- e.g.\ histone
+demethylase activity propagated to the degenerate JmjC protein Epe1, or
+ubiquitin-activating activity propagated to the ISG15-specific UBA7.
+\item \textbf{Enzyme specificity.} Annotations that are too narrow, too broad, or
+simply the wrong reaction relative to the enzyme's demonstrated substrate range are
+re-termed (e.g.\ a phosphatidylcholine-specific lysophospholipase call corrected to
+the broader phospholipase B activity).
+\item \textbf{Assay-to-function reliability.} A conceptual framework distinguishes
+readouts that measure a gene product's own molecular activity from distal,
+convergent phenotype readouts (ROS, caspase activation, the UPR, intracellular
+Ca\textsuperscript{2+}), the latter being the dominant driver of process-level
+over-annotation.
+\item \textbf{Evidence-source sufficiency.} A meta-analysis of which cheap evidence
+sources (reviews, abstracts, deep-research reports) suffice to confirm an
+\code{ACCEPT}, informing how much effort each action actually requires.
+\end{itemize}
+
+\subsection{Prediction review}
+
+A parallel schema, \code{PredictionReview}, evaluates computational predictions
+that are \emph{not} in curated GOA --- from enzyme-EC predictors, InterPro2GO,
+PANTHER/IBA, and reasoner-style systems. Predictions are scored not by corpus
+agreement but by biological validity, using the taxonomy of de Cr\'ecy-Lagard
+\emph{et al.} \cite{decrecylagard2025} (Table~\ref{tab:pred}), with explicit error
+types (paralog over-annotation, ignored pathway context, in-vitro/in-vivo
+ambiguity, frequency bias, training-data contamination). Applied to BioReason-Pro
+\cite{fallahpour2026} over two linked benchmarks --- a 139-gene set for narrative
+review and a 95-gene subset with term-level predictions --- this pipeline finds
+that the model's summaries largely recapitulate InterPro2GO in narrative form,
+default to ``cytosolic'' when no transmembrane domain is present (failing for
+periplasmic, vacuolar, mitochondrial-matrix, and ER proteins), assume catalytic
+activity from degenerate domains (pseudo-enzymes), and give near-identical generic
+descriptions to distinct paralogs. As a positive control, \augr{} recapitulates
+the major error calls of the de Cr\'ecy-Lagard \emph{E. coli} expert review from
+an answer-key-withheld starting point \cite{mungall2026esrecolidetmini}.
+
+\begin{table}[htbp]
+\centering
+\caption{Biological-validity assessment categories for predictions
+(\code{PredictionReview}), after de Cr\'ecy-Lagard \emph{et al.}
+\cite{decrecylagard2025}.}
+\label{tab:pred}
+\small
+\begin{tabular}{@{}llp{0.60\linewidth}@{}}
+\toprule
+\textbf{Code} & \textbf{Score} & \textbf{Meaning} \\
+\midrule
+COR & 2 & Correct novel prediction. \\
+CNN & 2 & Correct but not novel (already in training data). \\
+LSP & 2 & Less precise than the existing annotation. \\
+UNC & 1 & Uncertain --- cannot validate or refute. \\
+PLI & 0 & Paralog incorrect (wrong subfamily). \\
+NPI & 0 & Non-paralog incorrect (refuted by evidence). \\
+REP & 0 & Repetition (frequency-biased prediction). \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Annotation-rule review}
+
+Automated annotation rules (UniProt's ARBA and UniRule) generate millions of GO
+annotations from combinations of InterPro domains, PANTHER families, and taxonomic
+constraints; a single faulty rule propagates to thousands of proteins. \augr{}
+reviews rules directly, assessing parsimony, literature support, condition
+overlap, GO-term specificity, and taxonomic scope, and recommends \code{ACCEPT},
+\code{MODIFY}, or \code{REMOVE}. For example, a rule assigning ``adaptive
+thermogenesis'' --- a mammalian physiological process --- under a broad Eukaryota
+scope was caught annotating a fungal carboxypeptidase, indicating the scope should
+be restricted to Mammalia. The corpus currently contains 73 rule reviews.
+
+\subsection{Ontology obsoletion and replacement}
+
+Review frequently reveals that the problem is the \emph{ontology}, not the
+annotation: a term is mis-structured, conflates distinct concepts, or encodes a
+spurious process. \augr{} tracks these as obsoletion-and-replacement campaigns
+that feed corrections back to GO. The corpus includes 24 such campaigns (e.g.\
+various vesicle-tethering, membrane-contact-site, and metabolic sub-pathway terms),
+each documenting the offending term, the evidence against it, and a proposed
+replacement or restructuring.
+
+\subsection{Ad-hoc bioinformatics}
+
+When neither literature nor existing annotation resolves a question, the
+bioinformatics sub-agent performs targeted, reproducible analysis. Representative
+cases include active-site validation that re-classifies a domain-bearing protein as
+a pseudo-enzyme (Epe1's HVD-for-HXD substitution), localization analysis that
+distinguishes a soluble periplasmic enzyme from a membrane-bound one, and domain
+architecture comparison for small uncharacterized proteins. Analyses live in
+per-gene, dependency-pinned workspaces with a \code{RESULTS.md} that can be cited
+like any other reference, and the agent is explicitly prohibited from writing code
+that fakes results or merely defers to a website.
+
+\section{Results: corpus-level review}
+\label{sec:results}
+
+We applied \augr{} to a public corpus of 2{,}732 gene reviews (2{,}630 with
+synthesized core functions) spanning 165 organism groupings, from human, mouse,
+rat, worm, and yeast to a broad tail of bacteria, archaea, plants, fungi, and
+non-model eukaryotes. Across these reviews, \augr{} adjudicated roughly 89{,}900
+existing GO annotations and proposed 1{,}785 new ones.
+
+The distribution of actions over existing annotations (Table~\ref{tab:corpus})
+quantifies the over-annotation problem directly. About 52\% of existing
+annotations are accepted as representing a core function and a further 26\% are
+retained as valid but non-core --- so roughly four in five existing annotations are
+judged biologically sound in some form. The remaining one in five is flagged for
+change: \emph{over-annotation is the single largest problem category} (10\% of all
+existing annotations), roughly equalling outright removal (5.5\%) and re-terming
+(5.0\%) combined. Only 1\% of annotations were left \code{UNDECIDED}, indicating
+that accessible evidence was usually sufficient to reach a call --- while that
+escape hatch remains available precisely so the agent does not overrule curators
+from incomplete evidence.
+
+\begin{table}[htbp]
+\centering
+\caption{Distribution of \augr{} actions over existing GO annotations in the
+public corpus ($\approx$89{,}900 decisions across 2{,}732 gene reviews; 165
+organism groupings). \code{NEW} proposals (1{,}785) are tabulated separately as
+they do not review an existing annotation.}
+\label{tab:corpus}
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Action} & \textbf{Count} & \textbf{\% of existing} \\
+\midrule
+\code{ACCEPT} & 47{,}005 & 52.3 \\
+\code{KEEP\_AS\_NON\_CORE} & 23{,}264 & 25.9 \\
+\code{MARK\_AS\_OVER\_ANNOTATED} & 9{,}212 & 10.2 \\
+\code{REMOVE} & 4{,}973 & 5.5 \\
+\code{MODIFY} & 4{,}501 & 5.0 \\
+\code{UNDECIDED} & 922 & 1.0 \\
+\midrule
+Retained (ACCEPT $+$ non-core) & 70{,}269 & 78.2 \\
+Flagged for change (over-annotated $+$ remove $+$ modify) & 18{,}686 & 20.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two qualitative observations recur across the corpus and are consistent with the
+prior literature on annotation bias \cite{schnoes2013,haynes2018}. First, the
+flagged annotations are concentrated in biological-process and generic
+molecular-function terms, and in a handful of catch-all terms (notably ``protein
+binding''), rather than spread uniformly --- meaning that a small number of terms
+and pipelines account for a disproportionate share of the problem and are
+therefore high-value targets for systematic fixes. Second, the same structural
+errors recur across unrelated genes: pseudo-enzyme over-calls, paralog-blind
+transfer, and localization defaults. These are exactly the patterns the prediction
+pipeline finds in machine-learning predictors, suggesting that current models have
+learned the annotation \emph{distribution}, including its biases, rather than the
+underlying biology.
+
+The framework also yields an inverse resource: a literature-grounded register of
+\textbf{function knowledge gaps} --- defensible statements of what remains unknown
+about a gene product --- which complements the roughly 20\% of even well-studied
+proteomes that remain functionally dark \cite{wood2019,rocha2023,stoeger2018}.
+
+\section{Deployment and community feedback}
+
+\augr{} reviews are not written silently into a database. Every review is rendered
+as an interactive web page with per-element thumbs-up/down voting and a linked
+detailed evaluation form, so that domain experts can flag disagreements at the
+granularity of a single decision. The rendered corpus is browsable at
+\url{https://ai4curation.io/ai-gene-review/}. This feedback is the intended channel
+by which \augr{}'s automated synthesis is reconciled with expert judgment and by
+which systematic errors in the framework itself are surfaced and corrected.
+
+\section{Discussion}
+
+\augr{} occupies a deliberately narrow niche: a scalable \emph{intermediate} layer
+between aggregate function-prediction benchmarks and prospective wet-lab
+experiment. Aggregate benchmarks such as CAFA \cite{radivojac2013,zhou2019} are
+indispensable for tracking field-level progress but reward agreement with a biased
+corpus and cannot inspect biological rationale; expert review reveals systematic
+errors but does not scale. \augr{} keeps the multi-evidence synthesis that makes
+expert review informative, while constraining the agent tightly enough --- typed
+schema, external term and quotation validation, two-tier trust, and an explicit
+defer-to-curator action --- that it can be run over tens of thousands of genes
+without degenerating into fluent fabrication.
+
+The corpus results argue that this layer is needed regardless of whether the
+inputs are human- or machine-generated. One in five existing annotations is
+flagged for change, with over-annotation dominating; and recent reasoner-style
+predictors, despite topping aggregate benchmarks, largely restate domain-based
+pipelines and fail in the same structured ways (pseudo-enzymes, paralog-blindness,
+localization defaults) that \augr{} flags in the legacy corpus. The value of
+\augr{} is less in any single verdict than in making these failure modes
+\emph{visible, attributable, and aggregatable} --- and in feeding the corrections
+back to ontology developers (obsoletion campaigns), annotation pipelines (rule
+review), and model developers (prediction review).
+
+\paragraph{Limitations.} \augr{}'s judgments are only as good as the evidence it
+can access: cached publications are frequently abstract-only, and the framework is
+deliberately conservative (\code{UNDECIDED}) rather than risk overruling an
+experimental annotation whose full text it has not read. The action distribution
+reflects the genes selected for review --- skewed toward genes where curators
+suspected problems --- and should not be read as an unbiased estimate over all of
+GOA. Agentic synthesis can still miss nuanced experimental detail, and the
+validator guarantees that citations are \emph{real} and \emph{verbatim}, not that
+they are the \emph{best} or \emph{sufficient} support for a claim --- which is why
+human review and community feedback remain integral rather than optional.
+
+\paragraph{Outlook.} The natural extensions are to widen coverage toward the dark
+proteome, to close the loop from obsoletion and rule-review recommendations into
+production GO releases, and to use the accumulating corpus of validated reviews as
+a substrate for evaluating --- and eventually training --- the next generation of
+function predictors against biological validity rather than corpus agreement.
+
+\section*{Data and code availability}
+
+All gene reviews, the LinkML schema, the anti-hallucination validator, the
+prediction-, rule-, obsoletion-, and bioinformatics pipelines, and the project
+pages are openly available at \code{github.com/ai4curation/ai-gene-review}
+\cite{aigenereview}. Rendered, browsable reviews are at
+\url{https://ai4curation.io/ai-gene-review/}. The \emph{E. coli} positive-control
+dataset is archived on Zenodo \cite{mungall2026esrecolidetmini}.
+
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+\end{document}
