@@ -17,6 +17,34 @@ just module-deep-research-perplexity peroxisome-lifecycle
 just module-deep-research-openai modules/gluconeogenesis.yaml
 ```
 
+Render module pages (to `pages/modules/`) with:
+
+```bash
+uv run ai-gene-review render-modules --all
+uv run ai-gene-review render-modules modules/bbsome.yaml
+```
+
+Each rendered module page carries a **Derived QC** panel (computed by
+`ai_gene_review.module_qc`) with:
+
+- **Recommended-field compliance** — `linkml-data-qc` analysis of the
+  `ModuleReview` document, listing any recommended slots populated below 100%.
+- **Module deep research** — whether a `<module>-deep-research-*.md` report
+  exists alongside the module YAML, and from which provider(s).
+- **Leaf nodes lacking representative members** — terminal nodes (no `parts`,
+  no `variant_sets`) whose participants do not ground to a concrete protein
+  (a `gene_product`/`gene`/`active_unit` with a `UniProtKB` term, or a `family`
+  with `representative_members` / PTN exemplars). These are the abstract leaves
+  that still need a concrete UniProt/PTN exemplar.
+- **Gene-review completeness** — for every `UniProtKB` grounding in the module,
+  joined against `genes/**/*-ai-review.yaml`: whether the gene has a review,
+  whether that review is complete (no PENDING/UNDECIDED annotations), and
+  whether it has its own deep research.
+
+The module index (`pages/modules/index.html`) surfaces the headline figures
+(reviewed-gene count, leaf-grounding gaps, module deep-research presence) as
+sortable columns.
+
 Design notes:
 
 - Use `parts` for required or optional submodules.

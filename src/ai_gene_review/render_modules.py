@@ -12,6 +12,8 @@ from urllib.parse import quote
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from ai_gene_review.module_qc import collect_module_qc, index_gene_reviews
+
 
 def as_list(value: Any) -> list[Any]:
     """Return a value as a list, treating null and missing values as empty."""
@@ -292,6 +294,7 @@ def make_summary(
     yaml_path: Path,
     output_path: Path,
     index_path: Path,
+    qc: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """Build a compact summary used by the module index page."""
     module_value = data.get("module")
@@ -311,6 +314,7 @@ def make_summary(
         "module_type": module.get("module_type"),
         "concepts": concepts,
         "stats": collect_module_stats(data),
+        "qc": qc,
     }
 
 
@@ -368,8 +372,15 @@ def render_module(
     output_dir: Path = Path("pages/modules"),
     modules_dir: Path = Path("modules"),
     template_path: Optional[Path] = None,
+    gene_index: Optional[dict[str, Path]] = None,
+    genes_dir: Path = Path("genes"),
 ) -> tuple[Path, list[str]]:
-    """Render a single module YAML file to HTML."""
+    """Render a single module YAML file to HTML.
+
+    ``gene_index`` (base UniProt accession -> review path) may be supplied to
+    avoid re-scanning the gene corpus when rendering many modules; it is built
+    lazily inside the QC step when omitted.
+    """
     data = load_module_yaml(yaml_path)
 
     if template_path is None:
@@ -381,6 +392,9 @@ def render_module(
     index_path = output_dir / "index.html"
     stats = collect_module_stats(data)
     anchor_map = collect_anchor_map(data)
+    qc = collect_module_qc(
+        yaml_path, data, gene_index=gene_index, genes_dir=genes_dir
+    )
     warnings = [
         f"Duplicate module element id: {duplicate_id}"
         for duplicate_id in collect_duplicate_ids(data)
@@ -391,6 +405,7 @@ def render_module(
         data=data,
         module=data.get("module", {}),
         stats=stats,
+        qc=qc,
         source_file=yaml_path.as_posix(),
         output_path=output_path.as_posix(),
         index_href=relative_href(output_path, index_path),
@@ -447,6 +462,7 @@ def render_all_modules(
     modules_dir: Path = Path("modules"),
     output_dir: Path = Path("pages/modules"),
     template_path: Optional[Path] = None,
+    genes_dir: Path = Path("genes"),
 ) -> tuple[list[Path], list[str]]:
     """Render all module YAML files to HTML and create an index page."""
     output_paths: list[Path] = []
@@ -459,6 +475,9 @@ def render_all_modules(
         print(f"No module YAML files found in {modules_dir}")
         return output_paths, all_warnings
 
+    # Build the gene-review index once and reuse it across all modules.
+    gene_index = index_gene_reviews(genes_dir)
+
     clean_module_html(output_dir)
     print(f"Found {len(yaml_files)} module files to render")
     for yaml_file in yaml_files:
@@ -468,9 +487,16 @@ def render_all_modules(
                 output_dir=output_dir,
                 modules_dir=modules_dir,
                 template_path=template_path,
+                gene_index=gene_index,
+                genes_dir=genes_dir,
             )
             data = load_module_yaml(yaml_file)
-            summaries.append(make_summary(data, yaml_file, output_path, index_path))
+            qc = collect_module_qc(
+                yaml_file, data, gene_index=gene_index, genes_dir=genes_dir
+            )
+            summaries.append(
+                make_summary(data, yaml_file, output_path, index_path, qc=qc)
+            )
             output_paths.append(output_path)
 
             if warnings:
