@@ -118,6 +118,44 @@ This is strictly more than the existing `suggested_questions` field (which asks 
 but cites nothing): the added value is the **adjudicated boundary plus provenance for the
 unknown**.
 
+## Structured curation: the `KnowledgeGap` schema class
+
+The anatomy above is now a first-class schema object, `KnowledgeGap`, so a gap can be curated
+*in the gene/module YAML itself* rather than only as prose on this page. This mirrors the way
+the [Monarch `dismech`](https://github.com/monarch-initiative/dismech) knowledge base promotes
+unknowns to a first-class `Discussion` object (with `kind` / `status` / `proposed_experiment`),
+and goes further by demanding **provenance for the unknown** and a biology/curation/ontology
+typing.
+
+A `KnowledgeGap` (see `src/ai_gene_review/schema/gene_review.yaml`) carries:
+
+- `gap_statement` (required) and `boundary` — the precise unknown and the edge of knowledge;
+- `gap_kind` (`BIOLOGY` / `CURATION` / `ONTOLOGY`, multivalued for blends), `dark_aspect`
+  (`MF_DARK` / `BP_DARK` / `CC_DARK` / `WHOLLY_DARK` / `RESIDUAL_SUBGAP`), and a dismech-style
+  lifecycle `status` (`OPEN` / `NARROWING` / `CLOSING` / `RESOLVED`);
+- `significance` and `resolution`;
+- `provenance` — a list of `SupportingTextInReference`, so each "the field's own admission of
+  ignorance" quote is a **verbatim substring checked by the reference validator**, exactly like
+  `supported_by`. (When the only source is a DOI-only paper or a local analysis, anchor to a
+  `file:` reference, as elsewhere in this repo.)
+- `proposed_terms` — inline `ProposedOntologyTerm`s for `ONTOLOGY` gaps.
+
+It can be attached at five levels — the whole gene (`GeneReview.knowledge_gaps`), a single
+annotation (`ExistingAnnotation.review.knowledge_gaps`, ideal for **residual sub-gaps**), a
+core function (`CoreFunction.knowledge_gaps`), a whole module (`ModuleReview.knowledge_gaps`),
+or a single module step (`ModuleNode.knowledge_gaps`).
+
+**Worked YAML exemplars in the KB:** `genes/human/CFAP300/` (gene-level biology+ontology gap,
+two PMID provenance quotes) and `genes/human/RAB9A/` (annotation-level residual sub-gap on the
+GTPase-activity review, the missing GEF/GAP).
+
+**Rendered from data:** running `just aggregate-knowledge-gaps` (or
+`python scripts/aggregate_knowledge_gaps.py`) walks every gene/module YAML and regenerates the
+[Structured Knowledge-Gap Register](FUNCTION_KNOWLEDGE_GAPS/structured-gaps.md) plus
+`reports/knowledge_gaps.tsv`. The prose worked-entries below remain the curated narrative; the
+register is their queryable, schema-backed counterpart and will grow as gaps are recorded in the
+YAML.
+
 ## Worked example: the CFAP300 molecular-function gap
 
 CFAP300 (formerly C11orf70) is a dynein axonemal assembly factor; loss-of-function causes
