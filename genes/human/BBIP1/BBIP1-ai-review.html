@@ -1,0 +1,3626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBIP1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>BBIP1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A8MTZ0" target="_blank" class="term-link">
+                        A8MTZ0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "BBIP1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A8MTZ0" data-a="DESCRIPTION: BBIP1 (also known as BBIP10 and BBS18) is the smal..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>BBIP1 (also known as BBIP10 and BBS18) is the small (92 aa, ~10.5 kDa) eighth core subunit of the BBSome, an octameric, coat-like adaptor complex (BBS1, BBS2, BBS4, BBS5, BBS7, BBS8, BBS9 and BBIP10) that traffics signaling membrane receptors, including ciliary GPCRs, into and out of the primary cilium in conjunction with intraflagellar transport and the small GTPase ARL6/BBS3. BBIP1 is an integral, stably incorporated subunit that joins the complex through BBS4 and is required for BBSome integrity/stability and for primary cilium assembly. It is found inside the primary cilium and in the cytoplasm but not at centriolar satellites. Beyond its structural role in the BBSome, BBIP1 has a distinct activity not shared by other BBSome subunits; it is required for cytoplasmic microtubule polymerization and acetylation, acting in part through physical interaction with the tubulin deacetylase HDAC6. BBIP1 is restricted to ciliated organisms, and loss-of-function mutations cause the ciliopathy Bardet-Biedl syndrome type 18.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034464" target="_blank" class="term-link">
+                                    GO:0034464
+                                </a>
+                            </span>
+                            <span class="term-label">BBSome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0034464" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BBIP1/BBIP10 is a bona fide, experimentally validated core subunit of the BBSome. The phylogenetic (IBA) call agrees with direct experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> BBIP10 was discovered and characterized as the eighth BBSome subunit and is an integral component that binds the complex through BBS4. This is a core cellular-component annotation for the gene.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097500" target="_blank" class="term-link">
+                                    GO:0097500
+                                </a>
+                            </span>
+                            <span class="term-label">receptor localization to non-motile cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0097500" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The BBSome&#39;s central, defining function is trafficking signaling receptors (e.g. ciliary GPCRs) into and out of the primary (non-motile) cilium. As an integral subunit required for BBSome integrity, BBIP1 is appropriately annotated to this process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Term definition (a receptor is transported to, or maintained in, a location within a non-motile cilium) matches the established BBSome cargo- trafficking role; this is a core biological process for the gene.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt records BBIP1 in the cytoplasm, consistent with its cytoplasmic microtubule role and with BBSome subunits cycling through the cytoplasm before ciliary entry. This IEA call is corroborated by the experimental IDA below.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic localization; the informative CC annotations are BBSome, cilium, and ciliary membrane. Retain as supporting context.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005929" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BBIP1 localizes inside the primary cilium, like other BBSome subunits. The UniProt subcellular-location-derived IEA is consistent with experimental data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Ciliary localization is well supported experimentally and is central to BBIP1/BBSome function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034464" target="_blank" class="term-link">
+                                    GO:0034464
+                                </a>
+                            </span>
+                            <span class="term-label">BBSome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0034464" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IPR028233, BBIP10 family) maps the BBSome membership. This is redundant with, and corroborated by, the experimental BBSome annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Family-level electronic inference correctly assigns BBSome membership, consistent with direct evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0060271" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BBIP1 is required for primary cilium assembly; the InterPro2GO electronic inference agrees with the experimental IMP from the same depletion study.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cilium assembly is a core, experimentally supported process for BBIP1; the IEA is corroborated.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19081074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A BBSome subunit links ciliogenesis, microtubule stability, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005515" data-r="PMID:19081074" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IPI (WITH BBS4/Q96RK4) records a real, meaningful interaction (BBIP10 binds the BBSome through BBS4), but the term &#34;protein binding&#34; is uninformative and discouraged. The biological meaning is captured by the BBSome part_of annotations and, separately, by the HDAC6 interaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 conveys no specific function; the underlying BBS4 interaction is already represented by BBSome membership. Per curation guidance, avoid bare protein binding.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22500027" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22500027
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Intrinsic protein-protein interaction-mediated and chaperoni...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005515" data-r="PMID:22500027" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same uninformative term, supported by the BBSome assembly study showing BBIP10 binds the complex via BBS4. Better represented as BBSome membership.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein binding is not an informative molecular function; the specific interaction is captured by the BBSome part_of annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29039417" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29039417
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein interaction perturbation profiling at amino-acid res...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005515" data-r="PMID:29039417" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput Y2H perturbation profiling across the eight BBSome subunits (WITH BBS4/Q96RK4). Confirms BBIP1 PPIs within the BBSome but yields only the generic protein-binding term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Uninformative MF term; the meaningful content (BBSome subunit interactions) is captured by BBSome membership annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5617815
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005829" data-r="Reactome:R-HSA-5617815" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places the BBSome (and thus BBIP1) in the cytosol during pathway steps prior to ciliary entry. Consistent with cytoplasmic localization but less specific than the BBSome/ciliary CCs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plausible and curator-asserted (TAS), but generic; the informative localizations are BBSome, cilium, ciliary membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5624125
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005829" data-r="Reactome:R-HSA-5624125" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate cytosol localization from the Reactome Formation of the BBSome reaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic localization; retain as supporting, non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5624126
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005829" data-r="Reactome:R-HSA-5624126" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate cytosol localization from a Reactome BBSome cargo-binding reaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic localization; retain as supporting, non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5624127
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005829" data-r="Reactome:R-HSA-5624127" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate cytosol localization from a Reactome BBSome cargo-targeting reaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic localization; retain as supporting, non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5624129
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005829" data-r="Reactome:R-HSA-5624129" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate cytosol localization from the Reactome LZTFL1-BBSome reaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic localization; retain as supporting, non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence places BBIP1 in the cytosol. Consistent with cytoplasmic localization and the cytoplasmic microtubule role, though generic.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally observed but non-specific localization; informative CCs are BBSome, cilium, ciliary membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036064" target="_blank" class="term-link">
+                                    GO:0036064
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary basal body</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0036064" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence localizes BBIP1 to the ciliary basal body. The BBSome traffics through the basal body en route to the cilium, so this is plausible. Note UniProt states BBIP1 localizes inside the cilium but NOT at centriolar satellites; basal body is distinct from satellites.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) localization consistent with the BBSome trafficking route through the basal body; defer to the experimental call.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034464" target="_blank" class="term-link">
+                                    GO:0034464
+                                </a>
+                            </span>
+                            <span class="term-label">BBSome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19081074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A BBSome subunit links ciliogenesis, microtubule stability, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0034464" data-r="PMID:19081074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence (mass-spec identification of BBIP10 within the purified BBSome; ComplexPortal CPX-1908) establishes BBIP1 as a BBSome subunit. This is the strongest CC annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core, experimentally validated cellular-component annotation; defining identity of the gene product.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060170" target="_blank" class="term-link">
+                                    GO:0060170
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19081074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A BBSome subunit links ciliogenesis, microtubule stability, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0060170" data-r="PMID:19081074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The BBSome acts as a membrane coat at the ciliary membrane and BBIP10 localizes within the cilium. ComplexPortal IDA annotation to ciliary membrane reflects where the complex functions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the BBSome coat function at the ciliary membrane and with BBIP1&#39;s ciliary localization; experimentally supported.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19081074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A BBSome subunit links ciliogenesis, microtubule stability, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0060271" data-r="PMID:19081074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement of the cilium-assembly role from the discovery paper. The same process is independently supported by the IMP annotation below.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct process; redundant with stronger IMP evidence from the same study.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19081074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A BBSome subunit links ciliogenesis, microtubule stability, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005737" data-r="PMID:19081074" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental observation of cytoplasmic BBIP1, consistent with UniProt subcellular location and with its cytoplasmic microtubule function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally observed but generic localization; informative CCs are BBSome, cilium, ciliary membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034464" target="_blank" class="term-link">
+                                    GO:0034464
+                                </a>
+                            </span>
+                            <span class="term-label">BBSome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19081074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A BBSome subunit links ciliogenesis, microtubule stability, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0034464" data-r="PMID:19081074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence (UniProt-curated IDA) that BBIP10 is part of the BBSome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core, experimentally validated BBSome membership; defining function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19081074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A BBSome subunit links ciliogenesis, microtubule stability, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0060271" data-r="PMID:19081074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BBIP10 depletion impairs ciliogenesis (characteristic BBS phenotypes in zebrafish; ciliary defects in cells). Strong mutant-phenotype evidence for a role in cilium assembly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental IMP for a core biological process; the gene is required for primary cilium assembly.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19081074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A BBSome subunit links ciliogenesis, microtubule stability, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0005198" data-r="PMID:19081074" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new molecular-function annotation. BBIP1 is an integral structural subunit that contributes to BBSome integrity/stability; this captures its subunit-level structural role, which is currently only implied by the generic protein-binding IPIs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Captures BBIP1&#39;s structural contribution to the BBSome (required for BBSome stability), a more informative molecular function than protein binding.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    structural molecule activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046785" target="_blank" class="term-link">
+                                    GO:0046785
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule polymerization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19081074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A BBSome subunit links ciliogenesis, microtubule stability, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0046785" data-r="PMID:19081074" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new biological-process annotation capturing BBIP1&#39;s distinct, non-BBSome-shared role in cytoplasmic microtubule polymerization and acetylation (rescued by HDAC6 inhibition; BBIP1 binds HDAC6). Not currently represented in GOA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> BBIP10 depletion abolishes cytoplasmic microtubule polymerization and acetylation, a function explicitly distinguished from its BBSome role.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046785" target="_blank" class="term-link">
+                                    microtubule polymerization
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                                    GO:0060090
+                                </a>
+                            </span>
+                            <span class="term-label">molecular adaptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19081074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A BBSome subunit links ciliogenesis, microtubule stability, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A8MTZ0" data-a="GO:0060090" data-r="PMID:19081074" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new molecular-function annotation. BBIP1 physically interacts with the tubulin deacetylase HDAC6, and this interaction underlies its promotion of microtubule acetylation; an adaptor activity is a more informative MF than the generic protein-binding IPI from the same paper.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> BBIP1 binds HDAC6 (with BBS4/Q96RK4) and couples the BBSome to tubulin acetylation; molecular adaptor activity captures this bridging role.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                                    molecular adaptor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>BBIP1/BBIP10 is an integral structural subunit of the BBSome that joins the complex through BBS4 and is required for BBSome integrity/stability; the assembled BBSome acts as a coat-like adaptor that, with ARL6/BBS3 and IFT, traffics signaling receptors into and out of the primary cilium.</h3>
+                <span class="vote-buttons" data-g="A8MTZ0" data-a="FUNCTION: BBIP1/BBIP10 is an integral structural subunit of ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097500" target="_blank" class="term-link">
+                                receptor localization to non-motile cilium
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                cilium assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link">
+                                PMID:19081074
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We have now discovered a BBSome subunit that we named BBIP10. Similar to other BBSome subunits, BBIP10 localizes to the primary cilium.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22500027" target="_blank" class="term-link">
+                                PMID:22500027
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">BBIP10, an integral BBSome protein that binds to the complex through BBS4.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Independently of the rest of the BBSome, BBIP1 is required for cytoplasmic microtubule polymerization and acetylation, acting in part through physical interaction with the tubulin deacetylase HDAC6.</h3>
+                <span class="vote-buttons" data-g="A8MTZ0" data-a="FUNCTION: Independently of the rest of the BBSome, BBIP1 is ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                            molecular adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046785" target="_blank" class="term-link">
+                                microtubule polymerization
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link">
+                                PMID:19081074
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">BBIP10 is required for cytoplasmic microtubule polymerization and acetylation, two functions not shared with any other BBSome subunits.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link">
+                                PMID:19081074
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">inhibition of the tubulin deacetylase HDAC6 restores microtubule acetylation in BBIP10-depleted cells, and BBIP10 physically interacts with HDAC6.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" target="_blank" class="term-link">
+                            PMID:19081074
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A BBSome subunit links ciliogenesis, microtubule stability, and acetylation.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22500027" target="_blank" class="term-link">
+                            PMID:22500027
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Intrinsic protein-protein interaction-mediated and chaperonin-assisted sequential assembly of stable bardet-biedl syndrome protein complex, the BBSome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29039417" target="_blank" class="term-link">
+                            PMID:29039417
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Protein interaction perturbation profiling at amino-acid resolution.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5617815
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BBSome binds RAB3IP</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5624125
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Formation of the BBSome</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5624126
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ARL6:GTP and the BBSome bind ciliary cargo</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5624127
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ARL6:GTP and the BBSome target cargo to the primary cilium</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5624129
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">LZTFL1 binds the BBSome and prevents its traffic to the cilium</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the microtubule-stabilizing/acetylation function of BBIP1 mediated by BBSome-bound BBIP1 or by a free pool of BBIP1, and does it depend on direct HDAC6 inhibition versus an indirect mechanism?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Maxence V. Nachury</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A8MTZ0" data-a="Q: Is the microtubule-stabilizing/acetylation functio..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does BBIP1 contribute specific structural contacts within the cryo-EM BBSome architecture that are required for cargo (GPCR) capture or membrane coating, beyond simply stabilizing the complex?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A8MTZ0" data-a="Q: Does BBIP1 contribute specific structural contacts..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Separation-of-function mutagenesis of BBIP1 to uncouple BBSome incorporation (BBS4 binding) from HDAC6 binding/microtubule acetylation, assayed by ciliary GPCR trafficking versus cytoplasmic microtubule acetylation in BBIP1-null cells.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: BBIP1&#39;s BBSome-structural role and its microtubule/HDAC6-related role are genetically separable functions of the same small protein.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A8MTZ0" data-a="EXPERIMENT: Separation-of-function mutagenesis of BBIP1 to unc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Map the BBIP1-HDAC6 interaction interface and test whether BBIP1 directly inhibits HDAC6 tubulin-deacetylase activity in vitro.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: BBIP1 promotes microtubule acetylation by directly antagonizing HDAC6 rather than by an indirect cellular mechanism.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A8MTZ0" data-a="EXPERIMENT: Map the BBIP1-HDAC6 interaction interface and test..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(BBIP1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A8MTZ0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bbip1-bbip10-bbs18-uniprot-a8mtz0-curation-notes">BBIP1 (BBIP10 / BBS18; UniProt A8MTZ0) — curation notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Human gene, HGNC:28093, gene symbol BBIP1. Synonyms: BBIP10, BBS18, NCRNA00081.</li>
+<li>92 aa, ~10.5 kDa; smallest of the eight BBSome core subunits. Was historically misannotated<br />
+  as a non-coding RNA ("non-protein coding RNA 81") before being recognized as a protein<br />
+  [UniProt A8MTZ0 CAUTION: "Was previously thought to be non-coding and described as 'non-protein coding RNA 81'"].</li>
+<li>Member of the BBIP10 family (Pfam PF14777, InterPro IPR028233). Present exclusively in ciliated organisms.</li>
+<li>N-terminal region 1–22 is disordered/polar; 4 splice isoforms annotated.</li>
+</ul>
+<h2 id="core-biology-key-primary-paper">Core biology — key primary paper</h2>
+<p>PMID:19081074 (Loktev et al., Dev Cell 2008; abstract-only in cache, full_text_available: false;<br />
+corresponds to UniProt "Ref.4" Loktev et al. supplying FUNCTION/SUBUNIT/SUBCELLULAR LOCATION/HDAC6 interaction):<br />
+- Discovered BBIP10 as the eighth BBSome subunit. "We have now discovered a BBSome subunit that<br />
+  we named BBIP10. Similar to other BBSome subunits, BBIP10 localizes to the primary cilium,<br />
+  BBIP10 is present exclusively in ciliated organisms"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19081074" title="BBIP10 localizes to the primary cilium, BBIP10 is present exclusively in ciliated organisms">PMID:19081074</a>.<br />
+- Depletion produces canonical BBS phenotypes in zebrafish<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19081074" title="depletion of BBIP10 yields characteristic BBS phenotypes in zebrafish">PMID:19081074</a>.<br />
+- A unique (non-BBSome-shared) function: required for cytoplasmic microtubule polymerization and<br />
+  acetylation <a href="https://pubmed.ncbi.nlm.nih.gov/19081074" title="BBIP10 is required for cytoplasmic microtubule polymerization and   acetylation, two functions not shared with any other BBSome subunits">PMID:19081074</a>.<br />
+- Mechanism links to the tubulin deacetylase HDAC6: "inhibition of the tubulin deacetylase HDAC6<br />
+  restores microtubule acetylation in BBIP10-depleted cells, and BBIP10 physically interacts with HDAC6"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19081074">PMID:19081074</a>. HDAC6 = UniProt Q9UBN7 (the WITH/FROM in the GOA IPI row).<br />
+- Model: "BBSome-bound BBIP10 may therefore function to couple acetylation of axonemal microtubules<br />
+  and ciliary membrane growth" <a href="https://pubmed.ncbi.nlm.nih.gov/19081074">PMID:19081074</a>.</p>
+<p>UniProt FUNCTION (from Ref.4): "Required for primary cilia assembly and BBSome stability. Regulates<br />
+cytoplasmic microtubule stability and acetylation." SUBUNIT: "Part of BBSome complex, that contains<br />
+BBS1, BBS2, BBS4, BBS5, BBS7, BBS8, BBS9 and BBIP10. Interacts with HDAC6." SUBCELLULAR LOCATION:<br />
+"Cell projection, cilium. Cytoplasm. Note=Localizes inside the primary cilium but not at centriolar satellites."</p>
+<h2 id="bbsome-architecture-assembly">BBSome architecture / assembly</h2>
+<p>PMID:22500027 (Zhang et al., JBC 2012; full text available):<br />
+- BBIP10 is "an integral BBSome protein that binds to the complex through BBS4"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22500027" title="BBIP10, an integral BBSome protein that binds to the complex through BBS4">PMID:22500027</a>.<br />
+- PCM1 can interact with BBIP10 only when BBS4 is present <a href="https://pubmed.ncbi.nlm.nih.gov/22500027">PMID:22500027</a>.<br />
+- Establishes ordered BBSome assembly (core BBS7-BBS2-BBS9; then BBS1, BBS5, BBS8, BBS4).<br />
+- The GOA IPI row from this paper uses WITH/FROM UniProtKB:Q96RK4 (= BBS4), consistent with the<br />
+  BBIP10–BBS4 binding shown here. Supports a BBSome part_of / structural-binding annotation.</p>
+<h2 id="interaction-mapping-high-throughput">Interaction mapping (high-throughput)</h2>
+<p>PMID:29039417 (Woodsmith et al., Nat Methods 2017; abstract-only):<br />
+- Yeast two-hybrid "off-switch" perturbation profiling across "eight subunits of the BBSome"; defined</p>
+<blockquote>
+<p>1,000 interaction-disrupting mutations <a href="https://pubmed.ncbi.nlm.nih.gov/29039417">PMID:29039417</a>. BBIP1 included as one of the eight subunits.<br />
+- GOA IPI row also uses WITH/FROM Q96RK4 (BBS4). Supports BBIP1 participating in BBSome via PPIs;<br />
+  generic "protein binding" (GO:0005515) is uninformative.</p>
+</blockquote>
+<h2 id="disease">Disease</h2>
+<p>PMID:24026985 (Scheidecker et al., J Med Genet 2014; not cached, cited in UniProt Ref.5):<br />
+- A null mutation in BBIP1 causes Bardet-Biedl syndrome 18 (BBS18) [MIM:615995]. Confirms BBIP1 as a<br />
+  bona fide BBSome subunit whose loss causes BBS (severe retinopathy, obesity, polydactyly, renal,<br />
+  intellectual disability).</p>
+<h2 id="structure">Structure</h2>
+<ul>
+<li>Cryo-EM structure of the human BBSome includes BBIP1 (PDB 6XT9, chain J, residues 1-92; EMD-10617).</li>
+<li>ComplexPortal CPX-1908 = BBSome complex.</li>
+</ul>
+<h2 id="localization-summary-for-cc-annotation-review">Localization summary (for CC annotation review)</h2>
+<ul>
+<li>BBSome (GO:0034464): strongly supported, multiple lines (IDA PMID:19081074, IPI, IBA, IEA). Core CC.</li>
+<li>Cilium / ciliary membrane (GO:0005929 / GO:0060170): BBIP10 localizes inside primary cilium; ciliary<br />
+  membrane is where the BBSome acts as a coat. Supported.</li>
+<li>Cytoplasm (GO:0005737): UniProt SUBCELLULAR LOCATION lists Cytoplasm; consistent with cytoplasmic<br />
+  microtubule role. Supported.</li>
+<li>Ciliary basal body (GO:0036064): IDA from HPA. The BBSome traffics via the basal body; plausible.</li>
+<li>Cytosol (GO:0005829): HPA IDA + multiple Reactome TAS. Generic; BBSome subunits cycle through<br />
+  cytosol before ciliary entry. Acceptable but less specific than BBSome / ciliary CCs.</li>
+</ul>
+<h2 id="process-annotations">Process annotations</h2>
+<ul>
+<li>cilium assembly (GO:0060271): supported by IMP (zebrafish/cell depletion phenotypes), NAS, IEA. Core BP.</li>
+<li>receptor localization to non-motile cilium (GO:0097500): IBA from GO_Central, based on the well-<br />
+  established BBSome role in trafficking signaling receptors (e.g. GPCRs like SSTR3, MCHR1) into/out<br />
+  of the primary cilium. Def: "A process in which a receptor is transported to, or maintained in, a<br />
+  location within a non-motile cilium." Strongly fits BBSome core function. Core BP.</li>
+</ul>
+<h2 id="notable-functions-not-yet-well-captured-by-go-annotations">Notable functions NOT yet well captured by GO annotations</h2>
+<ul>
+<li>Microtubule stabilization / cytoplasmic microtubule acetylation coupled via HDAC6 (PMID:19081074).<br />
+  This BBIP1-specific (non-BBSome-shared) activity is a candidate for additional BP/MF terms<br />
+  (e.g. regulation of microtubule polymerization/stability; negative regulation of tubulin deacetylation<br />
+  via HDAC6 binding). HDAC6 binding itself is more informative than generic protein binding.</li>
+<li>BBSome structural stability ("Required for ... BBSome stability") — supports a structural/scaffold role.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A8MTZ0
+gene_symbol: BBIP1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  BBIP1 (also known as BBIP10 and BBS18) is the small (92 aa, ~10.5 kDa) eighth
+  core subunit of the BBSome, an octameric, coat-like adaptor complex (BBS1, BBS2,
+  BBS4, BBS5, BBS7, BBS8, BBS9 and BBIP10) that traffics signaling membrane
+  receptors, including ciliary GPCRs, into and out of the primary cilium in
+  conjunction with intraflagellar transport and the small GTPase ARL6/BBS3. BBIP1
+  is an integral, stably incorporated subunit that joins the complex through BBS4
+  and is required for BBSome integrity/stability and for primary cilium assembly.
+  It is found inside the primary cilium and in the cytoplasm but not at centriolar
+  satellites. Beyond its structural role in the BBSome, BBIP1 has a distinct
+  activity not shared by other BBSome subunits; it is required for cytoplasmic
+  microtubule polymerization and acetylation, acting in part through physical
+  interaction with the tubulin deacetylase HDAC6. BBIP1 is restricted to ciliated
+  organisms, and loss-of-function mutations cause the ciliopathy Bardet-Biedl
+  syndrome type 18.
+alternative_products:
+- name: &#39;1&#39;
+  id: A8MTZ0-1
+- name: &#39;2&#39;
+  id: A8MTZ0-2
+  sequence_note: VSP_045981
+- name: &#39;3&#39;
+  id: A8MTZ0-3
+  sequence_note: VSP_046434
+- name: &#39;4&#39;
+  id: A8MTZ0-4
+  sequence_note: VSP_046433
+existing_annotations:
+- term:
+    id: GO:0034464
+    label: BBSome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: BBIP1/BBIP10 is a bona fide, experimentally validated core subunit of
+      the BBSome. The phylogenetic (IBA) call agrees with direct experimental evidence.
+    action: ACCEPT
+    reason: BBIP10 was discovered and characterized as the eighth BBSome subunit
+      and is an integral component that binds the complex through BBS4. This is a
+      core cellular-component annotation for the gene.
+- term:
+    id: GO:0097500
+    label: receptor localization to non-motile cilium
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: The BBSome&#39;s central, defining function is trafficking signaling
+      receptors (e.g. ciliary GPCRs) into and out of the primary (non-motile)
+      cilium. As an integral subunit required for BBSome integrity, BBIP1 is
+      appropriately annotated to this process.
+    action: ACCEPT
+    reason: Term definition (a receptor is transported to, or maintained in, a
+      location within a non-motile cilium) matches the established BBSome cargo-
+      trafficking role; this is a core biological process for the gene.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: UniProt records BBIP1 in the cytoplasm, consistent with its cytoplasmic
+      microtubule role and with BBSome subunits cycling through the cytoplasm before
+      ciliary entry. This IEA call is corroborated by the experimental IDA below.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic localization; the informative CC annotations are
+      BBSome, cilium, and ciliary membrane. Retain as supporting context.
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: BBIP1 localizes inside the primary cilium, like other BBSome subunits.
+      The UniProt subcellular-location-derived IEA is consistent with experimental
+      data.
+    action: ACCEPT
+    reason: Ciliary localization is well supported experimentally and is central to
+      BBIP1/BBSome function.
+- term:
+    id: GO:0034464
+    label: BBSome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  review:
+    summary: InterPro2GO (IPR028233, BBIP10 family) maps the BBSome membership. This
+      is redundant with, and corroborated by, the experimental BBSome annotations.
+    action: ACCEPT
+    reason: Family-level electronic inference correctly assigns BBSome membership,
+      consistent with direct evidence.
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: BBIP1 is required for primary cilium assembly; the InterPro2GO electronic
+      inference agrees with the experimental IMP from the same depletion study.
+    action: ACCEPT
+    reason: Cilium assembly is a core, experimentally supported process for BBIP1;
+      the IEA is corroborated.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19081074
+  qualifier: enables
+  review:
+    summary: This IPI (WITH BBS4/Q96RK4) records a real, meaningful interaction
+      (BBIP10 binds the BBSome through BBS4), but the term &#34;protein binding&#34; is
+      uninformative and discouraged. The biological meaning is captured by the
+      BBSome part_of annotations and, separately, by the HDAC6 interaction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0005515 conveys no specific function; the underlying BBS4 interaction
+      is already represented by BBSome membership. Per curation guidance, avoid
+      bare protein binding.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22500027
+  qualifier: enables
+  review:
+    summary: Same uninformative term, supported by the BBSome assembly study showing
+      BBIP10 binds the complex via BBS4. Better represented as BBSome membership.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Protein binding is not an informative molecular function; the specific
+      interaction is captured by the BBSome part_of annotations.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29039417
+  qualifier: enables
+  review:
+    summary: High-throughput Y2H perturbation profiling across the eight BBSome
+      subunits (WITH BBS4/Q96RK4). Confirms BBIP1 PPIs within the BBSome but yields
+      only the generic protein-binding term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative MF term; the meaningful content (BBSome subunit interactions)
+      is captured by BBSome membership annotations.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5617815
+  qualifier: located_in
+  review:
+    summary: Reactome places the BBSome (and thus BBIP1) in the cytosol during
+      pathway steps prior to ciliary entry. Consistent with cytoplasmic localization
+      but less specific than the BBSome/ciliary CCs.
+    action: KEEP_AS_NON_CORE
+    reason: Plausible and curator-asserted (TAS), but generic; the informative
+      localizations are BBSome, cilium, ciliary membrane.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5624125
+  qualifier: located_in
+  review:
+    summary: Duplicate cytosol localization from the Reactome Formation of the
+      BBSome reaction.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic localization; retain as supporting, non-core.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5624126
+  qualifier: located_in
+  review:
+    summary: Duplicate cytosol localization from a Reactome BBSome cargo-binding
+      reaction.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic localization; retain as supporting, non-core.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5624127
+  qualifier: located_in
+  review:
+    summary: Duplicate cytosol localization from a Reactome BBSome cargo-targeting
+      reaction.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic localization; retain as supporting, non-core.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5624129
+  qualifier: located_in
+  review:
+    summary: Duplicate cytosol localization from the Reactome LZTFL1-BBSome reaction.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic localization; retain as supporting, non-core.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: HPA immunofluorescence places BBIP1 in the cytosol. Consistent with
+      cytoplasmic localization and the cytoplasmic microtubule role, though generic.
+    action: KEEP_AS_NON_CORE
+    reason: Experimentally observed but non-specific localization; informative CCs
+      are BBSome, cilium, ciliary membrane.
+- term:
+    id: GO:0036064
+    label: ciliary basal body
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: HPA immunofluorescence localizes BBIP1 to the ciliary basal body. The
+      BBSome traffics through the basal body en route to the cilium, so this is
+      plausible. Note UniProt states BBIP1 localizes inside the cilium but NOT at
+      centriolar satellites; basal body is distinct from satellites.
+    action: ACCEPT
+    reason: Experimental (IDA) localization consistent with the BBSome trafficking
+      route through the basal body; defer to the experimental call.
+- term:
+    id: GO:0034464
+    label: BBSome
+  evidence_type: IPI
+  original_reference_id: PMID:19081074
+  qualifier: part_of
+  review:
+    summary: Direct experimental evidence (mass-spec identification of BBIP10 within
+      the purified BBSome; ComplexPortal CPX-1908) establishes BBIP1 as a BBSome
+      subunit. This is the strongest CC annotation.
+    action: ACCEPT
+    reason: Core, experimentally validated cellular-component annotation; defining
+      identity of the gene product.
+- term:
+    id: GO:0060170
+    label: ciliary membrane
+  evidence_type: IDA
+  original_reference_id: PMID:19081074
+  qualifier: located_in
+  review:
+    summary: The BBSome acts as a membrane coat at the ciliary membrane and BBIP10
+      localizes within the cilium. ComplexPortal IDA annotation to ciliary membrane
+      reflects where the complex functions.
+    action: ACCEPT
+    reason: Consistent with the BBSome coat function at the ciliary membrane and with
+      BBIP1&#39;s ciliary localization; experimentally supported.
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: NAS
+  original_reference_id: PMID:19081074
+  qualifier: involved_in
+  review:
+    summary: Non-traceable author statement of the cilium-assembly role from the
+      discovery paper. The same process is independently supported by the IMP
+      annotation below.
+    action: ACCEPT
+    reason: Correct process; redundant with stronger IMP evidence from the same study.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:19081074
+  qualifier: located_in
+  review:
+    summary: Direct experimental observation of cytoplasmic BBIP1, consistent with
+      UniProt subcellular location and with its cytoplasmic microtubule function.
+    action: KEEP_AS_NON_CORE
+    reason: Experimentally observed but generic localization; informative CCs are
+      BBSome, cilium, ciliary membrane.
+- term:
+    id: GO:0034464
+    label: BBSome
+  evidence_type: IDA
+  original_reference_id: PMID:19081074
+  qualifier: part_of
+  review:
+    summary: Direct experimental evidence (UniProt-curated IDA) that BBIP10 is part
+      of the BBSome.
+    action: ACCEPT
+    reason: Core, experimentally validated BBSome membership; defining function.
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IMP
+  original_reference_id: PMID:19081074
+  qualifier: involved_in
+  review:
+    summary: BBIP10 depletion impairs ciliogenesis (characteristic BBS phenotypes in
+      zebrafish; ciliary defects in cells). Strong mutant-phenotype evidence for a
+      role in cilium assembly.
+    action: ACCEPT
+    reason: Experimental IMP for a core biological process; the gene is required for
+      primary cilium assembly.
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: IDA
+  original_reference_id: PMID:19081074
+  qualifier: enables
+  review:
+    summary: Proposed new molecular-function annotation. BBIP1 is an integral
+      structural subunit that contributes to BBSome integrity/stability; this
+      captures its subunit-level structural role, which is currently only implied by
+      the generic protein-binding IPIs.
+    action: NEW
+    reason: Captures BBIP1&#39;s structural contribution to the BBSome (required for
+      BBSome stability), a more informative molecular function than protein binding.
+    proposed_replacement_terms:
+    - id: GO:0005198
+      label: structural molecule activity
+- term:
+    id: GO:0046785
+    label: microtubule polymerization
+  evidence_type: IMP
+  original_reference_id: PMID:19081074
+  qualifier: involved_in
+  review:
+    summary: Proposed new biological-process annotation capturing BBIP1&#39;s distinct,
+      non-BBSome-shared role in cytoplasmic microtubule polymerization and
+      acetylation (rescued by HDAC6 inhibition; BBIP1 binds HDAC6). Not currently
+      represented in GOA.
+    action: NEW
+    reason: BBIP10 depletion abolishes cytoplasmic microtubule polymerization and
+      acetylation, a function explicitly distinguished from its BBSome role.
+    proposed_replacement_terms:
+    - id: GO:0046785
+      label: microtubule polymerization
+- term:
+    id: GO:0060090
+    label: molecular adaptor activity
+  evidence_type: IPI
+  original_reference_id: PMID:19081074
+  qualifier: enables
+  review:
+    summary: Proposed new molecular-function annotation. BBIP1 physically interacts
+      with the tubulin deacetylase HDAC6, and this interaction underlies its
+      promotion of microtubule acetylation; an adaptor activity is a more
+      informative MF than the generic protein-binding IPI from the same paper.
+    action: NEW
+    reason: BBIP1 binds HDAC6 (with BBS4/Q96RK4) and couples the BBSome to tubulin
+      acetylation; molecular adaptor activity captures this bridging role.
+    proposed_replacement_terms:
+    - id: GO:0060090
+      label: molecular adaptor activity
+core_functions:
+- description: BBIP1/BBIP10 is an integral structural subunit of the BBSome that joins
+    the complex through BBS4 and is required for BBSome integrity/stability; the
+    assembled BBSome acts as a coat-like adaptor that, with ARL6/BBS3 and IFT,
+    traffics signaling receptors into and out of the primary cilium.
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  directly_involved_in:
+  - id: GO:0097500
+    label: receptor localization to non-motile cilium
+  - id: GO:0060271
+    label: cilium assembly
+  supported_by:
+  - reference_id: PMID:19081074
+    supporting_text: We have now discovered a BBSome subunit that we named BBIP10.
+      Similar to other BBSome subunits, BBIP10 localizes to the primary cilium.
+  - reference_id: PMID:22500027
+    supporting_text: BBIP10, an integral BBSome protein that binds to the complex
+      through BBS4.
+- description: Independently of the rest of the BBSome, BBIP1 is required for
+    cytoplasmic microtubule polymerization and acetylation, acting in part through
+    physical interaction with the tubulin deacetylase HDAC6.
+  molecular_function:
+    id: GO:0060090
+    label: molecular adaptor activity
+  directly_involved_in:
+  - id: GO:0046785
+    label: microtubule polymerization
+  supported_by:
+  - reference_id: PMID:19081074
+    supporting_text: BBIP10 is required for cytoplasmic microtubule polymerization and
+      acetylation, two functions not shared with any other BBSome subunits.
+  - reference_id: PMID:19081074
+    supporting_text: inhibition of the tubulin deacetylase HDAC6 restores microtubule
+      acetylation in BBIP10-depleted cells, and BBIP10 physically interacts with HDAC6.
+proposed_new_terms: []
+suggested_questions:
+- question: Is the microtubule-stabilizing/acetylation function of BBIP1 mediated by
+    BBSome-bound BBIP1 or by a free pool of BBIP1, and does it depend on direct HDAC6
+    inhibition versus an indirect mechanism?
+  experts:
+  - Maxence V. Nachury
+- question: Does BBIP1 contribute specific structural contacts within the cryo-EM
+    BBSome architecture that are required for cargo (GPCR) capture or membrane
+    coating, beyond simply stabilizing the complex?
+suggested_experiments:
+- description: Separation-of-function mutagenesis of BBIP1 to uncouple BBSome
+    incorporation (BBS4 binding) from HDAC6 binding/microtubule acetylation, assayed
+    by ciliary GPCR trafficking versus cytoplasmic microtubule acetylation in
+    BBIP1-null cells.
+  hypothesis: BBIP1&#39;s BBSome-structural role and its microtubule/HDAC6-related role
+    are genetically separable functions of the same small protein.
+- description: Map the BBIP1-HDAC6 interaction interface and test whether BBIP1
+    directly inhibits HDAC6 tubulin-deacetylase activity in vitro.
+  hypothesis: BBIP1 promotes microtubule acetylation by directly antagonizing HDAC6
+    rather than by an indirect cellular mechanism.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:19081074
+  title: A BBSome subunit links ciliogenesis, microtubule stability, and acetylation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Discovery and primary characterization of BBIP10 as the eighth
+      BBSome subunit; establishes ciliary/cytoplasmic localization, requirement for
+      ciliogenesis (zebrafish/cell depletion), and the unique cytoplasmic microtubule
+      polymerization/acetylation role via HDAC6. Abstract-only in cache; this is
+      UniProt Ref.4 (Loktev et al., Dev Cell 2008) underpinning the UniProt FUNCTION,
+      SUBUNIT and SUBCELLULAR LOCATION statements.
+- id: PMID:22500027
+  title: Intrinsic protein-protein interaction-mediated and chaperonin-assisted sequential
+    assembly of stable bardet-biedl syndrome protein complex, the BBSome.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text available; explicitly states BBIP10 is an integral
+      BBSome protein that binds to the complex through BBS4, and that PCM1 interacts
+      with BBIP10 only when BBS4 is present. Supports BBSome membership and the BBS4
+      (Q96RK4) interaction underlying the IPI annotation.
+- id: PMID:29039417
+  title: Protein interaction perturbation profiling at amino-acid resolution.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Abstract-only; high-throughput Y2H perturbation profiling across
+      the eight BBSome subunits (BBIP1 included), defining over 1000 interaction-
+      disrupting mutations. Supports BBSome PPIs but only yields generic protein
+      binding.
+- id: Reactome:R-HSA-5617815
+  title: BBSome binds RAB3IP
+  findings: []
+- id: Reactome:R-HSA-5624125
+  title: Formation of the BBSome
+  findings: []
+- id: Reactome:R-HSA-5624126
+  title: ARL6:GTP and the BBSome bind ciliary cargo
+  findings: []
+- id: Reactome:R-HSA-5624127
+  title: ARL6:GTP and the BBSome target cargo to the primary cilium
+  findings: []
+- id: Reactome:R-HSA-5624129
+  title: LZTFL1 binds the BBSome and prevents its traffic to the cilium
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

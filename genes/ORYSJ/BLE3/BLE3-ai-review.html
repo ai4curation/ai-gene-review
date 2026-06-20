@@ -1,0 +1,2268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>BLE3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q84UT5" target="_blank" class="term-link">
+                        Q84UT5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Oryza sativa subsp. japonica</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "BLE3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q84UT5" data-a="DESCRIPTION: OsBLE3 (CASP-like protein BLE3 / OsCASPL1C2, brass..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>OsBLE3 (CASP-like protein BLE3 / OsCASPL1C2, brassinolide-enhanced 3) is a small tetraspan (four-transmembrane) plasma-membrane protein of the CASP-like (CASPL) subfamily of the MARVEL-related Casparian strip membrane domain protein family. Unlike most CASPLs it is functionally characterized: it is a brassinolide-upregulated gene whose expression depends on both brassinosteroid (BR) and auxin and is concentrated in roots, leaf sheaths, the shoot apical meristem, organ primordia and vascular tissue. Antisense knock-down causes growth retardation and reduces internode cell length to about 70% of wild type, showing that OsBLE3 promotes cell elongation in rice through dual BR/auxin regulation. No specific molecular (enzymatic/transport) activity is established; it is presumed to act as a plasma-membrane scaffold.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q84UT5" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct, well-supported plasma-membrane localization for this multi-pass CASP-like protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates a multi-pass cell-membrane protein, consistent with the four-transmembrane CASP/CASPL scaffold architecture.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/BLE3/BLE3-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009733" target="_blank" class="term-link">
+                                    GO:0009733
+                                </a>
+                            </span>
+                            <span class="term-label">response to auxin</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16808934" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16808934
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OsBLE3, a brassinolide-enhanced gene, is involved in the gro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q84UT5" data-a="GO:0009733" data-r="PMID:16808934" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported: OsBLE3 expression is enhanced by auxin (IAA) and the promoter contains auxin-response elements.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Expression-based (IEP) evidence shows OsBLE3 is co-induced by auxin and harbours auxin-response elements, placing it in the auxin response.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16808934" target="_blank" class="term-link">
+                                        PMID:16808934
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">existence of auxin response elements</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035264" target="_blank" class="term-link">
+                                    GO:0035264
+                                </a>
+                            </span>
+                            <span class="term-label">multicellular organism growth</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16808934" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16808934
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OsBLE3, a brassinolide-enhanced gene, is involved in the gro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q84UT5" data-a="GO:0035264" data-r="PMID:16808934" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported: antisense OsBLE3 plants show growth retardation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mutant/antisense phenotype (IMP) directly links OsBLE3 to organismal growth.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16808934" target="_blank" class="term-link">
+                                        PMID:16808934
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">growth retardation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009741" target="_blank" class="term-link">
+                                    GO:0009741
+                                </a>
+                            </span>
+                            <span class="term-label">response to brassinosteroid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16808934" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16808934
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OsBLE3, a brassinolide-enhanced gene, is involved in the gro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q84UT5" data-a="GO:0009741" data-r="PMID:16808934" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported: OsBLE3 is a brassinolide-enhanced gene, reduced in BR-deficient/insensitive backgrounds.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> OsBLE3 induction by brassinolide and its dependence on BR signalling (reduced in brd1 and BRI1-antisense plants) support involvement in the brassinosteroid response.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16808934" target="_blank" class="term-link">
+                                        PMID:16808934
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">brassinolide-enhanced gene</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009826" target="_blank" class="term-link">
+                                    GO:0009826
+                                </a>
+                            </span>
+                            <span class="term-label">unidimensional cell growth</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16808934" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16808934
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OsBLE3, a brassinolide-enhanced gene, is involved in the gro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q84UT5" data-a="GO:0009826" data-r="PMID:16808934" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported: antisense lines show reduced internode cell length, i.e. impaired cell elongation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The internode cell-length phenotype (IMP) directly demonstrates a role in unidimensional cell growth (elongation).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16808934" target="_blank" class="term-link">
+                                        PMID:16808934
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Internode cell length of the OsBLE3 antisense transgenic</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Plasma-membrane CASP-like protein that promotes cell elongation (unidimensional cell growth) in rice, acting downstream of and regulated by brassinosteroid and auxin.</h3>
+                <span class="vote-buttons" data-g="Q84UT5" data-a="FUNCTION: Plasma-membrane CASP-like protein that promotes ce..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009826" target="_blank" class="term-link">
+                                unidimensional cell growth
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/BLE3/BLE3-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Involved in cell elongation in rice through dual regulation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16808934" target="_blank" class="term-link">
+                                PMID:16808934
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Internode cell length of the OsBLE3 antisense transgenic</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ORYSJ/BLE3/BLE3-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB reviewed entry for BLE3</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BLE3 is a multi-pass cell-membrane CASP-like protein of the Casparian strip membrane proteins family.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ORYSJ/BLE3/BLE3-goa.tsv
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">QuickGO GOA annotations for BLE3</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GOA supplied the annotations reviewed in this file.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24920445" target="_blank" class="term-link">
+                            PMID:24920445
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional and evolutionary analysis of the CASPARIAN STRIP MEMBRANE DOMAIN PROTEIN family.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Places OsBLE3 in the CASPL subfamily (OsCASPL1C2) of plasma-membrane tetraspan scaffolds.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Supplied the IEA plasma membrane annotation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16808934" target="_blank" class="term-link">
+                            PMID:16808934
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OsBLE3, a brassinolide-enhanced gene, is involved in the growth of rice.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OsBLE3 (OsCASPL1C2) is a brassinolide-upregulated gene expressed in roots, leaf sheaths and vascular tissue; its expression is controlled by both brassinosteroid and auxin, and antisense knock-down causes growth retardation with internode cell length reduced to ~70% of wild type, indicating a role in cell elongation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ORYSJ/BLE3/BLE3-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon (Edison) deep-research report for OsBLE3/OsCASPL1C2</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Deep-research synthesis of OsBLE3: a brassinolide/auxin-regulated CASP-like plasma-membrane protein promoting cell elongation in rice, expressed in roots, leaf sheaths and vascular tissue.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the molecular mechanism by which OsBLE3 promotes cell elongation downstream of brassinosteroid and auxin?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q84UT5" data-a="Q: What is the molecular mechanism by which OsBLE3 pr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Identify OsBLE3 plasma-membrane interactors and test whether it scaffolds BR/auxin-responsive growth machinery; phenotype CRISPR knockouts for internode elongation.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: protein interaction and genetic analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q84UT5" data-a="EXPERIMENT: Identify OsBLE3 plasma-membrane interactors and te..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(BLE3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q84UT5" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">17 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-14T17:45:52.367538</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="BLE3-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="BLE3-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000015 The document provides a detailed summary of the OsCASP_like gene family in rice (and Arabidopsis). Key visual summaries include: - </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-rice-ble3-uniprot-q84ut5-functional-annotation-evidence-and-current-understanding">Research Report: Rice <strong>BLE3</strong> (UniProt <strong>Q84UT5</strong>) — Functional Annotation, Evidence, and Current Understanding</h2>
+<h3 id="1-mandatory-identity-verification-critical">1) Mandatory identity verification (critical)</h3>
+<p>The user-specified target is UniProt <strong>Q84UT5</strong>, annotated as a <strong>CASP-like protein BLE3</strong> (CASP/CASPL family) from <em>Oryza sativa</em> subsp. <em>japonica</em> (rice). In the peer‑reviewed primary literature, a rice gene explicitly named <strong>OsBLE3</strong> is experimentally characterized and maps to <strong>LOC_Os05g15630</strong> (chromosome 5), i.e., the same locus name included in the UniProt record provided by the user (LOC_Os05g15630). This supports that the gene symbol <strong>BLE3/OsBLE3</strong> corresponds to the rice locus used in that study (https://doi.org/10.1016/j.phytochem.2006.05.026; publication date: <strong>2006-07</strong>) (yang2006osble3abrassinolideenhanced pages 2-4, yang2006osble3abrassinolideenhanced pages 1-2).</p>
+<p>However, the 2006 OsBLE3 study describes a small multi‑pass membrane protein with <strong>3 predicted transmembrane segments</strong> and a <strong>mitochondrial targeting peptide / probable mitochondrial inner membrane localization</strong>, while modern CASP/CASPL literature commonly describes <strong>CASP/CASPL proteins as 4‑transmembrane (MARVEL‑branch) plasma‑membrane proteins</strong> that assemble the Casparian strip membrane domain. This creates a <strong>non-trivial annotation tension</strong>: (i) BLE3 may indeed be a CASP/CASPL (DUF588/PF04535-based) family member but earlier predictions differed, or (ii) some database annotations may have been revised/propagated without direct protein-localization validation for BLE3/Q84UT5. Because the tools here cannot directly query UniProt/InterPro records, I treat CASP/CASPL assignment for Q84UT5 as <strong>plausible but not experimentally verified for BLE3 specifically</strong> based on the retrieved evidence (yang2006osble3abrassinolideenhanced pages 2-4, barbosa2023directedgrowthand pages 11-12).</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<p><strong>Casparian strip (CS):</strong> a lignin-impregnated cell-wall band in root endodermis (and in some species exodermis) that forms an <strong>apoplastic diffusion barrier</strong> controlling water and mineral movement. Disrupting CS integrity can alter ion homeostasis and nutrient uptake (xue2024comparativeanalysisof pages 1-2, yang2022riceoscasp1orchestrates pages 1-2).</p>
+<p><strong>CASP / CASP-like (CASPL) proteins:</strong> membrane proteins that define the <strong>Casparian strip membrane domain (CSD)</strong> and contribute to forming a scaffold/matrix that recruits/organizes lignin polymerization components and secreted factors involved in localized lignification (e.g., RBOHF, ESB1, PER64, UCC1 are cited in the family-level context). In rice, CASP/CASPL repertoires have been systematically enumerated using the <strong>DUF588 (PF04535)</strong> HMM as the defining domain signature (xue2024comparativeanalysisof pages 1-2, yang2022riceoscasp1orchestrates pages 1-2).</p>
+<h3 id="3-geneprotein-features-of-rice-osble3-from-primary-literature-direct-evidence">3) Gene/protein features of rice OsBLE3 from primary literature (direct evidence)</h3>
+<h4 id="31-protein-size-and-predicted-topology">3.1 Protein size and predicted topology</h4>
+<p>Yang et al. cloned OsBLE3 cDNA (865 bp) encoding a <strong>162 aa</strong> protein (~<strong>16.8 kDa</strong>, predicted pI <strong>8.24</strong>), and predicted <strong>three transmembrane domains</strong> plus an N‑terminal targeting peptide, with PSORT/MitoProt II supporting probable <strong>mitochondrial inner membrane localization</strong> (https://doi.org/10.1016/j.phytochem.2006.05.026; <strong>2006-07</strong>) (yang2006osble3abrassinolideenhanced pages 2-4, yang2006osble3abrassinolideenhanced pages 6-8).</p>
+<h4 id="32-expression-patterns-tissuecell-type">3.2 Expression patterns (tissue/cell-type)</h4>
+<p>OsBLE3 transcript accumulation was highest in <strong>roots</strong> and <strong>leaf sheath</strong> and was detected in regions consistent with active growth: <strong>vascular bundles</strong>, <strong>shoot apical meristem</strong>, <strong>organ primordia</strong>, and <strong>branch root primordia</strong> (via Northern blot, in situ hybridization, and promoter::GUS) (yang2006osble3abrassinolideenhanced pages 2-4, yang2006osble3abrassinolideenhanced pages 1-2, yang2006osble3abrassinolideenhanced pages 4-6).</p>
+<h3 id="4-regulation-and-pathway-context-direct-evidence">4) Regulation and pathway context (direct evidence)</h3>
+<h4 id="41-brassinosteroid-br-and-auxin-responsiveness">4.1 Brassinosteroid (BR) and auxin responsiveness</h4>
+<p>OsBLE3 was originally identified as a <strong>brassinolide (BL)-enhanced</strong> gene. BL induces OsBLE3 transcript levels <strong>dose-dependently</strong>; IAA (auxin) also induces OsBLE3 dose‑dependently; and BL can further enhance OsBLE3 expression at low IAA concentrations. The OsBLE3 promoter contains auxin response element motifs (TGTCTC), supporting dual hormonal regulation (yang2006osble3abrassinolideenhanced pages 4-6, yang2006osble3abrassinolideenhanced pages 8-10).</p>
+<p>Genetic/hormone signaling placement: OsBLE3 expression was strongly reduced in the BR‑deficient <strong>brd1</strong> mutant, and BL induction was impaired in <strong>OsBRI1 antisense</strong> plants, indicating dependence on BR biosynthesis and (at least in part) BR receptor signaling (yang2006osble3abrassinolideenhanced pages 4-6, yang2006osble3abrassinolideenhanced pages 1-2).</p>
+<h3 id="5-functional-evidence-direct-perturbation-data-for-osble3">5) Functional evidence (direct perturbation data for OsBLE3)</h3>
+<p>Yang et al. generated <strong>antisense OsBLE3</strong> transgenic rice lines. Multiple lines (e.g., A7/A11/A12) showed greatly reduced OsBLE3 transcript levels and exhibited <strong>growth repression / semi-dwarf phenotypes</strong>, including <strong>shorter roots</strong>, <strong>less branching</strong>, and <strong>shortened internodes</strong>. Internode cell length was reduced to approximately <strong>65–75%</strong> of control (often summarized as ~70%), supporting a role in <strong>cell elongation</strong> (yang2006osble3abrassinolideenhanced pages 6-8, yang2006osble3abrassinolideenhanced pages 1-2).</p>
+<p>In lamina-joint bending assays, antisense plants remained BL responsive but showed markedly reduced bending compared with controls, consistent with OsBLE3 contributing to BR-associated growth outputs rather than being absolutely required for BL perception (yang2006osble3abrassinolideenhanced pages 6-8).</p>
+<h3 id="6-recent-developments-20232024-most-relevant-to-ble3q84ut5">6) Recent developments (2023–2024) most relevant to BLE3/Q84UT5</h3>
+<h4 id="61-2024-comparative-ricearabidopsis-casp-family-analysis">6.1 2024: comparative rice/Arabidopsis CASP family analysis</h4>
+<p>A 2024 comparative genomics study defined rice CASP family members using a DUF588/PF04535 HMM, identifying <strong>41 OsCASP genes</strong> and organizing them into <strong>six</strong> subgroups; it further reports that many OsCASP genes show <strong>root-enriched</strong> expression, with endodermal expression patterns emphasized as relevant to CS function (https://doi.org/10.3390/ijms25189858; <strong>2024-09</strong>) (xue2024comparativeanalysisof pages 1-2, xue2024comparativeanalysisof pages 2-4).</p>
+<p>The same study proposed candidate OsCASP_like genes with particularly pronounced root/endodermal expression (e.g., OsCASP_like11/9 or 11/19 as described in summaries) and reported ion/stress-responsive expression patterns for subsets of OsCASP_like genes. This provides current “family context” but does not directly validate BLE3/Q84UT5 function or localization (xue2024comparativeanalysisof pages 1-2, xue2024comparativeanalysisof media a3353a44).</p>
+<h4 id="62-2023-mechanistic-understanding-of-casp-microdomains">6.2 2023: mechanistic understanding of CASP microdomains</h4>
+<p>A 2023 <em>Nature Communications</em> study in Arabidopsis provided mechanistic insight into how CASPs shape and fuse membrane-wall microdomains during CS formation, implicating CASPs in organizing exocyst/secretory dynamics and identifying candidate interacting partners via proximity labeling (https://doi.org/10.1038/s41467-023-37265-7; <strong>2023-07</strong>) (barbosa2023directedgrowthand pages 11-12). This is authoritative mechanistic evidence for CASP function, but it is <strong>not BLE3-specific</strong>.</p>
+<h4 id="63-2024-contemporary-transcriptomic-usage-of-osble3">6.3 2024: contemporary transcriptomic usage of OsBLE3</h4>
+<p>A 2024 rice/wheat transcriptomic paper on the tertiary amine BMVE explicitly cites <strong>OsBLE3 (LOC_Os05g15630)</strong> as an auxin-responsive gene reported to be involved in cell elongation with dual regulation by brassinolide and auxin, reflecting continued community usage of OsBLE3 as a BR/auxin-responsive growth gene (https://doi.org/10.3389/fpls.2023.1273620; <strong>2024-01</strong>) (contextual mention; evidence derived from the older primary study) (yang2006osble3abrassinolideenhanced pages 1-2).</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<p><strong>Hormone-responsive growth control:</strong> The most direct BLE3-relevant application direction is that OsBLE3 is a <strong>hormone (BR/auxin)-responsive growth regulator</strong> linked to cell elongation and plant architecture traits (semi-dwarfing, internode length). While no applied breeding/CRISPR deployment for BLE3 itself was retrieved here, its phenotype and BR/auxin regulation make it conceptually relevant to architectural trait engineering (yang2006osble3abrassinolideenhanced pages 6-8, yang2006osble3abrassinolideenhanced pages 8-10).</p>
+<p><strong>Barrier biology (CASP/CASPL pathway applications):</strong> CASP/CASPL genes in rice are implicated in CS/suberin barrier formation, which can influence nutrient homeostasis and stress responses (e.g., salt). For example, OsCASP1 mutants show CS delays and altered suberin/lignin patterns with downstream ion imbalance and salt-related phenotypes, motivating “barrier engineering” concepts for nutrient/stress resilience. This is strong for CASP family members generally, but it is <strong>not direct evidence for BLE3</strong> (yang2022riceoscasp1orchestrates pages 1-2, yang2022riceoscasp1orchestrates pages 15-16).</p>
+<h3 id="8-expert-synthesis-and-analysis-evidence-weighted-functional-annotation">8) Expert synthesis and analysis (evidence-weighted functional annotation)</h3>
+<h4 id="81-most-defensible-ble3-function-based-on-direct-data">8.1 Most defensible BLE3 function based on direct data</h4>
+<p>The highest-confidence, BLE3-specific conclusion is that <strong>OsBLE3 is a brassinolide-enhanced and auxin-responsive gene that positively contributes to rice growth via cell elongation</strong>, supported by antisense phenotypes and internode cell-length measurements (yang2006osble3abrassinolideenhanced pages 6-8, yang2006osble3abrassinolideenhanced pages 8-10).</p>
+<h4 id="82-subcellular-localization-unresolved-conflict">8.2 Subcellular localization: unresolved conflict</h4>
+<p>Direct predictions in the OsBLE3 primary paper support <strong>mitochondrial inner membrane localization</strong>, but CASP/CASPL family biology places proteins at <strong>plasma membrane microdomains (CSD)</strong>. Without direct protein localization experiments for BLE3/Q84UT5 (e.g., BLE3-GFP), localization remains <strong>uncertain</strong>; any statement that BLE3 acts at the CSD should be treated as <strong>inference contingent on confirming Q84UT5 as a CASP/CASPL member</strong> (yang2006osble3abrassinolideenhanced pages 2-4, barbosa2023directedgrowthand pages 11-12).</p>
+<h4 id="83-how-to-reconcile-ble3-with-casp-like-annotation">8.3 How to reconcile “BLE3” with “CASP-like” annotation</h4>
+<p>The strongest bridge between the two is the repeated use of <strong>DUF588/PF04535</strong> as the defining signature for rice CASP/CASPL gene discovery; the 2006 OsBLE3 study also references DUF588-like annotation for OsBLE3. This suggests BLE3 could be placed within the broader DUF588/PF04535 space used to define CASP families, but the predicted TM count and localization in 2006 differ from recent family topology models (yang2006osble3abrassinolideenhanced pages 2-4, xue2024comparativeanalysisof pages 1-2, barbosa2023directedgrowthand pages 11-12). Definitive resolution requires current sequence/domain/topology confirmation (e.g., current UniProt/InterPro features and/or experimental localization).</p>
+<h3 id="9-key-statistics-and-data-points-from-cited-studies">9) Key statistics and data points (from cited studies)</h3>
+<ul>
+<li>OsBLE3 protein: <strong>162 aa</strong>, predicted <strong>16.8 kDa</strong>, pI <strong>8.24</strong>, predicted <strong>3 transmembrane domains</strong> (yang2006osble3abrassinolideenhanced pages 2-4).</li>
+<li>Antisense OsBLE3 internode cell length: <strong>~65–75% of control</strong> (often summarized ~70%), consistent with reduced cell elongation (yang2006osble3abrassinolideenhanced pages 6-8, yang2006osble3abrassinolideenhanced pages 1-2).</li>
+<li>Rice CASP family size (bioinformatics): <strong>41 OsCASP genes</strong> identified using DUF588/PF04535 HMM criteria (xue2024comparativeanalysisof pages 1-2, xue2024comparativeanalysisof pages 2-4).</li>
+</ul>
+<h3 id="10-visual-evidence-from-recent-literature">10) Visual evidence from recent literature</h3>
+<p>The 2024 comparative CASP family paper contains figures summarizing conserved domains/motifs and multiple expression heatmaps across tissues, root cell types, abiotic stress conditions, and ion-deficiency treatments for OsCASP genes (xue2024comparativeanalysisof media a3353a44, xue2024comparativeanalysisof media 937b3861, xue2024comparativeanalysisof media c8c8a19b, xue2024comparativeanalysisof media b24ca4f6, xue2024comparativeanalysisof media 15af25cc, xue2024comparativeanalysisof media e6e112ce).</p>
+<h3 id="evidence-map-what-is-direct-vs-inferred">Evidence map (what is direct vs inferred)</h3>
+<table>
+<thead>
+<tr>
+<th>Claim/Aspect</th>
+<th>Evidence type</th>
+<th>Key details</th>
+<th>Source (paper, year, DOI/URL)</th>
+<th>Citation ID(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene identifiers and mapping</td>
+<td>Direct experiment + database-linked mapping</td>
+<td>OsBLE3 in the literature maps to rice LOC_Os05g15630 on chromosome 5; the user-supplied target further maps this locus to UniProt Q84UT5 / Os05g0245300. Direct literature supports the OsBLE3 ↔ LOC_Os05g15630 link, but accession-level reconciliation with the CASP-like UniProt annotation should be treated cautiously because older literature emphasized a BL-induced gene rather than explicit CASP family placement.</td>
+<td>Yang et al., 2006, <em>Phytochemistry</em>, DOI: 10.1016/j.phytochem.2006.05.026, https://doi.org/10.1016/j.phytochem.2006.05.026; Dharni et al., 2024, <em>Frontiers in Plant Science</em>, DOI: 10.3389/fpls.2023.1273620, https://doi.org/10.3389/fpls.2023.1273620</td>
+<td>(yang2006osble3abrassinolideenhanced pages 2-4, yang2006osble3abrassinolideenhanced pages 1-2)</td>
+</tr>
+<tr>
+<td>Protein length / TMs / DUF588 / PF04535</td>
+<td>Direct experiment + bioinformatic prediction + family inference</td>
+<td>The 2006 OsBLE3 study reported an 865 bp cDNA encoding a 162 aa protein (~16.8 kDa, pI 8.24) with 3 predicted transmembrane domains and a DUF588-domain assignment. Recent CASP/CASPL family studies define rice CASP proteins using the DUF588/PF04535 HMM, supporting that DUF588/PF04535 is the key family-level signature used for CASP/CASPL annotation in rice.</td>
+<td>Yang et al., 2006, <em>Phytochemistry</em>, DOI: 10.1016/j.phytochem.2006.05.026, https://doi.org/10.1016/j.phytochem.2006.05.026; Xue et al., 2024, <em>Int. J. Mol. Sci.</em>, DOI: 10.3390/ijms25189858, https://doi.org/10.3390/ijms25189858</td>
+<td>(yang2006osble3abrassinolideenhanced pages 2-4, xue2024comparativeanalysisof pages 1-2, xue2024comparativeanalysisof pages 2-4)</td>
+</tr>
+<tr>
+<td>Predicted localization: mitochondrial inner membrane vs plasma membrane CSD</td>
+<td>Bioinformatic prediction vs family inference</td>
+<td>For OsBLE3 specifically, PSORT/MitoProt-based prediction suggested an N-terminal targeting peptide and probable mitochondrial inner membrane localization. In contrast, CASP/CASPL family proteins are generally inferred or shown to localize to plasma-membrane Casparian strip domains (CSDs), where they organize membrane-wall microdomains. Thus, localization evidence is currently conflicting between direct old prediction for OsBLE3 and family-based CASP/CASPL expectation.</td>
+<td>Yang et al., 2006, <em>Phytochemistry</em>, DOI: 10.1016/j.phytochem.2006.05.026, https://doi.org/10.1016/j.phytochem.2006.05.026; Yang et al., 2022, <em>Frontiers in Plant Science</em>, DOI: 10.3389/fpls.2022.1007300, https://doi.org/10.3389/fpls.2022.1007300; Barbosa et al., 2023, <em>Nature Communications</em>, DOI: 10.1038/s41467-023-37265-7, https://doi.org/10.1038/s41467-023-37265-7</td>
+<td>(yang2006osble3abrassinolideenhanced pages 2-4, yang2006osble3abrassinolideenhanced pages 6-8, yang2022riceoscasp1orchestrates pages 2-3, barbosa2023directedgrowthand pages 11-12)</td>
+</tr>
+<tr>
+<td>Regulation by brassinolide and auxin</td>
+<td>Direct experiment</td>
+<td>OsBLE3 transcript accumulation is induced by brassinolide (BL) in a dose-dependent manner; promoter analyses identified auxin-response elements (TGTCTC), and IAA also induced expression, with BL enhancing expression at low IAA. OsBLE3 expression was strongly reduced in the BL-deficient <em>brd1</em> background and BL induction was impaired in OsBRI1-antisense plants, placing OsBLE3 downstream of BR signaling and under dual BR/auxin control.</td>
+<td>Yang et al., 2006, <em>Phytochemistry</em>, DOI: 10.1016/j.phytochem.2006.05.026, https://doi.org/10.1016/j.phytochem.2006.05.026</td>
+<td>(yang2006osble3abrassinolideenhanced pages 1-2, yang2006osble3abrassinolideenhanced pages 8-10, yang2006osble3abrassinolideenhanced pages 4-6, komatsuUnknownyearartificiallycontrollingmorphogenesis pages 3-4)</td>
+</tr>
+<tr>
+<td>Expression patterns: roots/leaf sheath; vascular tissues; branch root primordia</td>
+<td>Direct experiment</td>
+<td>Northern blot, in situ hybridization, and promoter::GUS analyses showed strongest expression in roots and leaf sheaths, little to none in leaf blade, and signal in vascular bundles, nodal vascular tissues, shoot apical meristem, organ primordia, and branch root primordia. BL-responsive GUS activity was prominent in vascular tissues and lower-root primordia-like spots.</td>
+<td>Yang et al., 2006, <em>Phytochemistry</em>, DOI: 10.1016/j.phytochem.2006.05.026, https://doi.org/10.1016/j.phytochem.2006.05.026</td>
+<td>(yang2006osble3abrassinolideenhanced pages 2-4, yang2006osble3abrassinolideenhanced pages 1-2, yang2006osble3abrassinolideenhanced pages 4-6)</td>
+</tr>
+<tr>
+<td>Phenotypes from antisense</td>
+<td>Direct experiment</td>
+<td>Twelve antisense lines were generated; at least lines A7, A11, and A12 showed markedly reduced OsBLE3 transcript levels. Antisense plants were growth retarded/semi-dwarf, had shorter roots, reduced branching, shortened internodes, and reduced internode cell length to ~65–75% of control (~70% in summary statements). Lamina-joint bending remained BL responsive but was reduced versus controls, supporting a role in BR-related cell elongation/growth.</td>
+<td>Yang et al., 2006, <em>Phytochemistry</em>, DOI: 10.1016/j.phytochem.2006.05.026, https://doi.org/10.1016/j.phytochem.2006.05.026</td>
+<td>(yang2006osble3abrassinolideenhanced pages 6-8, yang2006osble3abrassinolideenhanced pages 1-2, yang2006osble3abrassinolideenhanced pages 8-10, komatsuUnknownyearartificiallycontrollingmorphogenesis pages 3-4)</td>
+</tr>
+<tr>
+<td>CASP/CASPL family roles in Casparian strip formation and lignin/suberin deposition</td>
+<td>Family inference + direct evidence from related rice genes</td>
+<td>CASP/CASPL proteins are membrane-domain scaffold proteins that help define the Casparian strip domain, recruit lignin polymerization machinery, and organize apoplastic barrier formation. In rice, OsCASP1 directly contributes to timely Casparian strip formation, proper lignin patterning, and suberin deposition in small lateral roots; loss of OsCASP1 delays CS formation and perturbs ion homeostasis. These data provide the strongest mechanistic basis for inferring a CASP-like role if BLE3/Q84UT5 is indeed a CASP/CASPL member.</td>
+<td>Yang et al., 2022, <em>Frontiers in Plant Science</em>, DOI: 10.3389/fpls.2022.1007300, https://doi.org/10.3389/fpls.2022.1007300; Barbosa et al., 2023, <em>Nature Communications</em>, DOI: 10.1038/s41467-023-37265-7, https://doi.org/10.1038/s41467-023-37265-7</td>
+<td>(yang2022riceoscasp1orchestrates pages 1-2, yang2022riceoscasp1orchestrates pages 2-3, yang2022riceoscasp1orchestrates pages 15-16, barbosa2023directedgrowthand pages 11-12, yang2022riceoscasp1orchestrates pages 3-5)</td>
+</tr>
+<tr>
+<td>Recent 2024 comparative CASP family study findings relevant to rice</td>
+<td>Bioinformatic family study</td>
+<td>A 2024 comparative study identified 41 OsCASP genes in rice using the DUF588/PF04535 HMM, grouped them into six subfamilies, and found most are root enriched, especially in endodermal cells. Candidate rice genes for Casparian-strip-related roles included OsCASP_like11/9 (or 11/19 as reported in summary text) for root/endodermal expression and OsCASP_like2/3/13/17/21/30 for ion-defect responses. The study provides current family context but did not directly validate BLE3/Q84UT5 experimentally.</td>
+<td>Xue et al., 2024, <em>Int. J. Mol. Sci.</em>, DOI: 10.3390/ijms25189858, https://doi.org/10.3390/ijms25189858</td>
+<td>(xue2024comparativeanalysisof pages 1-2, xue2024comparativeanalysisof pages 2-4, xue2024comparativeanalysisof media a3353a44, xue2024comparativeanalysisof media 937b3861, xue2024comparativeanalysisof media c8c8a19b, xue2024comparativeanalysisof media b24ca4f6, xue2024comparativeanalysisof media 15af25cc, xue2024comparativeanalysisof media e6e112ce)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compares direct experimental evidence for rice OsBLE3/LOC_Os05g15630 with broader CASP/CASPL family annotations used in recent rice studies. It is useful for separating what is experimentally shown for BLE3 from what is currently inferred from family-level CASP biology.</em></p>
+<h3 id="11-practical-next-steps-for-definitive-functional-annotation-recommended-based-on-evidence-gaps">11) Practical next steps for definitive functional annotation (recommended based on evidence gaps)</h3>
+<ol>
+<li><strong>Directly confirm Q84UT5 topology/localization</strong> (BLE3-GFP in rice; co-localization with endodermal CSD markers vs mitochondrial markers) to resolve whether BLE3 is a CASP/CASPL-type CSD protein or a mitochondria-localized BR/auxin-responsive membrane protein (yang2006osble3abrassinolideenhanced pages 2-4, barbosa2023directedgrowthand pages 11-12).</li>
+<li>If BLE3 is plasma-membrane CSD-localized, test <strong>barrier phenotypes</strong> (Casparian strip lignin continuity, suberin patterning, tracer penetration assays) in BLE3 knockouts, paralleling rice OsCASP1 functional assays (yang2022riceoscasp1orchestrates pages 1-2, yang2022riceoscasp1orchestrates pages 15-16).</li>
+</ol>
+<h3 id="references-urls-and-publication-dates">References (URLs and publication dates)</h3>
+<ul>
+<li>Yang G. et al. <strong>2006-07</strong>. <em>Phytochemistry</em>. “OsBLE3, a brassinolide-enhanced gene, is involved in the growth of rice.” https://doi.org/10.1016/j.phytochem.2006.05.026 (yang2006osble3abrassinolideenhanced pages 2-4, yang2006osble3abrassinolideenhanced pages 6-8)</li>
+<li>Dharni J.S. et al. <strong>2024-01</strong>. <em>Frontiers in Plant Science</em>. “Growth and transcriptional response of wheat and rice to the tertiary amine BMVE.” https://doi.org/10.3389/fpls.2023.1273620 (yang2006osble3abrassinolideenhanced pages 1-2)</li>
+<li>Xue B. et al. <strong>2024-09</strong>. <em>International Journal of Molecular Sciences</em>. “Comparative Analysis of Casparian Strip Membrane Domain Protein Family in Oryza sativa (L.) and Arabidopsis thaliana (L.).” https://doi.org/10.3390/ijms25189858 (xue2024comparativeanalysisof pages 1-2, xue2024comparativeanalysisof media a3353a44)</li>
+<li>Barbosa I.C.R. et al. <strong>2023-07</strong>. <em>Nature Communications</em>. “Directed growth and fusion of membrane-wall microdomains requires CASP-mediated inhibition and displacement of secretory foci.” https://doi.org/10.1038/s41467-023-37265-7 (barbosa2023directedgrowthand pages 11-12)</li>
+<li>Yang X. et al. <strong>2022-12</strong>. <em>Frontiers in Plant Science</em>. “Rice OsCASP1 orchestrates Casparian strip formation and suberin deposition in small lateral roots to maintain nutrient homeostasis.” https://doi.org/10.3389/fpls.2022.1007300 (yang2022riceoscasp1orchestrates pages 1-2, yang2022riceoscasp1orchestrates pages 15-16)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(yang2006osble3abrassinolideenhanced pages 2-4): Guangxiao Yang, Hidemitsu Nakamura, Hiroaki Ichikawa, Hidemi Kitano, and Setsuko Komatsu. Osble3, a brassinolide-enhanced gene, is involved in the growth of rice. Phytochemistry, 67 14:1442-54, Jul 2006. URL: https://doi.org/10.1016/j.phytochem.2006.05.026, doi:10.1016/j.phytochem.2006.05.026. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2006osble3abrassinolideenhanced pages 1-2): Guangxiao Yang, Hidemitsu Nakamura, Hiroaki Ichikawa, Hidemi Kitano, and Setsuko Komatsu. Osble3, a brassinolide-enhanced gene, is involved in the growth of rice. Phytochemistry, 67 14:1442-54, Jul 2006. URL: https://doi.org/10.1016/j.phytochem.2006.05.026, doi:10.1016/j.phytochem.2006.05.026. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbosa2023directedgrowthand pages 11-12): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof pages 1-2): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(yang2022riceoscasp1orchestrates pages 1-2): Xianfeng Yang, Huifang Xie, Qunqing Weng, Kangjing Liang, Xiujuan Zheng, Yuchun Guo, and Xinli Sun. Rice oscasp1 orchestrates casparian strip formation and suberin deposition in small lateral roots to maintain nutrient homeostasis. Frontiers in Plant Science, Dec 2022. URL: https://doi.org/10.3389/fpls.2022.1007300, doi:10.3389/fpls.2022.1007300. This article has 18 citations.</p>
+</li>
+<li>
+<p>(yang2006osble3abrassinolideenhanced pages 6-8): Guangxiao Yang, Hidemitsu Nakamura, Hiroaki Ichikawa, Hidemi Kitano, and Setsuko Komatsu. Osble3, a brassinolide-enhanced gene, is involved in the growth of rice. Phytochemistry, 67 14:1442-54, Jul 2006. URL: https://doi.org/10.1016/j.phytochem.2006.05.026, doi:10.1016/j.phytochem.2006.05.026. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2006osble3abrassinolideenhanced pages 4-6): Guangxiao Yang, Hidemitsu Nakamura, Hiroaki Ichikawa, Hidemi Kitano, and Setsuko Komatsu. Osble3, a brassinolide-enhanced gene, is involved in the growth of rice. Phytochemistry, 67 14:1442-54, Jul 2006. URL: https://doi.org/10.1016/j.phytochem.2006.05.026, doi:10.1016/j.phytochem.2006.05.026. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2006osble3abrassinolideenhanced pages 8-10): Guangxiao Yang, Hidemitsu Nakamura, Hiroaki Ichikawa, Hidemi Kitano, and Setsuko Komatsu. Osble3, a brassinolide-enhanced gene, is involved in the growth of rice. Phytochemistry, 67 14:1442-54, Jul 2006. URL: https://doi.org/10.1016/j.phytochem.2006.05.026, doi:10.1016/j.phytochem.2006.05.026. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof pages 2-4): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof media a3353a44): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(yang2022riceoscasp1orchestrates pages 15-16): Xianfeng Yang, Huifang Xie, Qunqing Weng, Kangjing Liang, Xiujuan Zheng, Yuchun Guo, and Xinli Sun. Rice oscasp1 orchestrates casparian strip formation and suberin deposition in small lateral roots to maintain nutrient homeostasis. Frontiers in Plant Science, Dec 2022. URL: https://doi.org/10.3389/fpls.2022.1007300, doi:10.3389/fpls.2022.1007300. This article has 18 citations.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof media 937b3861): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof media c8c8a19b): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof media b24ca4f6): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof media 15af25cc): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof media e6e112ce): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(yang2022riceoscasp1orchestrates pages 2-3): Xianfeng Yang, Huifang Xie, Qunqing Weng, Kangjing Liang, Xiujuan Zheng, Yuchun Guo, and Xinli Sun. Rice oscasp1 orchestrates casparian strip formation and suberin deposition in small lateral roots to maintain nutrient homeostasis. Frontiers in Plant Science, Dec 2022. URL: https://doi.org/10.3389/fpls.2022.1007300, doi:10.3389/fpls.2022.1007300. This article has 18 citations.</p>
+</li>
+<li>
+<p>(komatsuUnknownyearartificiallycontrollingmorphogenesis pages 3-4): S Komatsu. Artificially controlling morphogenesis by altering plant function based on the elucidation of molecular mechanism for brassinosteroids and gibberellins signal …. Unknown journal, Unknown year.</p>
+</li>
+<li>
+<p>(yang2022riceoscasp1orchestrates pages 3-5): Xianfeng Yang, Huifang Xie, Qunqing Weng, Kangjing Liang, Xiujuan Zheng, Yuchun Guo, and Xinli Sun. Rice oscasp1 orchestrates casparian strip formation and suberin deposition in small lateral roots to maintain nutrient homeostasis. Frontiers in Plant Science, Dec 2022. URL: https://doi.org/10.3389/fpls.2022.1007300, doi:10.3389/fpls.2022.1007300. This article has 18 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="BLE3-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000015 The document provides a detailed summary of the OsCASP_like gene family in rice (and Arabidopsis). Key visual summaries include: - " src="BLE3-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>barbosa2023directedgrowthand pages 11-12</li>
+<li>xue2024comparativeanalysisof pages 1-2</li>
+<li>xue2024comparativeanalysisof pages 2-4</li>
+<li>https://doi.org/10.1016/j.phytochem.2006.05.026;</li>
+<li>https://doi.org/10.3390/ijms25189858;</li>
+<li>https://doi.org/10.1038/s41467-023-37265-7;</li>
+<li>https://doi.org/10.3389/fpls.2023.1273620;</li>
+<li>https://doi.org/10.3389/fpls.2023.1273620</li>
+<li>https://doi.org/10.3390/ijms25189858</li>
+<li>https://doi.org/10.3389/fpls.2022.1007300;</li>
+<li>https://doi.org/10.1038/s41467-023-37265-7</li>
+<li>https://doi.org/10.1016/j.phytochem.2006.05.026</li>
+<li>https://doi.org/10.3389/fpls.2022.1007300</li>
+<li>https://doi.org/10.1016/j.phytochem.2006.05.026,</li>
+<li>https://doi.org/10.1038/s41467-023-37265-7,</li>
+<li>https://doi.org/10.3390/ijms25189858,</li>
+<li>https://doi.org/10.3389/fpls.2022.1007300,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q84UT5
+gene_symbol: BLE3
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:39947
+  label: Oryza sativa subsp. japonica
+description: &#39;OsBLE3 (CASP-like protein BLE3 / OsCASPL1C2, brassinolide-enhanced 3) is a small tetraspan
+  (four-transmembrane) plasma-membrane protein of the CASP-like (CASPL) subfamily of the MARVEL-related
+  Casparian strip membrane domain protein family. Unlike most CASPLs it is functionally characterized:
+  it is a brassinolide-upregulated gene whose expression depends on both brassinosteroid (BR) and auxin
+  and is concentrated in roots, leaf sheaths, the shoot apical meristem, organ primordia and vascular
+  tissue. Antisense knock-down causes growth retardation and reduces internode cell length to about 70%
+  of wild type, showing that OsBLE3 promotes cell elongation in rice through dual BR/auxin regulation.
+  No specific molecular (enzymatic/transport) activity is established; it is presumed to act as a plasma-membrane
+  scaffold.&#39;
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Correct, well-supported plasma-membrane localization for this multi-pass CASP-like protein.
+    action: ACCEPT
+    reason: UniProt annotates a multi-pass cell-membrane protein, consistent with the four-transmembrane
+      CASP/CASPL scaffold architecture.
+    supported_by:
+    - reference_id: file:ORYSJ/BLE3/BLE3-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell membrane&#39;
+- term:
+    id: GO:0009733
+    label: response to auxin
+  evidence_type: IEP
+  original_reference_id: PMID:16808934
+  qualifier: involved_in
+  review:
+    summary: &#39;Experimentally supported: OsBLE3 expression is enhanced by auxin (IAA) and the promoter
+      contains auxin-response elements.&#39;
+    action: ACCEPT
+    reason: Expression-based (IEP) evidence shows OsBLE3 is co-induced by auxin and harbours auxin-response
+      elements, placing it in the auxin response.
+    supported_by:
+    - reference_id: PMID:16808934
+      supporting_text: existence of auxin response elements
+- term:
+    id: GO:0035264
+    label: multicellular organism growth
+  evidence_type: IMP
+  original_reference_id: PMID:16808934
+  qualifier: involved_in
+  review:
+    summary: &#39;Experimentally supported: antisense OsBLE3 plants show growth retardation.&#39;
+    action: ACCEPT
+    reason: Mutant/antisense phenotype (IMP) directly links OsBLE3 to organismal growth.
+    supported_by:
+    - reference_id: PMID:16808934
+      supporting_text: growth retardation
+- term:
+    id: GO:0009741
+    label: response to brassinosteroid
+  evidence_type: IMP
+  original_reference_id: PMID:16808934
+  qualifier: involved_in
+  review:
+    summary: &#39;Experimentally supported: OsBLE3 is a brassinolide-enhanced gene, reduced in BR-deficient/insensitive
+      backgrounds.&#39;
+    action: ACCEPT
+    reason: OsBLE3 induction by brassinolide and its dependence on BR signalling (reduced in brd1 and
+      BRI1-antisense plants) support involvement in the brassinosteroid response.
+    supported_by:
+    - reference_id: PMID:16808934
+      supporting_text: brassinolide-enhanced gene
+- term:
+    id: GO:0009826
+    label: unidimensional cell growth
+  evidence_type: IMP
+  original_reference_id: PMID:16808934
+  qualifier: involved_in
+  review:
+    summary: &#39;Experimentally supported: antisense lines show reduced internode cell length, i.e. impaired
+      cell elongation.&#39;
+    action: ACCEPT
+    reason: The internode cell-length phenotype (IMP) directly demonstrates a role in unidimensional cell
+      growth (elongation).
+    supported_by:
+    - reference_id: PMID:16808934
+      supporting_text: Internode cell length of the OsBLE3 antisense transgenic
+references:
+- id: file:ORYSJ/BLE3/BLE3-uniprot.txt
+  title: UniProtKB reviewed entry for BLE3
+  findings:
+  - statement: BLE3 is a multi-pass cell-membrane CASP-like protein of the Casparian strip membrane proteins
+      family.
+- id: file:ORYSJ/BLE3/BLE3-goa.tsv
+  title: QuickGO GOA annotations for BLE3
+  findings:
+  - statement: GOA supplied the annotations reviewed in this file.
+- id: PMID:24920445
+  title: Functional and evolutionary analysis of the CASPARIAN STRIP MEMBRANE DOMAIN PROTEIN family.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified family-defining paper establishing the unified CASP/CASPL nomenclature.
+  findings:
+  - statement: Places OsBLE3 in the CASPL subfamily (OsCASPL1C2) of plasma-membrane tetraspan scaffolds.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings:
+  - statement: Supplied the IEA plasma membrane annotation.
+- id: PMID:16808934
+  title: OsBLE3, a brassinolide-enhanced gene, is involved in the growth of rice.
+  findings:
+  - statement: OsBLE3 (OsCASPL1C2) is a brassinolide-upregulated gene expressed in roots, leaf sheaths
+      and vascular tissue; its expression is controlled by both brassinosteroid and auxin, and antisense
+      knock-down causes growth retardation with internode cell length reduced to ~70% of wild type, indicating
+      a role in cell elongation.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; primary functional characterization of OsBLE3/OsCASPL1C2.
+- id: file:ORYSJ/BLE3/BLE3-deep-research-falcon.md
+  title: Falcon (Edison) deep-research report for OsBLE3/OsCASPL1C2
+  findings:
+  - statement: &#39;Deep-research synthesis of OsBLE3: a brassinolide/auxin-regulated CASP-like plasma-membrane
+      protein promoting cell elongation in rice, expressed in roots, leaf sheaths and vascular tissue.&#39;
+core_functions:
+- description: Plasma-membrane CASP-like protein that promotes cell elongation (unidimensional cell growth)
+    in rice, acting downstream of and regulated by brassinosteroid and auxin.
+  supported_by:
+  - reference_id: file:ORYSJ/BLE3/BLE3-uniprot.txt
+    supporting_text: Involved in cell elongation in rice through dual regulation
+  - reference_id: PMID:16808934
+    supporting_text: Internode cell length of the OsBLE3 antisense transgenic
+  directly_involved_in:
+  - id: GO:0009826
+    label: unidimensional cell growth
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+proposed_new_terms: []
+suggested_questions:
+- question: What is the molecular mechanism by which OsBLE3 promotes cell elongation downstream of brassinosteroid
+    and auxin?
+suggested_experiments:
+- description: Identify OsBLE3 plasma-membrane interactors and test whether it scaffolds BR/auxin-responsive
+    growth machinery; phenotype CRISPR knockouts for internode elongation.
+  experiment_type: protein interaction and genetic analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Trp53 (mouse)
 
-Source: Trp53-deep-research-bioreason-rl.md
+Source: Trp53-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

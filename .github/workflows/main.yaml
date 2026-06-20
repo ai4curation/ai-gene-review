@@ -7,6 +7,12 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
   pull_request:
+  # Weekly full re-validation safety net: per-PR scoping can miss breakage caused by
+  # upstream ontology drift (e.g. a GO term becoming obsolete), so validate everything
+  # once a week and on manual dispatch.
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
 
 env:
   FORCE_COLOR: "1" # Make tools pretty.
@@ -24,6 +30,13 @@ jobs:
 
     steps:
 
+      # Ontology SQLite DBs (GO, CHEBI, ...) are large; free space before downloads.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          large-packages: false
+
       # https://github.com/actions/checkout
       - name: Check out repository
         uses: actions/checkout@v4.2.2
@@ -34,12 +47,27 @@ jobs:
         uses: dorny/paths-filter@v3
         id: changes
         with:
+          list-files: shell
           filters: |
             src:
               - 'src/**'
               - 'tests/**'
               - 'pyproject.toml'
               - 'uv.lock'
+            genes:
+              - 'genes/**/*-ai-review.yaml'
+            # Anything that can change validation behaviour for ALL genes. If any of
+            # these change we cannot trust per-gene scoping, so we validate everything.
+            infra:
+              - 'src/ai_gene_review/schema/**'
+              - 'src/ai_gene_review/validation/**'
+              - 'src/ai_gene_review/cli.py'
+              - 'src/ai_gene_review/tools/validate_pmid_references.py'
+              - 'conf/**'
+              - 'scripts/run_term_validator.sh'
+              - 'scripts/run_reference_validator.sh'
+              - 'justfile'
+              - 'project.justfile'
 
       # https://github.com/astral-sh/setup-uv
       - name: Install uv
@@ -62,10 +90,40 @@ jobs:
       - name: Install project
         run: uv sync --dev
 
-      - name: Validate data
-        run: just validate-all
+      # Cache the oaklib ontology SQLite DBs so term validation does not re-download
+      # multi-GB GO/CHEBI/etc. every run. Weekly-rotating key keeps them reasonably fresh.
+      - name: Compute ontology cache week
+        id: ontoweek
+        run: echo "week=$(date -u +%Y%U)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache ontology databases
+        uses: actions/cache@v4
+        with:
+          path: ~/.data/oaklib
+          key: oaklib-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          restore-keys: |
+            oaklib-${{ runner.os }}-
+
+      # Scope validation to what changed: a change to schema/validators/config could
+      # affect every gene (-> full validate-all); otherwise validate only changed genes.
+      - name: Validate gene reviews (scoped)
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "::notice::Scheduled/manual run -> validating ALL gene reviews."
+            just validate-all
+          elif [ "${{ steps.changes.outputs.infra }}" = "true" ]; then
+            echo "::notice::Validation infrastructure changed -> validating ALL gene reviews."
+            just validate-all
+          elif [ "${{ steps.changes.outputs.genes }}" = "true" ]; then
+            echo "::notice::Validating only changed gene reviews."
+            just validate-changed ${{ steps.changes.outputs.genes_files }}
+          else
+            echo "No gene-review or validation-infrastructure changes; skipping gene validation."
+          fi
 
       - name: Test valid/invalid examples
+        if: steps.changes.outputs.infra == 'true' || steps.changes.outputs.src == 'true'
         run: just test-examples
 
       - name: Run test suite

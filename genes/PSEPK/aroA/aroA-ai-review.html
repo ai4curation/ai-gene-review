@@ -1,0 +1,2698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aroA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aroA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88M05" target="_blank" class="term-link">
+                        Q88M05
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aroA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88M05" data-a="DESCRIPTION: aroA (PP_1770) of Pseudomonas putida KT2440 is a 7..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>aroA (PP_1770) of Pseudomonas putida KT2440 is a 746-residue bifunctional cytoplasmic enzyme of aromatic amino acid biosynthesis. Its EPSP synthase module (3-phosphoshikimate 1-carboxyvinyltransferase, EC 2.5.1.19; 5-enolpyruvylshikimate-3-phosphate synthase) catalyzes the penultimate step of the shikimate pathway, transferring the enolpyruvyl moiety of phosphoenolpyruvate to the 5-hydroxyl of shikimate-3-phosphate to yield 5-enolpyruvylshikimate-3-phosphate (EPSP) plus inorganic phosphate; EPSP is then converted to chorismate, the branch-point precursor of phenylalanine, tyrosine, tryptophan, folate, ubiquinone, and other aromatic metabolites. In addition to the canonical EPSP synthase domain (Pfam EPSP_synthase; COG0128; TIGR01356 aroA), the protein carries an N-terminal prephenate/arogenate dehydrogenase (TyrA) module (Pfam PDH_N/PDH_C; COG0287) with a NAD(P)-binding Rossmann fold. UniProt annotates a second catalytic activity for this module, prephenate dehydrogenase (prephenate + NAD+ -&gt; 4-hydroxyphenylpyruvate + CO2 + NADH, EC 1.3.1.12), placing it in the tyrosine-biosynthetic conversion of prephenate to 4-hydroxyphenylpyruvate. The protein is thus a fused EPSP-synthase / prephenate-dehydrogenase enzyme contributing to both chorismate formation and downstream L-tyrosine biosynthesis. The shikimate pathway is absent in animals, making EPSP synthase the molecular target of the herbicide glyphosate, a competitive inhibitor at the PEP site.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level catalytic activity term; uninformative given the specific enzymatic activities annotated below.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0003824 is the top-level molecular-function catalytic term and conveys no specific information. The protein has well-supported specific activities (EPSP synthase, EC 2.5.1.19; prephenate dehydrogenase, EC 1.3.1.12) that should be used instead.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003866" target="_blank" class="term-link">
+                                    GO:0003866
+                                </a>
+                            </span>
+                            <span class="term-label">3-phosphoshikimate 1-carboxyvinyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0003866" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPSP synthase activity (EC 2.5.1.19); the canonical, core molecular function of aroA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by sequence/domain evidence: the EPSP synthase Pfam domain (PF00275), HAMAP rule MF_00210, COG0128, NCBIfam TIGR01356 (aroA), conserved PEP and shikimate-3-phosphate binding residues, and mapping to Rhea:21256 / EC 2.5.1.19. This is the defining function of aroA.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004665" target="_blank" class="term-link">
+                                    GO:0004665
+                                </a>
+                            </span>
+                            <span class="term-label">prephenate dehydrogenase (NADP+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0004665" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADP+-dependent prephenate dehydrogenase activity inferred from the fused TyrA domain. The cofactor specificity (NADP+ vs NAD+) is not experimentally established for this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The protein carries a genuine N-terminal prephenate/arogenate dehydrogenase (TyrA) module (Pfam PDH_N/PDH_C; COG0287), so prephenate dehydrogenase activity is a plausible second function. However, UniProt&#39;s curated CATALYTIC ACTIVITY block lists only the NAD+ route (EC 1.3.1.12), and the NADP+ specificity here is purely an InterPro electronic inference (IPR003099) with no cofactor evidence. Retain as a non-core, lower-confidence activity rather than a core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization, consistent with a soluble shikimate-pathway metabolic enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EPSP synthase is a soluble cytosolic enzyme of central aromatic amino acid biosynthesis; cytoplasmic localization is supported by UniProt-SubCell (SL-0086) and HAMAP rule MF_00210, with no signal/transmembrane features.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006571" target="_blank" class="term-link">
+                                    GO:0006571
+                                </a>
+                            </span>
+                            <span class="term-label">L-tyrosine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0006571" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tyrosine biosynthesis; supported via the fused prephenate dehydrogenase (TyrA) domain that converts prephenate to 4-hydroxyphenylpyruvate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The TyrA (prephenate dehydrogenase) module places this protein in the tyrosine-specific branch (prephenate -&gt; 4-hydroxyphenylpyruvate, UniPathway step 1/1 of the NAD+ route). This is a real but secondary process relative to the core EPSP synthase / chorismate-biosynthesis role, hence non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008652" target="_blank" class="term-link">
+                                    GO:0008652
+                                </a>
+                            </span>
+                            <span class="term-label">amino acid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0008652" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General amino acid biosynthetic process; correct but non-specific given the more precise aromatic/chorismate terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> True but high-level. The more specific processes (chorismate biosynthetic process, aromatic amino acid biosynthetic process, L-tyrosine biosynthetic process) capture the role precisely, making this generic parent redundant.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008977" target="_blank" class="term-link">
+                                    GO:0008977
+                                </a>
+                            </span>
+                            <span class="term-label">prephenate dehydrogenase (NAD+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0008977" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD+-dependent prephenate dehydrogenase activity from the fused TyrA domain; the second catalytic function of this bifunctional protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by the prephenate/arogenate dehydrogenase domain (residues ~14-302; Pfam PDH_N/PDH_C; COG0287) and by UniProt&#39;s curated CATALYTIC ACTIVITY block citing the NAD+ reaction (Rhea:13869, EC 1.3.1.12) and the L-tyrosine biosynthesis (NAD+ route) pathway. This is the better-supported of the two prephenate dehydrogenase cofactor variants but remains the secondary (non-core) function relative to EPSP synthase.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009073" target="_blank" class="term-link">
+                                    GO:0009073
+                                </a>
+                            </span>
+                            <span class="term-label">aromatic amino acid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0009073" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Aromatic amino acid biosynthesis; accurate at the family level for an EPSP-synthase / chorismate-pathway enzyme also feeding tyrosine biosynthesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Both functional modules act within aromatic amino acid biosynthesis: EPSP synthase produces the chorismate precursor common to Phe/Tyr/Trp, and the TyrA domain feeds the tyrosine branch. The term is appropriately specific.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                    GO:0009423
+                                </a>
+                            </span>
+                            <span class="term-label">chorismate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0009423" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chorismate biosynthesis; the core biological process of the EPSP synthase activity (penultimate shikimate-pathway step).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EPSP synthase catalyzes step 6/7 of chorismate biosynthesis from D-erythrose-4-phosphate and PEP (UniPathway UPA00053/UER00089). This is the most precise and well-supported biological-process term for the core function. Consistent with KT2440-specific metabolic-engineering evidence that tuning aroA expression contributes to flux through the shikimate pathway toward chorismate-derived products (see aroA-deep-research-falcon.md, citing PMID:41029715).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0016491" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic oxidoreductase parent term covering the prephenate dehydrogenase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant high-level parent of the specific prephenate dehydrogenase activities (GO:0008977 / GO:0004665) already annotated. Provides no additional information beyond the specific terms.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016628" target="_blank" class="term-link">
+                                    GO:0016628
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-CH group of donors, NAD or NADP as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0016628" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Intermediate oxidoreductase-class parent term for the prephenate dehydrogenase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A grouping parent of the specific prephenate dehydrogenase (NAD+/NADP+) activities. The leaf terms GO:0008977 / GO:0004665 are retained, so this mid-level class is redundant over-annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016765" target="_blank" class="term-link">
+                                    GO:0016765
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring alkyl or aryl (other than methyl) groups</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0016765" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic enolpyruvyl/alkyl transferase parent term for the EPSP synthase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-level parent of the specific EPSP synthase activity (GO:0003866, enolpyruvyl transferase) which is retained. Redundant given the leaf term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070403" target="_blank" class="term-link">
+                                    GO:0070403
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M05" data-a="GO:0070403" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD+ cofactor binding by the Rossmann-fold prephenate dehydrogenase (TyrA) domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the NAD(P)-binding Rossmann fold of the fused TyrA domain (InterPro IPR046826) and with the NAD+-dependent prephenate dehydrogenase activity. A supporting cofactor-binding term for the secondary activity, so non-core rather than a primary function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>EPSP synthase (3-phosphoshikimate 1-carboxyvinyltransferase) catalyzing the penultimate step of the shikimate pathway, the chorismate-yielding branch of aromatic amino acid biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88M05" data-a="FUNCTION: EPSP synthase (3-phosphoshikimate 1-carboxyvinyltr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003866" target="_blank" class="term-link">
+                            3-phosphoshikimate 1-carboxyvinyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                chorismate biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/aroA/aroA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Catalyzes the transfer of the enolpyruvyl moiety of phosphoenolpyruvate (PEP) to the 5-hydroxyl of shikimate-3-phosphate (S3P) to produce enolpyruvyl shikimate-3-phosphate and inorganic phosphate; EC 2.5.1.19; EPSP synthase family; chorismate biosynthesis step 6/7.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/aroA/aroA-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">aroA is annotated as 3-phosphoshikimate 1-carboxyvinyltransferase / EPSP synthase (EC 2.5.1.19) catalyzing S3P + PEP -&gt; EPSP + Pi, the penultimate step of the shikimate pathway leading to chorismate, the common precursor for Phe/Tyr/Trp biosynthesis.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/aroA/aroA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report (falcon) for aroA / EPSP synthase (Q88M05) in P. putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesizes EPSPS mechanism, shikimate-pathway/chorismate role, cytosolic localization inference, and KT2440-specific engineering evidence for aroA.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequence of P. putida KT2440 in which PP_1770 (aroA, Q88M05) is annotated, establishing the locus and organism context for this gene.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/41029715" target="_blank" class="term-link">
+                            PMID:41029715
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combinatorial engineering pinpoints shikimate pathway bottlenecks in para-aminobenzoic acid production in Pseudomonas putida.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In P. putida KT2440 metabolic engineering for para-aminobenzoic acid (a chorismate-derived product), aroA (EPSPS) was tuned among shikimate-pathway genes; reducing aroA expression to native levels lowered product titer, indicating aroA expression contributes to aromatic-pathway flux in vivo.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the prephenate dehydrogenase (TyrA) module of P. putida AroA catalytically active in vivo, and does it prefer NAD+ or NADP+ as cofactor?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88M05" data-a="Q: Is the prephenate dehydrogenase (TyrA) module of P..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the AroA-TyrA domain fusion form a substrate channel or otherwise functionally couple chorismate biosynthesis with the tyrosine branch in P. putida?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88M05" data-a="Q: Does the AroA-TyrA domain fusion form a substrate ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Heterologously express and purify Q88M05 and assay both EPSP synthase (S3P + PEP) and prephenate dehydrogenase (prephenate + NAD+/NADP+) activities to confirm bifunctionality and determine cofactor preference.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88M05" data-a="EXPERIMENT: Heterologously express and purify Q88M05 and assay..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct an aroA deletion/complementation in P. putida KT2440 and test for aromatic amino acid (and specifically tyrosine) auxotrophy to establish in vivo requirement of each catalytic module.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88M05" data-a="EXPERIMENT: Construct an aroA deletion/complementation in P. p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aroA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88M05" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">29 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T20:52:12.952603</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="aroA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-aroa-epsp-synthase-uniprot-q88m05-in-pseudomonas-putida-kt2440">Research report: Functional annotation of <strong>aroA / EPSP synthase</strong> (UniProt <strong>Q88M05</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>The UniProt target <strong>Q88M05</strong> is annotated as <strong>3‑phosphoshikimate 1‑carboxyvinyltransferase</strong> (EC <strong>2.5.1.19</strong>), also called <strong>5‑enolpyruvylshikimate‑3‑phosphate synthase (EPSPS)</strong>, classically encoded by <strong>aroA</strong>. EPSPS catalyzes the transfer of the enolpyruvyl group from <strong>phosphoenolpyruvate (PEP)</strong> to <strong>shikimate‑3‑phosphate (S3P)</strong> to form <strong>5‑enolpyruvylshikimate‑3‑phosphate (EPSP)</strong> and <strong>inorganic phosphate</strong>, a penultimate step in the <strong>shikimate pathway</strong> leading to chorismate and aromatic amino acids. A key caveat for <em>P. putida</em> KT2440 is that historical pathway depictions contain an <strong>annotation inconsistency</strong> in which <strong>PP1770</strong> is labeled as “TyrA” and simultaneously described with an EPSPS-like name; this should not be conflated with the well-established bacterial meaning of <strong>aroA = EPSPS</strong>. The most direct KT2440-specific functional evidence recovered here is <strong>pathway-engineering phenotypes</strong>: tuning <strong>aroA expression</strong> affected flux to the aromatic-derived product <strong>p‑aminobenzoic acid (pABA)</strong>. </p>
+<h3 id="target-verification-and-ambiguity-handling-critical">Target verification and ambiguity handling (critical)</h3>
+<p><strong>Verified target (user-supplied UniProt context):</strong> UniProt <strong>Q88M05</strong>, gene name <strong>aroA</strong>, ordered locus <strong>PP_1770</strong>, organism <strong><em>Pseudomonas putida</em> KT2440</strong>.</p>
+<p><strong>Detected ambiguity in KT2440 literature:</strong> In a KT2440 aromatic-pathway analysis, <strong>PP1770</strong> was presented in a pathway context as “<strong>PP1770 or TyrA</strong>” and described with dual functional labels including “<strong>prephenate dehydrogenase, putative/3‑phosphoshikimate 1‑carboxyvinyltransferase</strong>.” (molinahenares2009functionalanalysisof pages 2-4). This conflicts with the conventional assignment of <strong>tyrA</strong> to prephenate dehydrogenase and <strong>aroA</strong> to EPSPS, and it implies historical misannotation or figure-level conflation. Accordingly, this report treats <strong>Q88M05 as aroA/EPSPS</strong> (per UniProt target identity) and uses KT2440 papers only for statements they explicitly support.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Details</th>
+<th style="text-align: right;">Quantitative data</th>
+<th>Key sources (year; URL)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verified target identity</td>
+<td><strong>UniProt Q88M05</strong>; gene <strong>aroA</strong>; ordered locus <strong>PP_1770</strong>; organism <strong>Pseudomonas putida KT2440</strong></td>
+<td style="text-align: right;">—</td>
+<td>Molina-Henares et al. 2009; https://doi.org/10.1111/j.1751-7915.2008.00062.x (molinahenares2009functionalanalysisof pages 2-4)</td>
+<td>Literature for PP1770 in KT2440 exists, but direct biochemical characterization of Q88M05 in the retrieved sources is limited.</td>
+</tr>
+<tr>
+<td>Core enzymatic function</td>
+<td><strong>3-phosphoshikimate 1-carboxyvinyltransferase / 5-enolpyruvylshikimate-3-phosphate synthase (EPSPS; EC 2.5.1.19)</strong> catalyzes <strong>shikimate-3-phosphate (S3P) + phosphoenolpyruvate (PEP) → 5-enolpyruvylshikimate-3-phosphate (EPSP) + inorganic phosphate</strong></td>
+<td style="text-align: right;">Reaction stoichiometry shown; glyphosate can inhibit by occupying the PEP site</td>
+<td>Shende et al. 2024; https://doi.org/10.1039/d3np00037k (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 50-64)</td>
+<td>Current mechanistic understanding places EPSPS as an enolpyruvyl transferase acting through a tetrahedral intermediate; glyphosate is a competitive PEP-site inhibitor.</td>
+</tr>
+<tr>
+<td>Pathway context</td>
+<td>EPSPS performs the <strong>penultimate step of the shikimate pathway</strong>, leading to <strong>chorismate</strong>, the common precursor for <strong>phenylalanine, tyrosine, and tryptophan</strong> biosynthesis</td>
+<td style="text-align: right;">—</td>
+<td>Shende et al. 2024; https://doi.org/10.1039/d3np00037k (shende2024theshikimatepathway pages 10-11); Molina-Henares et al. 2009; https://doi.org/10.1111/j.1751-7915.2008.00062.x (molinahenares2009functionalanalysisof pages 2-4)</td>
+<td>In bacteria this is a <strong>cytosolic metabolic enzyme</strong> in central aromatic amino-acid biosynthesis, inferred from pathway/structural context (shende2024theshikimatepathway pages 50-64).</td>
+</tr>
+<tr>
+<td>Annotation inconsistency to flag</td>
+<td>PP1770 was reported in one KT2440 pathway source as <strong>“PP1770 or TyrA”</strong> with dual/ambiguous labeling including <strong>“prephenate dehydrogenase, putative/3-phosphoshikimate 1-carboxyvinyltransferase”</strong></td>
+<td style="text-align: right;">—</td>
+<td>Molina-Henares et al. 2009; https://doi.org/10.1111/j.1751-7915.2008.00062.x (molinahenares2009functionalanalysisof pages 2-4)</td>
+<td>This is the main inconsistency that requires caution; the user-supplied UniProt entry specifically identifies Q88M05 as <strong>aroA/EPSPS</strong>, so literature must not be conflated with true <strong>tyrA/prephenate dehydrogenase</strong> studies.</td>
+</tr>
+<tr>
+<td>P. putida KT2440 engineering relevance</td>
+<td>In KT2440 pABA pathway optimization, <strong>aroA</strong> was included among shikimate-pathway genes tuned by combinatorial expression to improve production</td>
+<td style="text-align: right;">Best strain produced <strong>185.4 mg/L pABA</strong>; lowering aroA/aroK/aroQ/aroGD146N expression to native levels caused a <strong>39.9% decrease</strong> in pABA in top strain S12</td>
+<td>Campos-Magaña et al. 2025; https://doi.org/10.1186/s13036-025-00553-5 (camposmagana2025combinatorialengineeringpinpoints pages 2-4, camposmagana2025combinatorialengineeringpinpoints pages 4-6, camposmagana2025combinatorialengineeringpinpoints pages 8-9)</td>
+<td>Evidence supports aroA as a practical flux-control point in aromatic-pathway engineering in <strong>P. putida</strong>, although <strong>aroB</strong> was highlighted as the stronger bottleneck in that study.</td>
+</tr>
+<tr>
+<td>Recent EPSPS developments (general)</td>
+<td>Directed evolution platforms are being used to obtain EPSPS variants with both catalytic competence and glyphosate tolerance</td>
+<td style="text-align: right;">One evolved EPSPS variant reached <strong>Ki ≈ 1 mM</strong> for glyphosate and <strong>~2.5-fold improved enzymatic efficiency</strong> versus the starting enzyme</td>
+<td>Reed et al. 2024; https://doi.org/10.1073/pnas.2317027121 (reed2024evolvingdualtraitepsp pages 1-2)</td>
+<td>This is not P. putida-specific, but it is highly relevant to modern functional interpretation and real-world use of EPSPS enzymes.</td>
+</tr>
+<tr>
+<td>Recent mechanistic expansion (general)</td>
+<td>A 2024 study showed <strong>MurA</strong> can also catalyze <strong>S3P + PEP → EPSP + Pi</strong> in bryophytes, revealing an alternative route to EPSP formation</td>
+<td style="text-align: right;">MurA activity was <strong>~100-fold lower</strong> than EPSPS; MurA activity on S3P/PEP was <strong>~8-fold higher</strong> than on its canonical substrate pair</td>
+<td>Caygill et al. 2024; https://doi.org/10.1073/pnas.2412997121 (caygill2024muracatalyzedsynthesisof pages 1-2, caygill2024muracatalyzedsynthesisof pages 6-7)</td>
+<td>Important for interpreting glyphosate tolerance biology broadly; not evidence that KT2440 uses MurA for this role.</td>
+</tr>
+<tr>
+<td>Glyphosate resistance relevance</td>
+<td>In bacteria, resistance can arise through <strong>target-site aroA mutations</strong>, <strong>EPSPS overproduction/gene amplification</strong>, <strong>transport/efflux changes</strong>, or <strong>glyphosate degradation/detoxification</strong></td>
+<td style="text-align: right;">Example selection range for Salmonella target-site mutants: <strong>0.35–2 g/L glyphosate</strong></td>
+<td>Hertel et al. 2021; https://doi.org/10.1111/1462-2920.15534 (hertel2021molecularmechanismsunderlying pages 1-5, hertel2021molecularmechanismsunderlying pages 24-27, hertel2021molecularmechanismsunderlying pages 5-8, hertel2021molecularmechanismsunderlying pages 12-15)</td>
+<td>These mechanisms frame how aroA function is exploited or bypassed under herbicide pressure.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified identity, biochemical function, pathway role, annotation caveats, and applied relevance of the target protein UniProt Q88M05 / aroA / PP_1770 from Pseudomonas putida KT2440. It also includes recent quantitative findings useful for interpreting EPSPS function and engineering significance.</em></p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-enzyme-name-and-ec-definition">1.1 Enzyme name and EC definition</h4>
+<p><strong>EPSP synthase (EPSPS; EC 2.5.1.19)</strong> is an enolpyruvyl transferase in the shikimate pathway that catalyzes:</p>
+<p><strong>S3P + PEP → EPSP + Pi</strong></p>
+<p>This penultimate step installs a second PEP-derived unit onto the shikimate scaffold to form EPSP, which is then converted to <strong>chorismate</strong> in the final shikimate-pathway step (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 50-64).</p>
+<h4 id="12-mechanism-and-inhibitor-biology">1.2 Mechanism and inhibitor biology</h4>
+<p>A 2024 authoritative review describes EPSPS as an “alkyl transferase-type enzyme” operating through a <strong>tetrahedral intermediate</strong>, and emphasizes that EPSPS catalysis involves <strong>C–O bond cleavage of PEP</strong> (unusual among many PEP-utilizing enzymes, which often cleave P–O bonds) (shende2024theshikimatepathway pages 10-11). </p>
+<p>EPSPS is also the canonical molecular target of <strong>glyphosate</strong>, which competitively occupies the <strong>PEP binding site</strong>, thereby preventing normal turnover and starving the cell of downstream aromatic amino acids (shende2024theshikimatepathway pages 10-11, hertel2021molecularmechanismsunderlying pages 1-5).</p>
+<h4 id="13-enzyme-classes-sequencephenotype-concepts">1.3 Enzyme classes (sequence/phenotype concepts)</h4>
+<p>The same 2024 review summarizes three EPSPS “classes”: <strong>Class I</strong> (often glyphosate-sensitive; found in plants and some bacteria), <strong>Class II</strong> (microbial; variable sensitivity), and <strong>Class III</strong> (microbial; low identity to <em>E. coli</em> EPSPS) (shende2024theshikimatepathway pages 10-11). This classification is widely used to interpret glyphosate sensitivity and potential resistance routes.</p>
+<h3 id="2-biological-role-and-pathway-context-in-bacteria-with-localization-inference">2) Biological role and pathway context in bacteria (with localization inference)</h3>
+<h4 id="21-role-in-the-shikimate-pathway-and-aromatic-amino-acid-synthesis">2.1 Role in the shikimate pathway and aromatic amino acid synthesis</h4>
+<p>EPSPS catalyzes the <strong>penultimate</strong> reaction of the shikimate pathway, which produces <strong>chorismate</strong>, the common precursor for <strong>phenylalanine, tyrosine, and tryptophan</strong> biosynthesis (shende2024theshikimatepathway pages 10-11, molinahenares2009functionalanalysisof pages 2-4). Because these amino acids are foundational building blocks and also feed numerous downstream aromatic metabolites, aroA/EPSPS is typically central to anabolic metabolism in bacteria.</p>
+<h4 id="22-cellular-localization">2.2 Cellular localization</h4>
+<p>The retrieved sources do not explicitly state subcellular localization for bacterial EPSPS. However, EPSPS is treated as a <strong>soluble metabolic enzyme</strong> in core carbon/anabolic metabolism, and bacterial structural context (e.g., <em>E. coli</em> EPSPS with S3P and glyphosate bound) supports the interpretation that it functions in the <strong>cytosol</strong> rather than in membranes or secretion pathways (shende2024theshikimatepathway pages 50-64).</p>
+<h3 id="3-pseudomonas-putida-kt2440-specific-evidence-genetics-phenotypes-applications">3) <em>Pseudomonas putida</em> KT2440-specific evidence (genetics, phenotypes, applications)</h3>
+<h4 id="31-kt2440-geneticsauxotrophy-context-available-in-retrieved-literature">3.1 KT2440 genetics/auxotrophy context available in retrieved literature</h4>
+<p>A genome-wide mutant-library screen in KT2440 identified many <strong>conditionally essential</strong> genes for growth on glucose minimal medium and recovered multiple <strong>aromatic amino-acid auxotrophs</strong>, including mutants in tryptophan biosynthesis genes (trpA/D/C/E/G/F) and downstream aromatic genes such as <strong>pheA</strong> and <strong>tyrA</strong> (molina‐henares2010identificationofconditionally pages 2-3, molina‐henares2010identificationofconditionally pages 6-7). In the retrieved text segments, <strong>aroA/EPSPS itself is not explicitly reported</strong> as an identified conditionally essential locus (molina‐henares2010identificationofconditionally pages 2-3, molina‐henares2010identificationofconditionally pages 6-7). This absence could reflect library coverage, essentiality preventing recovery, annotation differences, or that aroA is discussed elsewhere (e.g., supplement) not retrieved here.</p>
+<p>Separately, an aromatic biosynthesis functional study reports targeted phenotypes for <strong>pheA</strong> and <strong>tyrA</strong> in the PP1769–PP1770 region and documents aromatic amino-acid rescue patterns, but it likewise does not provide direct aroA/EPSPS phenotypes in the supplied pages (molinahenares2009functionalanalysisof pages 6-7).</p>
+<h4 id="32-real-world-implementation-kt2440-metabolic-engineering-leveraging-aroa">3.2 Real-world implementation: KT2440 metabolic engineering leveraging aroA</h4>
+<p>A 2025 <em>P. putida</em> study optimizing production of the aromatic-derived compound <strong>p‑aminobenzoic acid (pABA)</strong> explicitly defines <strong>aroA</strong> as EPSPS (“3‑phosphoshikimate‑1‑carboxylvinyl transferase”) and places it in the shikimate pathway step converting <strong>S3P → EPSP</strong> (with PEP as donor) (camposmagana2025combinatorialengineeringpinpoints pages 2-4). </p>
+<p>Using a Design-of-Experiments (Plackett–Burman) combinatorial expression approach across multiple shikimate-pathway genes, pABA titers ranged from ~<strong>2 mg/L</strong> to <strong>186.2 mg/L</strong> in the initial screen (camposmagana2025combinatorialengineeringpinpoints pages 4-6). In their top strain (<strong>S12</strong>), pABA reached <strong>185.40 mg/L</strong>, and reducing expression of <strong>aroA</strong> (together with aroK, aroQ, and aroGD146N) back to native levels caused a <strong>39.9% decrease</strong> in pABA production (p = 0.001) (camposmagana2025combinatorialengineeringpinpoints pages 8-9). This provides KT2440-specific functional evidence that <strong>aroA expression level contributes measurably to aromatic-pathway flux</strong> toward a chorismate-derived product under engineered conditions.</p>
+<h3 id="4-recent-developments-and-latest-research-prioritizing-20232024">4) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="41-2024-directed-evolution-and-structure-guided-improvement-of-epsps-function-under-glyphosate">4.1 2024: Directed evolution and structure-guided improvement of EPSPS function under glyphosate</h4>
+<p>A 2024 PNAS study developed a <strong>synthetic yeast selection system</strong> that enables simultaneous selection for <strong>glyphosate tolerance</strong> and retained/improved <strong>catalytic efficiency</strong> of EPSPS variants (reed2024evolvingdualtraitepsp pages 1-2). The study reports recovery of a mutant enzyme with <strong>Ki near 1 mM</strong> for glyphosate and approximately <strong>2.5-fold improved enzymatic efficiency</strong> relative to the starting enzyme (reed2024evolvingdualtraitepsp pages 1-2). This work illustrates a modern trend: treating EPSPS as an engineerable biocatalyst where the classic “resistance vs activity” tradeoff can be mitigated with selection design and structural interpretation (reed2024evolvingdualtraitepsp pages 1-2, reed2024evolvingdualtraitepsp pages 5-6).</p>
+<h4 id="42-2024-alternative-enzymology-for-epsp-formation-mura-promiscuity-and-glyphosate-tolerance">4.2 2024: Alternative enzymology for EPSP formation (MurA promiscuity) and glyphosate tolerance</h4>
+<p>A second 2024 PNAS study reports that <strong>MurA</strong> (canonically involved in peptidoglycan biosynthesis) can catalyze the <strong>same net reaction as EPSPS</strong> (S3P + PEP → EPSP + Pi) in the bryophyte <em>Marchantia polymorpha</em> (caygill2024muracatalyzedsynthesisof pages 1-2). Enzyme assays showed MurA activity on S3P/PEP was <strong>~100-fold lower than EPSPS</strong>, but <strong>~8-fold higher</strong> than MurA’s activity on its canonical UDP-GlcNAc/PEP substrate pair (caygill2024muracatalyzedsynthesisof pages 6-7). Genetic and heterologous-expression evidence linked this alternative activity to <strong>glyphosate tolerance</strong> (caygill2024muracatalyzedsynthesisof pages 1-2). Although this is not a KT2440 result, it expands the conceptual landscape for “EPSP-forming enzymes,” which is relevant when interpreting resistance and evolutionary possibilities.</p>
+<h4 id="43-2024-shikimate-pathway-review-consolidating-current-mechanistic-understanding">4.3 2024: Shikimate pathway review consolidating current mechanistic understanding</h4>
+<p>A 2024 <em>Natural Product Reports</em> review synthesizes EPSPS mechanism, inhibitor binding, structural information (including <em>E. coli</em> EPSPS complex with glyphosate; PDB 1G6S), and classification of enzyme classes relevant to predicting glyphosate sensitivity in different organisms (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 50-64). This is a high-authority source for current definitions and mechanistic consensus.</p>
+<h3 id="5-expert-opinionsauthoritative-synthesis-and-resistance-framework">5) Expert opinions/authoritative synthesis and resistance framework</h3>
+<p>A domain-leading 2021 <em>Environmental Microbiology</em> review frames bacterial glyphosate resistance as arising via four broad mechanisms: (i) <strong>reduced EPSPS sensitivity or increased EPSPS production</strong>, (ii) <strong>degradation</strong> of glyphosate, (iii) <strong>detoxification/modification</strong>, and (iv) altered <strong>transport</strong> (reduced uptake/increased export) (hertel2021molecularmechanismsunderlying pages 1-5). This review provides concrete examples of aroA/EPSPS-associated target-site resistance (e.g., Pro101Ser; Gly96Ala) and emphasizes that <strong>overproduction</strong> (including amplification or promoter-up changes) can effectively titrate glyphosate (hertel2021molecularmechanismsunderlying pages 5-8). It also highlights non-target routes including transport and enzymatic modification (e.g., N-acetylation) that prevent EPSPS inhibition (hertel2021molecularmechanismsunderlying pages 12-15).</p>
+<p>Quantitatively, the review reports laboratory selection of <em>Salmonella</em> aroA mutants under <strong>0.35–2 g/L glyphosate</strong>, illustrating the selection pressures under which target-site changes can arise (hertel2021molecularmechanismsunderlying pages 5-8).</p>
+<h3 id="6-applications-and-real-world-implementations">6) Applications and real-world implementations</h3>
+<ol>
+<li>
+<p><strong>Industrial/biotech strain engineering of aromatic products:</strong> In <em>P. putida</em> KT2440, adjusting expression of shikimate-pathway genes including <strong>aroA</strong> is used to improve yields of chorismate-derived products such as <strong>pABA</strong> (camposmagana2025combinatorialengineeringpinpoints pages 2-4, camposmagana2025combinatorialengineeringpinpoints pages 8-9). This exemplifies aroA’s practical role as a flux-controlling node in aromatic anabolic pathways.</p>
+</li>
+<li>
+<p><strong>Glyphosate tolerance engineering:</strong> EPSPS variants (often bacterial-derived such as Agrobacterium CP4 EPSPS) are historically foundational for glyphosate-tolerant crops; modern 2024 work continues to refine EPSPS variants to improve both resistance and activity using high-throughput selection and structural analysis (hertel2021molecularmechanismsunderlying pages 5-8, reed2024evolvingdualtraitepsp pages 1-2).</p>
+</li>
+<li>
+<p><strong>Environmental/clinical microbiology implications:</strong> Because glyphosate targets EPSPS, environmental exposures can select for bacterial resistance via multiple mechanisms (target-site, transport, detoxification), potentially intersecting with broader stress-adaptation and resistance landscapes (hertel2021molecularmechanismsunderlying pages 1-5).</p>
+</li>
+</ol>
+<h3 id="7-limitations-of-the-current-evidence-base-for-this-specific-uniprot-protein">7) Limitations of the current evidence base for this specific UniProt protein</h3>
+<p>Despite extensive general knowledge on aroA/EPSPS, <strong>direct experimental characterization of UniProt Q88M05 in <em>P. putida</em> KT2440</strong> (purified enzyme kinetics, substrate specificity beyond the canonical S3P/PEP reaction, structure, or explicit knockout essentiality) was not found in the retrieved KT2440 primary literature segments. The report therefore relies on: (i) authoritative EPSPS mechanism reviews (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 50-64), and (ii) KT2440-specific engineering phenotypes involving <strong>aroA expression</strong> (camposmagana2025combinatorialengineeringpinpoints pages 8-9), while explicitly flagging KT2440 annotation inconsistencies (molinahenares2009functionalanalysisof pages 2-4).</p>
+<h3 id="key-cited-sources-with-publication-dates-and-urls">Key cited sources (with publication dates and URLs)</h3>
+<ul>
+<li>Shende VV, Bauman KD, Moore BS. <em>The shikimate pathway: gateway to metabolic diversity.</em> <strong>Natural Product Reports</strong>. <strong>Jan 2024</strong>. https://doi.org/10.1039/d3np00037k (shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 50-64)</li>
+<li>Reed KB et al. <em>Evolving dual-trait EPSP synthase variants using a synthetic yeast selection system.</em> <strong>PNAS</strong>. <strong>Aug 2024</strong>. https://doi.org/10.1073/pnas.2317027121 (reed2024evolvingdualtraitepsp pages 1-2, reed2024evolvingdualtraitepsp pages 5-6)</li>
+<li>Caygill S et al. <em>MurA-catalyzed synthesis of EPSP confers glyphosate tolerance in bryophytes.</em> <strong>PNAS</strong>. <strong>Nov 2024</strong>. https://doi.org/10.1073/pnas.2412997121 (caygill2024muracatalyzedsynthesisof pages 1-2, caygill2024muracatalyzedsynthesisof pages 6-7)</li>
+<li>Campos‑Magaña MA et al. <em>Combinatorial engineering pinpoints shikimate pathway bottlenecks in pABA production in Pseudomonas putida.</em> <strong>Journal of Biological Engineering</strong>. <strong>Sep 2025</strong>. https://doi.org/10.1186/s13036-025-00553-5 (camposmagana2025combinatorialengineeringpinpoints pages 2-4, camposmagana2025combinatorialengineeringpinpoints pages 8-9)</li>
+<li>Hertel R et al. <em>Molecular mechanisms underlying glyphosate resistance in bacteria.</em> <strong>Environmental Microbiology</strong>. <strong>Jun 2021</strong>. https://doi.org/10.1111/1462-2920.15534 (hertel2021molecularmechanismsunderlying pages 1-5, hertel2021molecularmechanismsunderlying pages 5-8, hertel2021molecularmechanismsunderlying pages 12-15)</li>
+<li>Molina‑Henares MA et al. <em>Functional analysis of aromatic biosynthetic pathways in Pseudomonas putida KT2440.</em> <strong>Microbial Biotechnology</strong>. <strong>Dec 2009</strong>. https://doi.org/10.1111/j.1751-7915.2008.00062.x (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 6-7)</li>
+<li>Molina‑Henares MA et al. <em>Identification of conditionally essential genes for growth of Pseudomonas putida KT2440 on minimal medium…</em> <strong>Environmental Microbiology</strong>. <strong>Jun 2010</strong>. https://doi.org/10.1111/j.1462-2920.2010.02166.x (molina‐henares2010identificationofconditionally pages 2-3, molina‐henares2010identificationofconditionally pages 6-7)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 2-4): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shende2024theshikimatepathway pages 10-11): Vikram V. Shende, Katherine D. Bauman, and Bradley S. Moore. The shikimate pathway: gateway to metabolic diversity. Natural product reports, 41:604-648, Jan 2024. URL: https://doi.org/10.1039/d3np00037k, doi:10.1039/d3np00037k. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shende2024theshikimatepathway pages 50-64): Vikram V. Shende, Katherine D. Bauman, and Bradley S. Moore. The shikimate pathway: gateway to metabolic diversity. Natural product reports, 41:604-648, Jan 2024. URL: https://doi.org/10.1039/d3np00037k, doi:10.1039/d3np00037k. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(camposmagana2025combinatorialengineeringpinpoints pages 2-4): Marco A Campos-Magaña, Sara Moreno-Paz, Maria Martin-Pascual, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering pinpoints shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. Journal of Biological Engineering, Sep 2025. URL: https://doi.org/10.1186/s13036-025-00553-5, doi:10.1186/s13036-025-00553-5. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(camposmagana2025combinatorialengineeringpinpoints pages 4-6): Marco A Campos-Magaña, Sara Moreno-Paz, Maria Martin-Pascual, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering pinpoints shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. Journal of Biological Engineering, Sep 2025. URL: https://doi.org/10.1186/s13036-025-00553-5, doi:10.1186/s13036-025-00553-5. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(camposmagana2025combinatorialengineeringpinpoints pages 8-9): Marco A Campos-Magaña, Sara Moreno-Paz, Maria Martin-Pascual, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering pinpoints shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. Journal of Biological Engineering, Sep 2025. URL: https://doi.org/10.1186/s13036-025-00553-5, doi:10.1186/s13036-025-00553-5. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(reed2024evolvingdualtraitepsp pages 1-2): Kevin B. Reed, Wantae Kim, Hongyuan Lu, Clayton T. Larue, Shirley Guo, Sierra M. Brooks, Michael R. Montez, James M. Wagner, Y. Jessie Zhang, and Hal S. Alper. Evolving dual-trait epsp synthase variants using a synthetic yeast selection system. Proceedings of the National Academy of Sciences of the United States of America, Aug 2024. URL: https://doi.org/10.1073/pnas.2317027121, doi:10.1073/pnas.2317027121. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(caygill2024muracatalyzedsynthesisof pages 1-2): Samuel Caygill, Thomas Köcher, and Liam Dolan. Mura-catalyzed synthesis of 5-enolpyruvylshikimate-3-phosphate confers glyphosate tolerance in bryophytes. Proceedings of the National Academy of Sciences of the United States of America, Nov 2024. URL: https://doi.org/10.1073/pnas.2412997121, doi:10.1073/pnas.2412997121. This article has 10 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(caygill2024muracatalyzedsynthesisof pages 6-7): Samuel Caygill, Thomas Köcher, and Liam Dolan. Mura-catalyzed synthesis of 5-enolpyruvylshikimate-3-phosphate confers glyphosate tolerance in bryophytes. Proceedings of the National Academy of Sciences of the United States of America, Nov 2024. URL: https://doi.org/10.1073/pnas.2412997121, doi:10.1073/pnas.2412997121. This article has 10 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hertel2021molecularmechanismsunderlying pages 1-5): Robert Hertel, Johannes Gibhardt, Marion Martienssen, Ramona Kuhn, and Fabian M. Commichau. Molecular mechanisms underlying glyphosate resistance in bacteria. Jun 2021. URL: https://doi.org/10.1111/1462-2920.15534, doi:10.1111/1462-2920.15534. This article has 67 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hertel2021molecularmechanismsunderlying pages 24-27): Robert Hertel, Johannes Gibhardt, Marion Martienssen, Ramona Kuhn, and Fabian M. Commichau. Molecular mechanisms underlying glyphosate resistance in bacteria. Jun 2021. URL: https://doi.org/10.1111/1462-2920.15534, doi:10.1111/1462-2920.15534. This article has 67 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hertel2021molecularmechanismsunderlying pages 5-8): Robert Hertel, Johannes Gibhardt, Marion Martienssen, Ramona Kuhn, and Fabian M. Commichau. Molecular mechanisms underlying glyphosate resistance in bacteria. Jun 2021. URL: https://doi.org/10.1111/1462-2920.15534, doi:10.1111/1462-2920.15534. This article has 67 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hertel2021molecularmechanismsunderlying pages 12-15): Robert Hertel, Johannes Gibhardt, Marion Martienssen, Ramona Kuhn, and Fabian M. Commichau. Molecular mechanisms underlying glyphosate resistance in bacteria. Jun 2021. URL: https://doi.org/10.1111/1462-2920.15534, doi:10.1111/1462-2920.15534. This article has 67 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molina‐henares2010identificationofconditionally pages 2-3): M. Antonia Molina‐Henares, Jesús De La Torre, Adela García‐Salamanca, A. Jesús Molina‐Henares, M. Carmen Herrera, Juan L. Ramos, and Estrella Duque. Identification of conditionally essential genes for growth of <i>pseudomonas putida</i> kt2440 on minimal medium through the screening of a genome‐wide mutant library. Environmental Microbiology, 12:1468-1485, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2010.02166.x, doi:10.1111/j.1462-2920.2010.02166.x. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molina‐henares2010identificationofconditionally pages 6-7): M. Antonia Molina‐Henares, Jesús De La Torre, Adela García‐Salamanca, A. Jesús Molina‐Henares, M. Carmen Herrera, Juan L. Ramos, and Estrella Duque. Identification of conditionally essential genes for growth of <i>pseudomonas putida</i> kt2440 on minimal medium through the screening of a genome‐wide mutant library. Environmental Microbiology, 12:1468-1485, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2010.02166.x, doi:10.1111/j.1462-2920.2010.02166.x. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 6-7): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(reed2024evolvingdualtraitepsp pages 5-6): Kevin B. Reed, Wantae Kim, Hongyuan Lu, Clayton T. Larue, Shirley Guo, Sierra M. Brooks, Michael R. Montez, James M. Wagner, Y. Jessie Zhang, and Hal S. Alper. Evolving dual-trait epsp synthase variants using a synthetic yeast selection system. Proceedings of the National Academy of Sciences of the United States of America, Aug 2024. URL: https://doi.org/10.1073/pnas.2317027121, doi:10.1073/pnas.2317027121. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="aroA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>molinahenares2009functionalanalysisof pages 2-4</li>
+<li>shende2024theshikimatepathway pages 10-11</li>
+<li>shende2024theshikimatepathway pages 50-64</li>
+<li>reed2024evolvingdualtraitepsp pages 1-2</li>
+<li>molinahenares2009functionalanalysisof pages 6-7</li>
+<li>camposmagana2025combinatorialengineeringpinpoints pages 2-4</li>
+<li>camposmagana2025combinatorialengineeringpinpoints pages 4-6</li>
+<li>camposmagana2025combinatorialengineeringpinpoints pages 8-9</li>
+<li>caygill2024muracatalyzedsynthesisof pages 1-2</li>
+<li>caygill2024muracatalyzedsynthesisof pages 6-7</li>
+<li>hertel2021molecularmechanismsunderlying pages 1-5</li>
+<li>hertel2021molecularmechanismsunderlying pages 5-8</li>
+<li>hertel2021molecularmechanismsunderlying pages 12-15</li>
+<li>hertel2021molecularmechanismsunderlying pages 24-27</li>
+<li>reed2024evolvingdualtraitepsp pages 5-6</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x</li>
+<li>https://doi.org/10.1039/d3np00037k</li>
+<li>https://doi.org/10.1186/s13036-025-00553-5</li>
+<li>https://doi.org/10.1073/pnas.2317027121</li>
+<li>https://doi.org/10.1073/pnas.2412997121</li>
+<li>https://doi.org/10.1111/1462-2920.15534</li>
+<li>https://doi.org/10.1111/j.1462-2920.2010.02166.x</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x,</li>
+<li>https://doi.org/10.1039/d3np00037k,</li>
+<li>https://doi.org/10.1186/s13036-025-00553-5,</li>
+<li>https://doi.org/10.1073/pnas.2317027121,</li>
+<li>https://doi.org/10.1073/pnas.2412997121,</li>
+<li>https://doi.org/10.1111/1462-2920.15534,</li>
+<li>https://doi.org/10.1111/j.1462-2920.2010.02166.x,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88M05
+gene_symbol: aroA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  aroA (PP_1770) of Pseudomonas putida KT2440 is a 746-residue bifunctional
+  cytoplasmic enzyme of aromatic amino acid biosynthesis. Its EPSP synthase
+  module (3-phosphoshikimate 1-carboxyvinyltransferase, EC 2.5.1.19;
+  5-enolpyruvylshikimate-3-phosphate synthase) catalyzes the penultimate step of
+  the shikimate pathway, transferring the enolpyruvyl moiety of
+  phosphoenolpyruvate to the 5-hydroxyl of shikimate-3-phosphate to yield
+  5-enolpyruvylshikimate-3-phosphate (EPSP) plus inorganic phosphate; EPSP is
+  then converted to chorismate, the branch-point precursor of phenylalanine,
+  tyrosine, tryptophan, folate, ubiquinone, and other aromatic metabolites. In
+  addition to the canonical EPSP synthase domain (Pfam EPSP_synthase; COG0128;
+  TIGR01356 aroA), the protein carries an N-terminal prephenate/arogenate
+  dehydrogenase (TyrA) module (Pfam PDH_N/PDH_C; COG0287) with a NAD(P)-binding
+  Rossmann fold. UniProt annotates a second catalytic activity for this module,
+  prephenate dehydrogenase (prephenate + NAD+ -&gt; 4-hydroxyphenylpyruvate + CO2 +
+  NADH, EC 1.3.1.12), placing it in the tyrosine-biosynthetic conversion of
+  prephenate to 4-hydroxyphenylpyruvate. The protein is thus a fused
+  EPSP-synthase / prephenate-dehydrogenase enzyme contributing to both chorismate
+  formation and downstream L-tyrosine biosynthesis. The shikimate pathway is
+  absent in animals, making EPSP synthase the molecular target of the herbicide
+  glyphosate, a competitive inhibitor at the PEP site.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Root-level catalytic activity term; uninformative given the specific enzymatic activities annotated below.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0003824 is the top-level molecular-function catalytic term and conveys
+      no specific information. The protein has well-supported specific activities
+      (EPSP synthase, EC 2.5.1.19; prephenate dehydrogenase, EC 1.3.1.12) that
+      should be used instead.
+- term:
+    id: GO:0003866
+    label: 3-phosphoshikimate 1-carboxyvinyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: EPSP synthase activity (EC 2.5.1.19); the canonical, core molecular function of aroA.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by sequence/domain evidence: the EPSP synthase Pfam
+      domain (PF00275), HAMAP rule MF_00210, COG0128, NCBIfam TIGR01356 (aroA),
+      conserved PEP and shikimate-3-phosphate binding residues, and mapping to
+      Rhea:21256 / EC 2.5.1.19. This is the defining function of aroA.
+- term:
+    id: GO:0004665
+    label: prephenate dehydrogenase (NADP+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: NADP+-dependent prephenate dehydrogenase activity inferred from the fused TyrA domain. The cofactor specificity (NADP+ vs NAD+) is not experimentally established for this protein.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The protein carries a genuine N-terminal prephenate/arogenate dehydrogenase
+      (TyrA) module (Pfam PDH_N/PDH_C; COG0287), so prephenate dehydrogenase
+      activity is a plausible second function. However, UniProt&#39;s curated
+      CATALYTIC ACTIVITY block lists only the NAD+ route (EC 1.3.1.12), and the
+      NADP+ specificity here is purely an InterPro electronic inference
+      (IPR003099) with no cofactor evidence. Retain as a non-core, lower-confidence
+      activity rather than a core function.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization, consistent with a soluble shikimate-pathway metabolic enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      EPSP synthase is a soluble cytosolic enzyme of central aromatic amino acid
+      biosynthesis; cytoplasmic localization is supported by UniProt-SubCell
+      (SL-0086) and HAMAP rule MF_00210, with no signal/transmembrane features.
+- term:
+    id: GO:0006571
+    label: L-tyrosine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Tyrosine biosynthesis; supported via the fused prephenate dehydrogenase (TyrA) domain that converts prephenate to 4-hydroxyphenylpyruvate.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The TyrA (prephenate dehydrogenase) module places this protein in the
+      tyrosine-specific branch (prephenate -&gt; 4-hydroxyphenylpyruvate, UniPathway
+      step 1/1 of the NAD+ route). This is a real but secondary process relative
+      to the core EPSP synthase / chorismate-biosynthesis role, hence non-core.
+- term:
+    id: GO:0008652
+    label: amino acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: General amino acid biosynthetic process; correct but non-specific given the more precise aromatic/chorismate terms.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      True but high-level. The more specific processes (chorismate biosynthetic
+      process, aromatic amino acid biosynthetic process, L-tyrosine biosynthetic
+      process) capture the role precisely, making this generic parent redundant.
+- term:
+    id: GO:0008977
+    label: prephenate dehydrogenase (NAD+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: NAD+-dependent prephenate dehydrogenase activity from the fused TyrA domain; the second catalytic function of this bifunctional protein.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported by the prephenate/arogenate dehydrogenase domain (residues
+      ~14-302; Pfam PDH_N/PDH_C; COG0287) and by UniProt&#39;s curated CATALYTIC
+      ACTIVITY block citing the NAD+ reaction (Rhea:13869, EC 1.3.1.12) and the
+      L-tyrosine biosynthesis (NAD+ route) pathway. This is the better-supported
+      of the two prephenate dehydrogenase cofactor variants but remains the
+      secondary (non-core) function relative to EPSP synthase.
+- term:
+    id: GO:0009073
+    label: aromatic amino acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Aromatic amino acid biosynthesis; accurate at the family level for an EPSP-synthase / chorismate-pathway enzyme also feeding tyrosine biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Both functional modules act within aromatic amino acid biosynthesis: EPSP
+      synthase produces the chorismate precursor common to Phe/Tyr/Trp, and the
+      TyrA domain feeds the tyrosine branch. The term is appropriately specific.
+- term:
+    id: GO:0009423
+    label: chorismate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Chorismate biosynthesis; the core biological process of the EPSP synthase activity (penultimate shikimate-pathway step).
+    action: ACCEPT
+    reason: &gt;-
+      EPSP synthase catalyzes step 6/7 of chorismate biosynthesis from
+      D-erythrose-4-phosphate and PEP (UniPathway UPA00053/UER00089). This is the
+      most precise and well-supported biological-process term for the core
+      function. Consistent with KT2440-specific metabolic-engineering evidence that
+      tuning aroA expression contributes to flux through the shikimate pathway
+      toward chorismate-derived products (see aroA-deep-research-falcon.md,
+      citing PMID:41029715).
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Generic oxidoreductase parent term covering the prephenate dehydrogenase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Redundant high-level parent of the specific prephenate dehydrogenase
+      activities (GO:0008977 / GO:0004665) already annotated. Provides no
+      additional information beyond the specific terms.
+- term:
+    id: GO:0016628
+    label: oxidoreductase activity, acting on the CH-CH group of donors, NAD or NADP as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: Intermediate oxidoreductase-class parent term for the prephenate dehydrogenase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      A grouping parent of the specific prephenate dehydrogenase (NAD+/NADP+)
+      activities. The leaf terms GO:0008977 / GO:0004665 are retained, so this
+      mid-level class is redundant over-annotation.
+- term:
+    id: GO:0016765
+    label: transferase activity, transferring alkyl or aryl (other than methyl) groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic enolpyruvyl/alkyl transferase parent term for the EPSP synthase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      High-level parent of the specific EPSP synthase activity (GO:0003866,
+      enolpyruvyl transferase) which is retained. Redundant given the leaf term.
+- term:
+    id: GO:0070403
+    label: NAD+ binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: NAD+ cofactor binding by the Rossmann-fold prephenate dehydrogenase (TyrA) domain.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with the NAD(P)-binding Rossmann fold of the fused TyrA domain
+      (InterPro IPR046826) and with the NAD+-dependent prephenate dehydrogenase
+      activity. A supporting cofactor-binding term for the secondary activity, so
+      non-core rather than a primary function.
+core_functions:
+- description: &gt;-
+    EPSP synthase (3-phosphoshikimate 1-carboxyvinyltransferase) catalyzing the
+    penultimate step of the shikimate pathway, the chorismate-yielding branch of
+    aromatic amino acid biosynthesis.
+  molecular_function:
+    id: GO:0003866
+    label: 3-phosphoshikimate 1-carboxyvinyltransferase activity
+  supported_by:
+  - reference_id: file:PSEPK/aroA/aroA-uniprot.txt
+    supporting_text: &gt;-
+      Catalyzes the transfer of the enolpyruvyl moiety of phosphoenolpyruvate
+      (PEP) to the 5-hydroxyl of shikimate-3-phosphate (S3P) to produce
+      enolpyruvyl shikimate-3-phosphate and inorganic phosphate; EC 2.5.1.19;
+      EPSP synthase family; chorismate biosynthesis step 6/7.
+  - reference_id: file:PSEPK/aroA/aroA-deep-research-falcon.md
+    supporting_text: &gt;-
+      aroA is annotated as 3-phosphoshikimate 1-carboxyvinyltransferase / EPSP
+      synthase (EC 2.5.1.19) catalyzing S3P + PEP -&gt; EPSP + Pi, the penultimate
+      step of the shikimate pathway leading to chorismate, the common precursor
+      for Phe/Tyr/Trp biosynthesis.
+  directly_involved_in:
+  - id: GO:0009423
+    label: chorismate biosynthetic process
+# NOTE: The fused N-terminal prephenate/arogenate dehydrogenase (TyrA) module
+# (prephenate dehydrogenase NAD+ activity, GO:0008977; L-tyrosine biosynthetic
+# process, GO:0006571) is a genuine but secondary, non-core activity of this
+# bifunctional protein and is reviewed as KEEP_AS_NON_CORE in existing_annotations
+# rather than listed here as a core function.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/aroA/aroA-deep-research-falcon.md
+  title: Deep research report (falcon) for aroA / EPSP synthase (Q88M05) in P. putida KT2440
+  findings:
+  - statement: Synthesizes EPSPS mechanism, shikimate-pathway/chorismate role, cytosolic localization inference, and KT2440-specific engineering evidence for aroA.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.
+  findings:
+  - statement: Genome sequence of P. putida KT2440 in which PP_1770 (aroA, Q88M05) is annotated, establishing the locus and organism context for this gene.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified genome paper (Nelson et al., Environ Microbiol 2002) cited
+      in the UniProt entry as the source for the PP_1770 locus. Establishes
+      organism/locus, not direct enzymatic characterization.
+- id: PMID:41029715
+  title: Combinatorial engineering pinpoints shikimate pathway bottlenecks in para-aminobenzoic acid production in Pseudomonas putida.
+  findings:
+  - statement: In P. putida KT2440 metabolic engineering for para-aminobenzoic acid (a chorismate-derived product), aroA (EPSPS) was tuned among shikimate-pathway genes; reducing aroA expression to native levels lowered product titer, indicating aroA expression contributes to aromatic-pathway flux in vivo.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID confirmed via PubMed search (single match to title keywords +
+      organism). KT2440-specific engineering study; supports aroA as a
+      flux-relevant shikimate-pathway node rather than providing direct
+      purified-enzyme kinetics. Surfaced through the falcon deep-research summary.
+suggested_questions:
+- question: Is the prephenate dehydrogenase (TyrA) module of P. putida AroA catalytically active in vivo, and does it prefer NAD+ or NADP+ as cofactor?
+- question: Does the AroA-TyrA domain fusion form a substrate channel or otherwise functionally couple chorismate biosynthesis with the tyrosine branch in P. putida?
+suggested_experiments:
+- description: Heterologously express and purify Q88M05 and assay both EPSP synthase (S3P + PEP) and prephenate dehydrogenase (prephenate + NAD+/NADP+) activities to confirm bifunctionality and determine cofactor preference.
+- description: Construct an aroA deletion/complementation in P. putida KT2440 and test for aromatic amino acid (and specifically tyrosine) auxotrophy to establish in vivo requirement of each catalytic module.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

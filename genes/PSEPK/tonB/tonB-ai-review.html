@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tonB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tonB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88C75" target="_blank" class="term-link">
+                        Q88C75
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tonB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88C75" data-a="DESCRIPTION: TonB is an inner (cytoplasmic) membrane-anchored, ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TonB is an inner (cytoplasmic) membrane-anchored, periplasm-spanning energy-transducing protein of Gram-negative bacteria. Together with its partner proteins ExbB and ExbD, it forms the TonB-ExbB-ExbD complex that harnesses the proton-motive force of the inner membrane and transmits this energy across the periplasm to TonB-dependent transporters (TBDTs) in the outer membrane. By contacting the conserved &#34;TonB box&#34; of a TBDT through its periplasmic C-terminal domain, TonB drives conformational changes in the receptor plug that enable active, high-affinity uptake of scarce nutrients - principally ferric-siderophore complexes (e.g. ferric-pyoverdine) and other iron sources, but also vitamin B12 and certain other substrates that cannot cross the outer membrane by passive diffusion. The protein has an N-terminal single-pass transmembrane anchor, a long proline-rich/disordered periplasm-spanning segment, and a C-terminal TonB domain that engages outer-membrane receptors. In P. putida KT2440, which encodes a large repertoire of TonB-dependent receptors and produces the siderophore pyoverdine, TonB is central to iron acquisition and to fitness under iron-limited conditions.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C75" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TonB is anchored in the inner (plasma) membrane by an N-terminal single-pass transmembrane helix.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt subcellular location (cell inner membrane, single-pass, periplasmic side) and with the well-established topology of TonB-family proteins, which are anchored in the cytoplasmic membrane. In bacteria the plasma membrane is the inner membrane, so this localization is correct.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015031" target="_blank" class="term-link">
+                                    GO:0015031
+                                </a>
+                            </span>
+                            <span class="term-label">protein transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C75" data-a="GO:0015031" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TonB energizes outer-membrane uptake of iron-siderophore complexes and other small nutrients, not protein transport.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term arises from an electronic UniRule transfer and from the generic &#34;Protein transport&#34; keyword, but it does not reflect TonB function. TonB does not mediate protein translocation; it couples the proton-motive force to TonB-dependent outer-membrane transporters that import ferric-siderophores, iron, and vitamins. The biologically appropriate process is transmembrane transport / siderophore-iron import, already captured by other annotations, so &#34;protein transport&#34; is an over-annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C75" data-a="GO:0030288" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TonB spans the periplasm; its periplasm-spanning region and C-terminal domain reside in and act within the periplasmic space to contact outer-membrane receptors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TonB is anchored in the inner membrane but its long proline-rich segment and C-terminal TonB domain extend across the periplasm to engage the TonB box of outer-membrane transporters. Localization of the functional portion to the periplasmic space is consistent with established TonB topology and mechanism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031992" target="_blank" class="term-link">
+                                    GO:0031992
+                                </a>
+                            </span>
+                            <span class="term-label">energy transducer activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C75" data-a="GO:0031992" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TonB is the prototypical energy transducer, transmitting proton-motive-force energy from the inner membrane (via ExbB/ExbD) to outer-membrane transporters.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of TonB. The TonB/ExbB/ExbD complex transduces the inner-membrane proton-motive force into mechanical work delivered to TonB-dependent transporters, energizing their active transport cycle. Well supported by conserved TonB-family mechanism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C75" data-a="GO:0055085" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TonB is required for active transmembrane (outer-membrane) transport of siderophore-iron complexes and related nutrients.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TonB participates in transmembrane transport by energizing outer-membrane TBDTs, so the broad term is biologically correct. However, it is general; the more specific and informative process is siderophore-dependent iron import across the outer membrane. Retained as a correct but non-core, high-level process term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Proton-motive-force-driven energy transducer that couples inner-membrane electrochemical energy, captured with ExbB/ExbD, to active transport across the outer membrane.</h3>
+                <span class="vote-buttons" data-g="Q88C75" data-a="FUNCTION: Proton-motive-force-driven energy transducer that ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031992" target="_blank" class="term-link">
+                            energy transducer activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11514511" target="_blank" class="term-link">
+                                PMID:11514511
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">TonB couples the proton-motive force of the cytoplasmic membrane, via ExbB/ExbD, to energize TonB-dependent outer-membrane transporters in P. putida DOT-T1E, a close relative of KT2440; complementation with exbBD-tonB restores wild-type phenotypes.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Energization of TonB-dependent outer-membrane transporters to drive high-affinity import of ferric-siderophore complexes and other scarce nutrients across the outer membrane.</h3>
+                <span class="vote-buttons" data-g="Q88C75" data-a="FUNCTION: Energization of TonB-dependent outer-membrane tran..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031992" target="_blank" class="term-link">
+                            energy transducer activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015891" target="_blank" class="term-link">
+                                siderophore transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/tonB/tonB-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">KT2440 encodes ~29 predicted TonB-dependent receptors and produces pyoverdine; TonB energizes these receptors for iron/siderophore uptake, making it central to iron acquisition.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11514511" target="_blank" class="term-link">
+                            PMID:11514511
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Involvement of the TonB system in tolerance to solvents and drugs in Pseudomonas putida DOT-T1E</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/tonB/tonB-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report (falcon) for P. putida KT2440 tonB / PP_5308</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tonB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88C75" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">17 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:42:21.613312</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="tonB-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="tonB-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000008 The exbB-exbD-tonB operon organization is illustrated in Figure 4 on page 5. While quantitative data for 14C-4HBA accumulation (200</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-tonb-pp_5308-uniprot-q88c75-in-pseudomonas-putida-kt2440">Research report: functional annotation of <strong>tonB (PP_5308; UniProt Q88C75)</strong> in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="1-target-verification-mandatory-disambiguation">1) Target verification (mandatory disambiguation)</h3>
+<p>The UniProt accession <strong>Q88C75</strong> corresponds to <strong>TonB family protein TonB</strong> encoded by <strong>tonB / ordered locus PP_5308</strong> in <em>Pseudomonas putida</em> strain KT2440, a Gram‑negative bacterium. Because <strong>tonB</strong> is a widely used symbol across many bacteria and can refer to paralogs (including TolA-like proteins in some taxa), the most defensible KT2440-specific evidence obtainable here is (i) KT2440 genome context showing extensive TonB-dependent uptake capacity and (ii) close-<em>Pseudomonas putida</em> evidence demonstrating a canonical <strong>exbB–exbD–tonB</strong> locus with explicit sequence-based support for a single-copy homologous cluster in KT2440. (godoy2001involvementofthe pages 4-5, santos2004insightsintothe pages 8-10)</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-what-tonb-is">2.1 What TonB is</h4>
+<p><strong>TonB</strong> is an <strong>inner membrane-anchored, periplasm-spanning energy transducer</strong> that couples the <strong>proton motive force (pmf)</strong> of the cytoplasmic/inner membrane to active transport across the <strong>outer membrane (OM)</strong> in Gram-negative bacteria. It acts with <strong>ExbB</strong> and <strong>ExbD</strong> (inner membrane proteins) to energize OM uptake systems that otherwise cannot passively diffuse through porins because the substrates are scarce, large, or tightly bound. (braun2024substrateuptakeby pages 1-2)</p>
+<h4 id="22-what-tonb-dependent-transporters-are-and-how-tonb-energizes-them">2.2 What TonB-dependent transporters are and how TonB energizes them</h4>
+<p><strong>TonB-dependent outer membrane transporters (TBDTs)</strong> are β‑barrel OM proteins whose pores are occluded by a <strong>plug domain</strong>. A conserved short sequence in TBDTs, the <strong>TonB box</strong>, is engaged by TonB’s C‑terminal domain; TonB binding triggers plug rearrangements/opening, enabling nutrient translocation into the periplasm. (braun2024substrateuptakeby pages 1-2)</p>
+<h4 id="23-core-motor-complex-and-subcellular-localization">2.3 Core motor complex and subcellular localization</h4>
+<p>In the prevailing mechanistic framework, <strong>ExbB and ExbD form an inner membrane motor complex</strong> that transduces pmf energy to TonB; a commonly discussed architecture is an <strong>ExbB pentamer</strong> surrounding an <strong>ExbD dimer</strong>, with TonB interacting to transmit mechanical work across the periplasm to OM TBDTs. (braun2024substrateuptakeby pages 1-2)</p>
+<h3 id="3-kt2440-context-expected-biological-processes-and-pathways">3) KT2440 context: expected biological processes and pathways</h3>
+<h4 id="31-ironsiderophore-acquisition-is-a-major-tonb-linked-process-in-kt2440">3.1 Iron/siderophore acquisition is a major TonB-linked process in KT2440</h4>
+<p>The KT2440 genome encodes a large repertoire of OM TBDTs: <strong>29 genes predicted to encode TonB-dependent receptors</strong> (quantitative genome statistic). Many of these are inferred to support <strong>iron uptake</strong>, consistent with the common role of TBDTs in siderophore-mediated iron acquisition. (santos2004insightsintothe pages 8-10)</p>
+<p>KT2440 produces the siderophore <strong>pyoverdine</strong>, and pyoverdine-associated genes are organized into multiple clusters. Expression of pyoverdine-related systems is influenced by the environment and is largely controlled by the global iron regulator <strong>Fur</strong>, which represses relevant sigma factors under iron-replete conditions; this places TonB-powered uptake into the broader <strong>iron homeostasis regulatory network</strong>. (santos2004insightsintothe pages 8-10)</p>
+<p><strong>Functional implication for PP_5308/Q88C75:</strong> given its TonB family assignment and the KT2440 receptor repertoire, PP_5308 TonB is most plausibly a core component that energizes TBDTs involved in acquisition of <strong>iron complexes (siderophores) and potentially other scarce nutrients</strong>. This is an inference grounded in conserved TonB mechanism and KT2440 genome content, not a direct PP_5308 knockout demonstration. (braun2024substrateuptakeby pages 1-2, santos2004insightsintothe pages 8-10)</p>
+<h3 id="4-gene-level-evidence-operon-context-for-tonb-and-partners-exbbexbd">4) Gene-level evidence: operon context for tonB and partners (ExbB/ExbD)</h3>
+<p>Direct experimental genetics for <strong>PP_5308 in KT2440</strong> was not retrieved in the available texts. However, a closely related <em>P. putida</em> strain (DOT‑T1E) provides strong operon-level evidence for the <strong>canonical TonB system locus</strong>, with explicit mapping to KT2440 by sequence analysis:</p>
+<ul>
+<li>In DOT‑T1E, <strong>exbB–exbD–tonB</strong> form a tightly packed gene cluster with only <strong>3 bp</strong> between <strong>exbB</strong> and <strong>exbD</strong> and an <strong>overlap between exbD and tonB</strong>; RT‑PCR demonstrated co‑transcription spanning <strong>exbB–exbD</strong> and <strong>exbD–tonB</strong>. (godoy2001involvementofthe pages 4-5)</li>
+<li>The same study reports that BLAST analysis against the <strong>KT2440 genome</strong> indicates the cluster occurs as a <strong>single copy</strong> in KT2440, supporting orthology to the KT2440 <strong>PP_5308 (tonB)</strong> locus. (godoy2001involvementofthe pages 4-5)</li>
+</ul>
+<p>A primary-figure depiction of this operon organization and transcriptional analysis is captured in the retrieved image of the DOT‑T1E work (Figure showing locus organization/RT-PCR amplicons). (godoy2001involvementofthe media 62ab8242)</p>
+<h3 id="5-mutant-phenotypes-and-quantitative-data-organism-proximal-evidence">5) Mutant phenotypes and quantitative data (organism-proximal evidence)</h3>
+<p>Although these phenotypes were measured in <em>P. putida</em> DOT‑T1E rather than KT2440, they inform plausible consequences of disabling the homologous <strong>exbBD–tonB</strong> system and therefore provide useful quantitative constraints for functional annotation:</p>
+<ul>
+<li><strong>Solvent tolerance:</strong> wild-type DOT‑T1E tolerated <strong>1% (vol/vol) toluene</strong>; an insertion mutant disrupting <strong>exbD</strong> in the <strong>exbBD–tonB operon</strong> failed to withstand sudden toluene shock. (godoy2001involvementofthe pages 1-1)</li>
+<li><strong>Aromatic acid tolerance:</strong> wild-type DOT‑T1E grew with <strong>17 g/L (123 mM) p‑hydroxybenzoate (4HBA)</strong>, while mutant growth was prevented at <strong>6 g/L</strong>. (godoy2001involvementofthe pages 1-1)</li>
+<li><strong>Efflux-associated accumulation phenotype:</strong> the same operon-disrupting mutant accumulated markedly more radiolabeled substrate, reported as ~<strong>200 nmol [14C]4HBA per unit turbidity per min</strong> versus ~<strong>15 nmol</strong> for a control (≈13-fold), and also summarized as roughly <strong>~20-fold</strong> higher accumulation. (godoy2001involvementofthe pages 4-5, godoy2001involvementofthe pages 6-7)</li>
+<li><strong>Iron limitation sensitivity:</strong> growth of the operon-disrupting mutant was inhibited in iron-deficient conditions with the iron chelator <strong>EDDHA</strong>, consistent with TonB system involvement in iron acquisition. (godoy2001involvementofthe pages 1-1)</li>
+<li><strong>Genetic complementation:</strong> supplying <strong>exbBD and tonB</strong> in trans restored wild-type tolerance phenotypes, supporting that the observed traits derive from loss of the TonB system locus. (godoy2001involvementofthe pages 1-1)</li>
+</ul>
+<p><strong>Interpretation for PP_5308 (KT2440):</strong> these data support the conserved view that TonB systems primarily energize high-affinity uptake (commonly iron/siderophore), and additionally can influence envelope physiology and tolerance phenotypes, potentially through indirect coupling to efflux and membrane barrier functions. These organism-proximal results should be treated as <strong>orthology-based inference</strong> until KT2440 PP_5308-specific mutants are directly tested. (godoy2001involvementofthe pages 4-5, godoy2001involvementofthe pages 1-1)</p>
+<h3 id="6-recent-developments-prioritizing-20232024">6) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="61-2024-synthesis-of-tonb-dependent-uptake-mechanisms">6.1 2024 synthesis of TonB-dependent uptake mechanisms</h4>
+<p>A 2024 review consolidates contemporary understanding that TonB-dependent uptake involves <strong>mechanical force transduction</strong>: TonB engages TBDTs at the TonB box to elicit plug rearrangements/opening, while <strong>ExbB/ExbD</strong> transmit pmf-derived energy to TonB. The review also emphasizes the breadth of TonB-powered substrates beyond siderophores (while still highlighting iron uptake as central). (braun2024substrateuptakeby pages 1-2)</p>
+<h4 id="62-2024-in-vivo-mechanistic-testing-of-tonb-motor-models">6.2 2024 in vivo mechanistic testing of TonB motor models</h4>
+<p>A 2024 mechanistic preprint in <em>E. coli</em> provides in vivo evidence relevant to TonB family proteins broadly: TonB forms <strong>homodimers</strong> and <strong>TonB–ExbD transmembrane heterodimers</strong>, and ExbD undergoes <strong>PMF-dependent structural transitions</strong> during the energization cycle. While not <em>Pseudomonas</em> data, these results inform how PP_5308 likely interfaces physically with ExbD and participates in cyclic energization of multiple TBDTs. (postle2024invivotests pages 1-5)</p>
+<h3 id="7-current-applications-and-real-world-implementations-with-evidence-limitations">7) Current applications and real-world implementations (with evidence limitations)</h3>
+<p>For KT2440 specifically, direct PP_5308‑targeted application studies were not retrieved in the available corpus. Nevertheless, the KT2440 genomic investment in TBDTs (29 predicted receptors) and siderophore systems indicates that TonB-powered uptake is a central node shaping <strong>environmental fitness</strong> (e.g., iron scavenging in competitive niches). (santos2004insightsintothe pages 8-10)</p>
+<p>More generally, because TonB energizes OM uptake “gates” that are otherwise closed, TonB systems are often discussed as strategic leverage points for <strong>(i) inhibiting nutrient acquisition</strong> and <strong>(ii) hijacking uptake pathways</strong> for delivery of large cargoes through the OM (e.g., protein/toxin uptake routes and other TonB-powered imports). This rationale is grounded in the mechanistic review literature, but it is not yet tied here to a KT2440 PP_5308-specific deployment. (braun2024substrateuptakeby pages 1-2)</p>
+<h3 id="8-expert-opinion-and-analysis-authoritative-sources">8) Expert opinion and analysis (authoritative sources)</h3>
+<p>Two convergent expert-level perspectives emerge from the 2024 synthesis and organism-proximal genetics:</p>
+<ol>
+<li><strong>Primary functional role:</strong> TonB’s core biological role is to act as a pmf-driven force transducer that enables high-affinity uptake through OM TBDTs (classically siderophore/iron uptake). (braun2024substrateuptakeby pages 1-2, santos2004insightsintothe pages 8-10)</li>
+<li><strong>Broader phenotypic consequences:</strong> perturbing the TonB motor can produce phenotypes that extend to solvent/drug tolerance and envelope-related stress outcomes, likely via indirect coupling to outer-membrane receptor states, cellular iron physiology, and membrane/efflux system performance. This is supported by quantitative mutant phenotypes in <em>P. putida</em> DOT‑T1E, a close relative of KT2440, and should motivate KT2440-specific validation. (godoy2001involvementofthe pages 1-1, godoy2001involvementofthe pages 6-7)</li>
+</ol>
+<h3 id="9-summary-table-evidence-grounded-annotation">9) Summary table (evidence-grounded annotation)</h3>
+<p>The following table consolidates the functional annotation for <strong>PP_5308/Q88C75 TonB</strong> while clearly separating direct KT2440 context from orthology-based evidence and conserved mechanism.</p>
+<table>
+<thead>
+<tr>
+<th>Annotation topic</th>
+<th>Key findings</th>
+<th>Evidence/citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>• Target matches UniProt Q88C75 = TonB family protein encoded by <strong>tonB / PP_5308</strong> in <em>Pseudomonas putida</em> KT2440 • Gene symbol <strong>tonB</strong> is common across bacteria, so organism/ortholog verification is essential • Direct PP_5308 experiments are limited; strongest locus-specific support comes from KT2440 genome context plus close <em>P. putida</em> relative DOT-T1E with BLAST-supported single-copy homologous cluster in KT2440</td>
+<td>(godoy2001involvementofthe pages 4-5, santos2004insightsintothe pages 8-10)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>• TonB systems are <strong>inner-membrane/periplasm-spanning energy transducers</strong> rather than outer-membrane transporters • TonB has an N-terminal transmembrane anchor and a periplasmic C-terminal domain that contacts TonB-dependent outer-membrane receptors • ExbB/ExbD form the inner-membrane motor complex that energizes TonB from the proton motive force</td>
+<td>(postle2024invivotests pages 1-5, braun2024substrateuptakeby pages 11-12, braun2024substrateuptakeby pages 1-2)</td>
+</tr>
+<tr>
+<td>Mechanism</td>
+<td>• TonB couples <strong>pmf-derived energy</strong> from ExbB/ExbD to TonB-dependent transporters (TBDTs) • TonB binds receptor <strong>TonB boxes</strong>, promoting plug rearrangement/opening and nutrient passage into the periplasm • General stoichiometry/mechanistic model from recent work: <strong>ExbB pentamer + ExbD dimer</strong> enclosing/engaging TonB</td>
+<td>(braun2024substrateuptakeby pages 11-12, braun2024substrateuptakeby pages 1-2)</td>
+</tr>
+<tr>
+<td>Operon / genetic context</td>
+<td>• In <em>P. putida</em> DOT-T1E, <strong>exbB-exbD-tonB</strong> are tightly linked with only <strong>3 bp</strong> between <strong>exbB</strong> and <strong>exbD</strong> and an <strong>overlap between exbD and tonB</strong> • RT-PCR showed <strong>co-transcription</strong> of <strong>exbB-exbD</strong> and <strong>exbD-tonB</strong> • BLAST analysis indicated the cluster is present as a <strong>single copy in KT2440</strong>, supporting annotation of PP_5308 as the KT2440 TonB ortholog • Figure evidence for operon organization is available</td>
+<td>(godoy2001involvementofthe pages 4-5, godoy2001involvementofthe media 62ab8242)</td>
+</tr>
+<tr>
+<td>Regulated processes / biological role</td>
+<td>• KT2440 devotes major capacity to <strong>iron scavenging</strong>, including pyoverdine systems and <strong>29 predicted TonB-dependent receptors</strong> • Thus PP_5308 most plausibly functions in energizing uptake of <strong>siderophores/iron-associated substrates</strong> and possibly other scarce large nutrients • In pseudomonads, TonB-like systems can also influence envelope physiology and receptor-dependent processes beyond classical iron uptake</td>
+<td>(godoy2001involvementofthe pages 6-7, santos2004insightsintothe pages 8-10)</td>
+</tr>
+<tr>
+<td>Mutant phenotypes / quantitative data</td>
+<td>• In DOT-T1E, an <strong>exbD insertion in the exbBD-tonB operon</strong> increased sensitivity to solvents, antibiotics, and iron limitation • Wild type tolerated <strong>1% (vol/vol) toluene</strong> and <strong>17 g/L 4HBA</strong>, whereas mutant growth was prevented at <strong>6 g/L 4HBA</strong> and it failed sudden toluene shock • Mutant accumulated about <strong>200 nmol [14C]4HBA/U turbidity/min</strong> versus about <strong>15 nmol</strong> in control; another summary reports ~<strong>20-fold</strong> higher accumulation • Complementation with <strong>exbBD-tonB</strong> restored wild-type traits</td>
+<td>(godoy2001involvementofthe pages 1-1, godoy2001involvementofthe pages 4-5, godoy2001involvementofthe pages 6-7)</td>
+</tr>
+<tr>
+<td>Recent mechanistic developments (2024)</td>
+<td>• 2024 review synthesizes structural evidence that TonB-dependent uptake uses a <strong>mechanical force-transduction</strong> model from ExbB/ExbD to receptor plugs • 2024 JBC study identified a conserved <strong>TonB D-box</strong> motif coupling TonB to ExbD, refining the motor-assembly model • 2024 in vivo work further supports <strong>TonB-ExbD transmembrane heterodimers</strong>, PMF-dependent ExbD conformational changes, and cyclic TonB action</td>
+<td>(postle2024invivotests pages 45-51, postle2024invivotests pages 1-5, braun2024substrateuptakeby pages 11-12)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>• Functional annotation supports interpreting PP_5308 in <strong>iron acquisition</strong>, rhizosphere fitness, and environmental adaptation of KT2440 • TonB systems are attractive <strong>antimicrobial/drug-delivery targets</strong> because many outer-membrane uptake pathways depend on TonB energization • For KT2440 biotechnology, TonB-linked receptor networks may affect uptake of metals/nutrients relevant to <strong>bioprocessing and environmental performance</strong>, though direct PP_5308 application studies remain sparse</td>
+<td>(braun2024substrateuptakeby pages 11-12, santos2004insightsintothe pages 8-10)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the most defensible functional annotation for </em>Pseudomonas putida<em> KT2440 TonB (PP_5308/Q88C75), separating direct KT2440 evidence from inference based on TonB-family mechanism and closely related </em>P. putida<em> DOT-T1E data. It is useful for rapid curation because it combines identity verification, operon context, mechanistic function, and quantitative phenotypes with explicit source IDs.</em></p>
+<h3 id="10-key-evidence-images">10) Key evidence images</h3>
+<p>Operon organization and transcriptional evidence for the canonical <strong>exbB–exbD–tonB</strong> locus (from <em>P. putida</em> DOT‑T1E; used here to support orthology-based mapping to KT2440 PP_5308) are shown in the retrieved figure crop. (godoy2001involvementofthe media 62ab8242)</p>
+<p>A sequence-identity comparison table for TonB-system components (supporting conservation across <em>Pseudomonas</em> TonB systems and the plausibility of orthology-based inference) was also retrieved. (godoy2001involvementofthe media f6f3e2e6)</p>
+<h3 id="11-evidence-gaps-and-confidence-assessment">11) Evidence gaps and confidence assessment</h3>
+<ul>
+<li><strong>High-confidence functional class:</strong> PP_5308/Q88C75 is a TonB family inner-membrane/periplasmic energy transducer that powers TBDT-mediated outer-membrane uptake. (braun2024substrateuptakeby pages 1-2)</li>
+<li><strong>Moderate-confidence organism-specific roles:</strong> KT2440 likely uses PP_5308 to energize TBDTs involved in iron/siderophore uptake given the large TBDT repertoire (29 predicted receptors) and siderophore systems under Fur-linked control. (santos2004insightsintothe pages 8-10)</li>
+<li><strong>Lower-confidence phenotypic extrapolations:</strong> solvent/drug tolerance and efflux-related phenotypes are quantitatively documented for a close <em>P. putida</em> strain with an exbD insertion in the exbBD–tonB operon; KT2440 PP_5308-specific phenotypes require direct experimental confirmation. (godoy2001involvementofthe pages 1-1, godoy2001involvementofthe pages 4-5)</li>
+</ul>
+<h2 id="source-details-urls-and-publication-dates">Source details (URLs and publication dates)</h2>
+<ul>
+<li>Godoy et al., 2001-09 (Journal of Bacteriology): https://doi.org/10.1128/jb.183.18.5285-5292.2001 (godoy2001involvementofthe pages 1-1, godoy2001involvementofthe pages 4-5)</li>
+<li>Martins Dos Santos et al., 2004-12 (Environmental Microbiology): https://doi.org/10.1111/j.1462-2920.2004.00734.x (santos2004insightsintothe pages 8-10)</li>
+<li>Braun, 2024-12 (Molecular Microbiology review): https://doi.org/10.1111/mmi.15332 (braun2024substrateuptakeby pages 1-2)</li>
+<li>Postle et al., 2024-07 (bioRxiv): https://doi.org/10.1101/2024.07.10.602958 (postle2024invivotests pages 1-5)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(godoy2001involvementofthe pages 4-5): Patricia Godoy, Marı́a Isabel Ramos-González, and Juan L. Ramos. Involvement of the tonb system in tolerance to solvents and drugs in pseudomonas putida dot-t1e. Journal of Bacteriology, 183:5285-5292, Sep 2001. URL: https://doi.org/10.1128/jb.183.18.5285-5292.2001, doi:10.1128/jb.183.18.5285-5292.2001. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santos2004insightsintothe pages 8-10): V. A. P. Martins Dos Santos, S. Heim, E. R. B. Moore, M. Strätz, and K. N. Timmis. Insights into the genomic basis of niche specificity of pseudomonas putida kt2440. Environmental microbiology, 6 12:1264-86, Dec 2004. URL: https://doi.org/10.1111/j.1462-2920.2004.00734.x, doi:10.1111/j.1462-2920.2004.00734.x. This article has 339 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(braun2024substrateuptakeby pages 1-2): Volkmar Braun. Substrate uptake by tonb‐dependent outer membrane transporters. Molecular Microbiology, 122:929-947, Dec 2024. URL: https://doi.org/10.1111/mmi.15332, doi:10.1111/mmi.15332. This article has 20 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(godoy2001involvementofthe media 62ab8242): Patricia Godoy, Marı́a Isabel Ramos-González, and Juan L. Ramos. Involvement of the tonb system in tolerance to solvents and drugs in pseudomonas putida dot-t1e. Journal of Bacteriology, 183:5285-5292, Sep 2001. URL: https://doi.org/10.1128/jb.183.18.5285-5292.2001, doi:10.1128/jb.183.18.5285-5292.2001. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(godoy2001involvementofthe pages 1-1): Patricia Godoy, Marı́a Isabel Ramos-González, and Juan L. Ramos. Involvement of the tonb system in tolerance to solvents and drugs in pseudomonas putida dot-t1e. Journal of Bacteriology, 183:5285-5292, Sep 2001. URL: https://doi.org/10.1128/jb.183.18.5285-5292.2001, doi:10.1128/jb.183.18.5285-5292.2001. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(godoy2001involvementofthe pages 6-7): Patricia Godoy, Marı́a Isabel Ramos-González, and Juan L. Ramos. Involvement of the tonb system in tolerance to solvents and drugs in pseudomonas putida dot-t1e. Journal of Bacteriology, 183:5285-5292, Sep 2001. URL: https://doi.org/10.1128/jb.183.18.5285-5292.2001, doi:10.1128/jb.183.18.5285-5292.2001. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(postle2024invivotests pages 1-5): Kathleen Postle, Dale Kopp, and Bimal Jana. In vivo tests of the e. coli tonb system working model—interaction of exbb with unknown proteins, identification of tonb-exbd transmembrane heterodimers and pmf-dependent exbd structures. bioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.10.602958, doi:10.1101/2024.07.10.602958. This article has 0 citations.</p>
+</li>
+<li>
+<p>(braun2024substrateuptakeby pages 11-12): Volkmar Braun. Substrate uptake by tonb‐dependent outer membrane transporters. Molecular Microbiology, 122:929-947, Dec 2024. URL: https://doi.org/10.1111/mmi.15332, doi:10.1111/mmi.15332. This article has 20 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(postle2024invivotests pages 45-51): Kathleen Postle, Dale Kopp, and Bimal Jana. In vivo tests of the e. coli tonb system working model—interaction of exbb with unknown proteins, identification of tonb-exbd transmembrane heterodimers and pmf-dependent exbd structures. bioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.10.602958, doi:10.1101/2024.07.10.602958. This article has 0 citations.</p>
+</li>
+<li>
+<p>(godoy2001involvementofthe media f6f3e2e6): Patricia Godoy, Marı́a Isabel Ramos-González, and Juan L. Ramos. Involvement of the tonb system in tolerance to solvents and drugs in pseudomonas putida dot-t1e. Journal of Bacteriology, 183:5285-5292, Sep 2001. URL: https://doi.org/10.1128/jb.183.18.5285-5292.2001, doi:10.1128/jb.183.18.5285-5292.2001. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="tonB-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000008 The exbB-exbD-tonB operon organization is illustrated in Figure 4 on page 5. While quantitative data for 14C-4HBA accumulation (200" src="tonB-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>braun2024substrateuptakeby pages 1-2</li>
+<li>santos2004insightsintothe pages 8-10</li>
+<li>godoy2001involvementofthe pages 4-5</li>
+<li>godoy2001involvementofthe pages 1-1</li>
+<li>postle2024invivotests pages 1-5</li>
+<li>godoy2001involvementofthe pages 6-7</li>
+<li>braun2024substrateuptakeby pages 11-12</li>
+<li>postle2024invivotests pages 45-51</li>
+<li>14C</li>
+<li>https://doi.org/10.1128/jb.183.18.5285-5292.2001</li>
+<li>https://doi.org/10.1111/j.1462-2920.2004.00734.x</li>
+<li>https://doi.org/10.1111/mmi.15332</li>
+<li>https://doi.org/10.1101/2024.07.10.602958</li>
+<li>https://doi.org/10.1128/jb.183.18.5285-5292.2001,</li>
+<li>https://doi.org/10.1111/j.1462-2920.2004.00734.x,</li>
+<li>https://doi.org/10.1111/mmi.15332,</li>
+<li>https://doi.org/10.1101/2024.07.10.602958,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88C75
+gene_symbol: tonB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: TonB is an inner (cytoplasmic) membrane-anchored, periplasm-spanning energy-transducing protein of Gram-negative bacteria. Together with its partner proteins ExbB and ExbD, it forms the TonB-ExbB-ExbD complex that harnesses the proton-motive force of the inner membrane and transmits this energy across the periplasm to TonB-dependent transporters (TBDTs) in the outer membrane. By contacting the conserved &#34;TonB box&#34; of a TBDT through its periplasmic C-terminal domain, TonB drives conformational changes in the receptor plug that enable active, high-affinity uptake of scarce nutrients - principally ferric-siderophore complexes (e.g. ferric-pyoverdine) and other iron sources, but also vitamin B12 and certain other substrates that cannot cross the outer membrane by passive diffusion. The protein has an N-terminal single-pass transmembrane anchor, a long proline-rich/disordered periplasm-spanning segment, and a C-terminal TonB domain that engages outer-membrane receptors. In P. putida KT2440, which encodes a large repertoire of TonB-dependent receptors and produces the siderophore pyoverdine, TonB is central to iron acquisition and to fitness under iron-limited conditions.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: TonB is anchored in the inner (plasma) membrane by an N-terminal single-pass transmembrane helix.
+    action: ACCEPT
+    reason: Consistent with the UniProt subcellular location (cell inner membrane, single-pass, periplasmic side) and with the well-established topology of TonB-family proteins, which are anchored in the cytoplasmic membrane. In bacteria the plasma membrane is the inner membrane, so this localization is correct.
+- term:
+    id: GO:0015031
+    label: protein transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: TonB energizes outer-membrane uptake of iron-siderophore complexes and other small nutrients, not protein transport.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This term arises from an electronic UniRule transfer and from the generic &#34;Protein transport&#34; keyword, but it does not reflect TonB function. TonB does not mediate protein translocation; it couples the proton-motive force to TonB-dependent outer-membrane transporters that import ferric-siderophores, iron, and vitamins. The biologically appropriate process is transmembrane transport / siderophore-iron import, already captured by other annotations, so &#34;protein transport&#34; is an over-annotation.
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: located_in
+  review:
+    summary: TonB spans the periplasm; its periplasm-spanning region and C-terminal domain reside in and act within the periplasmic space to contact outer-membrane receptors.
+    action: ACCEPT
+    reason: TonB is anchored in the inner membrane but its long proline-rich segment and C-terminal TonB domain extend across the periplasm to engage the TonB box of outer-membrane transporters. Localization of the functional portion to the periplasmic space is consistent with established TonB topology and mechanism.
+- term:
+    id: GO:0031992
+    label: energy transducer activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: TonB is the prototypical energy transducer, transmitting proton-motive-force energy from the inner membrane (via ExbB/ExbD) to outer-membrane transporters.
+    action: ACCEPT
+    reason: This is the core molecular function of TonB. The TonB/ExbB/ExbD complex transduces the inner-membrane proton-motive force into mechanical work delivered to TonB-dependent transporters, energizing their active transport cycle. Well supported by conserved TonB-family mechanism.
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: TonB is required for active transmembrane (outer-membrane) transport of siderophore-iron complexes and related nutrients.
+    action: KEEP_AS_NON_CORE
+    reason: TonB participates in transmembrane transport by energizing outer-membrane TBDTs, so the broad term is biologically correct. However, it is general; the more specific and informative process is siderophore-dependent iron import across the outer membrane. Retained as a correct but non-core, high-level process term.
+core_functions:
+- description: Proton-motive-force-driven energy transducer that couples inner-membrane electrochemical energy, captured with ExbB/ExbD, to active transport across the outer membrane.
+  molecular_function:
+    id: GO:0031992
+    label: energy transducer activity
+  supported_by:
+  - reference_id: PMID:11514511
+    supporting_text: TonB couples the proton-motive force of the cytoplasmic membrane, via ExbB/ExbD, to energize TonB-dependent outer-membrane transporters in P. putida DOT-T1E, a close relative of KT2440; complementation with exbBD-tonB restores wild-type phenotypes.
+    full_text_unavailable: true
+- description: Energization of TonB-dependent outer-membrane transporters to drive high-affinity import of ferric-siderophore complexes and other scarce nutrients across the outer membrane.
+  molecular_function:
+    id: GO:0031992
+    label: energy transducer activity
+  locations:
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  supported_by:
+  - reference_id: file:PSEPK/tonB/tonB-deep-research-falcon.md
+    supporting_text: KT2440 encodes ~29 predicted TonB-dependent receptors and produces pyoverdine; TonB energizes these receptors for iron/siderophore uptake, making it central to iron acquisition.
+  directly_involved_in:
+  - id: GO:0015891
+    label: siderophore transport
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11514511
+  title: Involvement of the TonB system in tolerance to solvents and drugs in Pseudomonas putida DOT-T1E
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Godoy et al., J Bacteriol 2001;183(18):5285-5292. Characterizes the exbB-exbD-tonB operon in P. putida DOT-T1E (close relative of KT2440), demonstrating co-transcription, iron-limitation sensitivity, and complementation. Corrects a prior wrong identifier (PMID:11953438, which resolves to an unrelated yeast isocitrate dehydrogenase paper); the correct PMID:11514511 was recovered from DOI 10.1128/jb.183.18.5285-5292.2001 and verified via PubMed (title and abstract on-topic for TonB/DOT-T1E). Abstract-only; not in the publications cache.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: KT2440 genome paper (UniProt reference 1); establishes the genomic context and TonB-dependent receptor repertoire of KT2440. Cached in publications/.
+- id: file:PSEPK/tonB/tonB-deep-research-falcon.md
+  title: Deep research report (falcon) for P. putida KT2440 tonB / PP_5308
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

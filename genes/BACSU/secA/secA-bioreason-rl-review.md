@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: secA (B. subtilis)
 
-Source: secA-deep-research-bioreason-rl.md
+Source: secA-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

@@ -1,0 +1,11 @@
+# AHCTF1 Gene Review Notes
+
+## 2026-06-03 - PROTEOSTASIS PN conservative review
+
+Falcon deep research was run with `just deep-research-falcon human AHCTF1 --fallback perplexity-lite`. The Falcon client wrote `AHCTF1-deep-research-falcon.md`, but the wrapper returned nonzero after the 600 second timeout and the configured `perplexity-lite` fallback failed with a 401 quota error. Because the Falcon artifact is present and contains a complete report, it was used as supporting context; no manual file was created.
+
+AHCTF1 encodes ELYS/MEL-28, a chromatin-associated nucleoporin and nuclear pore complex assembly factor. The core evidence supports binding to chromatin and recruitment of the Nup107-160/Y-complex scaffold during post-mitotic NPC assembly: ELYS was identified with the Nup107-160 complex [PMID:17098863 "copurify with the Nup107-160 complex"], depletion disrupts nuclear pores [PMID:17098863 "severe disruption of nuclear pores"], and later domain work states that ELYS/chromatin binding is the first step in post-mitotic pore building [PMID:27341616 "first step in the post-mitotic building of the pore"].
+
+The mitotic kinetochore/cell-division annotations are real but should be interpreted separately from proteostasis. ELYS targets kinetochores during mitosis [PMID:17098863 "ELYS targets to kinetochores"], and conserved-domain work supports NPC, kinetochore, and chromatin localization [PMID:27341616 "NPC and kinetochore organization"]. These data justify keeping kinetochore and cytokinesis annotations, but they do not make AHCTF1 a protein-folding, ubiquitin-proteasome, ERAD, chaperone, or stress-response factor.
+
+PN curation conclusion: evaluate any Proteostasis Network projection for AHCTF1 conservatively. AHCTF1 can support nuclear-pore/nucleocytoplasmic-transport context only through its direct role in NPC assembly. It should not be propagated into proteostasis terms such as protein folding, protein quality control, ubiquitin-dependent protein catabolism, ER proteostasis, or proteasome function without direct evidence. Broad cytosol and extracellular-exosome GOA annotations were treated as over-annotations because they are pathway/proteomics artifacts relative to the strong nuclear pore/chromatin/kinetochore evidence.

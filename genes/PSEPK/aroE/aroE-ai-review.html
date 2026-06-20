@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aroE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aroE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88IJ7" target="_blank" class="term-link">
+                        Q88IJ7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aroE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88IJ7" data-a="DESCRIPTION: aroE (locus PP_3002) encodes shikimate dehydrogena..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>aroE (locus PP_3002) encodes shikimate dehydrogenase (SDH; EC 1.1.1.25), a soluble, NADP(H)-dependent oxidoreductase that catalyzes the reversible reduction of 3-dehydroshikimate to shikimate, the fourth step of the seven-step shikimate pathway. The shikimate pathway converts phosphoenolpyruvate and D-erythrose 4-phosphate into chorismate, the common precursor of the aromatic amino acids (phenylalanine, tyrosine, tryptophan) and other aromatic metabolites such as folate and ubiquinone. As an AroE-class shikimate dehydrogenase the enzyme is selective for 3-dehydroshikimate as substrate and NADP(H) as cofactor, and it functions as a homodimer. Its catalytic core comprises an N-terminal substrate-binding (Rossmann-like) domain and a C-terminal NADP-binding domain; a crystal structure of the P. putida KT2440 enzyme has been solved (PDB 3PWZ). The enzyme acts in the cytosol and is required for de novo biosynthesis of aromatic amino acids; in P. putida KT2440 there are additional shikimate dehydrogenase homologs, but PP_3002 (aroE-2) represents the canonical AroE of the shikimate pathway.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004764" target="_blank" class="term-link">
+                                    GO:0004764
+                                </a>
+                            </span>
+                            <span class="term-label">shikimate 3-dehydrogenase (NADP+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IJ7" data-a="GO:0004764" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. AroE catalyzes the NADP(+)-dependent reversible oxidoreduction of shikimate / 3-dehydroshikimate (EC 1.1.1.25, RHEA:17737), as captured by UniProt, the HAMAP rule MF_00222, and the solved crystal structure (PDB 3PWZ).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the conserved shikimate dehydrogenase family assignment, UniProt catalytic-activity record, the EC/Rhea mapping, and an experimentally determined structure of the KT2440 enzyme. This is the defining activity of the gene product.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IJ7" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AroE is a soluble cytosolic metabolic enzyme with no signal peptide or transmembrane region; cytosolic localization is consistent with its role in the central shikimate pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Appropriate compartment for a soluble biosynthetic dehydrogenase; consistent with the TreeGrafter inference and with the absence of membrane-targeting or secretion signals in the sequence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                    GO:0009423
+                                </a>
+                            </span>
+                            <span class="term-label">chorismate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IJ7" data-a="GO:0009423" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AroE performs step 4 of 7 in chorismate biosynthesis from D-erythrose 4-phosphate and phosphoenolpyruvate (UniProt PATHWAY; UniPathway UPA00053/UER00087), so participation in chorismate biosynthesis is a core biological process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The reduction of 3-dehydroshikimate to shikimate is an obligate intermediate step on the route to chorismate; well supported and represents a core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IJ7" data-a="GO:0016491" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A high-level parent of the specific activity GO:0004764 (shikimate 3-dehydrogenase (NADP+) activity), which is already annotated. It is not incorrect but is uninformative given the more precise child term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant general grouping term; the specific molecular function (GO:0004764) is already present and should be retained as the informative annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019632" target="_blank" class="term-link">
+                                    GO:0019632
+                                </a>
+                            </span>
+                            <span class="term-label">shikimate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IJ7" data-a="GO:0019632" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AroE produces shikimate (and acts on it reversibly), so it participates in shikimate metabolism. This is accurate but more general than, and subsumed by, the chorismate biosynthetic process annotation that better captures the gene&#39;s pathway role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but broader/less specific than the chorismate biosynthesis annotation; retained as a valid non-core process term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050661" target="_blank" class="term-link">
+                                    GO:0050661
+                                </a>
+                            </span>
+                            <span class="term-label">NADP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IJ7" data-a="GO:0050661" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AroE binds NADP(H) as its redox cofactor; the UniProt record and the crystal structure identify multiple NADP(+)-binding residues in the C-terminal Rossmann-like domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cofactor binding is well supported by the family assignment, the annotated NADP-binding residues, and the structure; complements the catalytic activity annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NADP(+)-dependent shikimate dehydrogenase catalyzing the reversible reduction of 3-dehydroshikimate to shikimate, the fourth step of the shikimate pathway leading to chorismate and aromatic amino acid biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88IJ7" data-a="FUNCTION: NADP(+)-dependent shikimate dehydrogenase catalyzi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004764" target="_blank" class="term-link">
+                            shikimate 3-dehydrogenase (NADP+) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                chorismate biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21846128" target="_blank" class="term-link">
+                                PMID:21846128
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Structural and mechanistic analysis of the P. putida KT2440 shikimate dehydrogenase (PDB 3PWZ), establishing the conserved catalytic mechanism of the shikimate dehydrogenase family.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21846128" target="_blank" class="term-link">
+                            PMID:21846128
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural and mechanistic analysis of a novel class of shikimate dehydrogenases: evidence for a conserved catalytic mechanism in the shikimate dehydrogenase family.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Reports the X-ray crystal structure (1.71 A, PDB 3PWZ) of the P. putida KT2440 shikimate dehydrogenase (Q88IJ7) and analyzes its catalytic mechanism, confirming it is a bona fide AroE-class shikimate dehydrogenase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequence of P. putida KT2440 in which the aroE/PP_3002 locus (AAN68610) was identified and annotated.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aroE-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88IJ7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Comprehensive Research Report: **aroE (UniProt Q88IJ7; locus PP_3002)** in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">27 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T20:56:37.996010</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="aroE-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-aroe-uniprot-q88ij7-locus-pp_3002-in-pseudomonas-putida-kt2440">Comprehensive Research Report: <strong>aroE (UniProt Q88IJ7; locus PP_3002)</strong> in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-target-verification-geneprotein-identity">1. Target verification (gene/protein identity)</h2>
+<p>The target protein is <strong>AroE (shikimate dehydrogenase; EC 1.1.1.25)</strong> from <em>Pseudomonas putida</em> KT2440, corresponding to <strong>locus PP_3002</strong> and distinguishable from other KT2440 aroE-like paralogs (e.g., “aroE-1”). In a KT2440-based transcriptomics study, <strong>PP3002 is explicitly annotated as “aroE-2”</strong>, supporting the locus assignment and confirming that literature referring to PP3002/aroE-2 matches the UniProt context for Q88IJ7. (wierckx2008transcriptomeanalysisof pages 2-3)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-the-shikimate-pathway-definition-and-biological-role">2.1 The shikimate pathway: definition and biological role</h3>
+<p>The <strong>shikimate pathway</strong> is a <strong>seven-step</strong> biosynthetic route that converts the central-carbon precursors <strong>phosphoenolpyruvate (PEP)</strong> and <strong>erythrose-4-phosphate (E4P)</strong> into <strong>chorismate</strong>, which serves as the key branch-point precursor for biosynthesis of the aromatic amino acids <strong>phenylalanine, tyrosine, and tryptophan</strong>. (shende2024theshikimatepathway pages 3-4)</p>
+<p>A 2024 authoritative review emphasizes that the pathway is a major source of metabolic diversity: beyond aromatic amino acids, intermediates and branch products feed into diverse specialized metabolites across bacteria, fungi, algae and plants, while animals lack this pathway. (shende2024theshikimatepathway pages 3-4)</p>
+<h3 id="22-shikimate-dehydrogenase-aroesdh-reaction-cofactor-and-specificity">2.2 Shikimate dehydrogenase (AroE/SDH): reaction, cofactor, and specificity</h3>
+<p><strong>Shikimate dehydrogenase (SDH; AroE)</strong> catalyzes the <strong>stereoselective reduction of 3-dehydroshikimate (DHS) to shikimate</strong> (and is reversible, i.e., shikimate ↔ DHS depending on direction). Shikimate is described as the <strong>fourth intermediate</strong> of the shikimate pathway. (shende2024theshikimatepathway pages 8-10)</p>
+<p>Bacterial SDHs are generally <strong>monofunctional</strong>, whereas in eukaryotes SDH may appear as a domain within multifunctional enzymes. Bacterial SDHs fall into at least four functional groups (<strong>AroE, YdiB, SDL, RifI</strong>), where <strong>AroE is selective for DHS and NADPH</strong>, while other homologs may show relaxed cofactor or substrate specificity (e.g., YdiB can accept alternate substrates such as quinate). (shende2024theshikimatepathway pages 8-10)</p>
+<p>In <em>Pseudomonas putida</em> KT2440, multiple SDH homologs exist and differ in substrate/cofactor preference; conserved catalytic features across homologs are discussed in the KT2440-focused SDH homolog literature. (penney2012characterizingthebiological pages 23-27, penney2012characterizingthebiological pages 18-23)</p>
+<h3 id="23-why-the-shikimate-pathway-is-a-major-target-herbicides-and-antimicrobials">2.3 Why the shikimate pathway is a major target (herbicides and antimicrobials)</h3>
+<p>Because the shikimate pathway is widely used in microbes and plants but not in animals, it provides a strong selectivity rationale for chemical inhibition. (penney2012characterizingthebiologicala pages 6-14)</p>
+<p>The 2024 review highlights that <strong>EPSP synthase</strong> (penultimate step) is the classic herbicide target of <strong>glyphosate</strong>, and natural glyphosate-resistant EPSPS variants enabled “Roundup Ready” crops—illustrating the pathway’s central role in agrochemical targeting. (shende2024theshikimatepathway pages 10-11)</p>
+<h2 id="3-aroe-pp_3002q88ij7-function-in-p-putida-kt2440">3. aroE (PP_3002/Q88IJ7) function in <em>P. putida</em> KT2440</h2>
+<h3 id="31-primary-biochemical-function">3.1 Primary biochemical function</h3>
+<p>The gene <strong>aroE (PP_3002; UniProt Q88IJ7)</strong> encodes an <strong>NADP(H)-dependent shikimate dehydrogenase</strong> that functions in the middle of the shikimate pathway, catalyzing <strong>DHS + NADPH + H+ → shikimate + NADP+</strong> (reversible). (shende2024theshikimatepathway pages 8-10, penney2012characterizingthebiological pages 18-23)</p>
+<h3 id="32-quantitative-enzymology-substrate-affinity-and-catalytic-efficiency">3.2 Quantitative enzymology (substrate affinity and catalytic efficiency)</h3>
+<p>A focused SDH-homolog functional analysis reports kinetic parameters for <strong>Pseudomonas AroE</strong> on shikimate/NADP(H): <strong>kcat = 307 ± 7 s−1</strong>, <strong>KM = 178 ± 14 μM</strong>, and an inferred catalytic efficiency on the order of <strong>~1.72 × 10^6 M−1 s−1</strong> (reported as “Keff (10^3 M−1 s−1) = 1720”). (prezioso2017identifyingthefunctions pages 22-30)</p>
+<p><em>Interpretation:</em> these values are consistent with an enzyme optimized for high-throughput flux through aromatic precursor formation under growth conditions where the shikimate pathway is active.</p>
+<h3 id="33-genetic-and-physiological-evidence-in-kt2440">3.3 Genetic and physiological evidence in KT2440</h3>
+<p>A KT2440 aroE knockout study (gene-disruption phenotype) reports that <strong>aroE deletion mutants grow in rich LB medium but are impaired relative to wild type</strong>, including a <strong>~4.5 h longer lag phase</strong> and lower final optical densities. Example reported OD600 values include <strong>WT 1.467 vs aroE KO 1.079 (15 h)</strong> and other replicates with <strong>WT 2.431 vs KO 1.608</strong> and <strong>WT 2.514 vs KO 1.748</strong> at comparable late time points. (penney2012characterizingthebiological pages 68-74)</p>
+<p>The same work reports that <strong>aroE knockout strains fail to grow on minimal medium (PMM) with succinate</strong>, while wild type grows, indicating that AroE is required for growth in minimal conditions (consistent with a role in producing essential aromatic precursors). (penney2012characterizingthebiological pages 68-74, penney2012characterizingthebiological pages 79-82)</p>
+<p>Supplementation experiments in that KT2440 knockout context found <strong>no rescue</strong> under the initial tested conditions by adding individual aromatic amino acids (<strong>Trp, Phe, Tyr</strong>) or various tested shikimate-pathway intermediates, suggesting either insufficient uptake, incorrect supplementation regime, or additional physiological constraints in the mutants (the authors note potential confounding effects of the antibiotic resistance cassette used for disruption). (penney2012characterizingthebiological pages 79-82, penney2012characterizingthebiological pages 68-74)</p>
+<p>The aroE knockout also reportedly <strong>abolished a characteristic UV fluorescence phenotype</strong> observed for KT2440 grown on King B medium (qualitative phenotype change). (penney2012characterizingthebiological pages 68-74)</p>
+<h2 id="4-cellular-localization">4. Cellular localization</h2>
+<p>Across the retrieved evidence set, <strong>no direct experimental subcellular localization measurement</strong> (e.g., fractionation, microscopy with tagged AroE, or proteomics localization calls) was identified for <strong>PP_3002/Q88IJ7 AroE</strong>. Therefore, this report does not assert a specific experimentally validated localization for the KT2440 enzyme beyond its expected intracellular metabolic role. (penney2012characterizingthebiological pages 86-91)</p>
+<h2 id="5-pathway-context-and-network-integration-in-pseudomonas">5. Pathway context and network integration in <em>Pseudomonas</em></h2>
+<h3 id="51-aroe-is-embedded-in-core-aromatic-precursor-supply">5.1 aroE is embedded in core aromatic precursor supply</h3>
+<p>The shikimate pathway supplies chorismate, which is then partitioned toward aromatic amino acids and other chorismate-derived metabolites. AroE lies at the DHS→shikimate step that is required to reach shikimate-3-phosphate, EPSP, and ultimately chorismate. (shende2024theshikimatepathway pages 8-10, shende2024theshikimatepathway pages 10-11)</p>
+<p>In <em>Pseudomonas</em> systems used for aromatic chemical production, pathway flux and precursor availability (PEP/E4P and downstream shikimate intermediates) are recurring bottlenecks—supporting the practical importance of maintaining efficient SDH/AroE function during growth and production. (godoy2024biosynthesisoffragrance pages 5-7)</p>
+<h3 id="52-transcriptomics-context-that-supports-gene-identity-and-pathway-regulation">5.2 Transcriptomics context that supports gene identity and pathway regulation</h3>
+<p>A KT2440-based microarray study lists both <strong>PP0074 (aroE-1)</strong> and <strong>PP3002 (aroE-2)</strong> among genes associated with early aromatic amino acid biosynthesis steps, reinforcing that KT2440 contains multiple aroE-like loci and supporting correct mapping of PP_3002 to the aroE-2 locus. (wierckx2008transcriptomeanalysisof pages 2-3)</p>
+<h2 id="6-recent-developments-prioritizing-20232024">6. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="61-2024-repurposing-shikimate-pathway-flux-for-catabolism-conceptual-advance">6.1 2024: Repurposing shikimate pathway flux for catabolism (conceptual advance)</h3>
+<p>A 2024 bioRxiv preprint reports a “<strong>shikimate pathway-dependent catabolism (SDC)</strong>” concept in <em>P. putida</em>, in which metabolic design and adaptive laboratory evolution are used to push carbon catabolism toward the shikimate pathway and a chorismate-cleaving pyruvate-releasing reaction. Flux balance analysis (FBA) comparisons show that when <strong>chorismate pyruvate lyase (CHRPL)</strong> is the sole pyruvate source, the predicted growth rate is <strong>17.8% lower than wild type</strong> but <strong>26.1% faster</strong> than other shikimate-derived pyruvate-releasing reactions considered. The preprint also reports FBA-based energetic comparisons: native metabolism yields <strong>1 mol pyruvate and 3.75 mol ATP per mol glycerol</strong>, whereas SDC yields <strong>0.55 mol pyruvate and 0.23 mol ATP per mol glycerol</strong> (illustrating the energetic cost of forcing catabolism through shikimate intermediates). (bruinsma2024shikimatepathwaydependentcatabolism pages 4-6)</p>
+<p><em>Relevance to aroE:</em> while not measuring AroE directly, this work underscores that large changes in flux through the shikimate pathway must account for NADPH/ATP requirements and regulatory constraints, in which AroE is a central NADPH-coupled step. (bruinsma2024shikimatepathwaydependentcatabolism pages 4-6, shende2024theshikimatepathway pages 8-10)</p>
+<h3 id="62-2024-aromatic-product-formation-and-shikimate-pathway-bottlenecks-in-pseudomonas">6.2 2024: Aromatic product formation and shikimate-pathway bottlenecks in <em>Pseudomonas</em></h3>
+<p>A 2024 study on <strong>2-phenylethanol (2-PE)</strong> production in <em>Pseudomonas putida</em> DOT-T1E-derived strains reports that limited availability of shikimate-pathway precursors (e.g., PEP availability) constrains aromatic amino-acid derived production, and it also reports diversion of shikimate toward a <strong>dead-end 3-hydroxyshikimate</strong> in the engineered context. Reported titers include production levels around <strong>82–110 mg/L 2-PE</strong> in assays using 2G lignocellulosic hydrolysates and <strong>10.5–84.1 mg/L</strong> in corn syrup-based assays; the text also reports molar yields in the range <strong>8.6–11.1%</strong> (glucose utilization basis) in hydrolysate experiments. (godoy2024biosynthesisoffragrance pages 5-7)</p>
+<p><em>Relevance to aroE:</em> diversion and dead-end shikimate derivatives highlight that controlling the DHS↔shikimate node and downstream processing can materially affect yields of chorismate-derived end products. (godoy2024biosynthesisoffragrance pages 5-7, shende2024theshikimatepathway pages 8-10)</p>
+<h3 id="63-2024-authoritative-synthesis-of-pathway-derived-metabolic-diversity">6.3 2024: Authoritative synthesis of pathway-derived metabolic diversity</h3>
+<p>A 2024 peer-reviewed Natural Product Reports review (“The shikimate pathway: gateway to metabolic diversity”) frames how intermediates across the seven-step pathway are repeatedly “poached” into specialized metabolism. It explicitly states that <strong>DHS is a direct precursor to gallic acid</strong> and provides an example where a <strong>shikimate dehydrogenase</strong> was shown to catalyze formation of both <strong>shikimate and gallic acid</strong> in a plant context, illustrating how SDH-like enzymes can be repurposed beyond canonical shikimate production. (shende2024theshikimatepathway pages 6-8)</p>
+<h3 id="64-2023-kt2440-engineering-example-linked-to-shikimate-derived-aromatics">6.4 2023: KT2440 engineering example linked to shikimate-derived aromatics</h3>
+<p>A 2023 KT2440 metabolic engineering study aimed at reversing gallic acid metabolism reports production of <strong>346.7 ± 0.004 mg/L gallic acid after 72 h</strong>, emphasizing that KT2440’s aromatic metabolism can be rewired to produce shikimate-derived aromatic products from low-cost substrates (glycerol). (penney2012characterizingthebiological pages 68-74)</p>
+<h2 id="7-current-applications-and-real-world-implementations-with-quantitative-outcomes">7. Current applications and real-world implementations (with quantitative outcomes)</h2>
+<h3 id="71-industrial-biotechnology-aromatic-precursors-and-fine-chemicals">7.1 Industrial biotechnology: aromatic precursors and fine chemicals</h3>
+<p>Shikimate pathway engineering is widely used to produce aromatic building blocks and aromatic amino acid derivatives; in <em>P. putida</em> KT2440 specifically, engineered strains can produce aromatic intermediates such as anthranilate.</p>
+<p>A KT2440 anthranilate production study reports:<br />
+- Under optimized shake-flask conditions: <strong>0.25 ± 0.004 g/L (1.83 mM) anthranilate</strong> from glucose. (kuepper2015metabolicengineeringof pages 5-6)<br />
+- In tryptophan-limited fed-batch bioreactors: up to <strong>1.54 ± 0.3 g/L anthranilate</strong> from glucose as the sole carbon source. (kuepper2015metabolicengineeringof pages 5-6)</p>
+<p>Although this work focuses on upstream control points (e.g., feedback-resistant DAHP synthase AroG and anthranilate synthase), it depends on robust flux through the shikimate pathway segment containing <strong>AroE</strong>. (kuepper2015metabolicengineeringof pages 5-6, shende2024theshikimatepathway pages 8-10)</p>
+<h3 id="72-sustainable-biorefineries-from-waste-streams">7.2 Sustainable biorefineries from waste streams</h3>
+<p>The 2024 2-PE study demonstrates practical production from lignocellulosic hydrolysates (corn stover/sugarcane straw hydrolysates) with measured titers and yields, highlighting realistic substrate contexts and indicating that shikimate-pathway precursor availability (PEP/E4P constraints) remains a key lever for industrial performance. (godoy2024biosynthesisoffragrance pages 5-7)</p>
+<h3 id="73-emerging-chassis-concepts-growth-coupled-designs">7.3 Emerging chassis concepts (growth-coupled designs)</h3>
+<p>The 2024 SDC preprint proposes a chassis-level redesign where growth is coupled to chorismate-derived pyruvate release. This is a conceptually significant “real-world implementable” direction because it integrates modeling, genome engineering, and adaptive evolution to enforce flux through the shikimate pathway. (bruinsma2024shikimatepathwaydependentcatabolism pages 4-6)</p>
+<h2 id="8-expert-analysis-authoritative-perspectives-and-implications-for-annotation">8. Expert analysis (authoritative perspectives and implications for annotation)</h2>
+<ol>
+<li><strong>Primary molecular function is well supported:</strong> multiple sources converge that AroE/SDH is an NADP(H)-coupled enzyme catalyzing DHS↔shikimate and that AroE-class SDHs are selective for DHS and NADPH. (shende2024theshikimatepathway pages 8-10, penney2012characterizingthebiological pages 18-23)</li>
+<li><strong>Physiological necessity in KT2440 minimal growth:</strong> aroE disruption in KT2440 produces a strong minimal-medium growth defect, consistent with failure to synthesize essential aromatic metabolites de novo. (penney2012characterizingthebiological pages 68-74, penney2012characterizingthebiological pages 79-82)</li>
+<li><strong>Cofactor economy is central in engineering contexts:</strong> 2024 work that forces catabolism through shikimate intermediates quantifies an ATP/NADPH burden in silico, reinforcing that AroE’s NADPH dependence is not merely biochemical detail—it can become a system-level constraint. (bruinsma2024shikimatepathwaydependentcatabolism pages 4-6, shende2024theshikimatepathway pages 8-10)</li>
+<li><strong>Functional ambiguity across homologs is a known issue in Pseudomonas:</strong> KT2440 contains multiple SDH-like proteins with distinct substrate/cofactor preferences, so careful locus mapping (PP_3002/aroE-2) is necessary when interpreting “aroE” claims from genome-wide studies. (wierckx2008transcriptomeanalysisof pages 2-3, shende2024theshikimatepathway pages 8-10)</li>
+</ol>
+<h2 id="9-key-statistics-and-data-summary-selected">9. Key statistics and data summary (selected)</h2>
+<ul>
+<li><strong>KT2440 aroE KO growth defect (LB):</strong> lag phase ~<strong>4.5 h longer</strong> than WT; OD600 examples: <strong>WT 1.467 vs KO 1.079 (15 h)</strong>. (penney2012characterizingthebiological pages 68-74)</li>
+<li><strong>KT2440 aroE KO (minimal medium):</strong> <strong>no growth</strong> on succinate minimal medium (PMM) in the reported assays. (penney2012characterizingthebiological pages 68-74)</li>
+<li><strong>AroE kinetics (Pseudomonas):</strong> <strong>kcat 307 ± 7 s−1</strong>, <strong>KM 178 ± 14 μM</strong>. (prezioso2017identifyingthefunctions pages 22-30)</li>
+<li><strong>KT2440 anthranilate titers:</strong> <strong>0.25 ± 0.004 g/L</strong> (shake flask) and up to <strong>1.54 ± 0.3 g/L</strong> (fed-batch). (kuepper2015metabolicengineeringof pages 5-6)</li>
+<li><strong>2024 2-PE from hydrolysates:</strong> <strong>82–110 mg/L</strong>, with reported molar yields <strong>~8.6–11.1%</strong> (glucose utilization basis). (godoy2024biosynthesisoffragrance pages 5-7)</li>
+<li><strong>2024 SDC FBA energetics:</strong> native <strong>1 pyruvate + 3.75 ATP / glycerol</strong> vs SDC <strong>0.55 pyruvate + 0.23 ATP / glycerol</strong>. (bruinsma2024shikimatepathwaydependentcatabolism pages 4-6)</li>
+</ul>
+<h2 id="evidence-map-table">Evidence map table</h2>
+<p>The following table consolidates key identity, function, phenotype, and application evidence (including URLs and quantitative data where available):</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key finding</th>
+<th>Organism/strain</th>
+<th>Evidence type</th>
+<th>Quantitative data</th>
+<th>Citation ID</th>
+<th>Publication year</th>
+<th>URL (if in text)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verified identity</td>
+<td>PP_3002 is explicitly labeled as an aroE-2 locus in a KT2440-derived transcriptomics study, supporting assignment of the target as the P. putida KT2440 aroE/shikimate dehydrogenase distinct from aroE-1/other homologs</td>
+<td><em>Pseudomonas putida</em> KT2440 / S12 comparative context</td>
+<td>Genome annotation / transcriptomics context</td>
+<td>Locus noted as PP3002 (aroE-2)</td>
+<td>(wierckx2008transcriptomeanalysisof pages 2-3)</td>
+<td>2008</td>
+<td>https://doi.org/10.1128/JB.01379-07</td>
+</tr>
+<tr>
+<td>Enzyme function</td>
+<td>AroE is the archetypal shikimate dehydrogenase catalyzing the reversible NADP-dependent interconversion of 3-dehydroshikimate and shikimate in the shikimate pathway for aromatic amino acid biosynthesis</td>
+<td><em>Pseudomonas putida</em> KT2440 (family-level functional assignment with KT2440 homolog context)</td>
+<td>Biochemical/functional characterization summary</td>
+<td>Cofactor preference: NADPH/NADP+; substrate: shikimate/3-dehydroshikimate</td>
+<td>(penney2012characterizingthebiological pages 18-23, penney2012characterizingthebiological pages 23-27)</td>
+<td>2012</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>The shikimate pathway supplies chorismate and downstream aromatic amino acids; engineering studies in <em>P. putida</em> treat SDH/AroE as part of the central route controlling flux to anthranilate and other aromatics</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>Pathway mapping / metabolic engineering</td>
+<td>Not directly quantified for AroE in this row</td>
+<td>(kuepper2015metabolicengineeringof pages 5-6, bruinsma2024shikimatepathwaydependentcatabolism pages 4-6)</td>
+<td>2015, 2024</td>
+<td>https://doi.org/10.3389/fmicb.2015.01310; https://doi.org/10.1101/2024.07.06.602327</td>
+</tr>
+<tr>
+<td>aroE knockout phenotype</td>
+<td>KT2440 aroE knockout grows in rich LB but with impaired growth and delayed lag; fails to grow on succinate minimal medium, indicating AroE is required under minimal conditions</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>Gene knockout phenotype</td>
+<td>Lag extended by ~4.5 h; example OD600 after 15 h WT 1.467 vs aroE KO 1.079; other examples WT 2.431 vs KO 1.608 and WT 2.514 vs KO 1.748</td>
+<td>(penney2012characterizingthebiological pages 68-74)</td>
+<td>2012</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Rescue/supplementation tests</td>
+<td>Growth defect of aroE knockout was not rescued by single aromatic amino acids or tested shikimate-pathway intermediates in initial experiments</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>Nutritional rescue experiments</td>
+<td>No rescue with Trp, Phe, Tyr or tested intermediates under stated conditions</td>
+<td>(penney2012characterizingthebiological pages 68-74, penney2012characterizingthebiological pages 79-82)</td>
+<td>2012</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Additional phenotype</td>
+<td>aroE knockout lost characteristic WT UV fluorescence on King B medium, implying broader physiological consequences of disrupting this shikimate-pathway step</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>Phenotypic observation</td>
+<td>Qualitative loss of 365 nm fluorescence</td>
+<td>(penney2012characterizingthebiological pages 68-74)</td>
+<td>2012</td>
+<td>—</td>
+</tr>
+<tr>
+<td>2023 applied context</td>
+<td>KT2440 was engineered to reverse gallic acid metabolism and produce gallic acid from glycerol via a synthetic operon linked to shikimate-pathway precursors</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>Metabolic engineering application</td>
+<td>346.7 ± 0.004 mg L−1 gallic acid after 72 h</td>
+<td>(penney2012characterizingthebiological pages 68-74)</td>
+<td>2023</td>
+<td>https://doi.org/10.1007/s10123-022-00282-5</td>
+</tr>
+<tr>
+<td>2024 applied context</td>
+<td>A new-to-nature shikimate pathway-dependent catabolism (SDC) in <em>P. putida</em> rerouted catabolism through chorismate-linked pyruvate release, highlighting the strategic importance of shikimate-pathway flux</td>
+<td><em>Pseudomonas putida</em></td>
+<td>Metabolic modeling + engineering preprint</td>
+<td>CHRPL-as-sole-pyruvate-source predicted growth rate 17.8% below WT and 26.1% faster than other shikimate-derived pyruvate-releasing reactions; native metabolism 1 mol pyruvate and 3.75 mol ATP per mol glycerol vs SDC 0.55 mol pyruvate and 0.23 mol ATP</td>
+<td>(bruinsma2024shikimatepathwaydependentcatabolism pages 4-6)</td>
+<td>2024</td>
+<td>https://doi.org/10.1101/2024.07.06.602327</td>
+</tr>
+<tr>
+<td>2024 product application</td>
+<td>In a <em>Pseudomonas</em> aromatic-production study, limited shikimate-pathway precursor availability and diversion of shikimate toward dead-end 3-hydroxyshikimate were identified as barriers during 2-phenylethanol production</td>
+<td><em>Pseudomonas putida</em> DOT-T1E-derived strains</td>
+<td>Metabolic engineering / process study</td>
+<td>2-PE up to ~120 ppm in engineered overproducer; 82–110 mg L−1 from 2G hydrolysates; 10.5–84.1 mg L−1 from corn syrup-derived assays</td>
+<td>(godoy2024biosynthesisoffragrance pages 5-7)</td>
+<td>2024</td>
+<td>https://doi.org/10.1186/s13068-024-02498-1</td>
+</tr>
+<tr>
+<td>2015 product application</td>
+<td>KT2440 anthranilate production was improved by manipulating upstream shikimate-pathway control (feedback-insensitive AroG plus TrpES40FG), illustrating practical use of flux through the AroE-containing pathway</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>Metabolic engineering / bioreactor study</td>
+<td>0.25 ± 0.004 g L−1 anthranilate in optimized shake flasks; up to 1.54 ± 0.3 g L−1 in tryptophan-limited fed-batch; alternative feed gave 1.0 ± 0.07 g L−1</td>
+<td>(kuepper2015metabolicengineeringof pages 5-6)</td>
+<td>2015</td>
+<td>https://doi.org/10.3389/fmicb.2015.01310</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes identity verification, core enzymatic function, KT2440-specific knockout phenotypes, and recent applied shikimate-pathway contexts relevant to aroE/PP_3002. It is useful as a compact evidence map separating direct gene-specific findings from broader pathway-engineering studies in Pseudomonas.</em></p>
+<h2 id="references-urls-and-publication-dates-where-available">References (URLs and publication dates where available)</h2>
+<ul>
+<li>Shende VV, Bauman KD, Moore BS. <strong>The shikimate pathway: gateway to metabolic diversity.</strong> <em>Nat Prod Rep.</em> <strong>Jan 2024</strong>. https://doi.org/10.1039/d3np00037k (shende2024theshikimatepathway pages 3-4, shende2024theshikimatepathway pages 8-10, shende2024theshikimatepathway pages 10-11, shende2024theshikimatepathway pages 6-8)</li>
+<li>Bruinsma L, et al. <strong>Shikimate pathway-dependent catabolism (SDC) preprint.</strong> <em>bioRxiv</em> posted <strong>Jul 7, 2024</strong>. https://doi.org/10.1101/2024.07.06.602327 (bruinsma2024shikimatepathwaydependentcatabolism pages 4-6)</li>
+<li>Godoy P, et al. <strong>Biosynthesis of fragrance 2-phenylethanol from sugars by Pseudomonas putida.</strong> <em>Biotechnol Biofuels Bioprod.</em> <strong>Apr 2024</strong>. https://doi.org/10.1186/s13068-024-02498-1 (godoy2024biosynthesisoffragrance pages 5-7)</li>
+<li>Kuepper J, et al. <strong>Metabolic Engineering of Pseudomonas putida KT2440 to Produce Anthranilate from Glucose.</strong> <em>Front Microbiol.</em> <strong>Nov 2015</strong>. https://doi.org/10.3389/fmicb.2015.01310 (kuepper2015metabolicengineeringof pages 5-6)</li>
+<li>Wierckx NJP, et al. <strong>Transcriptome analysis of a phenol-producing Pseudomonas putida construct.</strong> <em>J Bacteriol.</em> <strong>Apr 2008</strong>. https://doi.org/10.1128/JB.01379-07 (wierckx2008transcriptomeanalysisof pages 2-3)</li>
+</ul>
+<h2 id="notes-on-evidence-limitations">Notes on evidence limitations</h2>
+<ul>
+<li><strong>Localization:</strong> no direct localization experiment for AroE (PP_3002/Q88IJ7) was found in the retrieved full texts; localization therefore remains an evidence gap in this report. (penney2012characterizingthebiological pages 86-91)</li>
+<li><strong>KT2440-specific enzyme kinetics:</strong> the retrieved kinetic values are reported for “Pseudomonas AroE” in the SDH-homolog literature and support AroE function; however, the evidence provided here does not explicitly label those kinetics as PP_3002-derived enzyme preparation. (prezioso2017identifyingthefunctions pages 22-30)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(wierckx2008transcriptomeanalysisof pages 2-3): Nick J. P. Wierckx, Hendrik Ballerstedt, Jan A. M. de Bont, Johannes H. de Winde, Harald J. Ruijssenaars, and Jan Wery. Transcriptome analysis of a phenol-producing <i>pseudomonas putida</i> s12 construct: genetic and physiological basis for improved production. Journal of Bacteriology, 190:2822-2830, Apr 2008. URL: https://doi.org/10.1128/jb.01379-07, doi:10.1128/jb.01379-07. This article has 70 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shende2024theshikimatepathway pages 3-4): Vikram V. Shende, Katherine D. Bauman, and Bradley S. Moore. The shikimate pathway: gateway to metabolic diversity. Natural product reports, 41:604-648, Jan 2024. URL: https://doi.org/10.1039/d3np00037k, doi:10.1039/d3np00037k. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shende2024theshikimatepathway pages 8-10): Vikram V. Shende, Katherine D. Bauman, and Bradley S. Moore. The shikimate pathway: gateway to metabolic diversity. Natural product reports, 41:604-648, Jan 2024. URL: https://doi.org/10.1039/d3np00037k, doi:10.1039/d3np00037k. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penney2012characterizingthebiological pages 23-27): K Penney. Characterizing the biological functions of five shikimate dehydrogenase homologs enzymes in pseudomonas putida kt2440. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(penney2012characterizingthebiological pages 18-23): K Penney. Characterizing the biological functions of five shikimate dehydrogenase homologs enzymes in pseudomonas putida kt2440. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(penney2012characterizingthebiologicala pages 6-14): K Penney. Characterizing the biological functions of five shikimate dehydrogenase homologs enzymes in pseudomonas putida kt2440. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(shende2024theshikimatepathway pages 10-11): Vikram V. Shende, Katherine D. Bauman, and Bradley S. Moore. The shikimate pathway: gateway to metabolic diversity. Natural product reports, 41:604-648, Jan 2024. URL: https://doi.org/10.1039/d3np00037k, doi:10.1039/d3np00037k. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(prezioso2017identifyingthefunctions pages 22-30): SM Prezioso. Identifying the functions and regulatory mechanisms of shikimate dehydrogenase homologs in bacteria. Unknown journal, 2017.</p>
+</li>
+<li>
+<p>(penney2012characterizingthebiological pages 68-74): K Penney. Characterizing the biological functions of five shikimate dehydrogenase homologs enzymes in pseudomonas putida kt2440. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(penney2012characterizingthebiological pages 79-82): K Penney. Characterizing the biological functions of five shikimate dehydrogenase homologs enzymes in pseudomonas putida kt2440. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(penney2012characterizingthebiological pages 86-91): K Penney. Characterizing the biological functions of five shikimate dehydrogenase homologs enzymes in pseudomonas putida kt2440. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(godoy2024biosynthesisoffragrance pages 5-7): Patricia Godoy, Zulema Udaondo, Estrella Duque, and Juan L. Ramos. Biosynthesis of fragrance 2-phenylethanol from sugars by pseudomonas putida. Biotechnology for Biofuels and Bioproducts, Apr 2024. URL: https://doi.org/10.1186/s13068-024-02498-1, doi:10.1186/s13068-024-02498-1. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bruinsma2024shikimatepathwaydependentcatabolism pages 4-6): Lyon Bruinsma, Christos Batianis, Sara Moreno Paz, Kesi Kurnia, Job. J Dirkmaat, Alexandra Müller, Jose Juncosa Nunez, Ruud A. Weusthuis, and Vitor A. P. Martins dos Santos. Shikimate pathway-dependent catabolism: enabling near-to-maximum production yield of aromatics. BioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.06.602327, doi:10.1101/2024.07.06.602327. This article has 0 citations.</p>
+</li>
+<li>
+<p>(shende2024theshikimatepathway pages 6-8): Vikram V. Shende, Katherine D. Bauman, and Bradley S. Moore. The shikimate pathway: gateway to metabolic diversity. Natural product reports, 41:604-648, Jan 2024. URL: https://doi.org/10.1039/d3np00037k, doi:10.1039/d3np00037k. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuepper2015metabolicengineeringof pages 5-6): Jannis Kuepper, Jasmin Dickler, Michael Biggel, Swantje Behnken, Gernot Jäger, Nick Wierckx, and Lars M. Blank. Metabolic engineering of pseudomonas putida kt2440 to produce anthranilate from glucose. Frontiers in Microbiology, Nov 2015. URL: https://doi.org/10.3389/fmicb.2015.01310, doi:10.3389/fmicb.2015.01310. This article has 66 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="aroE-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>wierckx2008transcriptomeanalysisof pages 2-3</li>
+<li>shende2024theshikimatepathway pages 3-4</li>
+<li>shende2024theshikimatepathway pages 8-10</li>
+<li>penney2012characterizingthebiologicala pages 6-14</li>
+<li>shende2024theshikimatepathway pages 10-11</li>
+<li>prezioso2017identifyingthefunctions pages 22-30</li>
+<li>penney2012characterizingthebiological pages 68-74</li>
+<li>penney2012characterizingthebiological pages 86-91</li>
+<li>godoy2024biosynthesisoffragrance pages 5-7</li>
+<li>bruinsma2024shikimatepathwaydependentcatabolism pages 4-6</li>
+<li>shende2024theshikimatepathway pages 6-8</li>
+<li>kuepper2015metabolicengineeringof pages 5-6</li>
+<li>penney2012characterizingthebiological pages 23-27</li>
+<li>penney2012characterizingthebiological pages 18-23</li>
+<li>penney2012characterizingthebiological pages 79-82</li>
+<li>https://doi.org/10.1128/JB.01379-07</li>
+<li>https://doi.org/10.3389/fmicb.2015.01310;</li>
+<li>https://doi.org/10.1101/2024.07.06.602327</li>
+<li>https://doi.org/10.1007/s10123-022-00282-5</li>
+<li>https://doi.org/10.1186/s13068-024-02498-1</li>
+<li>https://doi.org/10.3389/fmicb.2015.01310</li>
+<li>https://doi.org/10.1039/d3np00037k</li>
+<li>https://doi.org/10.1128/jb.01379-07,</li>
+<li>https://doi.org/10.1039/d3np00037k,</li>
+<li>https://doi.org/10.1186/s13068-024-02498-1,</li>
+<li>https://doi.org/10.1101/2024.07.06.602327,</li>
+<li>https://doi.org/10.3389/fmicb.2015.01310,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88IJ7
+gene_symbol: aroE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: aroE (locus PP_3002) encodes shikimate dehydrogenase (SDH; EC 1.1.1.25), a soluble, NADP(H)-dependent oxidoreductase that catalyzes the reversible reduction of 3-dehydroshikimate to shikimate, the fourth step of the seven-step shikimate pathway. The shikimate pathway converts phosphoenolpyruvate and D-erythrose 4-phosphate into chorismate, the common precursor of the aromatic amino acids (phenylalanine, tyrosine, tryptophan) and other aromatic metabolites such as folate and ubiquinone. As an AroE-class shikimate dehydrogenase the enzyme is selective for 3-dehydroshikimate as substrate and NADP(H) as cofactor, and it functions as a homodimer. Its catalytic core comprises an N-terminal substrate-binding (Rossmann-like) domain and a C-terminal NADP-binding domain; a crystal structure of the P. putida KT2440 enzyme has been solved (PDB 3PWZ). The enzyme acts in the cytosol and is required for de novo biosynthesis of aromatic amino acids; in P. putida KT2440 there are additional shikimate dehydrogenase homologs, but PP_3002 (aroE-2) represents the canonical AroE of the shikimate pathway.
+existing_annotations:
+- term:
+    id: GO:0004764
+    label: shikimate 3-dehydrogenase (NADP+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function. AroE catalyzes the NADP(+)-dependent reversible oxidoreduction of shikimate / 3-dehydroshikimate (EC 1.1.1.25, RHEA:17737), as captured by UniProt, the HAMAP rule MF_00222, and the solved crystal structure (PDB 3PWZ).
+    action: ACCEPT
+    reason: Directly supported by the conserved shikimate dehydrogenase family assignment, UniProt catalytic-activity record, the EC/Rhea mapping, and an experimentally determined structure of the KT2440 enzyme. This is the defining activity of the gene product.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: AroE is a soluble cytosolic metabolic enzyme with no signal peptide or transmembrane region; cytosolic localization is consistent with its role in the central shikimate pathway.
+    action: ACCEPT
+    reason: Appropriate compartment for a soluble biosynthetic dehydrogenase; consistent with the TreeGrafter inference and with the absence of membrane-targeting or secretion signals in the sequence.
+- term:
+    id: GO:0009423
+    label: chorismate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: AroE performs step 4 of 7 in chorismate biosynthesis from D-erythrose 4-phosphate and phosphoenolpyruvate (UniProt PATHWAY; UniPathway UPA00053/UER00087), so participation in chorismate biosynthesis is a core biological process.
+    action: ACCEPT
+    reason: The reduction of 3-dehydroshikimate to shikimate is an obligate intermediate step on the route to chorismate; well supported and represents a core function.
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: A high-level parent of the specific activity GO:0004764 (shikimate 3-dehydrogenase (NADP+) activity), which is already annotated. It is not incorrect but is uninformative given the more precise child term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Redundant general grouping term; the specific molecular function (GO:0004764) is already present and should be retained as the informative annotation.
+- term:
+    id: GO:0019632
+    label: shikimate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: AroE produces shikimate (and acts on it reversibly), so it participates in shikimate metabolism. This is accurate but more general than, and subsumed by, the chorismate biosynthetic process annotation that better captures the gene&#39;s pathway role.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but broader/less specific than the chorismate biosynthesis annotation; retained as a valid non-core process term.
+- term:
+    id: GO:0050661
+    label: NADP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: AroE binds NADP(H) as its redox cofactor; the UniProt record and the crystal structure identify multiple NADP(+)-binding residues in the C-terminal Rossmann-like domain.
+    action: ACCEPT
+    reason: Cofactor binding is well supported by the family assignment, the annotated NADP-binding residues, and the structure; complements the catalytic activity annotation.
+core_functions:
+- description: NADP(+)-dependent shikimate dehydrogenase catalyzing the reversible reduction of 3-dehydroshikimate to shikimate, the fourth step of the shikimate pathway leading to chorismate and aromatic amino acid biosynthesis.
+  supported_by:
+  - reference_id: PMID:21846128
+    supporting_text: Structural and mechanistic analysis of the P. putida KT2440 shikimate dehydrogenase (PDB 3PWZ), establishing the conserved catalytic mechanism of the shikimate dehydrogenase family.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0004764
+    label: shikimate 3-dehydrogenase (NADP+) activity
+  directly_involved_in:
+  - id: GO:0009423
+    label: chorismate biosynthetic process
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:21846128
+  title: &#39;Structural and mechanistic analysis of a novel class of shikimate dehydrogenases: evidence for a conserved catalytic mechanism in the shikimate dehydrogenase family.&#39;
+  findings:
+  - statement: Reports the X-ray crystal structure (1.71 A, PDB 3PWZ) of the P. putida KT2440 shikimate dehydrogenase (Q88IJ7) and analyzes its catalytic mechanism, confirming it is a bona fide AroE-class shikimate dehydrogenase.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: UniProt cross-references PDB 3PWZ to Q88IJ7 (this exact protein) and cites PubMed 21846128 as the structure reference; the structure directly establishes the shikimate dehydrogenase fold and mechanism for this gene product.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.
+  findings:
+  - statement: Genome sequence of P. putida KT2440 in which the aroE/PP_3002 locus (AAN68610) was identified and annotated.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Source genome reference for the locus; provides gene identification context rather than direct functional characterization.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

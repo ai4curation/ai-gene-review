@@ -1,11 +1,13 @@
 ---
 title: Human Proteostasis Network
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
-status: SCOPING
 priority: high
 scope: Full Proteostasis Consortium workbook and manuscripts; unfolded protein binding is a sub-use case
 sidecars:
   priority_genes: PROTEOSTASIS/priority_genes.tsv
+  review_batches: PROTEOSTASIS/review_batches.tsv
   mapping_sets_dir: PROTEOSTASIS/mappings
   tests_dir: PROTEOSTASIS/tests
   reports_dir: PROTEOSTASIS/reports
@@ -20,6 +22,78 @@ external_sources:
   - Survey of the Human PN MS1 Translation Folding Transport
   - Survey of the Human PN MS2 ALP
   - Survey of the Human PN MS3 UPS
+review_batches:
+  - id: proteostasis-pr-1217
+    title: "[codex] Review proteostasis network genes"
+    source_pr: 1217
+    source_pr_url: "https://github.com/ai4curation/ai-gene-review/pull/1217"
+    merged_at: "2026-06-02T19:59:17Z"
+    species: human
+    gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+  - id: proteostasis-batch-2026-06-03
+    title: "Proteostasis PN projected candidate additions batch 2"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+  - id: proteostasis-batch-2026-06-06
+    title: "Proteostasis PN candidate additions batch 3 (V-ATPase, ER folding/QC, autophagy receptors, co-chaperone/UPS)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 20
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch3_selection_notes.md
+  - id: proteostasis-batch-2026-06-07
+    title: "Proteostasis PN candidate additions batch 4 (V-ATPase tissue isoforms + ClC-7, mito/ER chaperones, collagen biogenesis, histone chaperones, CRL/UPS adaptors, CK2/CK1)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 30
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch4_selection_notes.md
+  - id: proteostasis-batch-2026-06-07b
+    title: "Proteostasis PN candidate additions batch 5 (protein-folding chaperone & co-chaperone network: DNAJ/HSP40 family, small HSPs, HSP70/HSP90 hub co-chaperones, FKBP immunophilins, ER oxidative folding/PPIases)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch5_selection_notes.md
+  - id: proteostasis-batch-2026-06-07c
+    title: "Proteostasis PN candidate additions batch 6 (co-translational quality control: ribosome-associated QC & ribosome rescue, UFMylation, NMD surveillance, nascent-chain N-terminal acetylation)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch6_selection_notes.md
+  - id: proteostasis-batch-2026-06-11
+    title: "Proteostasis PN candidate additions batch 7 (ER protein biogenesis & ERAD: SRP/translocon/signal peptidase, EMC & GET membrane-protein insertion, ER glycoprotein-folding QC mannosidases/lectins, collagen prolyl hydroxylases & ER thioredoxins, ERAD ubiquitin machinery)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch7_selection_notes.md
+  - id: proteostasis-batch-2026-06-13
+    title: "Proteostasis PN candidate additions batch 8 (UPS branch: Cullin-RING ligase substrate-recognition & assembly modules — F-box SCF/CRL1 substrate receptors FBXL/FBXW/FBXO incl. lectin F-box ERAD subfamily and APC/C-inhibitor F-box members, plus CRL4 core DDB1/DDB2/DDA1/DTL and CRL assembly regulators CAND2/GLMN)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch8_selection_notes.md
+  - id: proteostasis-batch-2026-06-14
+    title: "Proteostasis PN candidate additions batch 9 (ALP branch: selective autophagy cargo recognition — SQSTM1/NBR1/OPTN/CCDC50/NUFIP1/RETREG2 receptors, TBK1/AZI2/TANK activation axis, TRIM5/13/16/17, ubiquitin-tagging E3s SIAH1/RNF41/RNF166/LRSAM1, plus MEFV/NLRX1/MAP1S)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 20
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch9_selection_notes.md
 ---
 # Human Proteostasis Network Project
 
@@ -66,6 +140,7 @@ Within this project:
 See:
 
 - [Priority genes](PROTEOSTASIS/priority_genes.tsv)
+- [Reviewed gene batches](PROTEOSTASIS/review_batches.tsv)
 - [PN tree browser](PROTEOSTASIS/pn.html)
 - [ALP mapping set](PROTEOSTASIS/mappings/autophagy_lysosome_pathway.yaml)
 - [Chaperone mapping set](PROTEOSTASIS/mappings/chaperone_systems.yaml)
@@ -87,6 +162,137 @@ See:
 - [Ribosome Quality Control project](RIBOSOME_QUALITY_CONTROL.md)
 - [Integrated Stress Response project](INTEGRATED_STRESS_RESPONSE.md)
 - [ER-phagy project](ER_PHAGY.md)
+
+## Gene Review Tracking
+
+The most recent PN review batch is
+[`#1217`](https://github.com/ai4curation/ai-gene-review/pull/1217),
+merged on `2026-06-02`. It reviewed `50` human proteostasis-network genes:
+`49` new review YAMLs plus a refresh of the existing `PIK3C3` review. The
+gene-level metadata for this batch is tracked in
+[review_batches.tsv](PROTEOSTASIS/review_batches.tsv).
+
+The current PN review batch, `proteostasis-batch-2026-06-03`, was selected from
+the projected candidate additions report and has `50` human gene-review PR rows
+in the same sidecar. Merged PRs record `merged_at`; open PRs keep that field
+empty until merged.
+
+Subsequent candidate-addition batches continued the rereview queue:
+`proteostasis-batch-2026-06-06` (`20` genes), `proteostasis-batch-2026-06-07`
+(`30` genes), and `proteostasis-batch-2026-06-07b` (`50` genes — the
+protein-folding chaperone & co-chaperone network: the DNAJ/HSP40 J-domain family,
+small heat-shock proteins, HSP70/HSP90 hub co-chaperones such as STUB1/CHIP,
+STIP1/HOP, SGTA and SERPINH1/HSP47, FKBP immunophilin co-chaperones, and ER
+oxidative-folding/PPIase enzymes including P4HB/PDI, ERO1A/B, ERP27/29 and
+PPIB). The mega-hubs `HSPA5`, `HSP90AA1` and `HSP90AB1` were deliberately
+deferred to dedicated single-gene reviews (50+ GOA terms each). See
+[batch5_selection_notes.md](PROTEOSTASIS/batch5_selection_notes.md).
+
+`proteostasis-batch-2026-06-07c` (`51` reviewed) covers the Translation
+branch's co-translational quality-control machinery: ribosome-associated quality
+control and ribosome rescue (LTN1, NEMF, ZNF598, PELO/HBS1L, GTPBP1/2, the
+makorin and RNF14/RNF25 E3s, GIGYF1/2–4EHP, RACK1, TRIP4, MAP3K20/ZAK, GCN1,
+NPLOC4/UFD1), the UFMylation cascade (UFM1, UBA5, UFC1, UFL1, UFSP1/2, DDRGK1),
+NMD surveillance (UPF1/2/3A/3B), and nascent-chain N-terminal acetylation (HYPK,
+NAA10/15/25/30/35/38/40), plus ribosome recycling (DENR/MCTS1/EIF2D/GTPBP6/
+EEF2K). `HUWE1` and `OGT` were deferred as mega/pleiotropic. The batch totals
+`51` because the `USP21` symbol resolved to the synonym gene `USP25` (also a
+valid ERAD-associated DUB); both were reviewed. See
+[batch6_selection_notes.md](PROTEOSTASIS/batch6_selection_notes.md).
+
+`proteostasis-batch-2026-06-11` (`50` reviewed) covers the **ER proteostasis
+branch**, walking the full ER lifecycle of a secretory/membrane protein:
+co-translational SRP targeting (`SRP9/19/68/72`, `SRPRB`), Sec61-translocon
+association and signal-peptide processing (`SEC62/63`, `SEC11A/C`,
+`SPCS1/2/3`, `SERP1/2`), ER membrane-protein insertion by the EMC
+(`EMC1/2/3/4/6/7/8/9/10`, `MMGT1`/EMC5) and GET/TRC tail-anchor pathway
+(`GET1/3/4`), ER glycoprotein-folding quality control via the ERAD
+mannosidases and cargo lectins (`EDEM1/2/3`, `MAN1B1`, `LMAN1/2`, `LMAN1L`,
+`LMAN2L`), ER oxidative folding and collagen prolyl hydroxylation
+(`P3H1/2`, `P4HA1/2/3`, `TXNDC11/12/16`), and the ERAD ubiquitin machinery and
+membrane cofactors (`RNF5/185/170`, `FAF2`, `UBAC2`, `ERLIN1/2`). All `50`
+review YAMLs validate; across `1347` reviewed annotations the action mix was
+`783` ACCEPT, `476` KEEP_AS_NON_CORE, `75` MARK_AS_OVER_ANNOTATED, `8` REMOVE,
+`3` MODIFY, `1` UNDECIDED, `1` NEW. Notable curation calls: REMOVE of
+pathway-bleed-through IEA terms (`transmembrane transport` / `ER mannose
+trimming` on the RNF5/RNF185 ERAD E3s), REMOVE of an over-propagated IBA serine
+endopeptidase MF on the `UBAC2` rhomboid **pseudoprotease**, MARK_AS_OVER_ANNOTATED
+of `ERLIN2` plasma-membrane and `MMGT1` legacy magnesium-transporter
+annotations, and handling of negated (NOT) historical mannosidase annotations on
+`EDEM1/EDEM2`. A shared caveat flagged for human follow-up: `PMID:23264731`
+(MTR120/KIAA1383 microtubule study) is cited for a `cytoplasmic microtubule`
+IDA on both `SERP1` (removed; full text confirms wrong gene) and `SRPRB`
+(left UNDECIDED where full text was unavailable). The mega-hub ER chaperones
+`HSPA5`/BiP, `HSP90B1`/GRP94, and the `ERN1`/`EIF2AK3` UPR sensors were deferred to
+dedicated reviews. See
+[batch7_selection_notes.md](PROTEOSTASIS/batch7_selection_notes.md).
+
+`proteostasis-batch-2026-06-13` (`50` reviewed) moves into the **Ubiquitin–
+Proteasome System (UPS) branch**, covering the **Cullin–RING ligase (CRL)
+substrate-recognition & assembly modules**: the `44` F-box substrate receptors
+of the SCF/CRL1 complex grouped by recognition module — leucine-rich-repeat
+`FBXL3/5/6/7/8/12/13/14/15/16/17/18/20/22`, WD40 `FBXW2/4/5/7/8/9/10/12`, and
+"other" `FBXO2/5/6/7/8/10/15/16/17/21/22/25/27/30/33/34/36/39/40/41/43/47` — plus
+the CRL4 core/receptors (`DDB1` adaptor scaffold, `DDB2` and `DTL`/CDT2 DCAF
+receptors, `DDA1` stabilizing subunit) and the CRL assembly regulators `CAND2`
+(CAND1 paralog) and `GLMN`/glomulin. All `50` review YAMLs pass schema, term
+(label + verbatim-quote), and best-practices validation; across `1590` reviewed
+annotations the action mix was `649` ACCEPT, `878` KEEP_AS_NON_CORE, `23`
+MARK_AS_OVER_ANNOTATED, `19` MODIFY, `11` NEW, `8` UNDECIDED, `2` REMOVE. The
+dominant curation pattern is the recurring **MODIFY/NEW that replaces a catalytic
+`ubiquitin protein ligase activity` / `ubiquitin-protein transferase activity`
+(IEA/NAS) on an F-box receptor with `GO:1990756 ubiquitin-like ligase-substrate
+adaptor activity`** — catalysis resides in the RBX1 RING, not the F-box adaptor —
+while bare `protein binding` was uniformly kept non-core in favor of the
+substrate-adaptor function. Notable calls: the **lectin/FBA F-box subfamily**
+(`FBXO2/6/17/27`) was framed by carbohydrate/high-mannose-glycan binding feeding
+ERAD/glycoprotein catabolism, but `FBXO17`'s ERAD term was MARK_AS_OVER_ANNOTATED
+because the experimental characterization shows it does **not** bind high-mannose
+glycans (only `FBXO2/FBXO6` do); the non-canonical "F-box" members `FBXO5`/EMI1
+and `FBXO43`/EMI2 were framed as **APC/C inhibitors** (not productive SCF
+receptors), with SCF-receptor IEA/NAS propagations marked non-core/over-annotated;
+`CAND2` and `GLMN` were modeled as CRL **assembly regulators/inhibitors** with no
+catalytic ligase activity assigned (`GLMN` core = `ubiquitin-protein transferase
+inhibitor activity` + RBX1 binding). The `2` REMOVE calls are both clearly-wrong
+IEA over-propagations — `FBXO21` `DNA binding` (a remote YccV/hemimethylated-DNA
+fold match, not a function) and `FBXO43` `cellular response to NGF` (an
+implausible Ensembl ortholog transfer onto a gonad-restricted meiotic APC/C
+inhibitor). The mega/pleiotropic UPS hubs `HUWE1` and `OGT` were left out of
+scope. See [batch8_selection_notes.md](PROTEOSTASIS/batch8_selection_notes.md).
+
+`proteostasis-batch-2026-06-14` (`20` reviewed) moves into the
+**Autophagy–Lysosome Pathway (ALP) branch** — the best-row-level-supported PN
+branch — covering the **selective autophagy cargo-recognition** machinery: the
+core selective autophagy receptors (`SQSTM1`/p62, `NBR1`, `OPTN`, `CCDC50`,
+the ribophagy receptor `NUFIP1`, and the ER-phagy receptor `RETREG2`/FAM134A),
+the TBK1 activation axis that phosphorylates those receptors (`TBK1`, `AZI2`/
+NAP1, `TANK`), the TRIM-family receptors/regulators (`TRIM5`, `TRIM13`,
+`TRIM16`, `TRIM17`), the ubiquitin-tagging E3 ligases that generate the
+autophagy signal (`SIAH1`, `RNF41`/NRDP1, `RNF166`, `LRSAM1`), and the
+selective-autophagy regulators `MEFV`/pyrin, `NLRX1`, and `MAP1S`. All `20`
+review YAMLs pass schema, term (label + verbatim-quote), and best-practices
+validation; across `1222` reviewed annotations the action mix was `690`
+KEEP_AS_NON_CORE, `505` ACCEPT, `19` MARK_AS_OVER_ANNOTATED, `5` NEW, `2`
+UNDECIDED, `1` REMOVE. The dominant curation pattern is the recurring elevation
+of the **selective-autophagy cargo-adaptor/receptor MF** (ubiquitin binding +
+LIR/Atg8 binding) over bare `protein binding`, which was uniformly kept non-core
+(the receptor hubs carry ~70 IPI `protein binding` entries each). Notable calls:
+genuine catalytic RING E3s (SIAH1, RNF41, RNF166, LRSAM1, TRIM5/13/17) kept
+catalytic ligase MF as core, whereas the **RING-less** TRIMs were handled
+conservatively — `TRIM16` ACCEPTed only the experimentally-supported atypical
+B-box autoubiquitination and `MEFV`/pyrin's IBA ubiquitin-ligase MF (no
+functional RING) was MARK_AS_OVER_ANNOTATED; `NEW`/proposed terms verified via
+QuickGO were added for receptor functions absent from GOA (`GO:0034517`
+ribophagy, `GO:0160247` autophagy cargo adaptor activity, `GO:0035973`
+aggrephagy, `GO:0010508` positive regulation of autophagy); disputed-direction
+electronic NF-κB-regulation terms on `NLRX1` and `AZI2` were flagged
+(MARK_AS_OVER_ANNOTATED / non-core) rather than removed; the single REMOVE is an
+implausible IEA `mitochondrial intermembrane space` localization on the
+cytosolic receptor `NBR1`; and `SIAH1`'s `zinc ion binding` IDA was ACCEPTed but
+its citation (PMID:11863358) flagged `WRONG_IDENTIFIER` in `reference_review`.
+The mega/pleiotropic hub `HUWE1` and a dedicated mitophagy/CMA effector set
+(DNM1L, MFN1, VDAC1, USP30, MARCHF5, MUL1, PARL, PGAM5, etc.) were left for a
+future batch. See [batch9_selection_notes.md](PROTEOSTASIS/batch9_selection_notes.md).
 
 ## What The PN Resource Actually Contains
 
@@ -121,11 +327,11 @@ Coverage after the completion pass:
 
 | Level | Total source codes | Pending review | Mapped | Context only | No mapping | Deferred | Missing from YAML |
 |-------|--------------------|----------------|--------|--------------|------------|----------|-------------------|
-| Branch | 9 | 8 | 0 | 1 | 0 | 0 | 0 |
-| Class | 42 | 30 | 9 | 2 | 1 | 0 | 0 |
-| Group | 297 | 229 | 60 | 2 | 1 | 5 | 0 |
-| Type | 800 | 661 | 119 | 2 | 14 | 4 | 0 |
-| Subtype | 881 | 795 | 64 | 1 | 14 | 7 | 0 |
+| Branch | 9 | 0 | 0 | 1 | 8 | 0 | 0 |
+| Class | 42 | 0 | 9 | 16 | 17 | 0 | 0 |
+| Group | 297 | 0 | 133 | 31 | 133 | 0 | 0 |
+| Type | 800 | 0 | 233 | 26 | 541 | 0 | 0 |
+| Subtype | 881 | 0 | 105 | 16 | 760 | 0 | 0 |
 
 Every `2026-04-17` PN source code now has exactly one `subject_curations`
 record in a branch mapping YAML. `missing_from_yaml` is now a QA failure state,
@@ -136,37 +342,36 @@ The YAML inventory contains:
 
 | Curation status | Records | Meaning |
 |-----------------|---------|---------|
-| `pending_review` | 1723 | Accounted for in YAML, but not yet manually analyzed in depth |
-| `mapped` | 252 | Reviewed and mapped to a GO term |
-| `context_only` | 8 | GO relationship recorded, but unsafe for gene-level propagation |
-| `no_mapping` | 30 | Reviewed and concluded that no GO mapping should be made |
-| `deferred` | 16 | Reviewed, but blocked by evidence, taxonomy ambiguity, or a missing/better GO term |
+| `mapped` | 480 | Reviewed and mapped to a GO term |
+| `context_only` | 90 | GO relationship recorded, but unsafe for gene-level propagation |
+| `no_mapping` | 1459 | Reviewed and concluded that no GO mapping should be made |
 
 Mapping scopes are:
 
 | Mapping scope | Records | Use |
 |---------------|---------|-----|
-| `exact` | 4 | Direct semantic match |
-| `ok_for_propagation_to_go` | 248 | May produce candidate gene-GO propagations |
-| `too_broad_to_propagate` | 8 | Real contextual alignment, but excluded from propagation |
+| `exact` | 3 | Direct semantic match |
+| `ok_for_propagation_to_go` | 477 | May produce candidate gene-GO propagations |
+| `too_broad_to_propagate` | 90 | Real contextual alignment, but excluded from propagation |
 
-Most PN source codes are not yet final non-map calls. They are explicitly
-tracked as pending review so curators can distinguish coverage bookkeeping from
-completed curation decisions.
+There are no remaining `pending_review`, `deferred`, or `missing_from_yaml`
+records in the current mapping set. Most source codes now resolve to
+`no_mapping`, which is an intentional curation outcome: the PN node is useful
+for proteostasis taxonomy but should not become a GO assertion.
 
 Projection against the human GOA DuckDB at
 `~/repos/go-db/db/goa_human.ddb` produced:
 
 | Projection status | Unique gene-GO pairs |
 |-------------------|----------------------|
-| already in GOA exactly | 703 |
-| entailed by GOA closure | 403 |
-| more specific than existing GOA | 238 |
-| supported by GOA regulation | 77 |
-| new to GOA | 760 |
-| no local GOA available | 16 |
+| already in GOA exactly | 1928 |
+| entailed by GOA closure | 512 |
+| more specific than existing GOA | 305 |
+| supported by GOA regulation | 35 |
+| new to GOA | 753 |
+| no local GOA available | 32 |
 
-Only the `1075` candidate additions (`more_specific_than_existing_goa` +
+Only the `1093` candidate additions (`more_specific_than_existing_goa` +
 `supported_by_goa_regulation` + `new_to_goa`) should enter manual AIGR
 rereview queues. The `no_local_goa` class is mostly a data-availability state,
 not biological evidence; with the DuckDB source it is now a small residual
@@ -174,21 +379,21 @@ category.
 
 ### Extra-Scrutiny Findings
 
-The mapping audit flags `180/260` GO-bearing curation records as requiring manual
+The mapping audit flags `430/519` GO-bearing curation records as requiring manual
 gene-level review before they are used to change a gene review. These are not
 necessarily wrong mappings; they are places where propagation can mislead if the
 projected GO term is treated as an asserted gene function.
 
 Main flagged patterns:
 
-- `151` mappings have regulatory, recruitment, localization, sensing, or other
+- `313` mappings have regulatory, recruitment, localization, sensing, or other
   contextual PN source labels.
-- `73` mappings use broad or context-losing GO targets such as generic
+- `131` mappings use broad or context-losing GO targets such as generic
   translation, protein transport, DNA repair, DNA binding, or stress-response
   terms.
-- `44` mappings include domain, family, or subtype metadata in the source label.
-- `12` mappings are at branch or class level.
-- `8` mappings are explicitly categorized as `too_broad_to_propagate` and are
+- `262` mappings include domain, family, or subtype metadata in the source label.
+- `190` mappings are at branch or class level.
+- `89` mappings are explicitly categorized as `too_broad_to_propagate` and are
   excluded from propagation reports.
 
 Representative cases that should stay in the manual review queue:
@@ -305,76 +510,85 @@ So the right reading is:
 - some rows are close to GO MF/BP/CC concepts
 - many rows are module, family, or pathway-context labels rather than GO-annotatable facts
 
-## Strategy For Bringing PN Into GO
+## PN-GO Bridge Contract
 
-This section is independent of AIGR workflow.
+The recommended collaboration is not "PN keeps doing PN, GO keeps doing GO, and
+we occasionally sync." That is too loose. The better model is a **GO-ready
+companion layer** for each PN release.
 
-### 1. Separate membership from GO assertion
+PN should keep its native Branch/Class/Group/Type/Subtype taxonomy because it
+captures proteostasis systems information that GO should not flatten. But each
+PN row should also carry a bridge decision saying exactly what GO can do with
+that row.
 
-A PN row first tells us:
+### Row-level bridge fields
 
-- this gene belongs in proteostasis
-- the authors place it in a particular proteostasis module
+Each PN row should be assigned:
 
-It does **not** automatically tell us:
+- `go_bridge_status`: `direct_go_annotation`, `go_annotation_after_gene_review`,
+  `ontology_gap`, `pn_context_only`, `domain_family_only`, or `not_go_relevant`
+- `go_term_id`: the candidate GO term, when one exists
+- `go_relation`: `exact`, `narrower_than_pn`, `broader_than_pn`,
+  `contextual_to_pn`, or `none`
+- `evidence_basis`: `row_primary_literature`, `review_article`,
+  `domain_architecture`, `orthology`, `database_seed`, or `unknown`
+- `directness`: `direct_gene_evidence`, `family_inference`, `module_context`,
+  `regulator`, or `hypothesis`
+- `gene_exceptions`: genes in the node that must not inherit the candidate GO term
+- `ontology_gap`: optional NTR/design triage when the existing GO target is
+  insufficient
+- `aigr_outcome`: `accepted`, `modified`, `rejected`, `ontology_ticket`,
+  `pending_gene_review`, or `not_reviewed`
 
-- the correct GO aspect
-- the exact GO term
-- whether the role is core vs contextual
-- whether the evidence is strong enough for manual GO curation
+This turns PN into a GO-compatible curation product without forcing PN to become
+a GO annotation table.
 
-### 2. Tag each row by provenance
+### Ontology-gap triage
 
-At minimum, rows should be split into:
+The `ontology_gap` block lives inside the existing mapping row so it does not
+duplicate the mapping schema. The parent row still answers: "what existing GO
+term, if any, can represent this PN node today?" The nested block answers:
+"does this mismatch justify ontology work?"
 
-- `entity_based_literature_supported`
-- `domain_based_family_inference`
-- `ALP_note_backed`
-- `UPS_domain_backed`
-- `cross_branch_context_only`
+The block records `status` values such as `covered_by_existing_go`,
+`ntr_candidate`, `ntr_justified`, `needs_design_pattern`, or
+`better_as_gocam_or_annotation_extension`; a `gap_type`; candidate parent GO
+terms; example genes; anti-scope notes; recommended action; and priority. For
+example, the SPNS1/ALR efflux row is marked `ntr_candidate`, not yet
+`ntr_justified`, because `GO:0007041 lysosomal transport` is usable today but
+loses the autophagic-lysosome-reformation efflux semantics that PN captures.
 
-This is the biggest determinant of whether a row is GO-ready, prediction-like, or just useful context.
+### Deliverables per PN release
 
-### 3. Decompose each PN row into candidate GO semantics
+For each PN workbook release, GO/AIGR should produce four artifacts:
 
-Each row should be classified into one of four buckets:
+1. **GO annotation candidate table**: only rows with `direct_go_annotation` or
+   `go_annotation_after_gene_review`.
+2. **Exception table**: cases such as `HSPA12A/HSPA12B` under HSP70, `TTC28`
+   under HSP90 cochaperone, BAG6 under broad ER protein transport, and
+   pseudoenzymes under enzyme-family buckets.
+3. **Ontology-gap list**: missing GO concepts exposed by PN, separated from
+   ordinary annotation work.
+4. **PN feedback table**: workbook corrections, ambiguous placements, weak
+   domain-only inclusions, and evidence upgrades needed from PN authors.
 
-1. `exact_or_near_GO`
-   Example: complex component, transport process, clear enzymatic role.
-2. `GO_with_context_loss`
-   Example: a GO term exists but loses the proteostasis-system framing.
-3. `ontology_gap`
-   Example: the biology is real but current GO lacks a clean term or term family.
-4. `non_GO_metadata`
-   Example: family/domain/subtype labels that should stay as supporting metadata.
+The sync point should be release-gated, not informal: PN release -> bridge
+classification -> projection/audit -> gene-level review of action rows -> GO
+annotations, ontology tickets, and PN feedback.
 
-### 4. Curate by branch, not all at once
+### Decision policy
 
-The branches are not equally reusable.
+| PN row type | GO action |
+|-------------|-----------|
+| Direct complex/component/enzyme/process role with gene-level evidence | Curate or project to GO, then validate gene-by-gene if propagation is involved |
+| Family/domain bucket with known divergent members | Keep PN-native; add gene exceptions before any GO projection |
+| Regulatory or pathway-stage placement | Usually GO-review queue, not automatic annotation |
+| Proteostasis systems context with no clean GO semantics | Keep as PN context only |
+| Real biology lacking a GO term | Open an ontology ticket; do not force into a broad existing GO box |
 
-- Start with ALP rows that have notes and references.
-- Use non-ALP/non-UPS branches to identify likely GO-compatible roles and obvious positive controls.
-- Treat UPS as a mixed case: many rows are probably best handled as prediction candidates or review leads until branch-specific evidence is inspected.
-
-### 5. Keep domain-based rows conservative
-
-The papers explicitly flag domain-based inclusions and borderline cases.
-
-Concrete examples:
-
-- `HSPA12A` and `HSPA12B` are included as HSP70-family PN components even though MS1 says their proteostasis functions are not yet known.
-- UPS authors explicitly say they aimed to be inclusive and that domain weight is debatable in some cases.
-
-These should not be imported into GO as manual curation without independent evidence.
-
-### 6. Expect ontology-gap work
-
-The PN resource reinforces that GO has missing or awkward coverage around:
-
-- holdase chaperoning
-- sensor/adaptor roles in quality control
-- co-chaperone mechanistic MF space
-- proteostasis-system context that mixes process and molecular role
+This is stricter than a periodic mapping sync. It makes every PN row either
+actionable for GO, explicitly non-actionable for GO, or queued as an ontology or
+evidence problem.
 
 ## AIGR Triage Opportunities
 
@@ -448,18 +662,25 @@ manual rereview.
   fusion step itself. That was not strong enough to add the more specific term
   to the human review.
 
-## Priority Review Targets
+## Priority Follow-up Targets
 
 See [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv).
 
-Recommended first-pass jobs:
+These rows began as first-pass priorities, but local reviews now exist for all
+listed genes. They are not yet represented in `review_batches.tsv` or the
+phase-1 dossier set, so the next task is bookkeeping plus bridge-outcome
+integration rather than initial fetch/review.
 
-1. `BTF3`: fetch and review the true human `BTF3` gene (`P20290`) as the PN
-   nascent-polypeptide-associated complex component.
-2. `HSPA12A` and `HSPA12B`: fetch and review as explicit domain-based PN inclusions.
-3. `AARSD1`: review the dual chaperone/translation placement.
-4. `BAG6`: review as a multi-branch boundary case connecting transport, UBL biology, and proteostasis.
-5. `TTC28`: explicitly test the PN cochaperone claim against the existing mitosis-focused review.
+Recommended follow-up jobs:
+
+1. Add these reviewed boundary cases to PN review tracking or create a
+   separate `boundary-review` batch so they appear in phase-1-style dossiers.
+2. Materialize their mapping outcomes in the bridge layer:
+   `HSPA12A/HSPA12B` are HSP70-family exceptions; `AARSD1` and `TTC28` are
+   HSP90-cochaperone exceptions; `BAG6` supports specific GET/ERAD/holdase
+   terms but not broad ER protein-transport propagation; `BTF3` is a positive
+   NAC-component case.
+3. Re-run the phase-1 dossier builder after updating the tracking sidecar.
 
 ## PN-vs-UPB Comparison
 
@@ -482,8 +703,13 @@ The PN project is broader:
 
 ## Next Steps
 
-- Audit the highest-priority genes in [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv).
-- Work through the `1075` projected candidate additions, using the unusual
+- Add the reviewed priority/boundary genes in
+  [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv) to tracking and
+  phase-1-style dossier generation.
+- Work through the `1093` projected candidate additions, using the unusual
   propagation report as a blocklist for automatic review edits.
 - Promote only gene-level decisions that survive evidence review into AIGR
-  YAML; leave broad PN context as project metadata.
+  YAML.
+- Convert the mapping layer into the explicit PN-GO bridge contract described
+  above, including actionability status, evidence basis, directness, exceptions,
+  ontology gaps, and PN feedback.

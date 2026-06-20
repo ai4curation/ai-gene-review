@@ -16,6 +16,7 @@ journal: American Journal of Physiology-Lung Cellular and Molecular Physiology
 year: '2008'
 doi: 10.1152/ajplung.00235.2007
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # The small heat shock-related protein, HSP20, is a cAMP-dependent protein kinase substrate that is involved in airway smooth muscle relaxation

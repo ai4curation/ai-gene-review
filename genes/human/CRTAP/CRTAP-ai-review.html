@@ -1,0 +1,3834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRTAP - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CRTAP</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O75718" target="_blank" class="term-link">
+                        O75718
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CRTAP";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O75718" data-a="DESCRIPTION: CRTAP (cartilage-associated protein) is an endopla..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CRTAP (cartilage-associated protein) is an endoplasmic reticulum (ER) lumen glycoprotein that is an essential, non-catalytic subunit of the collagen prolyl 3-hydroxylation complex, together with prolyl 3-hydroxylase 1 (P3H1/LEPRE1) and cyclophilin B (PPIB/CyPB). Within this ternary complex, P3H1 provides the catalytic prolyl 3-hydroxylase activity and PPIB the peptidyl-prolyl cis-trans isomerase activity, while CRTAP acts as a scaffolding/helper subunit required for complex assembly and stability. The complex 3-hydroxylates a single specific proline residue (Pro986) of the alpha1(I) and alpha1(II) fibrillar procollagen chains in the ER and also functions as a collagen-specific molecular chaperone/foldase that controls the rate of collagen triple-helix folding; delayed folding in its absence leads to overmodification of the collagen helix. CRTAP and P3H1 are mutually stabilizing: loss of either protein destabilizes the other. A minor fraction of CRTAP is secreted into the extracellular space/matrix. Biallelic loss-of-function variants cause autosomal recessive osteogenesis imperfecta type VII, underscoring an essential role in collagen biosynthesis and skeletal development.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005518" target="_blank" class="term-link">
+                                    GO:0005518
+                                </a>
+                            </span>
+                            <span class="term-label">collagen binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005518" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The collagen prolyl 3-hydroxylation complex binds fibrillar (pro)collagen as substrate, and cryo-EM shows CRTAP contributes to a multi-site collagen substrate-interacting zone within the P3H1/CRTAP/PPIB complex. The contributes_to qualifier is appropriate because substrate binding is a property of the assembled complex rather than CRTAP alone.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by structural evidence that CRTAP forms part of the collagen substrate-interacting surface of the complex; contributes_to qualifier is biologically accurate for an accessory subunit.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39245686" target="_blank" class="term-link">
+                                        PMID:39245686
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The structure of the P3H1/CRTAP/PPIB/collagen peptide complex reveals multiple binding sites, suggesting a substrate interacting zone.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CRTAP is active in the ER, where the prolyl 3-hydroxylation complex modifies and chaperones procollagen. This IBA agrees with direct experimental localization, though the more precise term is ER lumen.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ER is the validated functional compartment; consistent with IDA evidence and the ER-lumen Reactome annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                        PMID:19846465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the endoplasmic reticulum (ER) which 3-hydroxylates the Pro986 residue of alpha1(I) and alpha1(II) collagen chains.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030199" target="_blank" class="term-link">
+                                    GO:0030199
+                                </a>
+                            </span>
+                            <span class="term-label">collagen fibril organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0030199" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Loss of the complex delays collagen folding and causes overmodified collagen with disorganized matrix; the complex also modulates type I collagen fibril formation in vitro. CRTAP is therefore reasonably annotated to collagen fibril organization, though this is a downstream/structural consequence rather than CRTAP&#39;s direct molecular activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported but indirect; the core function is ER collagen 3-hydroxylation and chaperoning, with fibril organization being a downstream effect.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                        PMID:19846465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">function as a chaperone in both classical chaperone assays inhibiting citrate synthase aggregation and rhodanese refolding and aggregation, as well as in a fibril formation assay of type I collagen</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30021884" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30021884
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Histone Interaction Landscapes Visualized by Crosslinking Ma...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005515" data-r="PMID:30021884" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from a high-throughput crosslinking-MS study. The WITH/FROM is P3H1 (UniProtKB:Q32P28), so the meaningful content is the CRTAP-P3H1 interaction, captured more specifically by complex membership.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Uninformative bare protein binding term; the specific, biologically relevant interaction (CRTAP-P3H1 within the prolyl 3-hydroxylation complex) is better represented by complex-membership annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30021884" target="_blank" class="term-link">
+                                        PMID:30021884
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Histone Interaction Landscapes Visualized by Crosslinking Mass Spectrometry in Intact Cell Nuclei.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from the BioPlex affinity-purification MS interactome. The WITH/FROM is P3H1 (UniProtKB:Q32P28), reflecting the CRTAP-P3H1 interaction, which is better captured by complex membership.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Uninformative bare protein binding term from a high-throughput dataset; the specific interaction with P3H1 is represented by complex-membership and core function annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005783" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated electronic annotation of ER localization, redundant with but consistent with the experimental IDA and IBA ER annotations for this gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct ER location, the validated functional compartment; consistent with the experimental IDA evidence for this gene.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                        PMID:19846465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the endoplasmic reticulum (ER)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007283" target="_blank" class="term-link">
+                                    GO:0007283
+                                </a>
+                            </span>
+                            <span class="term-label">spermatogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0007283" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer from a mouse ortholog (UniProtKB:Q9CYD3) via Ensembl Compara. There is no human experimental evidence linking CRTAP to spermatogenesis, and the established core biology is ER collagen modification and skeletal connective tissue.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Broad ortholog-transfer annotation lacking human evidence and unrelated to the validated collagen-modification/chaperone function of CRTAP.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000107
+                                    
+                                </span>
+                                
+                                <div class="support-text">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39245686" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39245686
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The structural basis for the collagen processing by human P3...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005515" data-r="PMID:39245686" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding term, but here supported by direct cryo-EM structural evidence of the P3H1/CRTAP/PPIB ternary complex (WITH/FROM P3H1, UniProtKB:Q32P28). The specific, informative content is complex membership / the CRTAP-P3H1 interaction rather than generic protein binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is uninformative; the underlying structural finding is best represented by the prolyl 3-hydroxylation complex membership and the collagen-substrate-binding core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39245686" target="_blank" class="term-link">
+                                        PMID:39245686
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We determine cryo-EM structures of the P3H1/CRTAP/PPIB complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050821" target="_blank" class="term-link">
+                                    GO:0050821
+                                </a>
+                            </span>
+                            <span class="term-label">protein stabilization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19846465
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Prolyl 3-hydroxylase 1 and CRTAP are mutually stabilizing in...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0050821" data-r="PMID:19846465" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CRTAP stabilizes P3H1 in the ER: null mutation in either gene causes loss or substantial reduction of both proteins despite normal partner transcript levels, and proteasome inhibition partially rescues P3H1 in CRTAP-null cells. This is a genuine, experimentally demonstrated function (mutual stabilization of complex subunits).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated by IMP in patient fibroblasts; CRTAP stabilizes its complex partner P3H1, a core aspect of complex assembly and integrity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                        PMID:19846465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These data indicate that CRTAP and P3H1 are mutually stabilized in the collagen prolyl 3-hydroxylation complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0006457" data-r="GO_REF:0000024" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The prolyl 3-hydroxylation complex acts as a collagen-specific molecular chaperone/foldase; absence of CRTAP delays collagen helix folding. Protein folding is supported but generic; a more specific term such as protein folding in endoplasmic reticulum better captures the biology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported chaperone/foldase activity, but the generic protein folding term can be made more precise to reflect the ER collagen-folding role.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034975" target="_blank" class="term-link">
+                                    protein folding in endoplasmic reticulum
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20089953" target="_blank" class="term-link">
+                                        PMID:20089953
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the absence of P3H1 or CRTAP, alpha1(I)Pro986 3-hydroxylation is decreased and collagen folding is delayed, resulting in overmodification of the helical lysine and proline residues.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                                    GO:0032991
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0032991" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CRTAP is part of the heterotrimeric P3H1/CRTAP/PPIB collagen prolyl 3-hydroxylation complex, now confirmed by cryo-EM. The generic protein-containing complex term is correct but uninformative about which complex; it is retained as the most specific validated CC complex term available in the existing annotation set.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic; complex membership in the specific prolyl 3-hydroxylation complex is captured in core_functions (in_complex).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39245686" target="_blank" class="term-link">
+                                        PMID:39245686
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We determine cryo-EM structures of the P3H1/CRTAP/PPIB complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20089953" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20089953
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Lack of cyclophilin B in osteogenesis imperfecta with normal...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005783" data-r="PMID:20089953" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence localization of endogenous CRTAP to the ER in human fibroblasts. This is strong, primary evidence for the core ER location.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental localization to the ER, the validated functional compartment for CRTAP.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20089953" target="_blank" class="term-link">
+                                        PMID:20089953
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cells from the proband and a 5-year-old control subject were stained with antibodies to CyPB, P3H1, CRTAP ... to examine protein colocalization by means of confocal microscopy.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19846465
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Prolyl 3-hydroxylase 1 and CRTAP are mutually stabilizing in...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005576" data-r="PMID:19846465" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A minor fraction of CRTAP is secreted (~10-12% in normal cells, rising to 15-20% when its ER-retention partner P3H1 is absent). Secretion is real but represents a small, secondary pool; the dominant biology is ER-luminal.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally observed secreted pool, but a minor fraction relative to the ER-resident function; not a core localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                        PMID:19846465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">in conditioned media from control cells ... about 10-12% of total CRTAP is secreted</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19846465
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Prolyl 3-hydroxylase 1 and CRTAP are mutually stabilizing in...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005783" data-r="PMID:19846465" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct localization of CRTAP to the ER by immunofluorescence in patient and control fibroblasts, consistent with its role in the ER prolyl 3-hydroxylation complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence for the core ER location of CRTAP.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                        PMID:19846465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the endoplasmic reticulum (ER)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901874" target="_blank" class="term-link">
+                                    GO:1901874
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of post-translational protein modification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19846465
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Prolyl 3-hydroxylase 1 and CRTAP are mutually stabilizing in...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:1901874" data-r="PMID:19846465" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation reflects that loss of the complex causes overmodification (excess 4-hydroxylation and lysyl hydroxylation) of the collagen helix; i.e., the complex normally limits overmodification by controlling folding rate. This is an indirect consequence of the chaperone/foldase activity rather than a direct regulatory function of CRTAP on a modifying enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported as an indirect/consequential phenotype of delayed-folding prevention; not a direct molecular regulatory function of CRTAP.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                        PMID:19846465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Excess modification, or &#39;overmodification&#39; of the collagen helix can be detected as delayed electrophoretic migration of collagen alpha chains</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-1980233
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005788" data-r="Reactome:R-HSA-1980233" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome localizes CRTAP to the ER lumen, the precise compartment where the prolyl 3-hydroxylation complex acts on procollagen. This is more specific than the generic ER term and is well supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate and more precise than endoplasmic reticulum; the ER lumen is the validated site of complex activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                        PMID:19846465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the endoplasmic reticulum (ER) which 3-hydroxylates the Pro986 residue</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-2022073
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005788" data-r="Reactome:R-HSA-2022073" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant Reactome ER-lumen localization (procollagen triple helix formation reaction). Correct and consistent with the validated ER-luminal location.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct, precise ER-lumen location consistent with the accepted ER-lumen annotation; retained as a redundant but valid localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39245686" target="_blank" class="term-link">
+                                        PMID:39245686
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the modifications of proline residues play critical roles in the formation of triple helix and the maintenance of stability</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8948226
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005788" data-r="Reactome:R-HSA-8948226" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant Reactome ER-lumen localization (prolyl 3-hydroxylase complex dissociation reaction). Correct location, consistent with the accepted ER-lumen annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct, precise ER-lumen location consistent with the accepted ER-lumen annotation; retained as a redundant but valid localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                        PMID:19846465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the collagen prolyl 3-hydroxylation complex in the endoplasmic reticulum (ER)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8948230
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75718" data-a="GO:0005788" data-r="Reactome:R-HSA-8948230" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant Reactome ER-lumen localization (P3HB binds 4-Hyp-collagen propeptides reaction). Correct location, consistent with the accepted ER-lumen annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct, precise ER-lumen location consistent with the accepted ER-lumen annotation; retained as a redundant but valid localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                        PMID:19846465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the collagen prolyl 3-hydroxylation complex in the endoplasmic reticulum (ER)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-catalytic scaffolding/helper subunit of the ER collagen prolyl 3-hydroxylation complex (with P3H1 and PPIB). CRTAP is required for assembly, stability and activity of the complex that 3-hydroxylates Pro986 of alpha1(I) and alpha1(II) fibrillar procollagen chains; CRTAP contributes to collagen substrate binding but does not itself catalyze hydroxylation.</h3>
+                <span class="vote-buttons" data-g="O75718" data-a="FUNCTION: Non-catalytic scaffolding/helper subunit of the ER..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032964" target="_blank" class="term-link">
+                                collagen biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                endoplasmic reticulum lumen
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                            protein-containing complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005518" target="_blank" class="term-link">
+                                collagen binding
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                PMID:19846465
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the endoplasmic reticulum (ER) which 3-hydroxylates the Pro986 residue of alpha1(I) and alpha1(II) collagen chains.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39245686" target="_blank" class="term-link">
+                                PMID:39245686
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The structure of the P3H1/CRTAP/PPIB/collagen peptide complex reveals multiple binding sites, suggesting a substrate interacting zone.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Collagen-specific molecular chaperone/foldase activity of the complex: CRTAP is required for normal collagen triple-helix folding rate, and its loss causes delayed folding and overmodification of the collagen helix. CRTAP also mutually stabilizes its complex partner P3H1 in the ER.</h3>
+                <span class="vote-buttons" data-g="O75718" data-a="FUNCTION: Collagen-specific molecular chaperone/foldase acti..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                            protein folding chaperone
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034975" target="_blank" class="term-link">
+                                protein folding in endoplasmic reticulum
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050821" target="_blank" class="term-link">
+                                protein stabilization
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                endoplasmic reticulum lumen
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20089953" target="_blank" class="term-link">
+                                PMID:20089953
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">In the absence of P3H1 or CRTAP, alpha1(I)Pro986 3-hydroxylation is decreased and collagen folding is delayed, resulting in overmodification of the helical lysine and proline residues.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                                PMID:19846465
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">These data indicate that CRTAP and P3H1 are mutually stabilized in the collagen prolyl 3-hydroxylation complex.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17055431" target="_blank" class="term-link">
+                            PMID:17055431
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CRTAP is required for prolyl 3-hydroxylation and mutations cause recessive osteogenesis imperfecta.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CRTAP is required for efficient 3-hydroxylation of fibrillar collagen prolyl residues; loss-of-function mutations cause recessive osteogenesis imperfecta.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" target="_blank" class="term-link">
+                            PMID:19846465
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Prolyl 3-hydroxylase 1 and CRTAP are mutually stabilizing in the endoplasmic reticulum collagen prolyl 3-hydroxylation complex.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CRTAP, P3H1 and cyclophilin B form the ER collagen prolyl 3-hydroxylation complex that 3-hydroxylates Pro986 of alpha1(I)/alpha1(II) chains; CRTAP and P3H1 are mutually stabilized, and the complex also acts as a chaperone.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20089953" target="_blank" class="term-link">
+                            PMID:20089953
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Lack of cyclophilin B in osteogenesis imperfecta with normal collagen folding.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Confirms CRTAP as a component of the P3H1/CRTAP/CyPB complex; absence of P3H1 or CRTAP decreases Pro986 3-hydroxylation and delays collagen folding.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30021884" target="_blank" class="term-link">
+                            PMID:30021884
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Histone Interaction Landscapes Visualized by Crosslinking Mass Spectrometry in Intact Cell Nuclei.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39245686" target="_blank" class="term-link">
+                            PMID:39245686
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The structural basis for the collagen processing by human P3H1/CRTAP/PPIB ternary complex.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cryo-EM structures of the human P3H1/CRTAP/PPIB ternary complex; P3H1 and PPIB active sites form a bifunctional reaction center and CRTAP contributes to a multi-site collagen substrate-interacting zone.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-1980233
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Collagen prolyl 3-hydroxylase converts 4-Hyp collagen to 3,4-Hyp collagen</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-2022073
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Procollagen triple helix formation</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8948226
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Prolyl 3-hydroxylases:Fe2+:3,4-Hyp collagen propeptides dissociates</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8948230
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">P3HB binds 4-Hyp-collagen propeptides</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is there a GO cellular component term specifically for the collagen prolyl 3-hydroxylation (P3H1/CRTAP/PPIB) complex, and if not should one be created so CRTAP can be annotated more specifically than protein-containing complex?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O75718" data-a="Q: Is there a GO cellular component term specifically..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does CRTAP have any chaperone or substrate-binding function independent of P3H1 and PPIB, given that the proteins are mutually stabilizing and largely co-dependent?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O75718" data-a="Q: Does CRTAP have any chaperone or substrate-binding..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute the P3H1/CRTAP/PPIB complex and assay prolyl 3-hydroxylase activity and collagen-folding (chaperone/foldase) activity with and without CRTAP to quantify CRTAP&#39;s specific contribution to catalysis versus substrate binding and folding.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O75718" data-a="EXPERIMENT: Reconstitute the P3H1/CRTAP/PPIB complex and assay..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Map the CRTAP residues that form the collagen substrate-interacting zone (from the cryo-EM model) by structure-guided mutagenesis, and test effects on Pro986 3-hydroxylation efficiency and collagen folding rate in cells.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O75718" data-a="EXPERIMENT: Map the CRTAP residues that form the collagen subs..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use proximity labeling (BioID/APEX) of CRTAP in osteoblasts/chondrocytes to define its ER interactome and any partners beyond P3H1/PPIB that participate in collagen maturation.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O75718" data-a="EXPERIMENT: Use proximity labeling (BioID/APEX) of CRTAP in os..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CRTAP-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O75718" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="crtap-cartilage-associated-protein-review-notes">CRTAP (Cartilage-associated protein) — review notes</h1>
+<p>UniProt: O75718 (CRTAP_HUMAN), 401 aa precursor; gene CRTAP (synonym CASP); chr 3.<br />
+HGNC:2379. Member of the leprecan family (SIM, UniProt). Signal peptide 1-26;<br />
+secreted/ER-resident glycoprotein (N-glyc at 87, 363).</p>
+<h2 id="core-biology">Core biology</h2>
+<p>CRTAP is a non-catalytic, essential component of the endoplasmic reticulum<br />
+collagen prolyl 3-hydroxylation complex, together with prolyl 3-hydroxylase 1<br />
+(P3H1/LEPRE1, UniProt Q32P28) and cyclophilin B / peptidyl-prolyl isomerase B<br />
+(PPIB/CyPB). This ternary complex 3-hydroxylates a single specific proline,<br />
+Pro986, of the α1(I) and α1(II) fibrillar (pro)collagen chains in the ER lumen.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" title="CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the   endoplasmic reticulum (ER) which 3-hydroxylates the Pro986 residue of alpha1(I)   and alpha1(II) collagen chains.">PMID:19846465</a><br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/20089953" title="the collagen prolyl 3-hydroxylation complex, consisting of P3H1   ... CRTAP, and CyPB, modifies the α1(I)Pro986 residue.">PMID:20089953</a></p>
+<p>P3H1 carries the catalytic prolyl 3-hydroxylase activity and is the only complex<br />
+member with a KDEL ER-retrieval signal; CRTAP acts as the "helper protein" /<br />
+non-catalytic subunit, NOT the catalytic hydroxylase.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" title="P3H1 ... contains the enzymatic activity of the complex and is   the only complex component with a KDEL ER-retrieval signal ... CRTAP ... acts as   the helper protein of the complex.">PMID:19846465</a></p>
+<h2 id="mutual-stabilization-chaperone-role">Mutual stabilization &amp; chaperone role</h2>
+<p>CRTAP and P3H1 mutually stabilize each other in the ER: a null mutation in one<br />
+gene causes loss/reduction of BOTH proteins despite normal transcript levels of<br />
+the non-mutated gene. Proteasome inhibition partially rescues P3H1 in CRTAP-null<br />
+cells, indicating destabilized partner is degraded.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" title="a null mutation for one of these proteins results in absence or   substantial decrease of both proteins ... despite normal levels of transcript ...   These data indicate that CRTAP and P3H1 are mutually stabilized in the collagen   prolyl 3-hydroxylation complex.">PMID:19846465</a><br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" title="Proteasomal inhibitors partially rescue P3H1 protein in   CRTAP-null cells.">PMID:19846465</a></p>
+<p>The complex also functions as a collagen chaperone/foldase: loss of P3H1 or CRTAP<br />
+delays collagen helix folding, causing overmodification (excess 4-hydroxylation /<br />
+lysyl hydroxylation) of the helical region. The complex has classical chaperone<br />
+activity in vitro (inhibits citrate synthase aggregation, rhodanese refolding) and<br />
+modulates collagen fibril formation.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" title="The prolyl 3-hydroxylation complex has recently been reported ...   to function as a chaperone in both classical chaperone assays inhibiting citrate   synthase aggregation and rhodanese refolding and aggregation, as well as in a   fibril formation assay of type I collagen ... the complex also has a general   function to assist protein folding.">PMID:19846465</a><br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/20089953" title="In the absence of P3H1 or CRTAP, α1(I)Pro986 3-hydroxylation is   decreased and collagen folding is delayed, resulting in overmodification of the   helical lysine and proline residues.">PMID:20089953</a></p>
+<p>Note (negative regulation of PTM): the IMP annotation GO:1901874 "negative<br />
+regulation of post-translational protein modification" reflects that the complex<br />
+LIMITS overmodification by P4H/LH — i.e., its absence causes overmodification.<br />
+This is an indirect/consequential phenotype of the chaperone/foldase role, not a<br />
+direct enzymatic activity of CRTAP. Best regarded as non-core.</p>
+<h2 id="subcellular-location">Subcellular location</h2>
+<p>Primary functional location is the ER lumen. Endogenous CRTAP detected in ER by<br />
+IDA (PMID:19846465, PMID:20089953). A minor fraction is secreted to the<br />
+extracellular space/matrix: in normal cells ~10-12% of CRTAP is secreted, rising<br />
+to 15-20% in LEPRE1-null cells (because P3H1's KDEL normally retains CRTAP).<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" title="in conditioned media from control cells ... about 10-12% of   total CRTAP is secreted ... in LEPRE1-null cells, P3H1 is not present to retain   CRTAP in the ER, and the proportion of CRTAP secreted ... is more than tripled,   accounting for 15-20%">PMID:19846465</a><br />
+The UniProt SUBCELLULAR LOCATION line lists "Secreted, extracellular space,<br />
+extracellular matrix" (by similarity, ECO:0000250); the dominant biology is ER.</p>
+<h2 id="structure">Structure</h2>
+<p>Cryo-EM structures of the human P3H1/CRTAP/PPIB ternary complex (PDB 8K0E, 8K0F,<br />
+8K0I, 8K0M, 8K17, 8KC9). The active sites of P3H1 and PPIB form a face-to-face<br />
+bifunctional reaction center; the complex binds collagen peptide across multiple<br />
+sites forming a "substrate interacting zone"; a dual-ternary state is observed.<br />
+CRTAP is a TPR-like α-helical (leprecan-domain) scaffold subunit.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/39245686" title="We determine cryo-EM structures of the P3H1/CRTAP/PPIB complex.   The active sites of P3H1 and PPIB form a face-to-face bifunctional reaction   center ... The structure of the P3H1/CRTAP/PPIB/collagen peptide complex reveals   multiple binding sites, suggesting a substrate interacting zone.">PMID:39245686</a></p>
+<h2 id="disease">Disease</h2>
+<p>Biallelic loss-of-function CRTAP variants cause autosomal recessive osteogenesis<br />
+imperfecta type VII (OI7, MIM:610682), a severe-to-lethal bone dysplasia with<br />
+rhizomelia, overmodified type I collagen, reduced bone mass, fractures.<br />
+- [PMID:17055431 "CRTAP is required for prolyl 3-hydroxylation and mutations cause<br />
+  recessive osteogenesis imperfecta." (title; UniProt FUNCTION + DISEASE)]<br />
+- UniProt DISEASE: OI7 autosomal recessive (ECO:0000269|PubMed:17055431,<br />
+  18566967, 19550437, 21955071).<br />
+Crtap-knockout mice have recessive osteochondrodystrophy with loss of prolyl<br />
+3-hydroxylation in cartilage and bone.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/19846465" title="Crtap knock-out mice have a recessive osteochondrodystrophy   associated with lack of the prolyl 3-hydroxylation modification in cartilage and   bone.">PMID:19846465</a></p>
+<h2 id="interaction-evidence-supporting-protein-binding-go0005515-ipi-annotations">Interaction evidence supporting "protein binding" (GO:0005515) IPI annotations</h2>
+<p>All three IPI GO:0005515 annotations (PMID:30021884, PMID:33961781, PMID:39245686)<br />
+use WITH/FROM UniProtKB:Q32P28 = P3H1, i.e. they capture the CRTAP–P3H1<br />
+interaction. PMID:39245686 (cryo-EM ternary complex) is direct, specific<br />
+structural evidence; PMID:33961781 (BioPlex affinity-MS interactome) and<br />
+PMID:30021884 (XL-MS) are high-throughput. Bare "protein binding" is<br />
+uninformative; the meaningful, specific statement is membership in the<br />
+P3H1/CRTAP/PPIB complex.</p>
+<h2 id="annotation-assessment-summary">Annotation assessment summary</h2>
+<ul>
+<li>GO:0005518 collagen binding (IBA, contributes_to): the complex binds collagen<br />
+  substrate; CRTAP contributes to substrate binding within the complex (substrate<br />
+  interacting zone, PMID:39245686). Supportable as contributes_to; keep<br />
+  non-core (it is the complex, not CRTAP alone, that binds — but reasonable).</li>
+<li>GO:0005783 endoplasmic reticulum (multiple IBA/IEA/IDA): well supported, core<br />
+  location. ACCEPT IDA; IBA/IEA redundant but correct.</li>
+<li>GO:0005788 endoplasmic reticulum lumen (TAS Reactome x4): more precise than ER;<br />
+  correct. ACCEPT (one representative); others redundant.</li>
+<li>GO:0030199 collagen fibril organization (IBA): supported (chaperone modulates<br />
+  fibril formation; OI collagen disorganized). Keep non-core / accept.</li>
+<li>GO:0005515 protein binding (IPI x3): bare term — MARK_AS_OVER_ANNOTATED; the<br />
+  specific content is P3H1 binding / complex membership.</li>
+<li>GO:0005783 IEA (GO_REF:0000120) — redundant with IDA, over-annotated/non-core.</li>
+<li>GO:0007283 spermatogenesis (IEA, Ensembl from mouse): broad ortholog transfer,<br />
+  no human evidence; MARK_AS_OVER_ANNOTATED / non-core.</li>
+<li>GO:0050821 protein stabilization (IMP, PMID:19846465): supported — CRTAP<br />
+  stabilizes P3H1 (mutual stabilization). ACCEPT, but specific to complex partner.</li>
+<li>GO:0006457 protein folding (ISS): supported (complex is collagen chaperone).<br />
+  Keep; could be more specific (protein folding in ER / chaperone).</li>
+<li>GO:0032991 protein-containing complex (ISS): correct but generic; the specific<br />
+  complex is the prolyl 3-hydroxylase / collagen-modifying complex. MODIFY toward<br />
+  more specific if available, else keep non-core.</li>
+<li>GO:0005576 extracellular region (IDA, PMID:19846465): a minor secreted fraction<br />
+  is real but the dominant biology is ER; KEEP_AS_NON_CORE.</li>
+<li>GO:1901874 negative regulation of post-translational protein modification (IMP):<br />
+  indirect consequence (loss → overmodification); KEEP_AS_NON_CORE.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O75718
+gene_symbol: CRTAP
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  CRTAP (cartilage-associated protein) is an endoplasmic reticulum (ER) lumen
+  glycoprotein that is an essential, non-catalytic subunit of the collagen prolyl
+  3-hydroxylation complex, together with prolyl 3-hydroxylase 1 (P3H1/LEPRE1) and
+  cyclophilin B (PPIB/CyPB). Within this ternary complex, P3H1 provides the
+  catalytic prolyl 3-hydroxylase activity and PPIB the peptidyl-prolyl
+  cis-trans isomerase activity, while CRTAP acts as a scaffolding/helper subunit
+  required for complex assembly and stability. The complex 3-hydroxylates a single
+  specific proline residue (Pro986) of the alpha1(I) and alpha1(II) fibrillar
+  procollagen chains in the ER and also functions as a collagen-specific molecular
+  chaperone/foldase that controls the rate of collagen triple-helix folding;
+  delayed folding in its absence leads to overmodification of the collagen helix.
+  CRTAP and P3H1 are mutually stabilizing: loss of either protein destabilizes the
+  other. A minor fraction of CRTAP is secreted into the extracellular space/matrix.
+  Biallelic loss-of-function variants cause autosomal recessive osteogenesis
+  imperfecta type VII, underscoring an essential role in collagen biosynthesis and
+  skeletal development.
+existing_annotations:
+- term:
+    id: GO:0005518
+    label: collagen binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: contributes_to
+  review:
+    summary: &gt;-
+      The collagen prolyl 3-hydroxylation complex binds fibrillar (pro)collagen as
+      substrate, and cryo-EM shows CRTAP contributes to a multi-site collagen
+      substrate-interacting zone within the P3H1/CRTAP/PPIB complex. The
+      contributes_to qualifier is appropriate because substrate binding is a
+      property of the assembled complex rather than CRTAP alone.
+    action: ACCEPT
+    reason: &gt;-
+      Supported by structural evidence that CRTAP forms part of the collagen
+      substrate-interacting surface of the complex; contributes_to qualifier is
+      biologically accurate for an accessory subunit.
+    supported_by:
+    - reference_id: PMID:39245686
+      supporting_text: &gt;-
+        The structure of the P3H1/CRTAP/PPIB/collagen peptide complex reveals
+        multiple binding sites, suggesting a substrate interacting zone.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      CRTAP is active in the ER, where the prolyl 3-hydroxylation complex modifies
+      and chaperones procollagen. This IBA agrees with direct experimental
+      localization, though the more precise term is ER lumen.
+    action: ACCEPT
+    reason: &gt;-
+      ER is the validated functional compartment; consistent with IDA evidence and
+      the ER-lumen Reactome annotations.
+    supported_by:
+    - reference_id: PMID:19846465
+      supporting_text: &gt;-
+        CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the endoplasmic
+        reticulum (ER) which 3-hydroxylates the Pro986 residue of alpha1(I) and
+        alpha1(II) collagen chains.
+- term:
+    id: GO:0030199
+    label: collagen fibril organization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Loss of the complex delays collagen folding and causes overmodified collagen
+      with disorganized matrix; the complex also modulates type I collagen fibril
+      formation in vitro. CRTAP is therefore reasonably annotated to collagen
+      fibril organization, though this is a downstream/structural consequence
+      rather than CRTAP&#39;s direct molecular activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported but indirect; the core function is ER collagen 3-hydroxylation and
+      chaperoning, with fibril organization being a downstream effect.
+    supported_by:
+    - reference_id: PMID:19846465
+      supporting_text: &gt;-
+        function as a chaperone in both classical chaperone assays inhibiting
+        citrate synthase aggregation and rhodanese refolding and aggregation, as
+        well as in a fibril formation assay of type I collagen
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:30021884
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from a high-throughput crosslinking-MS study. The
+      WITH/FROM is P3H1 (UniProtKB:Q32P28), so the meaningful content is the
+      CRTAP-P3H1 interaction, captured more specifically by complex membership.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative bare protein binding term; the specific, biologically relevant
+      interaction (CRTAP-P3H1 within the prolyl 3-hydroxylation complex) is better
+      represented by complex-membership annotations.
+    supported_by:
+    - reference_id: PMID:30021884
+      supporting_text: &gt;-
+        Histone Interaction Landscapes Visualized by Crosslinking Mass Spectrometry
+        in Intact Cell Nuclei.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from the BioPlex affinity-purification MS interactome.
+      The WITH/FROM is P3H1 (UniProtKB:Q32P28), reflecting the CRTAP-P3H1
+      interaction, which is better captured by complex membership.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative bare protein binding term from a high-throughput dataset; the
+      specific interaction with P3H1 is represented by complex-membership and core
+      function annotations.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: &gt;-
+        Dual proteome-scale networks reveal cell-specific remodeling of the human
+        interactome.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated electronic annotation of ER localization, redundant with but
+      consistent with the experimental IDA and IBA ER annotations for this gene.
+    action: ACCEPT
+    reason: &gt;-
+      Correct ER location, the validated functional compartment; consistent with the
+      experimental IDA evidence for this gene.
+    supported_by:
+    - reference_id: PMID:19846465
+      supporting_text: &gt;-
+        CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the endoplasmic
+        reticulum (ER)
+- term:
+    id: GO:0007283
+    label: spermatogenesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer from a mouse ortholog (UniProtKB:Q9CYD3) via Ensembl
+      Compara. There is no human experimental evidence linking CRTAP to
+      spermatogenesis, and the established core biology is ER collagen modification
+      and skeletal connective tissue.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Broad ortholog-transfer annotation lacking human evidence and unrelated to
+      the validated collagen-modification/chaperone function of CRTAP.
+    supported_by:
+    - reference_id: GO_REF:0000107
+      supporting_text: &gt;-
+        Automatic transfer of experimentally verified manual GO annotation data to
+        orthologs using Ensembl Compara
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:39245686
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding term, but here supported by direct cryo-EM structural
+      evidence of the P3H1/CRTAP/PPIB ternary complex (WITH/FROM P3H1,
+      UniProtKB:Q32P28). The specific, informative content is complex membership /
+      the CRTAP-P3H1 interaction rather than generic protein binding.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare protein binding is uninformative; the underlying structural finding is
+      best represented by the prolyl 3-hydroxylation complex membership and the
+      collagen-substrate-binding core function.
+    supported_by:
+    - reference_id: PMID:39245686
+      supporting_text: &gt;-
+        We determine cryo-EM structures of the P3H1/CRTAP/PPIB complex.
+- term:
+    id: GO:0050821
+    label: protein stabilization
+  evidence_type: IMP
+  original_reference_id: PMID:19846465
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      CRTAP stabilizes P3H1 in the ER: null mutation in either gene causes loss or
+      substantial reduction of both proteins despite normal partner transcript
+      levels, and proteasome inhibition partially rescues P3H1 in CRTAP-null cells.
+      This is a genuine, experimentally demonstrated function (mutual stabilization
+      of complex subunits).
+    action: ACCEPT
+    reason: &gt;-
+      Directly demonstrated by IMP in patient fibroblasts; CRTAP stabilizes its
+      complex partner P3H1, a core aspect of complex assembly and integrity.
+    supported_by:
+    - reference_id: PMID:19846465
+      supporting_text: &gt;-
+        These data indicate that CRTAP and P3H1 are mutually stabilized in the
+        collagen prolyl 3-hydroxylation complex.
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The prolyl 3-hydroxylation complex acts as a collagen-specific molecular
+      chaperone/foldase; absence of CRTAP delays collagen helix folding. Protein
+      folding is supported but generic; a more specific term such as protein
+      folding in endoplasmic reticulum better captures the biology.
+    action: MODIFY
+    reason: &gt;-
+      Supported chaperone/foldase activity, but the generic protein folding term
+      can be made more precise to reflect the ER collagen-folding role.
+    proposed_replacement_terms:
+    - id: GO:0034975
+      label: protein folding in endoplasmic reticulum
+    supported_by:
+    - reference_id: PMID:20089953
+      supporting_text: &gt;-
+        In the absence of P3H1 or CRTAP, alpha1(I)Pro986 3-hydroxylation is
+        decreased and collagen folding is delayed, resulting in overmodification of
+        the helical lysine and proline residues.
+- term:
+    id: GO:0032991
+    label: protein-containing complex
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      CRTAP is part of the heterotrimeric P3H1/CRTAP/PPIB collagen prolyl
+      3-hydroxylation complex, now confirmed by cryo-EM. The generic
+      protein-containing complex term is correct but uninformative about which
+      complex; it is retained as the most specific validated CC complex term
+      available in the existing annotation set.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but generic; complex membership in the specific prolyl
+      3-hydroxylation complex is captured in core_functions (in_complex).
+    supported_by:
+    - reference_id: PMID:39245686
+      supporting_text: &gt;-
+        We determine cryo-EM structures of the P3H1/CRTAP/PPIB complex.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:20089953
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct immunofluorescence localization of endogenous CRTAP to the ER in human
+      fibroblasts. This is strong, primary evidence for the core ER location.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental localization to the ER, the validated functional
+      compartment for CRTAP.
+    supported_by:
+    - reference_id: PMID:20089953
+      supporting_text: &gt;-
+        Cells from the proband and a 5-year-old control subject were stained with
+        antibodies to CyPB, P3H1, CRTAP ... to examine protein colocalization by
+        means of confocal microscopy.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IDA
+  original_reference_id: PMID:19846465
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      A minor fraction of CRTAP is secreted (~10-12% in normal cells, rising to
+      15-20% when its ER-retention partner P3H1 is absent). Secretion is real but
+      represents a small, secondary pool; the dominant biology is ER-luminal.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimentally observed secreted pool, but a minor fraction relative to the
+      ER-resident function; not a core localization.
+    supported_by:
+    - reference_id: PMID:19846465
+      supporting_text: &gt;-
+        in conditioned media from control cells ... about 10-12% of total CRTAP is
+        secreted
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:19846465
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct localization of CRTAP to the ER by immunofluorescence in patient and
+      control fibroblasts, consistent with its role in the ER prolyl 3-hydroxylation
+      complex.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence for the core ER location of CRTAP.
+    supported_by:
+    - reference_id: PMID:19846465
+      supporting_text: &gt;-
+        CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the endoplasmic
+        reticulum (ER)
+- term:
+    id: GO:1901874
+    label: negative regulation of post-translational protein modification
+  evidence_type: IMP
+  original_reference_id: PMID:19846465
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This annotation reflects that loss of the complex causes overmodification
+      (excess 4-hydroxylation and lysyl hydroxylation) of the collagen helix; i.e.,
+      the complex normally limits overmodification by controlling folding rate.
+      This is an indirect consequence of the chaperone/foldase activity rather than
+      a direct regulatory function of CRTAP on a modifying enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported as an indirect/consequential phenotype of delayed-folding
+      prevention; not a direct molecular regulatory function of CRTAP.
+    supported_by:
+    - reference_id: PMID:19846465
+      supporting_text: &gt;-
+        Excess modification, or &#39;overmodification&#39; of the collagen helix can be
+        detected as delayed electrophoretic migration of collagen alpha chains
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1980233
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome localizes CRTAP to the ER lumen, the precise compartment where the
+      prolyl 3-hydroxylation complex acts on procollagen. This is more specific than
+      the generic ER term and is well supported.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate and more precise than endoplasmic reticulum; the ER lumen is the
+      validated site of complex activity.
+    supported_by:
+    - reference_id: PMID:19846465
+      supporting_text: &gt;-
+        CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the endoplasmic
+        reticulum (ER) which 3-hydroxylates the Pro986 residue
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2022073
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Redundant Reactome ER-lumen localization (procollagen triple helix formation
+      reaction). Correct and consistent with the validated ER-luminal location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct, precise ER-lumen location consistent with the accepted ER-lumen
+      annotation; retained as a redundant but valid localization.
+    supported_by:
+    - reference_id: PMID:39245686
+      supporting_text: &gt;-
+        the modifications of proline residues play critical roles in the formation
+        of triple helix and the maintenance of stability
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8948226
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Redundant Reactome ER-lumen localization (prolyl 3-hydroxylase complex
+      dissociation reaction). Correct location, consistent with the accepted
+      ER-lumen annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Correct, precise ER-lumen location consistent with the accepted ER-lumen
+      annotation; retained as a redundant but valid localization.
+    supported_by:
+    - reference_id: PMID:19846465
+      supporting_text: &gt;-
+        the collagen prolyl 3-hydroxylation complex in the endoplasmic reticulum
+        (ER)
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8948230
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Redundant Reactome ER-lumen localization (P3HB binds 4-Hyp-collagen
+      propeptides reaction). Correct location, consistent with the accepted
+      ER-lumen annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Correct, precise ER-lumen location consistent with the accepted ER-lumen
+      annotation; retained as a redundant but valid localization.
+    supported_by:
+    - reference_id: PMID:19846465
+      supporting_text: &gt;-
+        the collagen prolyl 3-hydroxylation complex in the endoplasmic reticulum
+        (ER)
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17055431
+  title: CRTAP is required for prolyl 3-hydroxylation and mutations cause recessive
+    osteogenesis imperfecta.
+  findings:
+  - statement: &gt;-
+      CRTAP is required for efficient 3-hydroxylation of fibrillar collagen prolyl
+      residues; loss-of-function mutations cause recessive osteogenesis imperfecta.
+    reference_section_type: ABSTRACT
+- id: PMID:19846465
+  title: Prolyl 3-hydroxylase 1 and CRTAP are mutually stabilizing in the endoplasmic
+    reticulum collagen prolyl 3-hydroxylation complex.
+  findings:
+  - statement: &gt;-
+      CRTAP, P3H1 and cyclophilin B form the ER collagen prolyl 3-hydroxylation
+      complex that 3-hydroxylates Pro986 of alpha1(I)/alpha1(II) chains; CRTAP and
+      P3H1 are mutually stabilized, and the complex also acts as a chaperone.
+    reference_section_type: ABSTRACT
+- id: PMID:20089953
+  title: Lack of cyclophilin B in osteogenesis imperfecta with normal collagen folding.
+  findings:
+  - statement: &gt;-
+      Confirms CRTAP as a component of the P3H1/CRTAP/CyPB complex; absence of P3H1
+      or CRTAP decreases Pro986 3-hydroxylation and delays collagen folding.
+    reference_section_type: ABSTRACT
+- id: PMID:30021884
+  title: Histone Interaction Landscapes Visualized by Crosslinking Mass Spectrometry
+    in Intact Cell Nuclei.
+  findings: []
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+- id: PMID:39245686
+  title: The structural basis for the collagen processing by human P3H1/CRTAP/PPIB
+    ternary complex.
+  findings:
+  - statement: &gt;-
+      Cryo-EM structures of the human P3H1/CRTAP/PPIB ternary complex; P3H1 and
+      PPIB active sites form a bifunctional reaction center and CRTAP contributes to
+      a multi-site collagen substrate-interacting zone.
+    reference_section_type: ABSTRACT
+- id: Reactome:R-HSA-1980233
+  title: Collagen prolyl 3-hydroxylase converts 4-Hyp collagen to 3,4-Hyp collagen
+  findings: []
+- id: Reactome:R-HSA-2022073
+  title: Procollagen triple helix formation
+  findings: []
+- id: Reactome:R-HSA-8948226
+  title: Prolyl 3-hydroxylases:Fe2+:3,4-Hyp collagen propeptides dissociates
+  findings: []
+- id: Reactome:R-HSA-8948230
+  title: P3HB binds 4-Hyp-collagen propeptides
+  findings: []
+core_functions:
+- description: &gt;-
+    Non-catalytic scaffolding/helper subunit of the ER collagen prolyl
+    3-hydroxylation complex (with P3H1 and PPIB). CRTAP is required for assembly,
+    stability and activity of the complex that 3-hydroxylates Pro986 of alpha1(I)
+    and alpha1(II) fibrillar procollagen chains; CRTAP contributes to collagen
+    substrate binding but does not itself catalyze hydroxylation.
+  supported_by:
+  - reference_id: PMID:19846465
+    supporting_text: &gt;-
+      CRTAP and P3H1 form a complex with cyclophilin B (CyPB) in the endoplasmic
+      reticulum (ER) which 3-hydroxylates the Pro986 residue of alpha1(I) and
+      alpha1(II) collagen chains.
+  - reference_id: PMID:39245686
+    supporting_text: &gt;-
+      The structure of the P3H1/CRTAP/PPIB/collagen peptide complex reveals
+      multiple binding sites, suggesting a substrate interacting zone.
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  contributes_to_molecular_function:
+    id: GO:0005518
+    label: collagen binding
+  directly_involved_in:
+  - id: GO:0032964
+    label: collagen biosynthetic process
+  locations:
+  - id: GO:0005788
+    label: endoplasmic reticulum lumen
+  substrates:
+  - id: GO:0005518
+    label: collagen binding
+  in_complex:
+    id: GO:0032991
+    label: protein-containing complex
+- description: &gt;-
+    Collagen-specific molecular chaperone/foldase activity of the complex: CRTAP is
+    required for normal collagen triple-helix folding rate, and its loss causes
+    delayed folding and overmodification of the collagen helix. CRTAP also mutually
+    stabilizes its complex partner P3H1 in the ER.
+  supported_by:
+  - reference_id: PMID:20089953
+    supporting_text: &gt;-
+      In the absence of P3H1 or CRTAP, alpha1(I)Pro986 3-hydroxylation is decreased
+      and collagen folding is delayed, resulting in overmodification of the helical
+      lysine and proline residues.
+  - reference_id: PMID:19846465
+    supporting_text: &gt;-
+      These data indicate that CRTAP and P3H1 are mutually stabilized in the
+      collagen prolyl 3-hydroxylation complex.
+  molecular_function:
+    id: GO:0044183
+    label: protein folding chaperone
+  directly_involved_in:
+  - id: GO:0034975
+    label: protein folding in endoplasmic reticulum
+  - id: GO:0050821
+    label: protein stabilization
+  locations:
+  - id: GO:0005788
+    label: endoplasmic reticulum lumen
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Is there a GO cellular component term specifically for the collagen prolyl
+    3-hydroxylation (P3H1/CRTAP/PPIB) complex, and if not should one be created so
+    CRTAP can be annotated more specifically than protein-containing complex?
+- question: &gt;-
+    Does CRTAP have any chaperone or substrate-binding function independent of P3H1
+    and PPIB, given that the proteins are mutually stabilizing and largely
+    co-dependent?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute the P3H1/CRTAP/PPIB complex and assay prolyl 3-hydroxylase
+    activity and collagen-folding (chaperone/foldase) activity with and without
+    CRTAP to quantify CRTAP&#39;s specific contribution to catalysis versus substrate
+    binding and folding.
+- description: &gt;-
+    Map the CRTAP residues that form the collagen substrate-interacting zone (from
+    the cryo-EM model) by structure-guided mutagenesis, and test effects on Pro986
+    3-hydroxylation efficiency and collagen folding rate in cells.
+- description: &gt;-
+    Use proximity labeling (BioID/APEX) of CRTAP in osteoblasts/chondrocytes to
+    define its ER interactome and any partners beyond P3H1/PPIB that participate in
+    collagen maturation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

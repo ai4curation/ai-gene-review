@@ -1,3 +1,10 @@
+---
+title: "Tardigrade Stress Response Protein Curation Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [RAMVA]
+---
+
 # Tardigrade Stress Response Protein Curation Project
 
 **Project Start Date:** 2026-04-09

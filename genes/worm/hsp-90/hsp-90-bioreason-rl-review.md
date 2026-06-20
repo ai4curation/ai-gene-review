@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: hsp-90 (C. elegans)
 
-Source: hsp-90-deep-research-bioreason-rl.md
+Source: hsp-90-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 3/5

@@ -25,6 +25,7 @@ journal: Nature
 year: '2010'
 doi: 10.1038/nature08964
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Native GABAB receptors are heteromultimers with a family of auxiliary subunits

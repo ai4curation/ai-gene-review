@@ -1,3 +1,9 @@
+---
+title: "Vesicle Targeting (GO:0006903) & Descendants — Obsoletion & Replacement"
+maturity: IN_PROGRESS
+tags: [OBSOLETION, FLAGSHIP]
+---
+
 # Vesicle Targeting (GO:0006903) & Descendants — Obsoletion & Replacement
 
 ## Overview

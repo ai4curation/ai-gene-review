@@ -8,6 +8,7 @@ journal: Journal of Bacteriology
 year: '1992'
 doi: 10.1128/jb.174.14.4657-4666.1992
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Characterization of the genes encoding beta-ketoadipate: succinyl-coenzyme A transferase in Pseudomonas putida

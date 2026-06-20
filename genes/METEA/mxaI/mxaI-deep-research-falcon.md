@@ -1,10 +1,10 @@
 ---
 provider: falcon
 model: Edison Scientific Literature
-cached: false
-start_time: '2026-05-22T22:30:25.389412'
-end_time: '2026-05-22T22:45:18.222432'
-duration_seconds: 892.83
+cached: true
+start_time: '2026-06-03T09:26:15.375306'
+end_time: '2026-06-03T09:26:15.379175'
+duration_seconds: 0.0
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: METEA

@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: CDC37 (S. cerevisiae)
 
-Source: CDC37-deep-research-bioreason-rl.md
+Source: CDC37-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

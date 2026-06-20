@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: atg5 (S. pombe)
 
-Source: atg5-deep-research-bioreason-rl.md
+Source: atg5-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

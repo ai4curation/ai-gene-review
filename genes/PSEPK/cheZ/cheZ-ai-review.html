@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cheZ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cheZ</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88EW3" target="_blank" class="term-link">
+                        Q88EW3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cheZ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88EW3" data-a="DESCRIPTION: CheZ is the chemotaxis signal-terminating phosphat..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CheZ is the chemotaxis signal-terminating phosphatase of Pseudomonas putida KT2440. It accelerates the dephosphorylation of the phosphorylated response regulator CheY (CheY-P), the diffusible output of the chemotaxis two-component system. By lowering CheY-P levels, CheZ resets the signaling pathway after stimulation, controlling the proportion of phosphorylated CheY that reaches the flagellar motor and thereby tuning the balance between smooth swimming and reorientation (run/reversal-tumble bias). The protein belongs to the CheZ family (Pfam PF04344; InterPro IPR007439) of response-regulator aspartyl-phosphate phosphatases, which share a conserved C-terminal catalytic region acting on the phosphorylated aspartate of CheY. CheZ acts in the cytoplasm, typically as a homodimer, and in many bacteria is enriched at chemoreceptor/chemotaxis signaling clusters through interaction with other Che proteins. In P. putida KT2440 the gene (PP_4339) lies within a flagella-mediated swimming chemotaxis operon, where CheZ supports motile foraging through complex chemical environments such as the soil and rhizosphere.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW3" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CheZ is a protein-aspartate (CheY-P) phosphatase; &#34;catalytic activity&#34; is correct but uninformatively general.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The InterPro2GO mapping assigns the root catalytic activity term, but CheZ has a well-defined, specific activity as a phosphoprotein phosphatase acting on phosphorylated CheY (an aspartyl-phosphate). UniProt itself maps the Protein phosphatase keyword for this entry to GO:0004721. Replace with the more specific molecular function term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004721" target="_blank" class="term-link">
+                                    phosphoprotein phosphatase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW3" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CheZ acts in the cytoplasm; consistent with UniProt subcellular location and the family&#39;s biology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt record annotates Cytoplasm as the subcellular location, and CheZ-family phosphatases are soluble cytoplasmic proteins (acting on diffusible CheY-P, often enriched at cytoplasmic chemotaxis clusters). The IEA mapping from the Swiss-Prot subcellular location vocabulary is appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009288" target="_blank" class="term-link">
+                                    GO:0009288
+                                </a>
+                            </span>
+                            <span class="term-label">bacterial-type flagellum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW3" data-a="GO:0009288" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CheZ is a cytoplasmic signaling phosphatase, not a structural component of the flagellum.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This located_in annotation comes from an InterPro2GO mapping that conflates chemotaxis with the flagellar apparatus. CheZ is a soluble cytoplasmic enzyme that modulates the chemotaxis response regulator CheY; it is not a structural part of the bacterial-type flagellum and does not localize to the flagellar structure. The functional connection to motility is captured better by the chemotaxis process terms, and localization is already correctly represented by the cytoplasm annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050920" target="_blank" class="term-link">
+                                    GO:0050920
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of chemotaxis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW3" data-a="GO:0050920" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CheZ regulates chemotaxis by dephosphorylating CheY-P to terminate and reset the signaling output.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core biological role of CheZ. By accelerating CheY-P dephosphorylation it controls the level of the chemotaxis output signal and thereby regulates chemotactic behavior. Supported by the conserved CheZ-family function and the UniProt FUNCTION annotation; the InterPro-based IEA is appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as the chemotaxis signal-terminating phosphatase, accelerating dephosphorylation of the phosphorylated response regulator CheY (CheY-P) to reset the chemotaxis signaling output and regulate flagellar motor switching.</h3>
+                <span class="vote-buttons" data-g="Q88EW3" data-a="FUNCTION: Acts as the chemotaxis signal-terminating phosphat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004721" target="_blank" class="term-link">
+                            phosphoprotein phosphatase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050920" target="_blank" class="term-link">
+                                regulation of chemotaxis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                                PMID:12534463
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">UniProt FUNCTION for Q88EW3, from the KT2440 genome paper - &#34;Plays an important role in bacterial chemotaxis signal transduction pathway by accelerating the dephosphorylation of phosphorylated CheY (CheY-P).&#34;</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of the UniProt FUNCTION annotation; CheZ (PP_4339) is placed in the flagella-mediated swimming chemotaxis gene region of the KT2440 genome and functions to regulate CheY by accelerating CheY-P dephosphorylation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cheZ-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EW3" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **cheZ** (UniProt Q88EW3; PP_4339) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">24 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T16:37:16.333710</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="cheZ-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-chez-uniprot-q88ew3-pp_4339-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>cheZ</strong> (UniProt Q88EW3; PP_4339) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-target-verification-mandatory-disambiguation">1. Target verification (mandatory disambiguation)</h2>
+<p><strong>Verified target identity:</strong> The requested protein is <strong>CheZ (chemotaxis protein; CheY-P phosphatase)</strong> from <em>Pseudomonas putida</em> strain KT2440, encoded by <strong>cheZ / PP_4339</strong>, UniProt <strong>Q88EW3</strong>. In the KT2440 genome annotation, CheZ is explicitly described as a <strong>phosphatase regulating the activity of the chemotaxis response regulator CheY</strong>, and it is placed within a <strong>flagella-mediated swimming chemotaxis operon</strong> (PP4332–PP4340) in a larger flagellar gene cluster (PP4331–PP4397). (santos2004genomicfeaturesof pages 24-27)</p>
+<p><strong>Domain/family alignment check:</strong> The UniProt-provided family assignment (“Belongs to the CheZ family”; Chemotax_Pase_CheZ) is consistent with the conserved CheZ-family catalytic motif and mechanism described for CheZ homologs in multiple bacteria. (liu2018achezlike pages 2-4, lertsethtakarn2015helicobacterpylorichezhp pages 3-4)</p>
+<p><strong>Ambiguity risk note:</strong> “cheZ” is a widely used chemotaxis gene symbol across bacteria; all claims below are either (i) <strong>directly supported</strong> for KT2440 CheZ by the KT2440 genome-level source or (ii) <strong>explicitly labeled as inference from CheZ-family experimental literature</strong> (other organisms). (santos2004genomicfeaturesof pages 24-27, lertsethtakarn2015helicobacterpylorichezhp pages 3-4)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-canonical-chemotaxis-phosphatase">2.1 Canonical chemotaxis phosphatase</h3>
+<p>CheZ is the canonical <strong>response regulator phosphatase</strong> in many bacterial chemotaxis systems. Its core biochemical role is to <strong>dephosphorylate phosphorylated CheY (CheY-P)</strong>, thereby terminating the output signal that controls flagellar motor switching. (lertsethtakarn2015helicobacterpylorichezhp pages 3-4, frederick2026alteringchemotaxisas pages 1-5)</p>
+<p>In KT2440, this canonical relationship is explicitly stated: <strong>“The activity of the transducer CheY is regulated by the phosphatase CheZ.”</strong> (santos2004genomicfeaturesof pages 24-27)</p>
+<h3 id="22-reaction-and-substrate-specificity">2.2 Reaction and substrate specificity</h3>
+<p><strong>Reaction (functional definition):</strong> CheZ catalyzes hydrolysis of the <strong>aspartyl-phosphate</strong> on <strong>CheY-P</strong>, regenerating unphosphorylated CheY and inorganic phosphate (conceptually: CheY~P + H2O → CheY + Pi). This activity accelerates the intrinsic autodephosphorylation of CheY-P. (lertsethtakarn2015helicobacterpylorichezhp pages 3-4, frederick2026alteringchemotaxisas pages 1-5)</p>
+<p><strong>Substrate specificity:</strong> Experimental studies of CheZ-family proteins show preferential action on <strong>chemotaxis response regulators</strong> rather than unrelated receiver domains. For example, a CheZ ortholog in <em>Campylobacter jejuni</em> (Cj0700) dephosphorylated <strong>CheY</strong> and interacted with chemotaxis-associated receiver domains (CheA-RR, CheV) but did not act on an unrelated response regulator (RacR), supporting pathway-focused substrate selection. (jama2023achezorthologue pages 16-19)</p>
+<p><strong>Species-dependent specialization:</strong> A CheZ-like phosphatase in <em>Sinorhizobium meliloti</em> (CheT) showed <strong>selectivity among paralogous CheY proteins</strong>, accelerating dephosphorylation of CheY1~P but not CheY2~P. This indicates that even within the CheZ family, substrate specificity can be tuned to particular CheY-like proteins in the organism. (agbekudzi2023similaritiesandvariations pages 88-92)</p>
+<h3 id="23-catalytic-mechanism-and-conserved-motifs">2.3 Catalytic mechanism and conserved motifs</h3>
+<p>CheZ-family proteins share a conserved <strong>DXXXQ</strong> catalytic motif. Multiple experimental systems demonstrate that the corresponding Asp/Gln residues are required for phosphatase activity (e.g., <em>Azorhizobium caulinodans</em> CheZ Asp165/Gln169; <em>Helicobacter pylori</em> CheZHP D189/Q193). (liu2018achezlike pages 2-4, lertsethtakarn2015helicobacterpylorichezhp pages 4-6)</p>
+<p>Mechanistically, CheZ’s active-site Asp and Gln promote dephosphorylation by positioning/activating water for nucleophilic attack on the phosphoryl group at the CheY active site (described for <em>E. coli</em> CheZ Asp143/Gln147). (frederick2026alteringchemotaxisas pages 1-5)</p>
+<p>A conserved <strong>C-terminal CheY-P binding region</strong> (often described as the last ~12 amino acids) is important for activity in at least some CheZ-family members; in <em>H. pylori</em> CheZHP, the C-terminal 12-aa segment contributes to CheY-P binding and phosphatase function. (lertsethtakarn2015helicobacterpylorichezhp pages 3-4, lertsethtakarn2015helicobacterpylorichezhp pages 4-6)</p>
+<h2 id="3-biological-role-in-pseudomonas-putida-kt2440">3. Biological role in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="31-pathway-placement-swimming-chemotaxis-module">3.1 Pathway placement: swimming chemotaxis module</h3>
+<p>In KT2440, CheZ is located in a <strong>flagella-mediated swimming chemotaxis operon</strong> (PP4332–PP4340) within the larger flagellar gene region (PP4331–PP4397), consistent with a role in controlling swimming behavior via chemotaxis signaling. (santos2004genomicfeaturesof pages 24-27)</p>
+<h3 id="32-functional-role-resetting-chey-signaling-output">3.2 Functional role: resetting CheY signaling output</h3>
+<p>CheY phosphorylation state determines chemotaxis output (motor switching); CheZ lowers CheY-P levels and thereby <strong>resets</strong> signaling after stimulation. This “reset” role is essential for maintaining responsiveness to changing gradients and avoiding persistent output states. While this dynamic description is established largely in model systems, it matches KT2440’s explicit annotation of CheZ as the regulator of CheY activity. (santos2004genomicfeaturesof pages 24-27, frederick2026alteringchemotaxisas pages 1-5)</p>
+<h2 id="4-cellular-localization-current-evidence-and-best-supported-inference">4. Cellular localization (current evidence and best-supported inference)</h2>
+<p><strong>Direct KT2440 evidence gap:</strong> No KT2440-specific microscopy or fractionation evidence for CheZ localization was identified in the retrieved texts.</p>
+<p><strong>Best-supported inference from authoritative experimental literature:</strong> CheZ-family phosphatase activity is frequently <strong>spatially restricted</strong> in bacterial cells, which is proposed to prevent formation of whole-cell CheY-P gradients and to coordinate outputs. In <em>E. coli</em>, CheZ localizes to the chemotaxis signaling cluster via interaction with CheA/CheA-short (CheAs). In <em>H. pylori</em>, CheZHP localizes to a cell pole through a different partner (ChePep), showing that localization mechanisms can diverge while maintaining polar/clustered localization logic. (lertsethtakarn2015helicobacterpylorichezhp pages 3-4, lertsethtakarn2015helicobacterpylorichezhp pages 7-9)</p>
+<p>For KT2440 CheZ (Q88EW3), the most defensible annotation is therefore <strong>cytoplasmic</strong> with <strong>likely enrichment at chemotaxis/flagellar signaling regions</strong> (e.g., chemoreceptor arrays or motor-associated zones), but the precise anchoring partner(s) and pattern remain to be experimentally verified in <em>P. putida</em>. (lertsethtakarn2015helicobacterpylorichezhp pages 3-4, santos2004genomicfeaturesof pages 24-27)</p>
+<h2 id="5-phenotypes-and-functional-consequences-of-disruption-direct-vs-inferred">5. Phenotypes and functional consequences of disruption (direct vs inferred)</h2>
+<p><strong>Direct KT2440 evidence gap:</strong> No KT2440 cheZ knockout phenotype was found in the gathered primary texts.</p>
+<p><strong>Strong inference from chemotaxis systems with validated CheZ loss-of-function:</strong></p>
+<ul>
+<li>In <em>Azorhizobium caulinodans</em>, cheZ disruption abolished chemotactic ring formation on soft agar while not eliminating single-cell motility, supporting a specific role in <strong>chemotaxis signaling</strong> rather than flagellar assembly/function. (liu2018achezlike pages 2-4)</li>
+<li>In <em>H. pylori</em>, deletion of cheZHP caused severely reduced soft-agar migration and a <strong>~2-fold increase in direction changes</strong> (WT ~21.6/min vs mutant ~48/min), consistent with elevated CheY-P and hyper-reversal behavior; active-site mutants phenocopied the null, tying phenotype to loss of phosphatase activity. (lertsethtakarn2015helicobacterpylorichezhp pages 4-6)</li>
+</ul>
+<p>Given KT2440’s operon context and explicit CheY regulatory annotation, a comparable prediction for <em>P. putida</em> KT2440 is that loss of cheZ would cause a <strong>strong swimming chemotaxis defect</strong> (altered run-reversal/tumble bias and impaired migration in gradient/soft-agar assays). This remains a prediction until directly measured in KT2440. (santos2004genomicfeaturesof pages 24-27, lertsethtakarn2015helicobacterpylorichezhp pages 4-6)</p>
+<h2 id="6-quantitative-data-relevant-to-functional-annotation-recent-and-legacy">6. Quantitative data relevant to functional annotation (recent and legacy)</h2>
+<h3 id="61-catalytic-acceleration-benchmarks-chez-family">6.1 Catalytic acceleration benchmarks (CheZ-family)</h3>
+<p>Quantitative catalytic effects can vary by organism and CheY substrate.</p>
+<ul>
+<li>A CheZ-like phosphatase in <em>S. meliloti</em> (CheT) accelerated dephosphorylation of <strong>CheY1~P ~2-fold</strong>, reducing half-life from <strong>26 s to 13 s</strong>, and did not accelerate a second CheY paralog (CheY2~P). Binding affinities showed stronger binding to a phosphomimic state (CheY1-BeF3− KD ~2.9 μM) than to CheY1 (KD ~75 μM). (agbekudzi2023similaritiesandvariations pages 88-92)</li>
+</ul>
+<p>These values provide a <strong>quantitative family reference point</strong> for CheZ-like catalytic acceleration and substrate selection, but should not be assumed identical for KT2440 CheZ without direct kinetics. (agbekudzi2023similaritiesandvariations pages 88-92, santos2004genomicfeaturesof pages 24-27)</p>
+<h3 id="62-quantitative-behavioral-output-effects-chez-loss">6.2 Quantitative behavioral output effects (CheZ loss)</h3>
+<p>The H. pylori cheZHP deletion phenotype provides a concrete example of how loss of CheZ-family phosphatase activity shifts motility output: direction changes increased from ~21.6/min to ~48/min (~2.2×). (lertsethtakarn2015helicobacterpylorichezhp pages 4-6)</p>
+<h3 id="63-quantitative-modulation-by-pathway-interactions">6.3 Quantitative modulation by pathway interactions</h3>
+<p>Protein-protein interactions can modulate CheZ activity; work cited within the CheZHP study notes that <strong>CheA-short can activate CheZ ~2.5-fold</strong> in the E. coli paradigm, highlighting that in vivo activity is not purely intrinsic catalysis but can be tuned by chemotaxis complex assembly. (lertsethtakarn2015helicobacterpylorichezhp pages 7-9)</p>
+<h2 id="7-recent-developments-and-latest-research-prioritized-20232024">7. Recent developments and latest research (prioritized 2023–2024)</h2>
+<h3 id="71-2024-authoritative-synthesis-expanding-chemotaxis-architectures">7.1 2024 authoritative synthesis: expanding chemotaxis architectures</h3>
+<p>A major 2024 Annual Review emphasizes that while the <strong>E. coli chemotaxis pathway</strong> serves as the canonical model, many bacteria possess <strong>alternative architectures and protein compositions</strong>, implying that CheZ function (and especially localization/complex integration) can be implemented in different organizational contexts across taxa. This directly supports caution when transferring detailed mechanistic assumptions to <em>Pseudomonas</em> without organism-specific evidence. (frederick2026alteringchemotaxisas pages 30-35)</p>
+<h3 id="72-2023-mechanistic-insights-chez-family-diversity-and-selectivity">7.2 2023 mechanistic insights: CheZ-family diversity and selectivity</h3>
+<p>A 2023 study/review of <em>S. meliloti</em> chemotaxis variation provides quantitative evidence that CheZ-family phosphatases can be <strong>selective among multiple CheY-like proteins</strong> and can have additional interaction partners (e.g., binding CheR with KD ~19 μM reported by microcalorimetry and formation of higher-order complexes), underscoring that CheZ-family roles may extend beyond a single simple phosphatase-substrate pair in some organisms. (agbekudzi2023similaritiesandvariations pages 92-97, agbekudzi2023similaritiesandvariations pages 88-92)</p>
+<p>A 2023 preprint in <em>C. jejuni</em> provides evidence for CheZ-like activity in a lineage previously thought to lack canonical CheZ, reinforcing the point that <strong>distant CheZ homologs may be missed by simple annotation</strong>, and that conserved phosphatase activity can be retained even with low sequence identity. (jama2023achezorthologue pages 16-19)</p>
+<h2 id="8-current-applications-and-real-world-implementations-relevant-to-chezchemotaxis">8. Current applications and real-world implementations relevant to CheZ/chemotaxis</h2>
+<h3 id="81-chemotaxis-engineering-and-biosensing-contexts">8.1 Chemotaxis engineering and biosensing contexts</h3>
+<p>Chemotaxis systems (including CheY/CheZ interactions) are increasingly used as components in <strong>biosensing concepts</strong> where bacterial accumulation reports chemical availability; split-fluorescent approaches explicitly use CheY–CheZ interaction as a readout of chemotaxis pathway activity in living cells (demonstrated in E. coli). While not specific to KT2440 CheZ, these approaches illustrate practical implementation of CheZ-mediated signaling state as a measurable output. (frederick2026alteringchemotaxisas pages 1-5)</p>
+<h3 id="82-environmental-and-rhizosphere-relevance-in-pseudomonas">8.2 Environmental and rhizosphere relevance in <em>Pseudomonas</em></h3>
+<p>For <em>Pseudomonas putida</em>, chemotaxis is an enabling trait for navigating complex soil/rhizosphere chemical landscapes. Genome-level organization indicates KT2440 invests in a large flagellar/chemotaxis gene complement (&gt;50 genes for the flagellar system in the cited genome discussion), supporting a functional role for CheZ in environmental motility strategies. (santos2004genomicfeaturesof pages 24-27)</p>
+<h2 id="9-expert-interpretation-and-annotation-recommendations-for-q88ew3-pp_4339">9. Expert interpretation and annotation recommendations for Q88EW3 (PP_4339)</h2>
+<h3 id="91-primary-functional-annotation-most-defensible">9.1 Primary functional annotation (most defensible)</h3>
+<p><strong>Protein name/function:</strong> Chemotaxis protein CheZ; <strong>CheY-P phosphatase</strong> (EC 3.1.3.-, response regulator phosphatase). (santos2004genomicfeaturesof pages 24-27, lertsethtakarn2015helicobacterpylorichezhp pages 3-4)</p>
+<p><strong>Primary substrate:</strong> CheY-P (chemotaxis response regulator). (santos2004genomicfeaturesof pages 24-27, frederick2026alteringchemotaxisas pages 1-5)</p>
+<p><strong>Biological process:</strong> Swimming chemotaxis signal termination/resetting by accelerating CheY-P dephosphorylation, thereby shaping flagellar motor switching behavior. (santos2004genomicfeaturesof pages 24-27, lertsethtakarn2015helicobacterpylorichezhp pages 4-6)</p>
+<p><strong>Cellular component/localization (best-supported):</strong> Cytoplasmic; likely recruited to chemotaxis clusters and/or polar signaling regions as in other bacteria, but KT2440-specific localization is currently unverified in the retrieved literature. (lertsethtakarn2015helicobacterpylorichezhp pages 3-4, lertsethtakarn2015helicobacterpylorichezhp pages 7-9)</p>
+<h3 id="92-confidence-assessment">9.2 Confidence assessment</h3>
+<ul>
+<li><strong>High confidence (direct KT2440 evidence):</strong> gene identity, organism, pathway involvement, relationship to CheY regulation. (santos2004genomicfeaturesof pages 24-27)</li>
+<li><strong>High confidence (family-level experimental support):</strong> biochemical role as CheY-P phosphatase with conserved DXXXQ motif dependence. (liu2018achezlike pages 2-4, lertsethtakarn2015helicobacterpylorichezhp pages 4-6)</li>
+<li><strong>Moderate confidence (inference):</strong> detailed localization mechanism/partner proteins and quantitative kinetics in KT2440. (lertsethtakarn2015helicobacterpylorichezhp pages 7-9, agbekudzi2023similaritiesandvariations pages 88-92)</li>
+</ul>
+<h2 id="10-evidence-summary-table">10. Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Claim/Topic</th>
+<th>Organism/Protein studied</th>
+<th>Key quantitative/qualitative findings</th>
+<th>Relevance to <em>P. putida</em> Q88EW3 (direct vs inferred)</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene identity and pathway placement</td>
+<td><em>Pseudomonas putida</em> KT2440 CheZ (PP_4339; UniProt Q88EW3)</td>
+<td>KT2440 genome annotation places <strong>cheZ/PP_4339</strong> in a flagella-mediated swimming chemotaxis operon (PP4332–PP4340; linked cluster PP4331–PP4397); text states “the activity of the transducer CheY is regulated by the phosphatase CheZ.” (santos2004genomicfeaturesof pages 24-27)</td>
+<td><strong>Direct</strong> evidence for correct gene/protein identity and chemotaxis role in KT2440</td>
+<td>dos Santos et al., 2004, doi: https://doi.org/10.1007/978-1-4419-9086-0_3</td>
+</tr>
+<tr>
+<td>Biochemical function</td>
+<td>Canonical CheZ family; <em>E. coli</em> / <em>H. pylori</em> CheZ homologs</td>
+<td>CheZ is the canonical <strong>CheY-P phosphatase</strong> in bacterial chemotaxis; it dephosphorylates phosphorylated CheY to terminate the signal. Conserved catalytic mechanism involves active-site Asp/Gln promoting hydrolysis of the aspartyl phosphate. (lertsethtakarn2015helicobacterpylorichezhp pages 3-4, frederick2026alteringchemotaxisas pages 1-5)</td>
+<td><strong>Inferred</strong> to Q88EW3 from family/domain conservation plus KT2440 genome annotation as CheZ</td>
+<td>Lertsethtakarn et al., 2015, doi: https://doi.org/10.1111/mmi.13086; Frederick et al., 2026, doi: https://doi.org/10.1038/s42003-025-09475-w</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td><em>Campylobacter jejuni</em> Cj0700 (CheZ ortholog)</td>
+<td>Purified CheZ ortholog dephosphorylates <strong>CheY</strong> and interacts strongly with CheY; weaker interactions with CheA-RR and CheV were reported, while no activity on unrelated RR RacR was detected, indicating preference for chemotaxis response regulators rather than generic RRs. (jama2023achezorthologue pages 16-19)</td>
+<td><strong>Inferred</strong>: supports that CheZ-family enzymes such as Q88EW3 are primarily CheY-P phosphatases, though species-specific side-substrates may vary</td>
+<td>Jama &amp; Ketley, 2023, doi: https://doi.org/10.1101/2023.01.06.523011</td>
+</tr>
+<tr>
+<td>Catalytic residues / motif</td>
+<td><em>Azorhizobium caulinodans</em> CheZ; <em>H. pylori</em> CheZHP; CheZ family</td>
+<td>CheZ-family phosphatases carry a conserved <strong>DXXXQ</strong> catalytic motif. In <em>A. caulinodans</em>, Asp165/Gln169 are conserved; in <em>H. pylori</em>, D189 and Q193 are required for activity; family summaries place the active site and CheY-P binding region in the C-terminal half. (liu2018achezlike pages 2-4, lertsethtakarn2015helicobacterpylorichezhp pages 3-4, lertsethtakarn2015helicobacterpylorichezhp pages 4-6)</td>
+<td><strong>Inferred</strong>: Q88EW3 is annotated as CheZ-family/Chemotax_Pase_CheZ, so catalytic function is strongly supported by domain-level conservation</td>
+<td>Liu et al., 2018, doi: https://doi.org/10.1128/AEM.01827-17; Lertsethtakarn et al., 2015, doi: https://doi.org/10.1111/mmi.13086</td>
+</tr>
+<tr>
+<td>CheY-P binding region</td>
+<td><em>H. pylori</em> CheZHP; CheZ family</td>
+<td>A <strong>C-terminal ~12-aa CheY-P binding region</strong> is required for full phosphatase activity; the C-terminal half contains the catalytic residues and binding determinants. (lertsethtakarn2015helicobacterpylorichezhp pages 3-4, lertsethtakarn2015helicobacterpylorichezhp pages 4-6)</td>
+<td><strong>Inferred</strong> to Q88EW3 from family-level conservation; direct binding-site mapping in KT2440 not found</td>
+<td>Lertsethtakarn et al., 2015, doi: https://doi.org/10.1111/mmi.13086</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>Canonical chemotaxis systems / KT2440 annotation</td>
+<td>CheZ lowers intracellular CheY-P, thereby resetting pathway output and biasing motor behavior away from persistent reversal/tumble states; KT2440 annotation specifically links CheZ to regulation of CheY in the swimming chemotaxis operon. (santos2004genomicfeaturesof pages 24-27, lertsethtakarn2015helicobacterpylorichezhp pages 3-4, frederick2026alteringchemotaxisas pages 1-5)</td>
+<td><strong>Direct + inferred</strong>: direct for pathway membership in KT2440; inferred for detailed dynamic role from conserved mechanism</td>
+<td>dos Santos et al., 2004, doi: https://doi.org/10.1007/978-1-4419-9086-0_3; Frederick et al., 2026, doi: https://doi.org/10.1038/s42003-025-09475-w</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td><em>E. coli</em> CheZ; <em>H. pylori</em> CheZHP</td>
+<td>CheZ phosphatase activity is often spatially restricted. In <em>E. coli</em>, CheZ localizes to the chemotaxis cluster via CheA/CheAs; in <em>H. pylori</em>, CheZHP localizes to the pole via ChePep, with localization region mapped to aa ~40–241. Spatial restriction is proposed to prevent whole-cell CheY-P gradients. (lertsethtakarn2015helicobacterpylorichezhp pages 3-4, lertsethtakarn2015helicobacterpylorichezhp pages 7-9)</td>
+<td><strong>Inferred only</strong>: no direct localization study for KT2440 Q88EW3 found in gathered evidence</td>
+<td>Lertsethtakarn et al., 2015, doi: https://doi.org/10.1111/mmi.13086</td>
+</tr>
+<tr>
+<td>Mutant phenotype</td>
+<td><em>A. caulinodans</em> CheZ</td>
+<td><strong>cheZ disruption abolishes chemotactic ring formation</strong> in soft agar while single-cell motility remains; complementation restores chemotaxis. This separates chemotaxis signaling from basal flagellar motility. (liu2018achezlike pages 2-4)</td>
+<td><strong>Inferred</strong>: strongly supports expected phenotype for KT2440 CheZ loss, but not directly tested here</td>
+<td>Liu et al., 2018, doi: https://doi.org/10.1128/AEM.01827-17</td>
+</tr>
+<tr>
+<td>Mutant phenotype</td>
+<td><em>H. pylori</em> CheZHP</td>
+<td>Full <strong>ΔcheZ</strong> mutant shows poor soft-agar migration and hyper-reversal behavior; direction changes increase about <strong>2-fold</strong> from ~21.6/min (WT) to ~48/min (mutant), consistent with elevated CheY-P. Active-site mutants D189N/Q193R phenocopy the null. (lertsethtakarn2015helicobacterpylorichezhp pages 4-6)</td>
+<td><strong>Inferred</strong>: illustrates expected behavioral consequence of losing CheZ-family phosphatase activity</td>
+<td>Lertsethtakarn et al., 2015, doi: https://doi.org/10.1111/mmi.13086</td>
+</tr>
+<tr>
+<td>Quantitative catalytic effect</td>
+<td><em>Sinorhizobium meliloti</em> CheT (CheZ-like phosphatase)</td>
+<td>CheT accelerates dephosphorylation of CheY1~P <strong>2-fold</strong>, reducing half-life from <strong>26 s to 13 s</strong>; does <strong>not</strong> enhance dephosphorylation of CheY2~P, showing substrate selectivity. Binding: KD ~<strong>75 μM</strong> for CheY1 and ~<strong>2.9 μM</strong> for phosphomimic CheY1-BeF3−. (agbekudzi2023similaritiesandvariations pages 88-92)</td>
+<td><strong>Inferred</strong>: quantitative family benchmark for expected phosphatase behavior of Q88EW3, but kinetics may differ by species</td>
+<td>Agbekudzi, 2023, no DOI URL available in gathered evidence</td>
+</tr>
+<tr>
+<td>Quantitative activation / complex effects</td>
+<td><em>E. coli</em> / <em>H. pylori</em> CheZ family context</td>
+<td>Interaction with CheA-short can activate CheZ about <strong>2.5-fold</strong> in prior <em>E. coli</em> work cited within the H. pylori study; CheZ-family proteins are therefore modulated by pathway protein interactions as well as catalytic residues. (lertsethtakarn2015helicobacterpylorichezhp pages 7-9)</td>
+<td><strong>Inferred</strong>: suggests Q88EW3 activity may also be influenced by chemotaxis-complex interactions, but no KT2440-specific data found</td>
+<td>Lertsethtakarn et al., 2015, doi: https://doi.org/10.1111/mmi.13086</td>
+</tr>
+<tr>
+<td>Alternative phosphatases / annotation context</td>
+<td>Broad bacterial chemotaxis systems</td>
+<td>CheZ is canonical, but some taxa use CheC/FliY/CheX instead; comparative genomics indicates <strong>Pseudomonas</strong> genomes are predominantly <strong>CheZ-only</strong> in the cited dataset (1,375 CheZ-only; 1 both; 1 CheX-only), supporting the expectation that CheZ is the principal chemotaxis phosphatase in pseudomonads. (frederick2026alteringchemotaxisas pages 30-35)</td>
+<td><strong>Inferred</strong>: supports uniqueness/centrality of CheZ for <em>Pseudomonas</em> chemotaxis, though not specific to KT2440 experiment</td>
+<td>Frederick et al., 2026, doi: https://doi.org/10.1038/s42003-025-09475-w</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles direct evidence for the identity and pathway placement of </em>Pseudomonas putida<em> KT2440 CheZ (PP_4339/Q88EW3) together with experimentally supported CheZ-family findings used to infer biochemical function, substrate specificity, localization logic, and likely phenotypes.</em></p>
+<h2 id="references-urls-and-publication-dates">References (URLs and publication dates)</h2>
+<ul>
+<li>dos Santos et al. <strong>2004-01</strong>. “Genomic Features of <em>Pseudomonas putida</em> Strain KT2440.” https://doi.org/10.1007/978-1-4419-9086-0_3 (santos2004genomicfeaturesof pages 24-27)</li>
+<li>Lertsethtakarn et al. <strong>2015-09</strong>. “<em>Helicobacter pylori</em> CheZHP and ChePep form a novel chemotaxis-regulatory complex…” https://doi.org/10.1111/mmi.13086 (lertsethtakarn2015helicobacterpylorichezhp pages 4-6, lertsethtakarn2015helicobacterpylorichezhp pages 7-9)</li>
+<li>Liu et al. <strong>2018-02</strong>. “A cheZ-like gene in <em>Azorhizobium caulinodans</em>…” https://doi.org/10.1128/AEM.01827-17 (liu2018achezlike pages 2-4)</li>
+<li>Jama &amp; Ketley <strong>2023-01</strong> (preprint). “A CheZ orthologue in <em>Campylobacter jejuni</em>…” https://doi.org/10.1101/2023.01.06.523011 (jama2023achezorthologue pages 16-19)</li>
+<li>Agbekudzi <strong>2023</strong>. “Similarities and variations of the enterobacterial chemotaxis paradigm in <em>Sinorhizobium meliloti</em>.” (DOI/URL not available in retrieved text metadata) (agbekudzi2023similaritiesandvariations pages 92-97, agbekudzi2023similaritiesandvariations pages 88-92)</li>
+<li>Muok et al. <strong>2024-11</strong>. “Unpacking Alternative Features of the Bacterial Chemotaxis System.” https://doi.org/10.1146/annurev-micro-032421-110850 (frederick2026alteringchemotaxisas pages 30-35)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(santos2004genomicfeaturesof pages 24-27): Vitor A. P. Martins dos Santos, Kenneth N. Timmis, Burkhard Tümmler, and Christian Weinel. Genomic features of pseudomonas putida strain kt2440. ArXiv, pages 77-112, Jan 2004. URL: https://doi.org/10.1007/978-1-4419-9086-0_3, doi:10.1007/978-1-4419-9086-0_3. This article has 19 citations.</p>
+</li>
+<li>
+<p>(liu2018achezlike pages 2-4): Xiaolin Liu, Wei Liu, Yu Sun, Chunlei Xia, Claudine Elmerich, and Zhihong Xie. A <i>chez</i> -like gene in azorhizobium caulinodans is a key gene in the control of chemotaxis and colonization of the host plant. Applied and Environmental Microbiology, Feb 2018. URL: https://doi.org/10.1128/aem.01827-17, doi:10.1128/aem.01827-17. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lertsethtakarn2015helicobacterpylorichezhp pages 3-4): Paphavee Lertsethtakarn, Michael R. Howitt, Juan Castellon, Manuel R. Amieva, and Karen M. Ottemann. Helicobacter pylori chezhp and chepep form a novel chemotaxis‐regulatory complex distinct from the core chemotaxis signaling proteins and the flagellar motor. Molecular Microbiology, 97:1063-1078, Sep 2015. URL: https://doi.org/10.1111/mmi.13086, doi:10.1111/mmi.13086. This article has 41 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frederick2026alteringchemotaxisas pages 1-5): Abigael Frederick, Carolina Lopes, Ben Fulton, Yuhsun Huang, Ram Podicheti, Douglas Rusch, George Minasov, Ludmilla Shuvalova, Karla J. F. Satchell, and Dean A. Rowe-Magnus. Altering chemotaxis as a strategy to enhance the foraging range of motility-restricted bacteria. Communications Biology, Jan 2026. URL: https://doi.org/10.1038/s42003-025-09475-w, doi:10.1038/s42003-025-09475-w. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jama2023achezorthologue pages 16-19): Abdullahi S. Jama and Julian M. Ketley. A chez orthologue in campylobacter jejuni plays a role in chemotaxis through conserved phosphatase activity. bioRxiv, Jan 2023. URL: https://doi.org/10.1101/2023.01.06.523011, doi:10.1101/2023.01.06.523011. This article has 0 citations.</p>
+</li>
+<li>
+<p>(agbekudzi2023similaritiesandvariations pages 88-92): A Agbekudzi. Similarities and variations of the enterobacterial chemotaxis paradigm in sinorhizobium meliloti. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(lertsethtakarn2015helicobacterpylorichezhp pages 4-6): Paphavee Lertsethtakarn, Michael R. Howitt, Juan Castellon, Manuel R. Amieva, and Karen M. Ottemann. Helicobacter pylori chezhp and chepep form a novel chemotaxis‐regulatory complex distinct from the core chemotaxis signaling proteins and the flagellar motor. Molecular Microbiology, 97:1063-1078, Sep 2015. URL: https://doi.org/10.1111/mmi.13086, doi:10.1111/mmi.13086. This article has 41 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lertsethtakarn2015helicobacterpylorichezhp pages 7-9): Paphavee Lertsethtakarn, Michael R. Howitt, Juan Castellon, Manuel R. Amieva, and Karen M. Ottemann. Helicobacter pylori chezhp and chepep form a novel chemotaxis‐regulatory complex distinct from the core chemotaxis signaling proteins and the flagellar motor. Molecular Microbiology, 97:1063-1078, Sep 2015. URL: https://doi.org/10.1111/mmi.13086, doi:10.1111/mmi.13086. This article has 41 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frederick2026alteringchemotaxisas pages 30-35): Abigael Frederick, Carolina Lopes, Ben Fulton, Yuhsun Huang, Ram Podicheti, Douglas Rusch, George Minasov, Ludmilla Shuvalova, Karla J. F. Satchell, and Dean A. Rowe-Magnus. Altering chemotaxis as a strategy to enhance the foraging range of motility-restricted bacteria. Communications Biology, Jan 2026. URL: https://doi.org/10.1038/s42003-025-09475-w, doi:10.1038/s42003-025-09475-w. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(agbekudzi2023similaritiesandvariations pages 92-97): A Agbekudzi. Similarities and variations of the enterobacterial chemotaxis paradigm in sinorhizobium meliloti. Unknown journal, 2023.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="cheZ-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>santos2004genomicfeaturesof pages 24-27</li>
+<li>jama2023achezorthologue pages 16-19</li>
+<li>agbekudzi2023similaritiesandvariations pages 88-92</li>
+<li>frederick2026alteringchemotaxisas pages 1-5</li>
+<li>liu2018achezlike pages 2-4</li>
+<li>lertsethtakarn2015helicobacterpylorichezhp pages 4-6</li>
+<li>lertsethtakarn2015helicobacterpylorichezhp pages 7-9</li>
+<li>frederick2026alteringchemotaxisas pages 30-35</li>
+<li>lertsethtakarn2015helicobacterpylorichezhp pages 3-4</li>
+<li>agbekudzi2023similaritiesandvariations pages 92-97</li>
+<li>https://doi.org/10.1007/978-1-4419-9086-0_3</li>
+<li>https://doi.org/10.1111/mmi.13086;</li>
+<li>https://doi.org/10.1038/s42003-025-09475-w</li>
+<li>https://doi.org/10.1101/2023.01.06.523011</li>
+<li>https://doi.org/10.1128/AEM.01827-17;</li>
+<li>https://doi.org/10.1111/mmi.13086</li>
+<li>https://doi.org/10.1007/978-1-4419-9086-0_3;</li>
+<li>https://doi.org/10.1128/AEM.01827-17</li>
+<li>https://doi.org/10.1146/annurev-micro-032421-110850</li>
+<li>https://doi.org/10.1007/978-1-4419-9086-0_3,</li>
+<li>https://doi.org/10.1128/aem.01827-17,</li>
+<li>https://doi.org/10.1111/mmi.13086,</li>
+<li>https://doi.org/10.1038/s42003-025-09475-w,</li>
+<li>https://doi.org/10.1101/2023.01.06.523011,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88EW3
+gene_symbol: cheZ
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  CheZ is the chemotaxis signal-terminating phosphatase of Pseudomonas putida
+  KT2440. It accelerates the dephosphorylation of the phosphorylated response
+  regulator CheY (CheY-P), the diffusible output of the chemotaxis two-component
+  system. By lowering CheY-P levels, CheZ resets the signaling pathway after
+  stimulation, controlling the proportion of phosphorylated CheY that reaches the
+  flagellar motor and thereby tuning the balance between smooth swimming and
+  reorientation (run/reversal-tumble bias). The protein belongs to the CheZ
+  family (Pfam PF04344; InterPro IPR007439) of response-regulator
+  aspartyl-phosphate phosphatases, which share a conserved C-terminal catalytic
+  region acting on the phosphorylated aspartate of CheY. CheZ acts in the
+  cytoplasm, typically as a homodimer, and in many bacteria is enriched at
+  chemoreceptor/chemotaxis signaling clusters through interaction with other Che
+  proteins. In P. putida KT2440 the gene (PP_4339) lies within a
+  flagella-mediated swimming chemotaxis operon, where CheZ supports motile
+  foraging through complex chemical environments such as the soil and rhizosphere.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      CheZ is a protein-aspartate (CheY-P) phosphatase; &#34;catalytic activity&#34; is
+      correct but uninformatively general.
+    action: MODIFY
+    reason: &gt;-
+      The InterPro2GO mapping assigns the root catalytic activity term, but CheZ
+      has a well-defined, specific activity as a phosphoprotein phosphatase
+      acting on phosphorylated CheY (an aspartyl-phosphate). UniProt itself maps
+      the Protein phosphatase keyword for this entry to GO:0004721. Replace with
+      the more specific molecular function term.
+    proposed_replacement_terms:
+    - id: GO:0004721
+      label: phosphoprotein phosphatase activity
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      CheZ acts in the cytoplasm; consistent with UniProt subcellular location
+      and the family&#39;s biology.
+    action: ACCEPT
+    reason: &gt;-
+      The UniProt record annotates Cytoplasm as the subcellular location, and
+      CheZ-family phosphatases are soluble cytoplasmic proteins (acting on
+      diffusible CheY-P, often enriched at cytoplasmic chemotaxis clusters). The
+      IEA mapping from the Swiss-Prot subcellular location vocabulary is
+      appropriate.
+- term:
+    id: GO:0009288
+    label: bacterial-type flagellum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      CheZ is a cytoplasmic signaling phosphatase, not a structural component of
+      the flagellum.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This located_in annotation comes from an InterPro2GO mapping that conflates
+      chemotaxis with the flagellar apparatus. CheZ is a soluble cytoplasmic
+      enzyme that modulates the chemotaxis response regulator CheY; it is not a
+      structural part of the bacterial-type flagellum and does not localize to
+      the flagellar structure. The functional connection to motility is captured
+      better by the chemotaxis process terms, and localization is already
+      correctly represented by the cytoplasm annotation.
+- term:
+    id: GO:0050920
+    label: regulation of chemotaxis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      CheZ regulates chemotaxis by dephosphorylating CheY-P to terminate and
+      reset the signaling output.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core biological role of CheZ. By accelerating CheY-P
+      dephosphorylation it controls the level of the chemotaxis output signal and
+      thereby regulates chemotactic behavior. Supported by the conserved
+      CheZ-family function and the UniProt FUNCTION annotation; the InterPro-based
+      IEA is appropriate.
+core_functions:
+- description: &gt;-
+    Acts as the chemotaxis signal-terminating phosphatase, accelerating
+    dephosphorylation of the phosphorylated response regulator CheY (CheY-P) to
+    reset the chemotaxis signaling output and regulate flagellar motor switching.
+  supported_by:
+  - reference_id: PMID:12534463
+    supporting_text: &gt;-
+      UniProt FUNCTION for Q88EW3, from the KT2440 genome paper - &#34;Plays an
+      important role in bacterial chemotaxis signal transduction pathway by
+      accelerating the dephosphorylation of phosphorylated CheY (CheY-P).&#34;
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0004721
+    label: phosphoprotein phosphatase activity
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  directly_involved_in:
+  - id: GO:0050920
+    label: regulation of chemotaxis
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings:
+  - statement: &gt;-
+      Source of the UniProt FUNCTION annotation; CheZ (PP_4339) is placed in the
+      flagella-mediated swimming chemotaxis gene region of the KT2440 genome and
+      functions to regulate CheY by accelerating CheY-P dephosphorylation.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID 12534463 is the KT2440 complete genome paper (Nelson et al., Environ
+      Microbiol 2002), cited as reference [1] in the UniProt record for Q88EW3.
+      It establishes gene identity and chemotaxis-operon context.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

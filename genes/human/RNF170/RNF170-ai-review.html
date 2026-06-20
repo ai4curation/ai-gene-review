@@ -1,0 +1,3231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RNF170 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RNF170</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96K19" target="_blank" class="term-link">
+                        Q96K19
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RNF170";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96K19" data-a="DESCRIPTION: RNF170 is a multi-pass endoplasmic reticulum membr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RNF170 is a multi-pass endoplasmic reticulum membrane RING-type E3 ubiquitin-protein ligase (EC 2.3.2.27, 258 aa) with three transmembrane helices and a large cytoplasmic loop carrying a C3HC4 RING domain (catalytic Cys-102/His-104). Its defining function is in ER-associated degradation (ERAD) of the inositol 1,4,5-trisphosphate receptor (ITPR1/IP3R): RNF170 is essential for stimulus-induced ubiquitination and degradation of activated ITPR1 and also contributes to ITPR1 turnover in resting cells, thereby controlling IP3R abundance and ER calcium-release signaling. To do this it is constitutively associated with the ERLIN1/ERLIN2 (SPFH-domain) complex, which recognizes activated IP3R and recruits RNF170 to ubiquitinate it. RNF170 also has a secondary, ligase-dependent immune-regulatory role: it binds Toll-like receptor 3 (TLR3) and builds K48-linked polyubiquitin chains on Lys-766 in the TLR3 TIR domain to drive its proteasomal degradation, selectively dampening TLR3-triggered innate immune responses. RNF170 is broadly expressed (including spinal cord); loss-of-function and RING-region missense variants cause autosomal dominant sensory ataxia (SNAX1) and autosomal recessive hereditary spastic paraplegia (SPG85), linking its ER ubiquitin-ligase activity to neuronal homeostasis. Its core localization and site of action is the ER membrane.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>inositol 1,4,5-trisphosphate receptor catabolic process via the ERAD pathway</h3>
+                <span class="vote-buttons" data-g="Q96K19" data-a="inositol 1,4,5-trisphosphate receptor catabolic process via the ERAD pathway" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The chemical reactions and pathways resulting in the breakdown of an inositol 1,4,5-trisphosphate receptor (IP3R/ITPR), in which the activated receptor is ubiquitinated at the endoplasmic reticulum membrane and degraded via the ER-associated degradation (ERAD) pathway and the proteasome.</p>
+            
+
+            
+            <p><strong>Justification:</strong> RNF170&#39;s defining, experimentally established function is the ERLIN1/ERLIN2-coupled ubiquitination and ERAD-mediated degradation of activated ITPR1/IP3R, which is currently not captured by any specific GO term in the GOA (only the generic ERAD pathway, GO:0036503, exists). A substrate-specific child term would better represent this well-characterized biology.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036503" target="_blank" class="term-link">
+                    ERAD pathway
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    file:human/RNF170/RNF170-uniprot.txt
+                    
+                    
+                    : E3 ubiquitin-protein ligase that plays an essential role in stimulus-induced inositol 1,4,5-trisphosphate receptor type 1 (ITPR1) ubiquitination and degradation
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K19" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer of ER membrane localization from the UniProt subcellular location; the core compartment and site of action for RNF170.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization; RNF170 is a multi-pass ER membrane protein supported experimentally (IDA, PMID:31076723; PMID:21610068).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/RNF170/RNF170-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Endoplasmic reticulum membrane {ECO:0000269|PubMed:21610068, ECO:0000269|PubMed:31076723}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061630" target="_blank" class="term-link">
+                                    GO:0061630
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin protein ligase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K19" data-a="GO:0061630" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined automated electronic assignment of RING-type ubiquitin ligase activity, the core molecular function of RNF170.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; supported by IDA (PMID:31076723), EC 2.3.2.27, and RING-region catalytic residues (C102S/H104A abolishes activity).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/RNF170/RNF170-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=2.3.2.27</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K19" data-a="GO:0005515" data-r="PMID:25416956" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interactome interaction with the proteasome subunit PSMA6, consistent with RNF170&#39;s role in proteasomal degradation. Bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records a real interaction (PSMA6) but bare protein binding is uninformative per curation guidelines.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/RNF170/RNF170-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q96K19; P60900: PSMA6</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        <br>
+                        <span class="isoform-badge" title="This annotation was made on a specific isoform">
+                            <a href="https://www.uniprot.org/uniprotkb/Q96K19-5" target="_blank" class="term-link" style="font-size: 0.7rem;">
+                                Q96K19-5
+                            </a>
+                        </span>
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K19" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Isoform-5 binary interactome interactions (e.g. SGTA, STARD3, TMEM109). Bare protein binding is uninformative; isoform 5 is a truncated splice variant.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactions on a truncated isoform; bare protein binding is uninformative and not a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/RNF170/RNF170-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q96K19-5; O43765: SGTA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016567" target="_blank" class="term-link">
+                                    GO:0016567
+                                </a>
+                            </span>
+                            <span class="term-label">protein ubiquitination</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K19" data-a="GO:0016567" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniPathway-derived general protein ubiquitination process, a parent of the specific ERAD/degradative ubiquitination RNF170 performs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic; the specific ERAD/IP3R degradation and K48-ubiquitination annotations better capture the role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/RNF170/RNF170-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PATHWAY: Protein modification; protein ubiquitination.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31076723" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31076723
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    E3 ubiquitin ligase RNF170 inhibits innate immune responses ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K19" data-a="GO:0005789" data-r="PMID:31076723" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that RNF170 acts at the ER membrane (TLR3 study); the core compartment for its ligase function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization/site of action with direct experimental support.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/RNF170/RNF170-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Endoplasmic reticulum membrane {ECO:0000269|PubMed:21610068, ECO:0000269|PubMed:31076723}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034140" target="_blank" class="term-link">
+                                    GO:0034140
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of toll-like receptor 3 signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31076723" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31076723
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    E3 ubiquitin ligase RNF170 inhibits innate immune responses ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K19" data-a="GO:0034140" data-r="PMID:31076723" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that RNF170 negatively regulates TLR3 signaling by degrading TLR3; a real but secondary immune-regulatory role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well supported (PMID:31076723, mainly murine cells) but a secondary role distinct from the core IP3R-ERAD function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31076723" target="_blank" class="term-link">
+                                        PMID:31076723
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The genetic ablation of RNF170 selectively augmented TLR3-triggered innate immune responses both in vitro and in vivo</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061630" target="_blank" class="term-link">
+                                    GO:0061630
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin protein ligase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31076723" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31076723
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    E3 ubiquitin ligase RNF170 inhibits innate immune responses ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K19" data-a="GO:0061630" data-r="PMID:31076723" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration of RNF170 RING-dependent ubiquitin ligase activity (K48 ubiquitination of TLR3). Core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function with direct experimental (IDA) support; RING catalytic mutations (C102S/H104A) abolish activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31076723" target="_blank" class="term-link">
+                                        PMID:31076723
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNF170 mediated the K48-linked polyubiquitination of K766 in the TIR domain of TLR3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070936" target="_blank" class="term-link">
+                                    GO:0070936
+                                </a>
+                            </span>
+                            <span class="term-label">protein K48-linked ubiquitination</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31076723" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31076723
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    E3 ubiquitin ligase RNF170 inhibits innate immune responses ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K19" data-a="GO:0070936" data-r="PMID:31076723" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that RNF170 builds K48-linked (degradative) polyubiquitin chains, demonstrated on TLR3. This degradative topology also underlies its IP3R/ERAD role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated K48-linked ubiquitination, the canonical degradative topology underlying RNF170&#39;s substrate-degradation functions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31076723" target="_blank" class="term-link">
+                                        PMID:31076723
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNF170 mediated the K48-linked polyubiquitination of K766 in the TIR domain of TLR3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036503" target="_blank" class="term-link">
+                                    GO:0036503
+                                </a>
+                            </span>
+                            <span class="term-label">ERAD pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21610068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21610068
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RNF170 protein, an endoplasmic reticulum membrane ubiquitin ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96K19" data-a="GO:0036503" data-r="PMID:21610068" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNF170 mediates ubiquitination and ERAD-dependent degradation of activated ITPR1/IP3R, its defining function (Lu et al. 2011). This core process is currently absent from the GOA and is proposed as a NEW annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IP3R/ITPR1 ERAD role with the ERLIN1/ERLIN2 complex is well established experimentally but not represented in the current GOA; it should be added.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/RNF170/RNF170-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">E3 ubiquitin-protein ligase that plays an essential role in stimulus-induced inositol 1,4,5-trisphosphate receptor type 1 (ITPR1) ubiquitination and degradation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31636353" target="_blank" class="term-link">
+                                        PMID:31636353
+                                    </a>
+                                    
+                                </span>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ER-membrane RING-type E3 ubiquitin ligase that ubiquitinates the activated inositol 1,4,5-trisphosphate receptor (ITPR1/IP3R) to drive its ERAD-mediated degradation, acting as the catalytic partner of the ERLIN1/ERLIN2 complex to control IP3R abundance and ER calcium signaling.</h3>
+                <span class="vote-buttons" data-g="Q96K19" data-a="FUNCTION: ER-membrane RING-type E3 ubiquitin ligase that ubi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061630" target="_blank" class="term-link">
+                            ubiquitin protein ligase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036503" target="_blank" class="term-link">
+                                ERAD pathway
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/RNF170/RNF170-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">E3 ubiquitin-protein ligase that plays an essential role in stimulus-induced inositol 1,4,5-trisphosphate receptor type 1 (ITPR1) ubiquitination and degradation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/RNF170/RNF170-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Constitutively associated with the ERLIN1/ERLIN 2 complex</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38782601" target="_blank" class="term-link">
+                                PMID:38782601
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ER-membrane ubiquitin ligase that builds K48-linked polyubiquitin chains on Toll-like receptor 3 (TLR3) to promote its proteasomal degradation, negatively regulating TLR3-triggered innate immune signaling.</h3>
+                <span class="vote-buttons" data-g="Q96K19" data-a="FUNCTION: ER-membrane ubiquitin ligase that builds K48-linke..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061630" target="_blank" class="term-link">
+                            ubiquitin protein ligase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034140" target="_blank" class="term-link">
+                                negative regulation of toll-like receptor 3 signaling pathway
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31076723" target="_blank" class="term-link">
+                                PMID:31076723
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">RNF170 mediated the K48-linked polyubiquitination of K766 in the TIR domain of TLR3 and promoted the degradation of TLR3 through the proteasome pathway</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21610068" target="_blank" class="term-link">
+                            PMID:21610068
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RNF170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNF170 is an ER-membrane ubiquitin ligase that, constitutively associated with the ERLIN1/ERLIN2 complex, mediates ubiquitination and ERAD-dependent degradation of activated inositol 1,4,5-trisphosphate receptor (ITPR1/IP3R).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31076723" target="_blank" class="term-link">
+                            PMID:31076723
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">E3 ubiquitin ligase RNF170 inhibits innate immune responses by targeting and degrading TLR3 in murine cells.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNF170 binds TLR3 and catalyzes K48-linked polyubiquitination of Lys-766 in the TLR3 TIR domain, promoting proteasomal degradation of TLR3 and selectively inhibiting TLR3-triggered innate immune responses; RNF170 acts at the ER membrane and its ligase activity requires RING residues Cys-102/His-104.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31636353" target="_blank" class="term-link">
+                            PMID:31636353
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Bi-allelic variants in RNF170 are associated with hereditary spastic paraplegia.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Bi-allelic (recessive) RNF170 variants cause autosomal recessive hereditary spastic paraplegia (SPG85) in four unrelated families; functional studies in patient fibroblasts, mutant SH-SY5Y cells and zebrafish knockdown link the loss of RNF170-mediated ITPR1/IP3R degradation (ERAD) and altered ER calcium signaling to the disease.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38782601" target="_blank" class="term-link">
+                            PMID:38782601
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ERLIN1/2 scaffolds bridge TMUB1 and RNF170 and restrict cholesterol esterification to regulate the secretory pathway.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ERLIN1/2 ring-like SPFH-domain scaffolds bind a conserved luminal N-terminal motif shared by RNF170 and the full-length isoform of TMUB1, bridging the two proteins in cholesterol-rich ER nanodomains; variants that preclude these interactions have been linked to hereditary spastic paraplegia, and ERLIN scaffolds limit cholesterol esterification to favour ER-to-Golgi cholesterol transport and regulate the secretory pathway.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the core IP3R/ITPR1 ERAD function (with the ERLIN1/ERLIN2 complex) conserved in human cells as established in the original studies, and should it be added to the GOA given that it is currently absent?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96K19" data-a="Q: Is the core IP3R/ITPR1 ERAD function (with the ERL..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do SPG85/SNAX1 RING-region variants (e.g. C102R, R199C) mechanistically impair RNF170 ligase activity and IP3R/calcium homeostasis to cause neurodegeneration?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96K19" data-a="Q: How do SPG85/SNAX1 RING-region variants (e.g. C102..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute or immunoprecipitate the RNF170-ERLIN1-ERLIN2 complex and assay stimulus-induced ITPR1 ubiquitination and degradation in WT vs RING-mutant (C102S/H104A) and SPG85-variant RNF170 to map the substrate lysines and chain topology on IP3R.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96K19" data-a="EXPERIMENT: Reconstitute or immunoprecipitate the RNF170-ERLIN..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform RNF170 knockout/rescue in neuronal cells with ER calcium imaging and quantitative proteomics to test whether IP3R stabilization and altered Ca2+ signaling underlie the sensory ataxia and spastic paraplegia phenotypes.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96K19" data-a="EXPERIMENT: Perform RNF170 knockout/rescue in neuronal cells w..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RNF170-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96K19" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">21 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-12T05:07:06.548239</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="RNF170-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="RNF170-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000027 Figure 5, panels A and B, quantifies the effect of RNF170 knockdown (depletion) on IP3R1 processing. As described in the text (page</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-human-rnf170-uniprot-q96k19-functional-annotation-and-current-understanding">Research report: Human RNF170 (UniProt Q96K19) — functional annotation and current understanding</h2>
+<h3 id="0-target-verification-critical-identity-check">0) Target verification (critical identity check)</h3>
+<p>The literature reviewed here matches the UniProt entry <strong>Q96K19</strong> for <strong>Homo sapiens RNF170</strong>, described experimentally as an <strong>ER membrane, RING-type E3 ubiquitin ligase</strong> that regulates <strong>ER-associated degradation (ERAD)</strong> of activated <strong>inositol 1,4,5-trisphosphate receptors (IP3Rs)</strong> and is genetically linked to <strong>hereditary spastic paraplegia (HSP)</strong>. (lu2011rnf170proteinan pages 4-5, wagner2019biallelicvariantsin pages 6-7)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-rnf170-as-a-ring-type-e3-ubiquitin-ligase">1.1 RNF170 as a RING-type E3 ubiquitin ligase</h4>
+<p>RNF170 is a <strong>RING-HC E3 ubiquitin ligase</strong>: it promotes transfer of ubiquitin from an E2 enzyme to a substrate protein, typically creating polyubiquitin chains that control substrate fate (often proteasomal degradation). In vitro, immunopurified RNF170 catalyzes ubiquitin conjugation in the presence of <strong>E1 (UBE1), E2 (UbcH5b), and ubiquitin</strong>, producing a high-molecular-weight ubiquitin “smear,” consistent with intrinsic ligase activity. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4)</p>
+<p>A key mechanistic validation is that mutating zinc-coordinating residues in the RING domain (<strong>Cys101/His103</strong>) abolishes ligase activity, establishing the catalytic dependence on the RING motif. (lu2011rnf170proteinan pages 3-4)</p>
+<h4 id="12-erad-and-stimulus-coupled-degradation-of-activated-ip3-receptors">1.2 ERAD and stimulus-coupled degradation of activated IP3 receptors</h4>
+<p>Activated IP3Rs undergo rapid down-regulation via the <strong>ubiquitin–proteasome pathway</strong>, a form of ERAD-like quality control applied to an activated signaling channel. RNF170 has been described as (at the time of foundational studies) the only E3 ligase directly demonstrated to mediate IP3R ubiquitination in this context, with recruitment to activated IP3Rs preceding robust polyubiquitination and downstream processing. (lu2011rnf170proteinan pages 5-6, lu2011rnf170proteinan pages 3-4)</p>
+<h4 id="13-erlin-scaffolds-as-organizing-platforms-for-rnf170">1.3 ERLIN scaffolds as organizing platforms for RNF170</h4>
+<p>ERLIN1/2 are ER membrane SPFH-family proteins that assemble into large oligomeric scaffolds in cholesterol-enriched ER nanodomains. These scaffolds act as platforms to recruit factors including RNF170, and (per 2024 work) can bridge RNF170 to other clients such as TMUB1-L, connecting ubiquitin machinery to ER lipid organization and secretory function. (veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 12-12)</p>
+<h3 id="2-molecular-function-enzymatic-reaction-substrate-specificity-and-mechanism">2) Molecular function: enzymatic reaction, substrate specificity, and mechanism</h3>
+<h4 id="21-subcellular-localization-and-topology">2.1 Subcellular localization and topology</h4>
+<p>RNF170 is an <strong>integral ER membrane protein</strong>, with topology predictions and biochemical fractionation placing the <strong>N-terminus in the ER lumen</strong> and the <strong>RING domain/C-terminus in the cytosol</strong>, consistent with ubiquitination of cytosolic lysines on substrates such as IP3Rs. (lu2011rnf170proteinan pages 3-4, lu2011rnf170proteinan pages 4-5)</p>
+<h4 id="22-core-substrate-ip3-receptors-human-cellular-evidence">2.2 Core substrate: IP3 receptors (human cellular evidence)</h4>
+<p>Foundational mechanistic work demonstrated that RNF170 rapidly associates with <strong>activated IP3R1</strong>, and depletion of RNF170 reduces stimulus-induced IP3R1 polyubiquitination and slows receptor down-regulation. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4)</p>
+<p>Quantitatively, RNF170 knockdown reduced agonist-induced <strong>IP3R1 polyubiquitination to 57 ± 7%</strong> of control and inhibited <strong>IP3R1 down-regulation by ~50%</strong>, while also increasing basal IP3R1 levels. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan media b065ce9e)</p>
+<p>Mechanistically, RNF170 recruitment to activated IP3Rs occurs via constitutive association with ERLIN1/2, which are required for efficient RNF170–IP3R coupling. (lu2011rnf170proteinan pages 8-9, lu2011rnf170proteinan pages 5-6)</p>
+<h4 id="23-additional-substrate-evidence-tlr3-murine-innate-immunity-mechanistic-details">2.3 Additional substrate evidence: TLR3 (murine innate immunity; mechanistic details)</h4>
+<p>A separate, well-developed mechanistic line of evidence (in murine systems) identifies RNF170 as a negative regulator of innate immunity through direct targeting of <strong>TLR3</strong>. RNF170 binds the TLR3 TIR domain and catalyzes <strong>K48-linked polyubiquitination</strong> at <strong>TLR3 Lys766</strong>, promoting <strong>proteasomal degradation</strong>; this requires intact RNF170 RING residues (C101/H103) and is blocked by proteasome inhibition (MG132), supported by CHX chase assays and in vivo phenotyping in Rnf170−/− mice. (song2020e3ubiquitinligase pages 6-7, song2020e3ubiquitinligase pages 7-9)</p>
+<p>Because this primary study is performed in <strong>murine cells and mice</strong>, extension to human physiology should be made cautiously, although the TLR3 K766 site is noted as conserved between mouse and human in the primary study. (song2020e3ubiquitinligase pages 7-9)</p>
+<h3 id="3-proteinprotein-interactions-and-complexes">3) Protein–protein interactions and complexes</h3>
+<h4 id="31-erlin12rnf170ip3r-module">3.1 ERLIN1/2–RNF170–IP3R module</h4>
+<p>RNF170 is reported to be constitutively associated with the <strong>ERLIN1/2 complex</strong>, which recruits RNF170 to activated IP3Rs to drive ubiquitination and proteasomal processing. (lu2011rnf170proteinan pages 8-9, lu2011rnf170proteinan pages 5-6)</p>
+<p>Proteomics of ER-resident E3 ligase complexes has independently recovered RNF170 with high-confidence interactors including <strong>ERLIN1, ERLIN2, and ITPR3</strong>, supporting the recurring architecture of this module in ERAD/proteostasis networks. (lari2016resolutionofproteotoxic pages 111-115)</p>
+<h4 id="32-2024-expansion-erlin-scaffolds-bridging-rnf170-and-tmub1-l-cholesterolsecretory-pathway-link">3.2 2024 expansion: ERLIN scaffolds bridging RNF170 and TMUB1-L (cholesterol/secretory pathway link)</h4>
+<p>A major 2024 development is the proposal that ERLIN1/2 scaffolds bind a conserved luminal N-terminal motif present in RNF170 and the long isoform of <strong>TMUB1 (TMUB1-L)</strong>, bridging these proteins in cholesterol-rich ER nanodomains. AlphaFold-Multimer modeling supports interaction interfaces between the conserved motifs and adjacent ERLIN subunits. (veronese2024erlin12scaffoldsbridge pages 4-6, veronese2024erlin12scaffoldsbridge pages 12-12)</p>
+<p>Functionally, ERLIN loss (DKO) leads to increased cholesterol esterification and lipid droplet accumulation, ER tubule collapse, Golgi fragmentation, and impaired secretory trafficking, with rescue by ERLIN re-expression or pharmacologic inhibition of cholesterol esterification (SOAT1 inhibitor <strong>avasimibe</strong>). (veronese2024erlin12scaffoldsbridge pages 10-12, veronese2024erlin12scaffoldsbridge pages 12-12)</p>
+<h3 id="4-pathways-and-biological-roles">4) Pathways and biological roles</h3>
+<h4 id="41-er-calcium-signaling-homeostasis-via-ip3r-turnover">4.1 ER calcium signaling homeostasis via IP3R turnover</h4>
+<p>By controlling stimulus-dependent degradation of activated IP3Rs, RNF170 is positioned as a regulator of <strong>ER Ca2+ release signaling dynamics</strong>, linking receptor activation state to ERAD engagement. (wagner2019biallelicvariantsin pages 6-7, lu2011rnf170proteinan pages 5-6)</p>
+<p>In patient-derived or engineered RNF170-deficient models, increased basal IP3R levels (cell-type-specific isoforms) and failure of stimulus-dependent IP3R reduction support the concept that RNF170 constrains IP3R abundance and signaling. (wagner2019biallelicvariantsin pages 6-7)</p>
+<h4 id="42-innate-immune-modulation-through-tlr3-control-murine-evidence">4.2 Innate immune modulation through TLR3 control (murine evidence)</h4>
+<p>RNF170-mediated proteasomal removal of TLR3 reduces downstream IRF3/NF-κB/STAT1-linked transcriptional activity and cytokine production in TLR3 pathways, positioning RNF170 as a negative regulator of TLR3-dependent antiviral inflammation in murine models. (song2020e3ubiquitinligase pages 6-7, song2020e3ubiquitinligase pages 7-9)</p>
+<p>2024 reviews summarize RNF170 in this role primarily by citing the 2020 primary study, without adding additional mechanistic detail in the excerpted sections. (wang2024hostfactorsmodulate pages 13-14, li2024thernabindingproteins pages 12-13)</p>
+<h3 id="5-human-disease-associations-and-genetics-with-recent-emphasis">5) Human disease associations and genetics (with recent emphasis)</h3>
+<h4 id="51-autosomal-recessive-hereditary-spastic-paraplegia-from-biallelic-rnf170-variants">5.1 Autosomal recessive hereditary spastic paraplegia from biallelic RNF170 variants</h4>
+<p>A key primary genetics study provides evidence that <strong>biallelic RNF170 variants</strong> are a cause of <strong>autosomal recessive HSP</strong>, supported by functional validation across patient fibroblasts, neuronal cells, and zebrafish assays. (wagner2019biallelicvariantsin pages 6-7)</p>
+<p>Mechanistically, patient-derived fibroblasts fail to show physiological stimulus-dependent degradation of IP3R-3, and RNF170 knockout neuronal SH-SY5Y cells show elevated basal IP3R-1 with rescue by re-expression of wild-type RNF170. (wagner2019biallelicvariantsin pages 6-7)</p>
+<p>Quantitatively, this study reports zebrafish developmental phenotypes and statistical testing (e.g., embryo length and eye size differences with adjusted P &lt; 0.0001) supporting functional impairment of tested patient variants relative to RNF170wt. (wagner2019biallelicvariantsin pages 6-7)</p>
+<h4 id="52-database-level-disease-target-support-open-targets">5.2 Database-level disease-target support (Open Targets)</h4>
+<p>Open Targets disease–target evidence links <strong>RNF170</strong> to <strong>hereditary spastic paraplegia</strong> and <strong>complex hereditary spastic paraplegia</strong>, with literature evidence pointing to PubMed ID 31636353 / PMC6803694. (OpenTargets Search: hereditary spastic paraplegia,spastic paraplegia,sensory ataxia,spinocerebellar ataxia,neuroaxonal dystrophy-RNF170)</p>
+<h4 id="53-expert-synthesis-2024-er-homeostasis-and-ubiquitin-mediated-quality-control-as-convergent-neurogenetic-mechanisms">5.3 Expert synthesis (2024): ER homeostasis and ubiquitin-mediated quality control as convergent neurogenetic mechanisms</h4>
+<p>A 2024 Trends in Neurosciences review emphasizes ER structure and protein quality-control pathways as central mechanisms in inherited neuropathies, HSP, and ataxias, and explicitly notes RNF170 as an E3 ligase associated with recessive HSP and inherited peripheral neuropathy. (vondel2024overarchingpathomechanismsin pages 5-8)</p>
+<p>Consistent pathway-context evidence from 2024 human genetics (ERLIN1 series) supports the broader ERLIN1/2–RNF170–IP3R ERAD module as disease-relevant: in a cohort of <strong>13 individuals</strong> with biallelic ERLIN1 variants (SPG62), the authors describe ERLIN1/2 as recruiting RNF170 to degrade activated IP3R1 and provide cohort-level statistics (e.g., mean onset 1.8 years; corpus callosum anomalies 5/13; founder splice variant in 6 individuals). Although ERLIN1 is not RNF170, these data reinforce the clinical relevance of the RNF170-centered module. (cogan2024biallelicvariantsin pages 1-6, cogan2024biallelicvariantsin pages 12-16)</p>
+<h3 id="6-recent-developments-prioritizing-20232024">6) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="61-2024-linking-the-erlinrnf170-axis-to-cholesterol-esterification-and-secretory-pathway-control">6.1 2024: Linking the ERLIN–RNF170 axis to cholesterol esterification and secretory pathway control</h4>
+<p>Veronese et al. (Life Science Alliance; <strong>May 2024</strong>) propose that ERLIN scaffolds directly bind cholesterol and restrain cholesterol esterification, thereby maintaining ER cholesterol accessibility for ER→Golgi transport; the ERLIN scaffolds concurrently organize RNF170 and TMUB1-L via conserved luminal motifs. Loss of ERLINs increases cholesterol esterification (including CE 18:1), enlarges lipid droplets, fragments Golgi, and disrupts secretory trafficking and migration phenotypes; SOAT1 inhibition by <strong>avasimibe</strong> rescues multiple phenotypes. (veronese2024erlin12scaffoldsbridge pages 10-12, veronese2024erlin12scaffoldsbridge pages 12-12)</p>
+<p>Quantitative details reported include proteomics showing a trend toward increased SOAT1 abundance (log2FC 0.40; q=0.07) and phenotyping with N=3 biological replicates and large cell counts (≥130 cells for lipid droplet size; ≥340 for Golgi fragmentation) analyzed by ANOVA with Tukey post hoc tests. (veronese2024erlin12scaffoldsbridge pages 12-12, veronese2024erlin12scaffoldsbridge pages 10-12)</p>
+<h4 id="62-2024-updated-clinical-genetics-context-for-the-erlinrnf170ip3r-module">6.2 2024: Updated clinical genetics context for the ERLIN–RNF170–IP3R module</h4>
+<p>Cogan et al. (Human Genetics; <strong>Oct 2024</strong>) frame ERLIN1/2 as ERAD organizers that associate with RNF170 to target activated IP3Rs, and expand genotype–phenotype characterization in ERLIN-related HSP. This strengthens the view (also consistent with RNF170 HSP genetics) that motor neurons are unusually sensitive to disruption of this ERAD-linked calcium signaling module. (cogan2024biallelicvariantsin pages 1-6, cogan2024biallelicvariantsin pages 12-16)</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<h4 id="71-genetic-diagnostics-and-variant-interpretation">7.1 Genetic diagnostics and variant interpretation</h4>
+<p>RNF170 is now a disease gene supported by primary genetics and functional validation for HSP, supporting its inclusion in <strong>neurogenetic diagnostic panels</strong> for spastic paraplegia/ataxia phenotypes and for variant interpretation workflows. (wagner2019biallelicvariantsin pages 6-7, vondel2024overarchingpathomechanismsin pages 5-8)</p>
+<h4 id="72-therapeutic-implications-pathway-prioritization-and-mechanism-informed-interventions">7.2 Therapeutic implications: pathway prioritization and mechanism-informed interventions</h4>
+<p>The RNF170-centered mechanism suggests two translationally relevant intervention layers:<br />
+1) <strong>IP3R signaling / ER Ca2+ homeostasis</strong>: human genetics and functional data prioritize the IP3R degradation/signaling axis as a candidate therapeutic pathway in HSP. (wagner2019biallelicvariantsin pages 6-7)<br />
+2) <strong>ER cholesterol esterification / secretory pathway</strong>: 2024 mechanistic work identifies cholesterol esterification control as a modifiable node in ERLIN-module dysfunction, with <strong>SOAT1 inhibition (avasimibe)</strong> rescuing cell phenotypes (lipid droplet size, Golgi morphology, and gene-expression readouts). This is not a direct RNF170-targeting therapy, but it provides a mechanism-based proof-of-concept for pharmacologic modulation of ERLIN–RNF170-associated ER nanodomain functions. (veronese2024erlin12scaffoldsbridge pages 10-12, veronese2024erlin12scaffoldsbridge pages 12-12)</p>
+<h3 id="8-expert-opinions-and-analysis-authoritative-sources">8) Expert opinions and analysis (authoritative sources)</h3>
+<p>A 2024 expert review in Trends in Neurosciences highlights ER structure and protein quality-control pathways (UPS/autophagy) as overarching mechanisms in inherited neuropathies, HSP, and ataxias, and includes RNF170 among implicated E3 ligases, supporting a convergent “ER homeostasis / QC” framing for RNF170-related disease mechanisms. (vondel2024overarchingpathomechanismsin pages 5-8)</p>
+<p>Genetics-focused 2024 work on ERLIN1 (SPG62) similarly emphasizes that the ERLIN1/2–RNF170 module is expected to impair IP3R1 turnover and Ca2+ signaling, providing additional disease-mechanism coherence at the pathway level. (cogan2024biallelicvariantsin pages 12-16)</p>
+<h3 id="9-recent-statistics-and-quantitative-data-highlights">9) Recent statistics and quantitative data highlights</h3>
+<ul>
+<li><strong>RNF170 knockdown in human cell models</strong>: stimulus-induced IP3R1 polyubiquitination reduced to <strong>57 ± 7%</strong> of control and IP3R1 down-regulation inhibited by <strong>~50%</strong>. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan media b065ce9e)</li>
+<li><strong>RNF170 loss-of-function cellular phenotypes in HSP genetics study</strong>: increased basal IP3R-1 in RNF170 KO SH-SY5Y cells with rescue; zebrafish phenotypes with adjusted P values including <strong>P &lt; 0.0001</strong> in quantitative measures. (wagner2019biallelicvariantsin pages 6-7)</li>
+<li><strong>2024 ERLIN scaffold phenotyping/omics</strong>: SOAT1 proteomics trend (log2FC <strong>0.40</strong>, q=<strong>0.07</strong>) and high-powered imaging quantification with <strong>≥130</strong> and <strong>≥340</strong> cells across readouts (N=3 biological replicates). (veronese2024erlin12scaffoldsbridge pages 12-12, veronese2024erlin12scaffoldsbridge pages 10-12)</li>
+</ul>
+<h3 id="10-quick-reference-summary-table">10) Quick reference summary table</h3>
+<p>The following table consolidates the most evidence-supported statements for functional annotation.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/domains</td>
+<td>- Human <strong>RNF170</strong> corresponds to UniProt <strong>Q96K19</strong>, a <strong>RING-type E3 ubiquitin ligase</strong> studied as an ER-membrane regulator of protein turnover and signaling.<br>- Foundational work defines RNF170 as a <strong>257 aa RING-HC protein</strong> with catalytic dependence on <strong>Cys101/His103</strong>; this matches the UniProt RING-domain annotation and ER-associated function. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4)</td>
+</tr>
+<tr>
+<td>Localization/topology</td>
+<td>- RNF170 is an <strong>integral endoplasmic reticulum (ER) membrane</strong> protein.<br>- Topology predictions and biochemical fractionation place its <strong>N-terminus in the ER lumen</strong> and its <strong>RING domain/C-terminus in the cytosol</strong>, positioning the catalytic machinery to ubiquitinate cytosolic receptor lysines.<br>- RNF170 localizes in <strong>ERLIN-positive cholesterol-rich ER nanodomains</strong>. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4, veronese2024erlin12scaffoldsbridge pages 1-2)</td>
+</tr>
+<tr>
+<td>Core enzymatic activity</td>
+<td>- RNF170 catalyzes <strong>E3 ubiquitin transfer</strong> in vitro using <strong>UBE1 + UbcH5b</strong> and ubiquitin, generating a high-molecular-weight ubiquitin smear typical of ligase activity.<br>- Catalysis is lost with <strong>RING mutant C101S/H103A</strong>, confirming dependence on the RING domain.<br>- Functionally, RNF170 promotes <strong>proteasome-directed ER-associated degradation (ERAD)</strong> of selected membrane/signaling proteins. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4, song2020e3ubiquitinligase pages 6-7)</td>
+</tr>
+<tr>
+<td>Key substrates</td>
+<td>- Best-supported human substrate class: <strong>activated IP3 receptors (IP3Rs)</strong>, especially <strong>IP3R1/IP3R3</strong>, which undergo RNF170-dependent ubiquitination and degradation after stimulation.<br>- In murine innate immunity studies, RNF170 also targets <strong>TLR3</strong>, catalyzing <strong>K48-linked polyubiquitination</strong> at <strong>K766</strong> to drive proteasomal degradation.<br>- TLR3 regulation is strongly supported experimentally, but species context should be noted because the primary paper is in <strong>murine cells/mice</strong>. (wagner2019biallelicvariantsin pages 6-7, lu2011rnf170proteinan pages 4-5, song2020e3ubiquitinligase pages 6-7, song2020e3ubiquitinligase pages 1-2, song2020e3ubiquitinligase pages 7-9)</td>
+</tr>
+<tr>
+<td>Key interactors/complex</td>
+<td>- RNF170 is constitutively associated with the <strong>ERLIN1/2 complex</strong>, which recruits it to activated IP3Rs.<br>- It is also found in complexes containing <strong>p97/VCP-associated ERAD machinery</strong> and, in 2024 work, <strong>TMUB1-L</strong> bridged by ERLIN scaffolds.<br>- Proteomics and co-IP studies repeatedly enrich <strong>ERLIN1, ERLIN2, ITPR3, TMUB1, TMEM259</strong> with RNF170-centered complexes. (lu2011rnf170proteinan pages 8-9, lari2016resolutionofproteotoxic pages 111-115, veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 12-12)</td>
+</tr>
+<tr>
+<td>Pathways</td>
+<td>- RNF170 acts in <strong>ERAD/proteostasis</strong>, especially stimulus-coupled degradation of activated <strong>IP3Rs</strong>.<br>- Through IP3R turnover, RNF170 regulates <strong>ER Ca2+ release signaling</strong> and is therefore connected to neurodegeneration-relevant calcium homeostasis pathways.<br>- Separate immune work places RNF170 in <strong>TLR3 innate immune signaling</strong> as a negative regulator limiting IRF3/NF-kB/STAT1 outputs by degrading TLR3. (wagner2019biallelicvariantsin pages 6-7, lu2011rnf170proteinan pages 5-6, song2020e3ubiquitinligase pages 6-7, vondel2024overarchingpathomechanismsin pages 5-8)</td>
+</tr>
+<tr>
+<td>Disease associations</td>
+<td>- <strong>Biallelic loss-of-function RNF170 variants</strong> cause <strong>autosomal recessive hereditary spastic paraplegia (HSP)</strong>, with Open Targets evidence mapped to hereditary/complex HSP.<br>- Earlier literature also linked a <strong>dominant sensory ataxia</strong> phenotype to RNF170 mutation, and mouse knockout models show age-dependent gait abnormalities.<br>- Expert 2024 synthesis places RNF170 within an <strong>ER homeostasis/quality-control disease module</strong> shared across HSP, ataxia, and related neurodegenerative disorders. (wagner2019biallelicvariantsin pages 6-7, lu2011rnf170proteinan pages 8-9, OpenTargets Search: hereditary spastic paraplegia,spastic paraplegia,sensory ataxia,spinocerebellar ataxia,neuroaxonal dystrophy-RNF170, vondel2024overarchingpathomechanismsin pages 5-8)</td>
+</tr>
+<tr>
+<td>Recent 2024 developments</td>
+<td>- <strong>Veronese et al. 2024</strong> propose that <strong>ERLIN1/2 ring-like scaffolds</strong> bind a conserved luminal motif in <strong>RNF170 and TMUB1-L</strong>, organizing them in cholesterol-rich ER nanodomains.<br>- This work expands RNF170 biology beyond IP3R degradation by linking the ERLIN–RNF170 module to <strong>cholesterol esterification control, Golgi morphology, and secretory pathway regulation</strong>.<br>- 2024 disease reviews and genetics papers further emphasize the <strong>ERLIN1/2–RNF170–IP3R</strong> axis as a recurrent neurogenetic mechanism in spastic paraplegia/ataxia. (veronese2024erlin12scaffoldsbridge pages 12-12, veronese2024erlin12scaffoldsbridge pages 4-6, veronese2024erlin12scaffoldsbridge pages 10-12, cogan2024biallelicvariantsin pages 1-6, vondel2024overarchingpathomechanismsin pages 5-8)</td>
+</tr>
+<tr>
+<td>Quantitative data points</td>
+<td>- <strong>RNF170 knockdown</strong> reduced agonist-induced <strong>IP3R1 polyubiquitination to 57 ± 7% of control</strong>, inhibited IP3R1 down-regulation by roughly <strong>~50%</strong>, and increased basal IP3R1 by <strong>~27 ± 11%</strong>. (lu2011rnf170proteinan pages 4-5)<br>- In RNF170-deficient models, <strong>IP3R3</strong> rose by about <strong>~4-fold</strong> in patient fibroblasts and <strong>IP3R1</strong> by <strong>~1.8-fold</strong> in RNF170-knockout SH-SY5Y cells. (gehweiler2024rnf170anoveldisease pages 68-72)<br>- 2024 ERLIN-loss proteomics/lipidomics reported <strong>SOAT1 log2FC = 0.40, q = 0.07</strong> and phenotyping with <strong>N = 3</strong> biological replicates, including <strong>≥130 cells</strong> for lipid-droplet size and <strong>≥340 cells</strong> for Golgi fragmentation. (veronese2024erlin12scaffoldsbridge pages 12-12, veronese2024erlin12scaffoldsbridge pages 10-12)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the key verified facts about human RNF170 (UniProt Q96K19), including its identity, ER localization, E3 ligase function, substrates, complexes, disease relevance, and notable 2024 advances. It is useful as a quick-reference annotation scaffold anchored to specific evidence contexts.</em></p>
+<h3 id="11-key-figure-evidence">11) Key figure evidence</h3>
+<p>A figure supporting RNF170’s quantitative effect on IP3R1 ubiquitination and down-regulation is available from Lu et al. 2011 (Figure 5A-B). (lu2011rnf170proteinan media b065ce9e)</p>
+<h3 id="12-limitations-and-open-questions">12) Limitations and open questions</h3>
+<ul>
+<li><strong>Human vs murine innate-immunity substrate</strong>: the strongest mechanistic TLR3 evidence is murine; human relevance is plausible (conserved K766) but not established here as a human-cell mechanism within the retrieved excerpts. (song2020e3ubiquitinligase pages 7-9)</li>
+<li><strong>Direct RNF170 catalytic specificity determinants</strong> (e.g., how RNF170 selects IP3Rs vs other ER membrane clients, and how ERLIN nanodomains tune substrate choice) remain incompletely resolved; 2024 work suggests a broader organizational role for ERLIN scaffolds that may impact RNF170 client selection. (veronese2024erlin12scaffoldsbridge pages 12-12)</li>
+</ul>
+<h3 id="13-core-references-urls-and-publication-dates">13) Core references (URLs and publication dates)</h3>
+<ul>
+<li>Lu JP et al. <strong>“RNF170 Protein, an Endoplasmic Reticulum Membrane Ubiquitin Ligase, Mediates Inositol 1,4,5-Trisphosphate Receptor Ubiquitination and Degradation”</strong>. <em>Journal of Biological Chemistry</em>. <strong>Jul 2011</strong>. https://doi.org/10.1074/jbc.m111.251983 (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4)</li>
+<li>Wagner M et al. <strong>“Bi-allelic variants in RNF170 are associated with hereditary spastic paraplegia”</strong>. <em>Nature Communications</em>. <strong>Oct 2019</strong>. https://doi.org/10.1038/s41467-019-12620-9 (wagner2019biallelicvariantsin pages 6-7)</li>
+<li>Song X et al. <strong>“E3 ubiquitin ligase RNF170 inhibits innate immune responses by targeting and degrading TLR3 in murine cells”</strong>. <em>Cellular &amp; Molecular Immunology</em>. <strong>May 2020</strong>. https://doi.org/10.1038/s41423-019-0236-y (song2020e3ubiquitinligase pages 6-7)</li>
+<li>Veronese M et al. <strong>“ERLIN1/2 scaffolds bridge TMUB1 and RNF170 and restrict cholesterol esterification to regulate the secretory pathway”</strong>. <em>Life Science Alliance</em>. <strong>May 2024</strong>. https://doi.org/10.26508/lsa.202402620 (veronese2024erlin12scaffoldsbridge pages 10-12)</li>
+<li>Van de Vondel L et al. <strong>“Overarching pathomechanisms in inherited peripheral neuropathies, spastic paraplegias, and cerebellar ataxias”</strong>. <em>Trends in Neurosciences</em>. <strong>Mar 2024</strong>. https://doi.org/10.1016/j.tins.2024.01.004 (vondel2024overarchingpathomechanismsin pages 5-8)</li>
+<li>Cogan G et al. <strong>“Biallelic variants in ERLIN1: a series of 13 individuals with spastic paraparesis.”</strong> <em>Human Genetics</em>. <strong>Oct 2024</strong>. https://doi.org/10.1007/s00439-024-02702-0 (cogan2024biallelicvariantsin pages 1-6, cogan2024biallelicvariantsin pages 12-16)</li>
+<li>Open Targets Platform (RNF170–HSP association evidence; literature includes PMID 31636353). Accessed via tool output. (OpenTargets Search: hereditary spastic paraplegia,spastic paraplegia,sensory ataxia,spinocerebellar ataxia,neuroaxonal dystrophy-RNF170)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(lu2011rnf170proteinan pages 4-5): Justine P. Lu, Yuan Wang, Danielle A. Sliter, Margaret M.P. Pearce, and Richard J.H. Wojcikiewicz. Rnf170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation. Journal of Biological Chemistry, 286:24426-24433, Jul 2011. URL: https://doi.org/10.1074/jbc.m111.251983, doi:10.1074/jbc.m111.251983. This article has 134 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wagner2019biallelicvariantsin pages 6-7): Matias Wagner, Daniel P. S. Osborn, Ina Gehweiler, Maike Nagel, Ulrike Ulmer, Somayeh Bakhtiari, Rim Amouri, Reza Boostani, Faycal Hentati, Maryam M. Hockley, Benedikt Hölbling, Thomas Schwarzmayr, Ehsan Ghayoor Karimiani, Christoph Kernstock, Reza Maroofian, Wolfgang Müller-Felber, Ege Ozkan, Sergio Padilla-Lopez, Selina Reich, Jennifer Reichbauer, Hossein Darvish, Neda Shahmohammadibeni, Abbas Tafakhori, Katharina Vill, Stephan Zuchner, Michael C. Kruer, Juliane Winkelmann, Yalda Jamshidi, and Rebecca Schüle. Bi-allelic variants in rnf170 are associated with hereditary spastic paraplegia. Nature Communications, Oct 2019. URL: https://doi.org/10.1038/s41467-019-12620-9, doi:10.1038/s41467-019-12620-9. This article has 62 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2011rnf170proteinan pages 3-4): Justine P. Lu, Yuan Wang, Danielle A. Sliter, Margaret M.P. Pearce, and Richard J.H. Wojcikiewicz. Rnf170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation. Journal of Biological Chemistry, 286:24426-24433, Jul 2011. URL: https://doi.org/10.1074/jbc.m111.251983, doi:10.1074/jbc.m111.251983. This article has 134 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2011rnf170proteinan pages 5-6): Justine P. Lu, Yuan Wang, Danielle A. Sliter, Margaret M.P. Pearce, and Richard J.H. Wojcikiewicz. Rnf170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation. Journal of Biological Chemistry, 286:24426-24433, Jul 2011. URL: https://doi.org/10.1074/jbc.m111.251983, doi:10.1074/jbc.m111.251983. This article has 134 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(veronese2024erlin12scaffoldsbridge pages 1-2): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(veronese2024erlin12scaffoldsbridge pages 12-12): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2011rnf170proteinan media b065ce9e): Justine P. Lu, Yuan Wang, Danielle A. Sliter, Margaret M.P. Pearce, and Richard J.H. Wojcikiewicz. Rnf170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation. Journal of Biological Chemistry, 286:24426-24433, Jul 2011. URL: https://doi.org/10.1074/jbc.m111.251983, doi:10.1074/jbc.m111.251983. This article has 134 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2011rnf170proteinan pages 8-9): Justine P. Lu, Yuan Wang, Danielle A. Sliter, Margaret M.P. Pearce, and Richard J.H. Wojcikiewicz. Rnf170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation. Journal of Biological Chemistry, 286:24426-24433, Jul 2011. URL: https://doi.org/10.1074/jbc.m111.251983, doi:10.1074/jbc.m111.251983. This article has 134 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(song2020e3ubiquitinligase pages 6-7): Xiaoqi Song, Shuo Liu, Wen-die Wang, Zhong-fei Ma, Xuetao Cao, and Minghong Jiang. E3 ubiquitin ligase rnf170 inhibits innate immune responses by targeting and degrading tlr3 in murine cells. Cellular &amp; Molecular Immunology, 17:865-874, May 2020. URL: https://doi.org/10.1038/s41423-019-0236-y, doi:10.1038/s41423-019-0236-y. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(song2020e3ubiquitinligase pages 7-9): Xiaoqi Song, Shuo Liu, Wen-die Wang, Zhong-fei Ma, Xuetao Cao, and Minghong Jiang. E3 ubiquitin ligase rnf170 inhibits innate immune responses by targeting and degrading tlr3 in murine cells. Cellular &amp; Molecular Immunology, 17:865-874, May 2020. URL: https://doi.org/10.1038/s41423-019-0236-y, doi:10.1038/s41423-019-0236-y. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lari2016resolutionofproteotoxic pages 111-115): F Lari. Resolution of proteotoxic stress in the endoplasmic reticulum by ubiquitin ligase complexes. Unknown journal, 2016.</p>
+</li>
+<li>
+<p>(veronese2024erlin12scaffoldsbridge pages 4-6): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(veronese2024erlin12scaffoldsbridge pages 10-12): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2024hostfactorsmodulate pages 13-14): Jingjing Wang, Yirui Dong, Xuewei Zheng, Haodi Ma, Mengjiao Huang, Dongliao Fu, Jiangbo Liu, and Qinan Yin. Host factors modulate virus-induced ifn production via pattern recognition receptors. Journal of Inflammation Research, 17:3737-3752, Jun 2024. URL: https://doi.org/10.2147/jir.s455035, doi:10.2147/jir.s455035. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2024thernabindingproteins pages 12-13): Jianguo Li, Jingge Yu, Ao Shen, Suwen Lai, Zhiping Liu, and Tian-Sheng He. The rna-binding proteins regulate innate antiviral immune signaling by modulating pattern recognition receptors. Virology Journal, Sep 2024. URL: https://doi.org/10.1186/s12985-024-02503-x, doi:10.1186/s12985-024-02503-x. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(OpenTargets Search: hereditary spastic paraplegia,spastic paraplegia,sensory ataxia,spinocerebellar ataxia,neuroaxonal dystrophy-RNF170): Open Targets Query (hereditary spastic paraplegia,spastic paraplegia,sensory ataxia,spinocerebellar ataxia,neuroaxonal dystrophy-RNF170, 2 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+<li>
+<p>(vondel2024overarchingpathomechanismsin pages 5-8): Liedewei Van de Vondel, Jonathan De Winter, Vincent Timmerman, and Jonathan Baets. Overarching pathomechanisms in inherited peripheral neuropathies, spastic paraplegias, and cerebellar ataxias. Mar 2024. URL: https://doi.org/10.1016/j.tins.2024.01.004, doi:10.1016/j.tins.2024.01.004. This article has 11 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cogan2024biallelicvariantsin pages 1-6): Guillaume Cogan, Maha S. Zaki, Mahmoud Issa, Boris Keren, Marine Guillaud-Bataille, Florence Renaldo, Arnaud Isapof, Pauline Lallemant, Giovanni Stevanin, Lena Guillot-Noel, Thomas Courtin, Julien Buratti, Cécile Freihuber, Joseph G. Gleeson, Robyn Howarth, Alexandra Durr, Jean-Madeleine de Sainte Agathe, and Cyril Mignot. Biallelic variants in erlin1: a series of 13 individuals with spastic paraparesis. Human genetics, 143:1353-1362, Oct 2024. URL: https://doi.org/10.1007/s00439-024-02702-0, doi:10.1007/s00439-024-02702-0. This article has 3 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cogan2024biallelicvariantsin pages 12-16): Guillaume Cogan, Maha S. Zaki, Mahmoud Issa, Boris Keren, Marine Guillaud-Bataille, Florence Renaldo, Arnaud Isapof, Pauline Lallemant, Giovanni Stevanin, Lena Guillot-Noel, Thomas Courtin, Julien Buratti, Cécile Freihuber, Joseph G. Gleeson, Robyn Howarth, Alexandra Durr, Jean-Madeleine de Sainte Agathe, and Cyril Mignot. Biallelic variants in erlin1: a series of 13 individuals with spastic paraparesis. Human genetics, 143:1353-1362, Oct 2024. URL: https://doi.org/10.1007/s00439-024-02702-0, doi:10.1007/s00439-024-02702-0. This article has 3 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(song2020e3ubiquitinligase pages 1-2): Xiaoqi Song, Shuo Liu, Wen-die Wang, Zhong-fei Ma, Xuetao Cao, and Minghong Jiang. E3 ubiquitin ligase rnf170 inhibits innate immune responses by targeting and degrading tlr3 in murine cells. Cellular &amp; Molecular Immunology, 17:865-874, May 2020. URL: https://doi.org/10.1038/s41423-019-0236-y, doi:10.1038/s41423-019-0236-y. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gehweiler2024rnf170anoveldisease pages 68-72): I Gehweiler. Rnf170-a novel disease gene causing hereditary spastic paraplegia. Unknown journal, 2024.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="RNF170-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000027 Figure 5, panels A and B, quantifies the effect of RNF170 knockdown (depletion) on IP3R1 processing. As described in the text (page" src="RNF170-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lari2016resolutionofproteotoxic pages 111-115</li>
+<li>wagner2019biallelicvariantsin pages 6-7</li>
+<li>vondel2024overarchingpathomechanismsin pages 5-8</li>
+<li>cogan2024biallelicvariantsin pages 12-16</li>
+<li>wang2024hostfactorsmodulate pages 13-14</li>
+<li>li2024thernabindingproteins pages 12-13</li>
+<li>cogan2024biallelicvariantsin pages 1-6</li>
+<li>https://doi.org/10.1074/jbc.m111.251983</li>
+<li>https://doi.org/10.1038/s41467-019-12620-9</li>
+<li>https://doi.org/10.1038/s41423-019-0236-y</li>
+<li>https://doi.org/10.26508/lsa.202402620</li>
+<li>https://doi.org/10.1016/j.tins.2024.01.004</li>
+<li>https://doi.org/10.1007/s00439-024-02702-0</li>
+<li>https://doi.org/10.1074/jbc.m111.251983,</li>
+<li>https://doi.org/10.1038/s41467-019-12620-9,</li>
+<li>https://doi.org/10.26508/lsa.202402620,</li>
+<li>https://doi.org/10.1038/s41423-019-0236-y,</li>
+<li>https://doi.org/10.2147/jir.s455035,</li>
+<li>https://doi.org/10.1186/s12985-024-02503-x,</li>
+<li>https://doi.org/10.1016/j.tins.2024.01.004,</li>
+<li>https://doi.org/10.1007/s00439-024-02702-0,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RNF170-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96K19" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rnf170-review-notes">RNF170 review notes</h1>
+<p>UniProt: Q96K19 (RN170_HUMAN), 258 aa, gene RNF170. HGNC:25358. Chromosome 8. Multi-pass ER membrane protein.</p>
+<h2 id="core-identity">Core identity</h2>
+<p>RNF170 is a multi-pass ER-membrane RING-type E3 ubiquitin ligase (EC 2.3.2.27). C3HC4 RING domain (ZN_FING 87-130; catalytic residues Cys-102/His-104; C102S/H104A double mutant completely abolishes ligase activity). Three transmembrane helices (25-45, 202-222, 224-244) anchor it in the ER membrane with a large cytoplasmic loop (46-201) carrying the RING.</p>
+<p>[file:human/RNF170/RNF170-uniprot.txt "E3 ubiquitin-protein ligase that plays an essential role in stimulus-induced inositol 1,4,5-trisphosphate receptor type 1 (ITPR1) ubiquitination and degradation"]<br />
+[file:human/RNF170/RNF170-uniprot.txt "MUTAGEN 102 ... C-&gt;S: Complete loss of E3 ligase activity; when associated with A-104"]</p>
+<h2 id="primary-role-ip3ritpr1-erad-with-the-erlin1erlin2-complex">Primary role: IP3R/ITPR1 ERAD with the ERLIN1/ERLIN2 complex</h2>
+<p>RNF170 is essential for stimulus-induced ubiquitination and ERAD-mediated degradation of the inositol 1,4,5-trisphosphate receptor (ITPR1/IP3R), and also for ITPR1 turnover in resting cells. It is constitutively associated with the ERLIN1/ERLIN2 complex and interacts with activated ITPR1. This is the founding/defining function (Lu et al. 2011, PMID:21610068).</p>
+<p>[file:human/RNF170/RNF170-uniprot.txt "Also involved in ITPR1 turnover in resting cells"]<br />
+[file:human/RNF170/RNF170-uniprot.txt "Constitutively associated with the ERLIN1/ERLIN 2 complex. Interacts with activated ITPR1"]</p>
+<p>Note: This IP3R/ERLIN role is NOT explicitly represented in the current GOA (the GOA has no ITPR1-ERAD term). It is captured here in description, core_functions, and a proposed_new_term, with provenance from the UniProt record / PMID:21610068. PMID:21610068 is not in the cached publications/ folder; supporting text is taken verbatim from the UniProt file.</p>
+<h2 id="secondary-role-tlr3-degradation-innate-immunity">Secondary role: TLR3 degradation / innate immunity</h2>
+<p>RNF170 binds TLR3 and mediates K48-linked polyubiquitination of K766 in the TLR3 TIR domain, promoting proteasomal degradation and selectively inhibiting TLR3-triggered innate immune responses (Song et al. 2020, PMID:31076723; mainly murine cells). This is the source of the K48 ubiquitination, negative regulation of TLR3 signaling, and IDA ligase-activity / ER-membrane annotations in the GOA.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/31076723" title="RNF170 mediated the K48-linked polyubiquitination of K766 in the TIR domain of TLR3 and promoted the degradation of TLR3 through the proteasome pathway">PMID:31076723</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/31076723" title="The genetic ablation of RNF170 selectively augmented TLR3-triggered innate immune responses both in vitro and in vivo">PMID:31076723</a></p>
+<h2 id="disease">Disease</h2>
+<p>Mutations cause autosomal dominant sensory ataxia (SNAX1; R199C) and autosomal recessive hereditary spastic paraplegia (SPG85; e.g. C102R, C107W). RING-region (C102) variants link the ligase activity to neurodegeneration, consistent with its role in IP3R/ER calcium-channel homeostasis.</p>
+<h2 id="localization">Localization</h2>
+<p>ER membrane (PMID:21610068, PMID:31076723), multi-pass. This is the core compartment.</p>
+<h2 id="annotation-review-decisions-summary">Annotation review decisions (summary)</h2>
+<ul>
+<li>ubiquitin protein ligase activity (GO:0061630): CORE, ACCEPT (IDA PMID:31076723, EC 2.3.2.27; RING C102S/H104A abolishes).</li>
+<li>ER membrane (GO:0005789): CORE location, ACCEPT (IDA + IEA).</li>
+<li>protein K48-linked ubiquitination (GO:0070936): ACCEPT (IDA, degradative topology on TLR3; also used on ITPR1).</li>
+<li>negative regulation of TLR3 signaling pathway (GO:0034140): KEEP_AS_NON_CORE (real, but secondary immunity role; the core role is IP3R ERAD).</li>
+<li>protein ubiquitination (GO:0016567, IEA UniPathway): KEEP_AS_NON_CORE (generic parent).</li>
+<li>protein binding (GO:0005515, IPI x2): KEEP_AS_NON_CORE (uninformative; includes PSMA6 proteasome subunit and isoform-5 interactome partners).</li>
+<li>proposed_new_term: ITPR1/IP3R ERAD + ERLIN complex membership (the defining function, currently missing from GOA).</li>
+</ul>
+<h2 id="falcon-deep-research-findings-incorporated-2026-06">Falcon deep-research findings (incorporated 2026-06)</h2>
+<ul>
+<li>Recessive (biallelic) RNF170 variants cause autosomal recessive HSP (SPG85), established in four unrelated families with functional validation in patient fibroblasts, mutant SH-SY5Y cells, and zebrafish knockdown <a href="https://pubmed.ncbi.nlm.nih.gov/31636353" title="mutations in the ubiquitin E3 ligase gene RNF170, which targets inositol 1,4,5-trisphosphate receptors for degradation, are the likely cause of autosomal recessive HSP in four unrelated families">PMID:31636353</a>. Added as a reference; previously the SPG85 link was only in description without a cited primary genetics paper.</li>
+<li>That genetics study mechanistically ties disease to failure of the RNF170-mediated ITPR1/IP3R ERAD pathway and altered ER Ca2+ release signaling <a href="https://pubmed.ncbi.nlm.nih.gov/31636353" title="Activated inositol 1,4,5-trisphosphate receptors are then rapidly degraded by the endoplasmic reticulum-associated degradation pathway">PMID:31636353</a>, reinforcing the existing core IP3R-ERAD function annotation (added PMID:31636353 id to that NEW annotation's supported_by).</li>
+<li>Falcon reports patient-derived fibroblasts fail to show stimulus-dependent IP3R-3 degradation and RNF170-KO SH-SY5Y cells show elevated basal IP3R-1 with rescue by WT RNF170 (Wagner 2019); consistent with RNF170 constraining IP3R abundance [DOI:10.1038/s41467-019-12620-9].</li>
+<li>ERLIN1/2 SPFH scaffolds bind a conserved luminal N-terminal motif shared by RNF170 and TMUB1-L, bridging them in cholesterol-rich ER nanodomains (already in review as PMID:38782601) [DOI:10.26508/lsa.202402620].</li>
+<li>Falcon also surfaced the ERLIN1 SPG62 cohort (Cogan 2024, n=13) and a Trends Neurosci review (Van de Vondel 2024) framing the ERLIN1/2-RNF170-IP3R module as a recurrent neurogenetic mechanism; these are about ERLIN1/pathway context rather than RNF170 directly, so not added as RNF170 references [DOI:10.1007/s00439-024-02702-0; DOI:10.1016/j.tins.2024.01.004].</li>
+<li>Song 2020 TLR3 study (already PMID:31076723) and the Lu 2011 founding IP3R-ERAD paper (already PMID:21610068) were re-confirmed by Falcon; no change.</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Pn Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RNF170-pn-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96K19" data-a="DOC: Pn Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rnf170-pn-consistency-notes">RNF170 PN Consistency Notes</h1>
+<ul>
+<li>Generated: 2026-06-18</li>
+<li>Project: PROTEOSTASIS</li>
+<li>Scope: PN consistency rereview against local AIGR review and available deep-research artifacts</li>
+<li>UniProt: Q96K19</li>
+<li>AIGR review status: COMPLETE</li>
+<li>Review batch: proteostasis-batch-2026-06-11</li>
+<li>Batch change status: added</li>
+</ul>
+<h2 id="source-files-checked">Source Files Checked</h2>
+<ul>
+<li>AIGR review YAML: present - <a href="RNF170-ai-review.yaml">genes/human/RNF170/RNF170-ai-review.yaml</a></li>
+<li>AIGR review HTML: missing - genes/human/RNF170/RNF170-ai-review.html</li>
+<li>Gene notes: present - <a href="RNF170-notes.md">genes/human/RNF170/RNF170-notes.md</a></li>
+<li>GOA TSV: present - <a href="RNF170-goa.tsv">genes/human/RNF170/RNF170-goa.tsv</a></li>
+<li>UniProt record: present - <a href="RNF170-uniprot.txt">genes/human/RNF170/RNF170-uniprot.txt</a></li>
+<li>PN dossier: <a href="../../../projects/PROTEOSTASIS/reports/phase1_dossiers/RNF170.md">projects/PROTEOSTASIS/reports/phase1_dossiers/RNF170.md</a></li>
+<li>PN consistency section: <a href="../../../projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/RNF170.md">projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/RNF170.md</a></li>
+<li>PN projection report: <a href="../../../projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv">projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv</a></li>
+<li>PN mapping audit: <a href="../../../projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv">projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv</a></li>
+</ul>
+<h3 id="deep-research-files">Deep Research Files</h3>
+<ul>
+<li><a href="RNF170-deep-research-falcon.md">genes/human/RNF170/RNF170-deep-research-falcon.md</a></li>
+</ul>
+<h2 id="aigr-review-snapshot">AIGR Review Snapshot</h2>
+<ul>
+<li>Description: RNF170 is a multi-pass endoplasmic reticulum membrane RING-type E3 ubiquitin-protein ligase (EC 2.3.2.27, 258 aa) with three transmembrane helices and a large cytoplasmic loop carrying a C3HC4 RING domain (catalytic Cys-102/His-104). Its defining function is in ER-associated degradation (ERAD) of the inositol 1,4,5-trisphosphate receptor (ITPR1/IP3R): RNF170 is essential for stimulus-induced ubiquitination and degradation of activated ITPR1 and also contributes to ITPR1 turnover in resting cells, thereby controlling IP3R abundance and ER calcium-release signaling. To do this it is constitutively associated with the ERLIN1/ERLIN2 (SPFH-domain) complex, which recognizes activated IP3R and recruits RNF170 to ubiquitinate it. RNF170 also has a secondary, ligase-dependent immune-regulatory role: it binds Toll-like receptor 3 (TLR3) and builds K48-linked polyubiquitin chains on Lys-766 in the TLR3 TIR domain to drive its proteasomal degradation, selectively dampening TLR3-triggered innate immune responses. RNF170 is broadly expressed (including spinal cord); loss-of-function and RING-region missense variants cause autosomal dominant sensory ataxia (SNAX1) and autosomal recessive hereditary spastic paraplegia (SPG85), linking its ER ubiquitin-ligase activity to neuronal homeostasis. Its core localization and site of action is the ER membrane.</li>
+<li>Existing/core annotation action counts: ACCEPT: 5; KEEP_AS_NON_CORE: 4; NEW: 1</li>
+</ul>
+<h2 id="pn-consistency-summary">PN Consistency Summary</h2>
+<ul>
+<li><strong>Consistency:</strong> Excellent and notably aligned on the NEW pressure. Deep research, review and PN all foreground the <strong>IP3R/ITPR1 ERAD with the ERLIN1/ERLIN2 complex</strong> (PMID:21610068, verified via PubMed <a href="https://doi.org/10.1074/jbc.M111.251983">DOI</a>) as the defining function that is currently ABSENT from the GOA — the review marks GO:0036503 ERAD pathway as action <code>NEW</code> for exactly this reason, matching the dossier <code>goa_status=new_to_goa</code> for GO:0036503. GOA confirmed to lack GO:0036503 and GO:0000151. No contradictions.</li>
+<li><strong>PN story / NEW pressure:</strong> GO:0036503 ERAD pathway (verified real) is genuinely new_to_goa here — the review already proposes adding it (NEW) plus a substrate-specific child term "inositol 1,4,5-trisphosphate receptor catabolic process via the ERAD pathway" (proposed_new_terms, parent GO:0036503). PN's GO:0036503 projection = ADD, fully concordant. GO:0000151 ubiquitin ligase complex (verified real, NOT in GOA) is grounded by the constitutive ERLIN1/2 association — DEFENSIBLE ADD; the review does NOT currently capture complex membership (no GO:0000151). Conclude: ERAD ADD strongly justified (review agrees); GO:0000151 a defensible ADD the review missed.</li>
+<li><strong>Evidence alignment:</strong> Strong. PN ERLIN row cites "1610068" (truncated PMID = 21610068, the Lu et al. founding IP3R-ERAD paper) and "41481136" (UNVERIFIABLE — does not resolve as a PMID; likely a typo/garbled ID). Review's IP3R-ERAD evidence (PMID:21610068, 31636353, 38782601) is richer; the SNAX1/SPG85 genetics tie ligase activity to disease. PN RING row "19489725 / rev" not in review (family review).</li>
+<li><strong>Verdict:</strong> Fully consistent and mutually reinforcing on the IP3R-ERAD NEW story; review already proposes the ERAD ADD. GO:0000151 complex membership is a defensible addition the review omits.</li>
+</ul>
+<h2 id="full-consistency-review">Full Consistency Review</h2>
+<ul>
+<li><strong>UniProt:</strong> Q96K19 · <strong>batch:</strong> proteostasis-batch-2026-06-11 · <strong>review status:</strong> COMPLETE (thorough; multi-pass ER RING E3, IP3R-ERAD core + TLR3, ERLIN complex, SPG85/SNAX1 disease)</li>
+<li><strong>PN placement:</strong> 3 rows — <code>ER proteostasis|...|ERAD|...|ERAD-associated RING E3 ligase</code>; <code>UPS|...|RING|with transmembrane domain|ER</code>; <code>UPS|...|idiosyncratic RING complex|RNF170 / ERLIN complex|catalytic / RING, transmembrane</code>. <strong>PN-node mapping:</strong> ERAD-RING subtype→GO:0061630 (in_goa); ERAD type→GO:0036503 (new_to_goa); ERAD group→GO:0036503 exact (new_to_goa); RING group→GO:0061630 (in_goa); RNF170/ERLIN-complex group→GO:0000151 ubiquitin ligase complex (new_to_goa). Projected: GO:0036503×2 (new), GO:0061630×2 (in GOA), GO:0000151 (new).</li>
+<li><strong>Consistency:</strong> Excellent and notably aligned on the NEW pressure. Deep research, review and PN all foreground the <strong>IP3R/ITPR1 ERAD with the ERLIN1/ERLIN2 complex</strong> (PMID:21610068, verified via PubMed <a href="https://doi.org/10.1074/jbc.M111.251983">DOI</a>) as the defining function that is currently ABSENT from the GOA — the review marks GO:0036503 ERAD pathway as action <code>NEW</code> for exactly this reason, matching the dossier <code>goa_status=new_to_goa</code> for GO:0036503. GOA confirmed to lack GO:0036503 and GO:0000151. No contradictions.</li>
+<li><strong>PN story / NEW pressure:</strong> GO:0036503 ERAD pathway (verified real) is genuinely new_to_goa here — the review already proposes adding it (NEW) plus a substrate-specific child term "inositol 1,4,5-trisphosphate receptor catabolic process via the ERAD pathway" (proposed_new_terms, parent GO:0036503). PN's GO:0036503 projection = ADD, fully concordant. GO:0000151 ubiquitin ligase complex (verified real, NOT in GOA) is grounded by the constitutive ERLIN1/2 association — DEFENSIBLE ADD; the review does NOT currently capture complex membership (no GO:0000151). Conclude: ERAD ADD strongly justified (review agrees); GO:0000151 a defensible ADD the review missed.</li>
+<li><strong>Mapping strategy:</strong> Correct. Catalytic RING → GO:0061630; ERAD group/type → GO:0036503 (exact); ERLIN-complex group → GO:0000151 (membership, conservative). The ERLIN/RNF170 module is ER-membrane, so child GO:0000835 ER ubiquitin ligase complex (verified in OLS) would be more precise. No node-status change warranted.</li>
+<li><strong>Evidence alignment:</strong> Strong. PN ERLIN row cites "1610068" (truncated PMID = 21610068, the Lu et al. founding IP3R-ERAD paper) and "41481136" (UNVERIFIABLE — does not resolve as a PMID; likely a typo/garbled ID). Review's IP3R-ERAD evidence (PMID:21610068, 31636353, 38782601) is richer; the SNAX1/SPG85 genetics tie ligase activity to disease. PN RING row "19489725 / rev" not in review (family review).</li>
+<li><strong>Verdict:</strong> Fully consistent and mutually reinforcing on the IP3R-ERAD NEW story; review already proposes the ERAD ADD. GO:0000151 complex membership is a defensible addition the review omits.</li>
+<li><strong>Recommended edits:</strong> [YAML] add GO:0000151 ubiquitin ligase complex (or child GO:0000835 ER ubiquitin ligase complex; part_of, PMID:21610068/38782601 ERLIN1/2 association) as a non-core CC — currently absent from the review. [REF] verify PN row-3 reference "41481136" — does not resolve as a valid PMID (likely garbled); confirm intended citation.</li>
+</ul>
+<h2 id="pn-dossier-context">PN Dossier Context</h2>
+<ul>
+<li>review_batch: proteostasis-batch-2026-06-11</li>
+<li>review_yaml: genes/human/RNF170/RNF170-ai-review.yaml</li>
+<li>PN workbook rows: 3</li>
+</ul>
+<h2 id="pn-row-1-er-proteostasis-organelle-specific-protein-degradation-er-associated-degradation-cytosolic-handling-of-erad-substrates-erad-associated-ring-e3-ligase">PN row 1: ER proteostasis | Organelle-specific protein degradation | ER associated degradation | Cytosolic handling of ERAD substrates | ERAD-associated RING E3 ligase</h2>
+<ul>
+<li>UniProt: Q96K19</li>
+<li>In branches: ER, UPS</li>
+<li>PN-node mapping records (path + ancestors):<ul>
+<li>[subtype] ER proteostasis|Organelle-specific protein degradation|ER associated degradation|Cytosolic handling of ERAD substrates|ERAD-associated RING E3 ligase<br />
+    status=mapped scope=ok_for_propagation_to_go GO=[GO:0061630 ubiquitin protein ligase activity]<br />
+    rationale: This PN subtype denotes ERAD-associated RING E3 ligases. Ubiquitin protein ligase activity is the appropriate shared catalytic target.</li>
+<li>[type] ER proteostasis|Organelle-specific protein degradation|ER associated degradation|Cytosolic handling of ERAD substrates<br />
+    status=mapped scope=ok_for_propagation_to_go GO=[GO:0036503 ERAD pathway]<br />
+    rationale: This PN type covers the cytosolic processing steps that receive ERAD substrates after retrotranslocation. These activities remain part of the ERAD pathway, but the source category is a specific mechanistic slice.</li>
+<li>[group] ER proteostasis|Organelle-specific protein degradation|ER associated degradation<br />
+    status=mapped scope=exact GO=[GO:0036503 ERAD pathway]<br />
+    rationale: The PN group "ER associated degradation" is a direct lexical and biological match to the GO ERAD pathway term. The additional branch and class context disambiguates the source string from any broader degradation language.</li>
+<li>[class] ER proteostasis|Organelle-specific protein degradation<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a broad PN category rather than a single GO class. The member genes span multiple activities, complexes, or contexts, so direct propagation from this node would overstate the shared biology.</li>
+<li>[branch] ER proteostasis<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a top-level PN branch. This is a systems/taxonomy umbrella, not a direct GO assertion; narrower child curations carry any propagating GO mappings.</li>
+</ul>
+</li>
+</ul>
+<h2 id="pn-row-2-ubiquitin-proteasome-system-e3-ubiquitin-and-ubl-ligases-ring-with-transmembrane-domain-er">PN row 2: Ubiquitin Proteasome System | E3 ubiquitin and UBL ligases | RING | with transmembrane domain | ER</h2>
+<ul>
+<li>UniProt: Q96K19</li>
+<li>In branches: ER, UPS</li>
+<li>Signature domains: IPR001841</li>
+<li>Auxiliary domains: (none)</li>
+<li>PN references (titles):<ul>
+<li>19489725 / rev</li>
+</ul>
+</li>
+<li>PN-node mapping records (path + ancestors):<ul>
+<li>[subtype] Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|RING|with transmembrane domain|ER<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a narrower E3-ligase architecture, component, or domain subdivision already covered by the curated parent E3 mapping. No additional direct GO mapping is needed at this node.</li>
+<li>[type] Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|RING|with transmembrane domain<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a narrower E3-ligase architecture, component, or domain subdivision already covered by the curated parent E3 mapping. No additional direct GO mapping is needed at this node.</li>
+<li>[group] Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|RING<br />
+    status=mapped scope=ok_for_propagation_to_go GO=[GO:0061630 ubiquitin protein ligase activity]<br />
+    rationale: This PN group is a catalytic ubiquitin E3 ligase bucket. The shared GO molecular-function target is ubiquitin protein ligase activity.</li>
+<li>[class] Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases<br />
+    status=context_only scope=too_broad_to_propagate GO=[GO:0061630 ubiquitin protein ligase activity]<br />
+    rationale: This class is a genuine E3-ligase context, but its descendants include catalytic ligases, cullin scaffolds, substrate receptors, adaptors, cofactors, regulators, and UBL modifier systems. A class-level propagation would over-annotate.</li>
+<li>[branch] Ubiquitin Proteasome System<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as the top-level UPS branch. It is a project taxonomy umbrella rather than a direct GO assertion; UPS propagation must come from manually curated child nodes.</li>
+</ul>
+</li>
+</ul>
+<h2 id="pn-row-3-ubiquitin-proteasome-system-e3-ubiquitin-and-ubl-ligases-idiosyncratic-ring-complex-rnf170-erlin-complex-catalytic-ring-transmembrane">PN row 3: Ubiquitin Proteasome System | E3 ubiquitin and UBL ligases | idiosyncratic RING complex | RNF170 / ERLIN complex | catalytic / RING, transmembrane</h2>
+<ul>
+<li>UniProt: Q96K19</li>
+<li>In branches: ER, UPS</li>
+<li>Signature domains: (none)</li>
+<li>Auxiliary domains: IPR001841</li>
+<li>PN references (titles):<ul>
+<li>1610068</li>
+<li>41481136</li>
+</ul>
+</li>
+<li>PN-node mapping records (path + ancestors):<ul>
+<li>[subtype] Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|idiosyncratic RING complex|RNF170 / ERLIN complex|catalytic / RING, transmembrane<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a narrower E3-ligase architecture, component, or domain subdivision already covered by the curated parent E3 mapping. No additional direct GO mapping is needed at this node.</li>
+<li>[type] Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|idiosyncratic RING complex|RNF170 / ERLIN complex<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a narrower E3-ligase architecture, component, or domain subdivision already covered by the curated parent E3 mapping. No additional direct GO mapping is needed at this node.</li>
+<li>[group] Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|idiosyncratic RING complex<br />
+    status=mapped scope=ok_for_propagation_to_go GO=[GO:0000151 ubiquitin ligase complex]<br />
+    rationale: This PN group is an E3 ligase complex bucket. The safest shared GO target is ubiquitin ligase complex membership rather than assigning catalytic activity to every subunit.</li>
+<li>[class] Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases<br />
+    status=context_only scope=too_broad_to_propagate GO=[GO:0061630 ubiquitin protein ligase activity]<br />
+    rationale: This class is a genuine E3-ligase context, but its descendants include catalytic ligases, cullin scaffolds, substrate receptors, adaptors, cofactors, regulators, and UBL modifier systems. A class-level propagation would over-annotate.</li>
+<li>[branch] Ubiquitin Proteasome System<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as the top-level UPS branch. It is a project taxonomy umbrella rather than a direct GO assertion; UPS propagation must come from manually curated child nodes.</li>
+</ul>
+</li>
+</ul>
+<h2 id="projected-go-annotations-5">Projected GO annotations (5)</h2>
+<ul>
+<li>GO:0036503 ERAD pathway | scope=exact | goa_status=new_to_goa | from=ER proteostasis|Organelle-specific protein degradation|ER associated degradation</li>
+<li>GO:0036503 ERAD pathway | scope=ok_for_propagation_to_go | goa_status=new_to_goa | from=ER proteostasis|Organelle-specific protein degradation|ER associated degradation|Cytosolic handling of ERAD substrates</li>
+<li>GO:0061630 ubiquitin protein ligase activity | scope=ok_for_propagation_to_go | goa_status=already_in_goa_exact | from=ER proteostasis|Organelle-specific protein degradation|ER associated degradation|Cytosolic handling of ERAD substrates|ERAD-associated RING E3 ligase</li>
+<li>GO:0061630 ubiquitin protein ligase activity | scope=ok_for_propagation_to_go | goa_status=already_in_goa_exact | from=Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|RING</li>
+<li>GO:0000151 ubiquitin ligase complex | scope=ok_for_propagation_to_go | goa_status=new_to_goa | from=Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|idiosyncratic RING complex</li>
+</ul>
+<h2 id="note">Note</h2>
+<p>This file is generated from the current PROTEOSTASIS phase-1 dossier and local gene-review artifacts. Edit the source review, PN mapping, or dossier rather than this generated note when correcting the underlying curation.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96K19
+gene_symbol: RNF170
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  RNF170 is a multi-pass endoplasmic reticulum membrane RING-type E3
+  ubiquitin-protein ligase (EC 2.3.2.27, 258 aa) with three transmembrane
+  helices and a large cytoplasmic loop carrying a C3HC4 RING domain (catalytic
+  Cys-102/His-104). Its defining function is in ER-associated degradation (ERAD)
+  of the inositol 1,4,5-trisphosphate receptor (ITPR1/IP3R): RNF170 is essential
+  for stimulus-induced ubiquitination and degradation of activated ITPR1 and also
+  contributes to ITPR1 turnover in resting cells, thereby controlling IP3R
+  abundance and ER calcium-release signaling. To do this it is constitutively
+  associated with the ERLIN1/ERLIN2 (SPFH-domain) complex, which recognizes
+  activated IP3R and recruits RNF170 to ubiquitinate it. RNF170 also has a
+  secondary, ligase-dependent immune-regulatory role: it binds Toll-like receptor
+  3 (TLR3) and builds K48-linked polyubiquitin chains on Lys-766 in the TLR3 TIR
+  domain to drive its proteasomal degradation, selectively dampening
+  TLR3-triggered innate immune responses. RNF170 is broadly expressed (including
+  spinal cord); loss-of-function and RING-region missense variants cause
+  autosomal dominant sensory ataxia (SNAX1) and autosomal recessive hereditary
+  spastic paraplegia (SPG85), linking its ER ubiquitin-ligase activity to neuronal
+  homeostasis. Its core localization and site of action is the ER membrane.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q96K19-1
+- name: &#39;2&#39;
+  id: Q96K19-2
+  sequence_note: VSP_023856
+- name: &#39;3&#39;
+  id: Q96K19-3
+  sequence_note: VSP_023855, VSP_023857
+- name: &#39;4&#39;
+  id: Q96K19-4
+  sequence_note: VSP_023851, VSP_023852
+- name: &#39;5&#39;
+  id: Q96K19-5
+  sequence_note: VSP_023853, VSP_023854
+- name: &#39;6&#39;
+  id: Q96K19-6
+  sequence_note: VSP_044556
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic transfer of ER membrane localization from the UniProt subcellular location; the core compartment and site of action for RNF170.
+    action: ACCEPT
+    reason: Correct core localization; RNF170 is a multi-pass ER membrane protein supported experimentally (IDA, PMID:31076723; PMID:21610068).
+    supported_by:
+    - reference_id: file:human/RNF170/RNF170-uniprot.txt
+      supporting_text: &#39;Endoplasmic reticulum membrane {ECO:0000269|PubMed:21610068, ECO:0000269|PubMed:31076723}&#39;
+- term:
+    id: GO:0061630
+    label: ubiquitin protein ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Combined automated electronic assignment of RING-type ubiquitin ligase activity, the core molecular function of RNF170.
+    action: ACCEPT
+    reason: Correct core molecular function; supported by IDA (PMID:31076723), EC 2.3.2.27, and RING-region catalytic residues (C102S/H104A abolishes activity).
+    supported_by:
+    - reference_id: file:human/RNF170/RNF170-uniprot.txt
+      supporting_text: EC=2.3.2.27
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: Interactome interaction with the proteasome subunit PSMA6, consistent with RNF170&#39;s role in proteasomal degradation. Bare protein binding is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: Records a real interaction (PSMA6) but bare protein binding is uninformative per curation guidelines.
+    supported_by:
+    - reference_id: file:human/RNF170/RNF170-uniprot.txt
+      supporting_text: &#39;Q96K19; P60900: PSMA6&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  isoform: Q96K19-5
+  review:
+    summary: Isoform-5 binary interactome interactions (e.g. SGTA, STARD3, TMEM109). Bare protein binding is uninformative; isoform 5 is a truncated splice variant.
+    action: KEEP_AS_NON_CORE
+    reason: High-throughput interactions on a truncated isoform; bare protein binding is uninformative and not a core function.
+    supported_by:
+    - reference_id: file:human/RNF170/RNF170-uniprot.txt
+      supporting_text: &#39;Q96K19-5; O43765: SGTA&#39;
+- term:
+    id: GO:0016567
+    label: protein ubiquitination
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: UniPathway-derived general protein ubiquitination process, a parent of the specific ERAD/degradative ubiquitination RNF170 performs.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic; the specific ERAD/IP3R degradation and K48-ubiquitination annotations better capture the role.
+    supported_by:
+    - reference_id: file:human/RNF170/RNF170-uniprot.txt
+      supporting_text: &#39;PATHWAY: Protein modification; protein ubiquitination.&#39;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:31076723
+  qualifier: is_active_in
+  review:
+    summary: Direct experimental evidence that RNF170 acts at the ER membrane (TLR3 study); the core compartment for its ligase function.
+    action: ACCEPT
+    reason: Core localization/site of action with direct experimental support.
+    supported_by:
+    - reference_id: file:human/RNF170/RNF170-uniprot.txt
+      supporting_text: &#39;Endoplasmic reticulum membrane {ECO:0000269|PubMed:21610068, ECO:0000269|PubMed:31076723}&#39;
+- term:
+    id: GO:0034140
+    label: negative regulation of toll-like receptor 3 signaling pathway
+  evidence_type: IDA
+  original_reference_id: PMID:31076723
+  qualifier: involved_in
+  review:
+    summary: Direct evidence that RNF170 negatively regulates TLR3 signaling by degrading TLR3; a real but secondary immune-regulatory role.
+    action: KEEP_AS_NON_CORE
+    reason: Well supported (PMID:31076723, mainly murine cells) but a secondary role distinct from the core IP3R-ERAD function.
+    supported_by:
+    - reference_id: PMID:31076723
+      supporting_text: The genetic ablation of RNF170 selectively augmented TLR3-triggered innate immune responses both in vitro and in vivo
+- term:
+    id: GO:0061630
+    label: ubiquitin protein ligase activity
+  evidence_type: IDA
+  original_reference_id: PMID:31076723
+  qualifier: enables
+  review:
+    summary: Direct experimental demonstration of RNF170 RING-dependent ubiquitin ligase activity (K48 ubiquitination of TLR3). Core molecular function.
+    action: ACCEPT
+    reason: Core molecular function with direct experimental (IDA) support; RING catalytic mutations (C102S/H104A) abolish activity.
+    supported_by:
+    - reference_id: PMID:31076723
+      supporting_text: RNF170 mediated the K48-linked polyubiquitination of K766 in the TIR domain of TLR3
+- term:
+    id: GO:0070936
+    label: protein K48-linked ubiquitination
+  evidence_type: IDA
+  original_reference_id: PMID:31076723
+  qualifier: involved_in
+  review:
+    summary: Direct evidence that RNF170 builds K48-linked (degradative) polyubiquitin chains, demonstrated on TLR3. This degradative topology also underlies its IP3R/ERAD role.
+    action: ACCEPT
+    reason: Directly demonstrated K48-linked ubiquitination, the canonical degradative topology underlying RNF170&#39;s substrate-degradation functions.
+    supported_by:
+    - reference_id: PMID:31076723
+      supporting_text: RNF170 mediated the K48-linked polyubiquitination of K766 in the TIR domain of TLR3
+- term:
+    id: GO:0036503
+    label: ERAD pathway
+  evidence_type: IDA
+  original_reference_id: PMID:21610068
+  qualifier: involved_in
+  review:
+    summary: RNF170 mediates ubiquitination and ERAD-dependent degradation of activated ITPR1/IP3R, its defining function (Lu et al. 2011). This core process is currently absent from the GOA and is proposed as a NEW annotation.
+    action: NEW
+    reason: The IP3R/ITPR1 ERAD role with the ERLIN1/ERLIN2 complex is well established experimentally but not represented in the current GOA; it should be added.
+    supported_by:
+    - reference_id: file:human/RNF170/RNF170-uniprot.txt
+      supporting_text: E3 ubiquitin-protein ligase that plays an essential role in stimulus-induced inositol 1,4,5-trisphosphate receptor type 1 (ITPR1) ubiquitination and degradation
+    - reference_id: PMID:31636353
+references:
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:21610068
+  title: &#39;RNF170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation.&#39;
+  findings:
+  - statement: RNF170 is an ER-membrane ubiquitin ligase that, constitutively associated with the ERLIN1/ERLIN2 complex, mediates ubiquitination and ERAD-dependent degradation of activated inositol 1,4,5-trisphosphate receptor (ITPR1/IP3R).
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified (J Biol Chem 286:24426-24433). Founding/defining study of RNF170 as the IP3R ERAD ligase and ERLIN1/ERLIN2 partner; not cached in publications/, supporting text taken from the UniProt record. This core IP3R-ERAD role is currently absent from the GOA.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput interactome; source of the PSMA6 (proteasome subunit) protein binding annotation.
+- id: PMID:31076723
+  title: E3 ubiquitin ligase RNF170 inhibits innate immune responses by targeting and degrading TLR3 in murine cells.
+  findings:
+  - statement: RNF170 binds TLR3 and catalyzes K48-linked polyubiquitination of Lys-766 in the TLR3 TIR domain, promoting proteasomal degradation of TLR3 and selectively inhibiting TLR3-triggered innate immune responses; RNF170 acts at the ER membrane and its ligase activity requires RING residues Cys-102/His-104.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text available; source of the IDA ligase-activity, ER-membrane, K48-ubiquitination and negative-regulation-of-TLR3 annotations. Predominantly murine cells.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Binary interactome reference map; source of isoform-5 (Q96K19-5) bare protein binding annotations.
+- id: PMID:31636353
+  title: Bi-allelic variants in RNF170 are associated with hereditary spastic paraplegia.
+  findings:
+  - statement: Bi-allelic (recessive) RNF170 variants cause autosomal recessive hereditary spastic paraplegia (SPG85) in four unrelated families; functional studies in patient fibroblasts, mutant SH-SY5Y cells and zebrafish knockdown link the loss of RNF170-mediated ITPR1/IP3R degradation (ERAD) and altered ER calcium signaling to the disease.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified (Nat Commun 2019;10(1):4790; DOI 10.1038/s41467-019-12620-9; PMC6803694). Falcon deep-research finding. Primary genetics study establishing recessive RNF170 variants as a cause of HSP (SPG85) and tying the phenotype to the IP3R/ITPR1 ERAD pathway. Not cached in publications/, so no verbatim supporting_text added to annotations.
+- id: PMID:38782601
+  title: ERLIN1/2 scaffolds bridge TMUB1 and RNF170 and restrict cholesterol esterification to regulate the secretory pathway.
+  findings:
+  - statement: ERLIN1/2 ring-like SPFH-domain scaffolds bind a conserved luminal N-terminal motif shared by RNF170 and the full-length isoform of TMUB1, bridging the two proteins in cholesterol-rich ER nanodomains; variants that preclude these interactions have been linked to hereditary spastic paraplegia, and ERLIN scaffolds limit cholesterol esterification to favour ER-to-Golgi cholesterol transport and regulate the secretory pathway.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified (Life Sci Alliance 2024;7(8):e202402620; DOI 10.26508/lsa.202402620). Falcon deep-research finding. Defines a luminal N-terminal motif by which the ERLIN1/2 scaffold engages RNF170 (and TMUB1-L), extending the ERLIN-RNF170 module to cholesterol/secretory-pathway regulation. Not cached in publications/, so no verbatim supporting_text added to annotations.
+core_functions:
+- description: ER-membrane RING-type E3 ubiquitin ligase that ubiquitinates the activated inositol 1,4,5-trisphosphate receptor (ITPR1/IP3R) to drive its ERAD-mediated degradation, acting as the catalytic partner of the ERLIN1/ERLIN2 complex to control IP3R abundance and ER calcium signaling.
+  molecular_function:
+    id: GO:0061630
+    label: ubiquitin protein ligase activity
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: file:human/RNF170/RNF170-uniprot.txt
+    supporting_text: E3 ubiquitin-protein ligase that plays an essential role in stimulus-induced inositol 1,4,5-trisphosphate receptor type 1 (ITPR1) ubiquitination and degradation
+  - reference_id: file:human/RNF170/RNF170-uniprot.txt
+    supporting_text: Constitutively associated with the ERLIN1/ERLIN 2 complex
+  - reference_id: PMID:38782601
+  directly_involved_in:
+  - id: GO:0036503
+    label: ERAD pathway
+- description: ER-membrane ubiquitin ligase that builds K48-linked polyubiquitin chains on Toll-like receptor 3 (TLR3) to promote its proteasomal degradation, negatively regulating TLR3-triggered innate immune signaling.
+  molecular_function:
+    id: GO:0061630
+    label: ubiquitin protein ligase activity
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:31076723
+    supporting_text: RNF170 mediated the K48-linked polyubiquitination of K766 in the TIR domain of TLR3 and promoted the degradation of TLR3 through the proteasome pathway
+  directly_involved_in:
+  - id: GO:0034140
+    label: negative regulation of toll-like receptor 3 signaling pathway
+proposed_new_terms:
+- proposed_name: inositol 1,4,5-trisphosphate receptor catabolic process via the ERAD pathway
+  proposed_definition: The chemical reactions and pathways resulting in the breakdown of an inositol 1,4,5-trisphosphate receptor (IP3R/ITPR), in which the activated receptor is ubiquitinated at the endoplasmic reticulum membrane and degraded via the ER-associated degradation (ERAD) pathway and the proteasome.
+  justification: RNF170&#39;s defining, experimentally established function is the ERLIN1/ERLIN2-coupled ubiquitination and ERAD-mediated degradation of activated ITPR1/IP3R, which is currently not captured by any specific GO term in the GOA (only the generic ERAD pathway, GO:0036503, exists). A substrate-specific child term would better represent this well-characterized biology.
+  proposed_parent:
+    id: GO:0036503
+    label: ERAD pathway
+  supported_by:
+  - reference_id: file:human/RNF170/RNF170-uniprot.txt
+    supporting_text: E3 ubiquitin-protein ligase that plays an essential role in stimulus-induced inositol 1,4,5-trisphosphate receptor type 1 (ITPR1) ubiquitination and degradation
+suggested_questions:
+- question: Is the core IP3R/ITPR1 ERAD function (with the ERLIN1/ERLIN2 complex) conserved in human cells as established in the original studies, and should it be added to the GOA given that it is currently absent?
+- question: How do SPG85/SNAX1 RING-region variants (e.g. C102R, R199C) mechanistically impair RNF170 ligase activity and IP3R/calcium homeostasis to cause neurodegeneration?
+suggested_experiments:
+- description: Reconstitute or immunoprecipitate the RNF170-ERLIN1-ERLIN2 complex and assay stimulus-induced ITPR1 ubiquitination and degradation in WT vs RING-mutant (C102S/H104A) and SPG85-variant RNF170 to map the substrate lysines and chain topology on IP3R.
+- description: Perform RNF170 knockout/rescue in neuronal cells with ER calcium imaging and quantitative proteomics to test whether IP3R stabilization and altered Ca2+ signaling underlie the sensory ataxia and spastic paraplegia phenotypes.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

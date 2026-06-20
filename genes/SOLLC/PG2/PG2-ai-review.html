@@ -1,0 +1,3445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PG2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PG2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P05117" target="_blank" class="term-link">
+                        P05117
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Solanum lycopersicum</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PG2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P05117" data-a="DESCRIPTION: PG2 (Polygalacturonase-2, UniProt P05117) is the c..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PG2 (Polygalacturonase-2, UniProt P05117) is the classic tomato fruit-ripening endo-polygalacturonase (EC 3.2.1.15), a secreted glycosyl hydrolase family 28 (GH28) cell-wall enzyme. It catalyzes the random hydrolysis of (1-&gt;4)-alpha-D-galacturonosyl linkages in homogalacturonan / de-esterified pectic polyuronides, depolymerizing and solubilizing cell-wall pectin in the apoplast of the ripening pericarp. PG activity is undetectable in mature-green fruit and rises sharply as fruit change colour, driven by ethylene-dependent transcriptional induction; PG2 is expressed essentially only in ripening fruit (at the protein level). The mature catalytic polypeptide exists as two glyco-isoforms (PG2A/PG2B, differing mainly in N-glycosylation) and can associate with a wall-anchored, non-catalytic beta/converter subunit (GP1) to form the more thermostable PG1 complex; PG2 itself is the catalytic subunit. Functional-genetics evidence is definitive for its biological role: antisense suppression of tomato PG (the basis of the Calgene &#34;Flavr Savr&#34; tomato) and Ds insertional knockouts strongly reduce pectin depolymerization and extend shelf life without arresting other ripening programs (ethylene production and lycopene accumulation are unaffected), and reduced SlPG2 expression correlates with firmer fruit. Thus PG2 is mechanistically a pectin-degrading hydrolase acting in cell-wall disassembly; &#34;fruit ripening&#34; is the developmental process the enzyme serves, not its molecular function. The protein localizes to the cell wall / apoplast and is N-glycosylated.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009835" target="_blank" class="term-link">
+                                    GO:0009835
+                                </a>
+                            </span>
+                            <span class="term-label">fruit ripening</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P05117" data-a="GO:0009835" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Fruit ripening&#34;; snapshot-only, removed in the current GOA release. PG2 is a pectin-degrading hydrolase ENZYME whose expression and action are confined to ripening fruit, but &#34;fruit ripening&#34; is the developmental maturation process the enzyme serves, not its molecular function or its direct biological-process role.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED. This is the canonical &#34;enzyme labelled with the process it serves&#34; over-annotation pattern: GO:0009835 is defined as &#34;a developmental maturation process that has as participant a fruit&#34;, whereas PG2 is a single, well-characterized cell-wall glycosidase (EC 3.2.1.15) acting in the apoplast. PG2 is genuinely ripening-associated - PG activity is undetectable in mature-green fruit and appears only as fruit change colour [PMID:7449759], and the enzyme is expressed essentially only in ripening fruit - but the precise, mechanistic biology is captured by polygalacturonase activity (GO:0004650, MF) plus pectin catabolic process (GO:0045490) and cell-wall disassembly (plant-type cell wall organization, GO:0009664), all of which are proposed/retained below. Crucially, PG2 acts DOWNSTREAM of the ripening program rather than driving it: antisense suppression of PG strongly reduces pectin depolymerization yet leaves ethylene production and lycopene accumulation unchanged, so the fruit still &#34;ripens&#34; while softening less [file:SOLLC/PG2/PG2-deep-research-falcon.md]. Annotating the gene with the whole developmental process therefore over-states its role and conflates the process with the enzyme&#39;s function. Retain as a non-core, historical keyword annotation but mark as over-annotated; the genuine contribution to ripening is better represented by the specific MF/BP terms below.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7449759" target="_blank" class="term-link">
+                                        PMID:7449759
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Polygalacturonase activity is not detectable in mature green tomato fruits 
+but appears as fruits begin to change colour and continues to increase during 
+the ripening period.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9747798" target="_blank" class="term-link">
+                                        PMID:9747798
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the gene for tomato polygalacturonase (PG), a critical 
+enzyme in fruit ripening.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/PG2/PG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PG activity is not required to initiate ethylene-mediated ripening, but rather acts downstream as a cell-wall disassembly effector</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004650" target="_blank" class="term-link">
+                                    GO:0004650
+                                </a>
+                            </span>
+                            <span class="term-label">polygalacturonase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P05117" data-a="GO:0004650" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (combined methods: ARBA, InterPro IPR000743, EC 3.2.1.15) for polygalacturonase activity. This is the core, experimentally validated molecular function of PG2.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and central. PG2 is a characterized endo-polygalacturonase: the UniProt entry carries EC=3.2.1.15 with experimental evidence, and the catalytic activity (random hydrolysis of (1-&gt;4)-alpha-D-galacturonosyl linkages, GO:0004650) was measured directly by Chun &amp; Huber, who studied &#34;the hydrolysis of polygalacturonic acid and cell walls by PG isozyme 2 (PG2)&#34; under apoplast-approximating conditions [PMID:9701584]. The PROSITE POLYGALACTURONASE motif and two catalytic active-site residues (His270 proton donor, Asp293) are annotated in UniProt. This is the gene&#39;s defining molecular function and should be retained as core.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9701584" target="_blank" class="term-link">
+                                        PMID:9701584
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We examined the hydrolysis of polygalacturonic 
+acid and cell walls by PG isozyme 2 (PG2) under conditions widely adopted in the 
+literature</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/PG2/PG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">they cleave internal α-1,4 linkages in **homogalacturonan/pectic polyuronides**, contributing to pectin disassembly during ripening</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P05117" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR000743, GH28) for the broad parent process &#34;carbohydrate metabolic process&#34;. Not wrong, but uninformatively general for a pectin-specific hydrolase.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;Carbohydrate metabolic process&#34; is a very high-level grouping term. PG2 does metabolize a carbohydrate polymer (pectin / homogalacturonan), so the term is not incorrect, but it conveys almost none of the gene&#39;s actual biology. The specific, informative biological process is pectin catabolic process (GO:0045490), proposed as a NEW term below and directly supported by the in-vitro hydrolysis of pectic polymers [PMID:9701584] and by the antisense/in-vivo depolymerization evidence [PMID:7827495]. Once the specific pectin-catabolism term is present, the broad carbohydrate-metabolism parent adds no information and is best regarded as an over-annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9701584" target="_blank" class="term-link">
+                                        PMID:9701584
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The hydrolysis of cell wall pectins by tomato (Lycopersicon esculentum) 
+polygalacturonase (PG) in vitro is more extensive than the degradation affecting</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/PG2/PG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">they cleave internal α-1,4 linkages in **homogalacturonan/pectic polyuronides**, contributing to pectin disassembly during ripening</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009830" target="_blank" class="term-link">
+                                    GO:0009830
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall modification involved in abscission</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P05117" data-a="GO:0009830" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from an ARBA machine-learning model (GO_REF:0000117) propagating an abscission-related cell-wall-modification process to the GH28 polygalacturonase family. The cell-wall-modification essence is right, but the &#34;abscission&#34; context is wrong for this fruit-ripening-specific isozyme.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PG2 does modify/disassemble the cell wall, but it does so during fruit RIPENING, not in abscission. The annotation is a family-level ARBA over-generalization: the GH28 polygalacturonase family includes abscission-zone PGs (a distinct paralogous role), and the rule has been applied to PG2 by sequence similarity rather than evidence. PG2 is expressed essentially only in ripening fruit, and there is no evidence for a PG2 abscission function. The genuine, gene-specific biology (apoplastic pectin degradation driving cell-wall disassembly in the softening pericarp) is better captured by the more general, context-neutral &#34;plant-type cell wall organization&#34; (GO:0009664), which explicitly covers disassembly of the pectin-containing wall. Modify to that term rather than retaining the incorrect abscission context.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009664" target="_blank" class="term-link">
+                                    plant-type cell wall organization
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2152163" target="_blank" class="term-link">
+                                        PMID:2152163
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Tomato polygalacturonase is a cell wall enzyme secreted in large amounts during 
+tomato fruit ripening.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7827495" target="_blank" class="term-link">
+                                        PMID:7827495
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PG2 is 
+responsible for pectin solubilization and depolymerization in vivo</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009901" target="_blank" class="term-link">
+                                    GO:0009901
+                                </a>
+                            </span>
+                            <span class="term-label">anther dehiscence</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P05117" data-a="GO:0009901" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from an ARBA machine-learning model (GO_REF:0000117) assigning anther dehiscence to PG2. This is a different developmental context served by other members of the polygalacturonase family, not by the tomato fruit-ripening PG2.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a family-level ARBA over-annotation. Anther dehiscence (GO:0009901, &#34;the dehiscence of an anther to release the pollen grains&#34;) is mediated in other species by anther/pollen-specific polygalacturonases (e.g. Arabidopsis QRT/ADPG paralogs), not by the tomato fruit PG2. Tomato PG2 is expressed essentially only in ripening fruit at the protein level [PMID:2152163], and neither the primary literature nor the deep-research synthesis provides any evidence of a role in anther dehiscence (the term &#34;dehiscence&#34; does not appear anywhere in the research corpus). The annotation reflects sequence similarity to a distinct paralogous subfamily and should be removed.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2152163" target="_blank" class="term-link">
+                                        PMID:2152163
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Tomato polygalacturonase is a cell wall enzyme secreted in large amounts during 
+tomato fruit ripening.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/PG2/PG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**PG2 (UniProt P05117; gene PG2 / PG2A / PG2B) from tomato is an extracellular/apoplastic, ripening-associated endopolygalacturonase (EC 3.2.1.15)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010047" target="_blank" class="term-link">
+                                    GO:0010047
+                                </a>
+                            </span>
+                            <span class="term-label">fruit dehiscence</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P05117" data-a="GO:0010047" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from an ARBA machine-learning model (GO_REF:0000117) assigning fruit dehiscence to PG2. Tomato is a fleshy, indehiscent berry; fruit dehiscence (pod/silique shatter) is a dry-fruit process served by distinct polygalacturonase paralogs.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Another family-level ARBA over-annotation that is biologically inapplicable to tomato. Fruit dehiscence (GO:0010047, &#34;the spontaneous opening of the fruit permitting the escape of seeds&#34;) is a property of dry dehiscent fruits (e.g. Arabidopsis siliques, legume pods) and is mediated by dehiscence-zone polygalacturonases. The tomato fruit is a fleshy indehiscent berry, and PG2&#39;s documented role is pectin depolymerization and softening during ripening [PMID:7827495], not seed-release pod shatter. There is no evidence (literature or deep research) for a PG2 dehiscence function. The annotation is an incorrect cross-paralog transfer and should be removed.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7827495" target="_blank" class="term-link">
+                                        PMID:7827495
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PG2 is 
+responsible for pectin solubilization and depolymerization in vivo</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/PG2/PG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ripening-associated **endo-polygalacturonase** (EC 3.2.1.15) implicated in **pectin depolymerization** during fruit softening</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048046" target="_blank" class="term-link">
+                                    GO:0048046
+                                </a>
+                            </span>
+                            <span class="term-label">apoplast</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P05117" data-a="GO:0048046" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProtKB Subcellular Location vocabulary mapping (GO_REF:0000044) for apoplast localization. Directly supported by experiment; this is where PG2 carries out its function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported. PG2 is a secreted, signal-peptide-bearing glycoprotein that is processed and transported to the cell wall / apoplast: Osteryoung et al. showed tomato PG is &#34;a cell wall enzyme secreted in large amounts during tomato fruit ripening&#34; and that the protein was &#34;properly localized in cell walls&#34; of transgenic tissue [PMID:2152163]. The UniProt subcellular location is &#34;Secreted, extracellular space, apoplast&#34; and &#34;Secreted, cell wall&#34;. The apoplast (which includes cell walls and intercellular spaces) is precisely the compartment where PG2 degrades pectin, and the low-pH / ionic conditions of the fruit apoplast define its operating environment [PMID:9701584]. Accept as a core cellular-component annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2152163" target="_blank" class="term-link">
+                                        PMID:2152163
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Tomato polygalacturonase is a cell wall enzyme secreted in large amounts during 
+tomato fruit ripening.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9701584" target="_blank" class="term-link">
+                                        PMID:9701584
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">under conditions approximating the 
+apoplastic environment of tomato fruit (pH 6.0 and K+ as the predominate 
+cation)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045490" target="_blank" class="term-link">
+                                    GO:0045490
+                                </a>
+                            </span>
+                            <span class="term-label">pectin catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9701584" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9701584
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Polygalacturonase-mediated solubilization and depolymerizati...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P05117" data-a="GO:0045490" data-r="PMID:9701584" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PG2 hydrolyzes and depolymerizes pectin (homogalacturonan / pectic polyuronides). This is the specific, informative biological process that should replace the over-general &#34;carbohydrate metabolic process&#34; and should be present alongside the polygalacturonase MF.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The genuine biological process of PG2 - breakdown of pectin - is not directly represented in current GOA (only the broad GO:0005975 parent). Chun &amp; Huber measured PG2-mediated hydrolysis of polygalacturonic acid and cell-wall pectins directly in vitro [PMID:9701584], and Watson et al. demonstrated that in vivo &#34;PG2 is responsible for pectin solubilization and depolymerization&#34; in ripening fruit [PMID:7827495]. Pectin catabolic process (GO:0045490, &#34;the breakdown of pectin, a polymer containing a backbone of alpha-1,4-linked D-galacturonic acid residues&#34;) is the precise process term and is already used as the IBA term for this gene group in UniProt&#39;s GO cross-references. IDA is justified by the direct in-vitro hydrolysis assays.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9701584" target="_blank" class="term-link">
+                                        PMID:9701584
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Pectin depolymerization by PG2 was extensive at pH values from 4.0 to 5.0 and 
+was further enhanced at high K+ levels.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7827495" target="_blank" class="term-link">
+                                        PMID:7827495
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PG2 is 
+responsible for pectin solubilization and depolymerization in vivo</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/PG2/PG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PG2 largely drives depolymerization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009664" target="_blank" class="term-link">
+                                    GO:0009664
+                                </a>
+                            </span>
+                            <span class="term-label">plant-type cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7827495" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7827495
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Reduction of tomato polygalacturonase beta subunit expressio...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P05117" data-a="GO:0009664" data-r="PMID:7827495" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> By depolymerizing apoplastic pectin, PG2 contributes to disassembly of the pectin-containing cell wall during fruit softening. This captures the gene&#39;s developmental contribution to ripening at the correct, mechanistic level (cell-wall disassembly) rather than the whole &#34;fruit ripening&#34; process.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;Plant-type cell wall organization&#34; (GO:0009664) explicitly covers &#34;the disassembly of the cellulose and pectin-containing cell wall&#34;, which is exactly what PG2 effects during ripening. In-vivo evidence is strong: reducing PG2/beta-subunit activity changes the extent of pectin solubilization and depolymerization of the wall [PMID:7827495], and insertional knockout of PG produces a &gt;1000-fold reduction in PG activity [PMID:9747798], with reduced PG correlating with firmer fruit (less wall disassembly). This is the preferred process term to capture PG2&#39;s contribution to softening, replacing both the incorrect &#34;abscission&#34; context (GO:0009830) and the over-broad developmental &#34;fruit ripening&#34; (GO:0009835). IMP is justified by the antisense and insertional loss-of-function phenotypes.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7827495" target="_blank" class="term-link">
+                                        PMID:7827495
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">increased 
+solubilization and depolymerization of pectins due to the action of 
+polygalacturonase (PG)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9747798" target="_blank" class="term-link">
+                                        PMID:9747798
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">there was at least a 1000-fold reduction in 
+polygalacturonase levels in those plants bearing Ds insertions in PG exons</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/PG2/PG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PG activity is not required to initiate ethylene-mediated ripening, but rather acts downstream as a cell-wall disassembly effector</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PG2 is a secreted endo-polygalacturonase (EC 3.2.1.15) that catalyzes the random hydrolysis of (1-&gt;4)-alpha-D-galacturonosyl linkages in homogalacturonan / de-esterified pectin, depolymerizing and solubilizing cell-wall pectic polyuronides in the apoplast.
+</h3>
+                <span class="vote-buttons" data-g="P05117" data-a="FUNCTION: PG2 is a secreted endo-polygalacturonase (EC 3.2.1..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004650" target="_blank" class="term-link">
+                            polygalacturonase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045490" target="_blank" class="term-link">
+                                pectin catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048046" target="_blank" class="term-link">
+                                apoplast
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9701584" target="_blank" class="term-link">
+                                PMID:9701584
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We examined the hydrolysis of polygalacturonic 
+acid and cell walls by PG isozyme 2 (PG2) under conditions widely adopted in the 
+literature</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2152163" target="_blank" class="term-link">
+                                PMID:2152163
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Tomato polygalacturonase is a cell wall enzyme secreted in large amounts during 
+tomato fruit ripening.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Through apoplastic pectin depolymerization, PG2 drives disassembly of the pectin-containing cell wall in the ripening pericarp, contributing to fruit softening. It acts downstream of the ethylene-controlled ripening program: antisense suppression and insertional knockout of PG strongly reduce pectin depolymerization and fruit softening (the basis of delayed-ripening &#34;Flavr Savr&#34;-type tomatoes) without arresting ethylene production or pigment accumulation.
+</h3>
+                <span class="vote-buttons" data-g="P05117" data-a="FUNCTION: Through apoplastic pectin depolymerization, PG2 dr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004650" target="_blank" class="term-link">
+                            polygalacturonase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009664" target="_blank" class="term-link">
+                                plant-type cell wall organization
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048046" target="_blank" class="term-link">
+                                apoplast
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7827495" target="_blank" class="term-link">
+                                PMID:7827495
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">PG2 is 
+responsible for pectin solubilization and depolymerization in vivo</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9747798" target="_blank" class="term-link">
+                                PMID:9747798
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">there was at least a 1000-fold reduction in 
+polygalacturonase levels in those plants bearing Ds insertions in PG exons</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLLC/PG2/PG2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PG activity is not required to initiate ethylene-mediated ripening, but rather acts downstream as a cell-wall disassembly effector</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro IPR000743 (glycoside hydrolase family 28) maps to the broad &#34;carbohydrate metabolic process&#34;; the gene-specific process is pectin catabolism.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular location &#34;Secreted, extracellular space, apoplast&#34; and &#34;Secreted, cell wall&#34; maps to the apoplast cellular-component term; confirmed experimentally.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA rules propagate family-level (GH28) process terms (cell wall modification involved in abscission, anther dehiscence, fruit dehiscence) that reflect distinct polygalacturonase paralogs, not the tomato fruit-ripening PG2.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA methods (ARBA, InterPro IPR000743, EC 3.2.1.15) assign polygalacturonase activity, the core and experimentally validated molecular function.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotation present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For PG2 the keyword &#34;Fruit ripening&#34; mapped to the whole developmental process GO:0009835, conflating the enzyme&#39;s function with the process it serves; its removal was justified.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7449759" target="_blank" class="term-link">
+                            PMID:7449759
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Changes in polygalacturonase isoenzymes during the &#39;ripening&#39; of normal and mutant tomato fruit.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PG activity is undetectable in mature-green fruit and appears as fruit begin to change colour, increasing through ripening; two isoenzymes (PG1, PG2) appear sequentially.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The ripening increase in PG activity is due to net synthesis of protein; rin and Nr ripening mutants produce little or only PG1.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2152163" target="_blank" class="term-link">
+                            PMID:2152163
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Analysis of tomato polygalacturonase expression in transgenic tobacco.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Tomato PG is a cell-wall enzyme secreted in large amounts during fruit ripening, synthesized as a glycoprotein precursor processed to PG1, PG2A and PG2B isozymes.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PG is properly processed and localized to the cell wall and is enzymatically active; supports apoplast/cell-wall localization.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7827495" target="_blank" class="term-link">
+                            PMID:7827495
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Reduction of tomato polygalacturonase beta subunit expression affects pectin solubilization and degradation during fruit ripening.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PG2 is the single catalytic PG polypeptide; PG1 is PG2 associated with a non-catalytic beta subunit.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PG2 is responsible for pectin solubilization and depolymerization in vivo during fruit ripening; the beta subunit modulates the extent of pectin metabolism.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9747798" target="_blank" class="term-link">
+                            PMID:9747798
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Insertional inactivation of the tomato polygalacturonase gene.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ds insertional knockouts in PG exons cause at least a 1000-fold reduction in polygalacturonase levels; PG is described as a critical enzyme in fruit ripening.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9701584" target="_blank" class="term-link">
+                            PMID:9701584
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Polygalacturonase-mediated solubilization and depolymerization of pectic polymers in tomato fruit cell walls. Regulation by pH and ionic conditions.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PG isozyme 2 (PG2) hydrolyzes polygalacturonic acid and cell-wall pectins in vitro; reaction characterized under apoplast-approximating pH/ionic conditions.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Pectin depolymerization by PG2 is extensive at pH 4.0-5.0 and enhanced by high K+; establishes the catalytic activity (EC 3.2.1.15) and apoplastic operating conditions.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SOLLC/PG2/PG2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of tomato PG2 (P05117).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PG2 is an extracellular/apoplastic, ripening-associated endo-polygalacturonase (EC 3.2.1.15) that hydrolyzes homogalacturonan and is strongly implicated in depolymerization of pectic polymers during fruit softening.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Antisense suppression of PG (foundation of the Flavr Savr tomato) reduces pectin depolymerization without altering ethylene production or lycopene accumulation, showing PG2 acts downstream of ripening as a cell-wall disassembly effector.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PG2A/PG2B are catalytic glyco-isoforms that can bind a wall-associated converter (beta) subunit to form PG1-like complexes under apoplast-like pH (4-5.5).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Given that PG2 antisense suppression strongly reduces pectin depolymerization but only modestly affects whole-fruit firmness and does not prevent ripening, what is the precise quantitative contribution of PG2 to softening relative to other wall-modifying enzymes (pectate lyase, expansins, beta-galactosidases)?
+</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Donald Grierson</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P05117" data-a="Q: Given that PG2 antisense suppression strongly redu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the wall-anchored beta/converter subunit (GP1) regulate PG2 catalytic output in vivo primarily by recruiting/retaining PG2 in the wall, or by limiting its access to pectic substrate?
+</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Dean DellaPenna</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P05117" data-a="Q: Does the wall-anchored beta/converter subunit (GP1..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use viscometric and reducing-sugar assays plus size-exclusion chromatography to quantify endo-polygalacturonase kinetics (Km, kcat) of purified PG2A and PG2B on homogalacturonans of defined degree of methyl-esterification, confirming substrate specificity and the requirement for prior pectin methylesterase de-esterification.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PG2 preferentially cleaves de-esterified homogalacturonan, so its in-vivo activity is gated by apoplastic pectin methylesterase action.
+</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme kinetics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P05117" data-a="EXPERIMENT: Use viscometric and reducing-sugar assays plus siz..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate clean CRISPR/Cas9 SlPG2 knockouts in a modern tomato cultivar and profile cell-wall pectin molecular-weight distribution, fruit firmness over postharvest storage, and the ripening transcriptome, separating PG2&#39;s wall-disassembly role from the broader ripening program.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SlPG2 loss reduces apoplastic pectin depolymerization and extends shelf life while leaving ethylene-driven colour/aroma ripening intact.
+</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: targeted gene knockout and cell-wall phenotyping</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P05117" data-a="EXPERIMENT: Generate clean CRISPR/Cas9 SlPG2 knockouts in a mo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PG2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P05117" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of Tomato **PG2** (UniProt **P05117**) — Polygalacturonase-2 (EC 3.2.1.15)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">20 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T09:55:29.525670</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="PG2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="PG2-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000014 I have extracted Figure 5 and Figure 6 as requested. Figure 5 includes panels C and D, which show the fruit firmness and PG enzyme </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-tomato-pg2-uniprot-p05117-polygalacturonase-2-ec-32115">Research Report: Functional Annotation of Tomato <strong>PG2</strong> (UniProt <strong>P05117</strong>) — Polygalacturonase-2 (EC 3.2.1.15)</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>Polygalacturonase-2 (PG2; UniProt P05117) from <em>Solanum lycopersicum</em> (tomato) is a ripening-associated <strong>endo-polygalacturonase</strong> (EC 3.2.1.15) implicated in <strong>pectin depolymerization</strong> during fruit softening. Classic genetic evidence using antisense suppression supports a division of labor between tomato PG isoforms: <strong>PG2 largely drives depolymerization</strong>, while <strong>PG1 may contribute more to solubilization</strong>. Tomato PG2 occurs as two glyco-isoforms (PG2A/PG2B) and can associate with a β/h “converter” subunit to form a PG1-like complex under apoplast-like conditions. Recent 2024 work links <strong>NO/GSNOR signaling</strong> to reduced <strong>SlPG2 transcript abundance</strong>, reduced PG activity, and increased firmness during postharvest ripening.</p>
+<hr />
+<h2 id="0-mandatory-target-verification-geneprotein-identity-and-disambiguation">0) Mandatory target verification (gene/protein identity and disambiguation)</h2>
+<h3 id="confirmed-target-context">Confirmed target context</h3>
+<ul>
+<li><strong>Organism:</strong> <em>Solanum lycopersicum</em> (tomato).</li>
+<li><strong>Protein:</strong> Polygalacturonase-2 (PG2), with historical tomato fruit isoforms <strong>PG2A and PG2B</strong> described biochemically and immunologically. These are consistently treated as the <strong>catalytic PG2 polypeptides</strong> distinct from PG1, which is a complex containing PG2 plus an additional subunit (converter/β- or h-subunit). (pogson1993accumulationofthe pages 5-6, peeters2004influenceofβ‐subunit pages 1-2)</li>
+</ul>
+<h3 id="important-limitation">Important limitation</h3>
+<p>None of the retrieved primary studies explicitly cite the <strong>UniProt accession P05117</strong> in their text; therefore, the mapping is supported by <strong>concordant isoform naming and biochemical definitions</strong> (PG2/PG2A/PG2B in tomato fruit), which match the UniProt description provided by the user. (pogson1993accumulationofthe pages 5-6, peeters2004influenceofβ‐subunit pages 1-2)</p>
+<hr />
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-polygalacturonase-pg-and-the-pectin-substrate">1.1 Polygalacturonase (PG) and the pectin substrate</h3>
+<p>Tomato fruit polygalacturonases are described as <strong>endopolygalacturonases</strong> (EC 3.2.1.15; poly(1,4-α-D-galacturonide) glycanohydrolases), i.e., they cleave internal α-1,4 linkages in <strong>homogalacturonan/pectic polyuronides</strong>, contributing to pectin disassembly during ripening. (pogson1993accumulationofthe pages 1-2)</p>
+<h3 id="12-pg-isoenzymes-in-tomato-fruit-pg1-vs-pg2">1.2 PG isoenzymes in tomato fruit: PG1 vs PG2</h3>
+<p>Tomato fruit contains <strong>three related PG isoenzymes</strong> commonly discussed as <strong>PG1, PG2A, and PG2B</strong>. (peeters2004influenceofβ‐subunit pages 1-2)<br />
+- <strong>PG2A/PG2B (“PG2”)</strong>: described as the <strong>single catalytic polypeptide</strong> forms, differing mainly in <strong>glycosylation</strong>. (peeters2004influenceofβ‐subunit pages 1-2)<br />
+- <strong>PG1</strong>: a more <strong>thermostable</strong> form that includes a <strong>converter (β/h) subunit</strong> associated with the PG2 catalytic polypeptide; reconstitution studies indicate the converter can transform PG2 into a PG1-like form in vitro. (peeters2004influenceofβ‐subunit pages 1-2)</p>
+<p>This isoenzyme framing is central for functional annotation: PG2 corresponds to the catalytic pectin-hydrolyzing enzyme, whereas PG1 reflects an assembled complex with altered stability/association properties. (pogson1993accumulationofthe pages 5-6, peeters2004influenceofβ‐subunit pages 1-2)</p>
+<hr />
+<h2 id="2-biochemical-function-reaction-specificity-and-biophysical-context">2) Biochemical function: reaction, specificity, and biophysical context</h2>
+<h3 id="21-reaction-catalyzed-and-primary-biological-role">2.1 Reaction catalyzed and primary biological role</h3>
+<p><strong>Functional reaction class:</strong> PG2 is a pectin-degrading enzyme (EC 3.2.1.15) implicated in <strong>depolymerizing solubilized pectin fragments</strong> during ripening. (smith1990inheritanceandeffect pages 9-10, peeters2004influenceofβ‐subunit pages 1-2)</p>
+<p><strong>Genetic evidence for depolymerization role:</strong> In antisense-PG tomato lines, PG2 was described as “almost completely inhibited,” and the authors infer PG2 “may be responsible for pectin depolymerisation,” while PG1 may be more associated with solubilization. (smith1990inheritanceandeffect pages 9-10)</p>
+<h3 id="22-pg2a-and-pg2b-isoforms">2.2 PG2A and PG2B isoforms</h3>
+<p>Two PG2 isoforms were reported with apparent molecular masses of about <strong>45 kDa (PG2A)</strong> and <strong>43 kDa (PG2B)</strong>. (pogson1993accumulationofthe pages 5-6)</p>
+<h3 id="23-converterh-subunit-interaction-and-the-pg1-complex">2.3 Converter/β(h)-subunit interaction and the PG1 complex</h3>
+<p>Biochemical evidence shows PG2 can associate with a <strong>β-subunit (converter; ~39 kDa glycoprotein)</strong> to form a PG1-like complex, with association robust across a wide range of salt/pH conditions. (pogson1993accumulationofthe pages 5-6)</p>
+<h3 id="24-environmental-apoplast-like-operating-conditions">2.4 Environmental (apoplast-like) operating conditions</h3>
+<p>PG2–β-subunit/PG1-like complex formation occurs under <strong>low ionic strength and pH ~4–5.5</strong>, which the authors explicitly describe as expected for the fruit <strong>apoplast</strong> environment, supporting extracellular/cell-wall function. (pogson1993accumulationofthe pages 5-6)</p>
+<h3 id="25-missing-biochemical-details-what-is-not-resolved-by-the-retrieved-corpus">2.5 Missing biochemical details (what is not resolved by the retrieved corpus)</h3>
+<p>The retrieved evidence does <strong>not</strong> provide enzyme kinetic constants (Km, kcat), detailed substrate preferences (e.g., degree of methylesterification dependence), or numeric pH/salt optima for PG2 specifically; these would require additional primary biochemical characterization papers not captured in the retrieved set. (peeters2004influenceofβ‐subunit pages 1-2, pogson1993accumulationofthe pages 5-6)</p>
+<hr />
+<h2 id="3-biological-processes-pathways-and-localization">3) Biological processes, pathways, and localization</h2>
+<h3 id="31-ripening-associated-expression-and-tissue-context">3.1 Ripening-associated expression and tissue context</h3>
+<ul>
+<li><strong>High transcript abundance during ripening:</strong> PG mRNA in ripening tomato <strong>pericarp</strong> was reported to accumulate to <strong>~1–2% of total poly(A)+ RNA</strong>, highlighting unusually strong induction in the fruit tissue most relevant to softening. (smith1990inheritanceandeffect pages 9-10)</li>
+<li><strong>Isoform dynamics:</strong> PG1 is described as dominant in early ripening but only ~10% of total PG in fully ripe fruit, consistent with increasing predominance of PG2 later in ripening. (smith1990inheritanceandeffect pages 9-10)</li>
+</ul>
+<h3 id="32-pericarp-vs-locule-localization-supporting-cell-wallapoplastic-deployment">3.2 Pericarp vs locule localization (supporting cell-wall/apoplastic deployment)</h3>
+<p>A PG1 β-subunit was detected in <strong>pericarp</strong> but not <strong>locule</strong> tissue, and the authors propose the β-subunit is positioned in the <strong>cell wall</strong> to provide a binding site for active PG2 synthesized during ripening—supporting functional localization in the cell-wall/apoplast compartment of pericarp tissue. (pogson1993accumulationofthe pages 1-2)</p>
+<h3 id="33-relationship-to-ethylene-and-ripening-control">3.3 Relationship to ethylene and ripening control</h3>
+<p>In antisense-PG lines with large reductions in PG activity, <strong>ethylene production and lycopene accumulation were not altered</strong>, suggesting PG activity is not required to initiate ethylene-mediated ripening, but rather acts downstream as a cell-wall disassembly effector. (smith1990inheritanceandeffect pages 9-10)</p>
+<h3 id="34-postharvest-signaling-nogsnor-axis-2024">3.4 Postharvest signaling: NO/GSNOR axis (2024)</h3>
+<p>A 2024 postharvest study reported that <strong>SlGSNOR silencing</strong> increased firmness (notably between <strong>6–12 days</strong> postharvest) while reducing PG activity and lowering <strong>SlPG2</strong> transcript abundance. (liu2024thecrucialrole pages 10-12)</p>
+<p>This positions <strong>SlPG2</strong> within a modern regulatory model where NO/GSNOR signaling modulates expression and/or activity of multiple cell-wall enzymes during postharvest ripening and softening. (liu2024thecrucialrole pages 10-12)</p>
+<hr />
+<h2 id="4-evidence-for-causal-roles-in-softening-key-experimental-results-and-quantitative-data">4) Evidence for causal roles in softening: key experimental results and quantitative data</h2>
+<h3 id="41-antisense-suppression-foundational-causal-evidence">4.1 Antisense suppression (foundational causal evidence)</h3>
+<p>Smith et al. (1990; published <strong>March 1990</strong>) used antisense suppression of tomato PG, reporting: (smith1990inheritanceandeffect pages 9-10)<br />
+- <strong>PG activity reduction:</strong> ~<strong>50–95%</strong> inhibition across transformants; up to ~<strong>99%</strong> reduction in one line when antisense copy number was increased. (smith1990inheritanceandeffect pages 9-10)<br />
+- <strong>Pectin depolymerization suppressed (molecular-weight shift):</strong> soluble polyuronide weight-average Mr decreased to ~<strong>80,000</strong> in normal fruit 14 days after breaker, but antisense lines remained at higher Mr (~<strong>95,000</strong> and ~<strong>135,000</strong>), consistent with reduced depolymerization. (smith1990inheritanceandeffect pages 9-10)<br />
+- <strong>Solubilization vs depolymerization separation:</strong> total EDTA-soluble uronic acids were not strongly affected despite large PG reductions, supporting a mechanistic distinction between solubilization and depolymerization during ripening. (smith1990inheritanceandeffect pages 9-10)</p>
+<h3 id="42-a-modern-functional-genetics-proxy-2024-transgenic-pg-overexpression">4.2 A modern functional-genetics proxy (2024 transgenic PG overexpression)</h3>
+<p>A 2024 study overexpressing a heterologous PG2-class gene (raspberry RiPG2) in tomato provides contemporary corroboration that elevated PG activity drives softening and pectin fraction shifts (increased soluble pectin fractions; decreased protopectin and other wall components). While this is not tomato PG2 (P05117) itself, it supports conservation of PG2-class enzyme function in fleshy fruit softening. (li2024overexpressionofthe pages 8-11, li2024overexpressionofthe media 1edf85ad, li2024overexpressionofthe media 7bb70ee1)</p>
+<hr />
+<h2 id="5-recent-developments-and-latest-research-prioritizing-20232024">5) Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="51-postharvest-regulation-of-slpg2-via-nogsnor-2024">5.1 Postharvest regulation of SlPG2 via NO/GSNOR (2024)</h3>
+<p>Liu et al. (<strong>February 2024</strong>) report that SlGSNOR impairment decreases PG activity and reduces SlPG2 transcript abundance, concurrently increasing firmness during postharvest storage; this connects SlPG2 to a signaling framework (NO homeostasis) with translational relevance to postharvest management. URL: https://doi.org/10.3390/ijms25052729 (liu2024thecrucialrole pages 10-12)</p>
+<h3 id="52-contemporary-gene-editing-strategy-focus-2024">5.2 Contemporary gene-editing strategy focus (2024)</h3>
+<p>A 2024 CRISPR/Cas9 tomato breeding study emphasizes that suppressing pectin-degrading enzymes (including PG and PL) increases firmness and shelf life, and demonstrates CRISPR knockouts of firmness-negative targets (FIS1 and PL) yielding significantly enhanced firmness while maintaining overall quality traits. Although it does not target SlPG2 specifically, it frames PG-pathway engineering (including SlPG2) as a practical breeding axis. URL: https://doi.org/10.3390/cimb47010009 (yang2024crisprcas9allowsfor pages 1-2)</p>
+<hr />
+<h2 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h2>
+<h3 id="61-texture-engineering-and-shelf-life-extension-via-pg-suppression">6.1 Texture engineering and shelf-life extension via PG suppression</h3>
+<p>The 1990 antisense study provides an early biotechnology blueprint: strong PG suppression (50–95% to 99% activity reductions) reduced pectin depolymerization while allowing normal ripening markers (ethylene, lycopene), demonstrating that manipulating PG (including PG2-dominated activity) can alter texture-related cell-wall outcomes without globally arresting ripening. URL: https://doi.org/10.1007/BF00028773 (smith1990inheritanceandeffect pages 9-10)</p>
+<h3 id="62-postharvest-firmness-management-through-signaling-modulation-nogsnor">6.2 Postharvest firmness management through signaling modulation (NO/GSNOR)</h3>
+<p>The 2024 postharvest work suggests that chemical inhibition or VIGS-based perturbation of the NO/GSNOR axis can reduce SlPG2 expression and PG activity and thereby maintain firmness. This points to a “regulate the regulator” strategy rather than direct PG2 inhibition/knockout. URL: https://doi.org/10.3390/ijms25052729 (liu2024thecrucialrole pages 10-12)</p>
+<h3 id="63-food-processing-considerations-thermal-stability-converterh-subunit">6.3 Food processing considerations (thermal stability; converter/h-subunit)</h3>
+<p>In food-processing contexts, PG isoenzyme assembly affects stability: PG2 (PG2A/PG2B) is described as <strong>heat labile</strong>, whereas association with the converter/h-subunit yields more <strong>thermostable</strong> PG1-like behavior, relevant for heat-treated tomato products (juice/paste) where endogenous PG activity can influence viscosity/texture. URL: https://doi.org/10.1002/bit.20134 (peeters2004influenceofβ‐subunit pages 1-2)</p>
+<hr />
+<h2 id="7-expert-synthesis-and-interpretive-analysis-authoritative-source-driven">7) Expert synthesis and interpretive analysis (authoritative source-driven)</h2>
+<h3 id="71-mechanistic-model-supported-by-multi-decade-evidence">7.1 Mechanistic model supported by multi-decade evidence</h3>
+<p>Across classic and recent evidence, a coherent mechanistic model emerges:<br />
+1. During ripening, tomato pericarp strongly induces PG expression (high PG mRNA levels), and the PG isoenzyme complement shifts such that catalytic PG2 becomes prominent. (smith1990inheritanceandeffect pages 9-10)<br />
+2. PG2 contributes primarily to <strong>depolymerization</strong> of solubilized polyuronides; reducing PG activity strongly attenuates depolymerization (molecular-weight shift) without necessarily preventing solubilization or other ripening programs. (smith1990inheritanceandeffect pages 9-10)<br />
+3. In the apoplast/cell wall, PG2 can associate with a β/h-subunit positioned in the wall, potentially providing binding/stability features and giving rise to PG1-like complexes under apoplast-like pH conditions. (pogson1993accumulationofthe pages 5-6, pogson1993accumulationofthe pages 1-2)<br />
+4. Modern postharvest regulation links SlPG2 expression to NO/GSNOR signaling, integrating PG2 into broader redox/signaling control over softening enzyme networks. (liu2024thecrucialrole pages 10-12)</p>
+<hr />
+<h2 id="8-key-evidence-table">8) Key evidence table</h2>
+<p>The following table consolidates major annotation claims, the evidence, and citable sources.</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Annotation element</th>
+<th>Evidence summary</th>
+<th>System studied</th>
+<th>Publication (authors, year)</th>
+<th>URL/DOI</th>
+<th>Context citation ID(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enzyme reaction / substrate class</td>
+<td>Tomato polygalacturonase (PG) is described as a pectin-degrading enzyme. In processing-focused work, PG2A/PG2B are the heat-labile catalytic forms collectively termed PG2, while PG1 contains PG2 plus an accessory subunit; this supports annotation of PG2 as the catalytic pectin-hydrolyzing component acting on cell-wall pectins.</td>
+<td>Tomato fruit PG isoenzymes from ripening/processed fruit</td>
+<td>Peeters et al., 2004</td>
+<td>https://doi.org/10.1002/bit.20134</td>
+<td>(peeters2004influenceofβ‐subunit pages 1-2)</td>
+</tr>
+<tr>
+<td>Role in ripening-associated pectin depolymerization</td>
+<td>Antisense suppression of tomato PG reduced total PG activity by ~50–95% (up to ~99% in higher-copy lines) and decreased pectin depolymerization without preventing ripening. Authors concluded PG1 may contribute to pectin solubilization, whereas PG2, which was nearly abolished, may be mainly responsible for pectin depolymerization.</td>
+<td>Transgenic antisense tomato fruit during ripening</td>
+<td>Smith et al., 1990</td>
+<td>https://doi.org/10.1007/BF00028773</td>
+<td>(smith1990inheritanceandeffect pages 9-10)</td>
+</tr>
+<tr>
+<td>Quantitative effect on pectin molecular mass</td>
+<td>In normal fruit, soluble pectin molecular mass dropped to ~80 kDa by 14 days after breaker, whereas antisense lines remained at ~95 kDa and ~135 kDa, consistent with reduced PG2-linked depolymerization. Total EDTA-soluble uronic acid was not strongly changed, separating solubilization from depolymerization.</td>
+<td>Transgenic antisense tomato fruit</td>
+<td>Smith et al., 1990</td>
+<td>https://doi.org/10.1007/BF00028773</td>
+<td>(smith1990inheritanceandeffect pages 9-10)</td>
+</tr>
+<tr>
+<td>Isoforms PG2A and PG2B</td>
+<td>PG2 exists as two isoforms, PG2A and PG2B, with approximate apparent molecular masses of 45 kDa and 43 kDa, respectively; differences are attributed mainly to glycosylation rather than distinct catalytic identities.</td>
+<td>Ripening tomato fruit polygalacturonase preparations</td>
+<td>Pogson &amp; Brady, 1993; Peeters et al., 2004</td>
+<td>https://doi.org/10.1007/BF00240897; https://doi.org/10.1002/bit.20134</td>
+<td>(pogson1993accumulationofthe pages 5-6, peeters2004influenceofβ‐subunit pages 1-2)</td>
+</tr>
+<tr>
+<td>PG1 complex formation with beta/h-subunit</td>
+<td>PG1 is formed from catalytic PG2 plus a glycoprotein beta/h-subunit (converter). In vitro, purified PG2 added to mature-green pericarp formed a PG1-like complex containing PG2 and the ~39 kDa beta-subunit, with PG1-like mobility and antigenicity.</td>
+<td>Tomato fruit pericarp extracts and purified isoenzymes</td>
+<td>Pogson &amp; Brady, 1993</td>
+<td>https://doi.org/10.1007/BF00240897</td>
+<td>(pogson1993accumulationofthe pages 5-6)</td>
+</tr>
+<tr>
+<td>Properties of beta/h-subunit interaction</td>
+<td>PG2 binding to the beta-subunit was robust across salt, pH, and reducing conditions and could occur even with denatured beta-subunit, indicating a strong non-covalent association. The complex forms under low ionic strength and pH 4–5.5, conditions relevant to the fruit apoplast/cell-wall space.</td>
+<td>In vitro reconstitution using tomato PG fractions</td>
+<td>Pogson &amp; Brady, 1993</td>
+<td>https://doi.org/10.1007/BF00240897</td>
+<td>(pogson1993accumulationofthe pages 5-6)</td>
+</tr>
+<tr>
+<td>Thermal stability distinction between PG1 and PG2</td>
+<td>PG2A/PG2B are heat-labile catalytic polypeptides, while PG1 is relatively thermostable because it contains the h-subunit. The h-subunit can convert PG2 to PG1 in vitro, and the resulting PG1 resembles native PG1 in physicochemical behavior.</td>
+<td>Tomato juice / purified isoenzymes under heat and pressure treatment</td>
+<td>Peeters et al., 2004</td>
+<td>https://doi.org/10.1002/bit.20134</td>
+<td>(peeters2004influenceofβ‐subunit pages 1-2)</td>
+</tr>
+<tr>
+<td>In vivo relevance of PG1</td>
+<td>Processing work notes uncertainty over whether PG1 exists pre-formed in vivo or forms during extraction/handling, so the most secure annotation for P05117 is the catalytic PG2 polypeptide rather than the PG1 complex.</td>
+<td>Tomato fruit PG isoenzymes</td>
+<td>Peeters et al., 2004</td>
+<td>https://doi.org/10.1002/bit.20134</td>
+<td>(peeters2004influenceofβ‐subunit pages 1-2)</td>
+</tr>
+<tr>
+<td>Contribution to fruit softening</td>
+<td>Reduced PG/SlPG2 expression is associated with firmer fruit, while higher PG activity accelerates softening. In SlGSNOR-silenced tomato fruit, firmness was significantly higher from 6–12 days postharvest, accompanied by reduced PG activity and lower SlPG2 transcript abundance.</td>
+<td>Postharvest tomato fruit with SlGSNOR silencing</td>
+<td>Liu et al., 2024</td>
+<td>https://doi.org/10.3390/ijms25052729</td>
+<td>(liu2024thecrucialrole pages 10-12)</td>
+</tr>
+<tr>
+<td>Regulatory factor: NO/GSNOR axis</td>
+<td>SlGSNOR positively promotes ripening-associated softening; when SlGSNOR is silenced or inhibited, SlPG2 transcript abundance decreases together with PG, pectate lyase, and cellulase activities. This implicates NO/GSNOR signaling upstream of SlPG2 expression during postharvest softening.</td>
+<td>Postharvest tomato fruit treated with N6022/GSNO or infected with TRV-SlGSNOR</td>
+<td>Liu et al., 2024</td>
+<td>https://doi.org/10.3390/ijms25052729</td>
+<td>(liu2024thecrucialrole pages 10-12)</td>
+</tr>
+<tr>
+<td>Broader functional inference from modern tomato transgenics</td>
+<td>In tomato, heterologous overexpression of raspberry RiPG2 increased PG activity, decreased firmness, increased water-soluble and ion-bound pectins, and decreased protopectin/CSP/cellulose/hemicellulose, supporting the conserved interpretation that PG2-class enzymes drive pectin solubilization/depolymerization and softening.</td>
+<td>Transgenic tomato overexpressing RiPG2</td>
+<td>Li et al., 2024</td>
+<td>https://doi.org/10.3390/agronomy14010160</td>
+<td>(li2024overexpressionofthe pages 11-12, li2024overexpressionofthe pages 8-11)</td>
+</tr>
+<tr>
+<td>Ripening-stage expression association</td>
+<td>In the RiPG2 transgenic tomato study, PG activity remained higher than controls throughout development, and firmness decreased accordingly; the authors interpret PG activity as promoting cell-wall hydrolysis during ripening. This is consistent with historical tomato PG2 evidence even though the transgene is from raspberry.</td>
+<td>Tomato fruits at 35, 40, and 45 days after flowering</td>
+<td>Li et al., 2024</td>
+<td>https://doi.org/10.3390/agronomy14010160</td>
+<td>(li2024overexpressionofthe pages 8-11)</td>
+</tr>
+<tr>
+<td>Identity/disambiguation note for tomato PG2</td>
+<td>Multiple tomato studies consistently use PG2/PG2A/PG2B to denote the catalytic fruit endopolygalacturonase distinct from PG1, which is the PG2-containing complex with the beta/h-subunit. This literature usage aligns with the UniProt description of P05117 as tomato Polygalacturonase-2.</td>
+<td>Tomato fruit polygalacturonase literature</td>
+<td>Smith et al., 1990; Pogson &amp; Brady, 1993; Peeters et al., 2004</td>
+<td>https://doi.org/10.1007/BF00028773; https://doi.org/10.1007/BF00240897; https://doi.org/10.1002/bit.20134</td>
+<td>(smith1990inheritanceandeffect pages 9-10, pogson1993accumulationofthe pages 5-6, peeters2004influenceofβ‐subunit pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes key experimental evidence relevant to functional annotation of Solanum lycopersicum PG2/P05117, emphasizing catalytic role, isoform relationships, complex formation with the beta/h-subunit, and regulation during ripening. It is useful for tracing each major claim to specific publications and workspace citation IDs.</em></p>
+<hr />
+<h2 id="9-figures-quantitative-support">9) Figures (quantitative support)</h2>
+<p>Cropped figures from the 2024 transgenic tomato PG study provide visual quantitative support for firmness and PG activity changes and for shifts in pectin/cell-wall fractions across stages. (li2024overexpressionofthe media 1edf85ad, li2024overexpressionofthe media 7bb70ee1)</p>
+<hr />
+<h2 id="10-practical-functional-annotation-statement-recommended">10) Practical functional annotation statement (recommended)</h2>
+<p><strong>PG2 (UniProt P05117; gene PG2 / PG2A / PG2B) from tomato is an extracellular/apoplastic, ripening-associated endopolygalacturonase (EC 3.2.1.15) that hydrolyzes homogalacturonan (poly(1,4-α-D-galacturonide)) and is strongly implicated in depolymerization of pectic polymers during fruit softening.</strong> (pogson1993accumulationofthe pages 1-2, smith1990inheritanceandeffect pages 9-10)</p>
+<p><strong>Localization/complex context:</strong> PG2A/PG2B are catalytic isoforms that can bind a wall-associated converter/β(h)-subunit and form PG1-like complexes under apoplast-like pH (4–5.5), influencing stability/association properties during ripening and/or processing. (pogson1993accumulationofthe pages 5-6, peeters2004influenceofβ‐subunit pages 1-2)</p>
+<p><strong>Regulatory context:</strong> PG2 operates downstream of ripening programs (ethylene production unaffected by PG antisense suppression), and recent postharvest evidence links SlPG2 expression to NO/GSNOR signaling control of softening. (smith1990inheritanceandeffect pages 9-10, liu2024thecrucialrole pages 10-12)</p>
+<hr />
+<h2 id="references-urls-and-publication-dates">References (URLs and publication dates)</h2>
+<ul>
+<li>Smith CJS et al. <strong>1990-03</strong>. <em>Plant Molecular Biology</em>. “Inheritance and effect on ripening of antisense polygalacturonase genes in transgenic tomatoes.” https://doi.org/10.1007/BF00028773 (smith1990inheritanceandeffect pages 9-10)</li>
+<li>Pogson BJ, Brady CJ. <strong>1993-07</strong>. <em>Planta</em>. “Accumulation of the β-subunit of polygalacturonase 1 in normal and mutant tomato fruit.” https://doi.org/10.1007/BF00240897 (pogson1993accumulationofthe pages 1-2)</li>
+<li>Peeters L et al. <strong>2004-06</strong>. <em>Biotechnology and Bioengineering</em>. “Influence of β-subunit on thermal and high-pressure process stability of tomato polygalacturonase.” https://doi.org/10.1002/bit.20134 (peeters2004influenceofβ‐subunit pages 1-2)</li>
+<li>Liu Z et al. <strong>2024-02</strong>. <em>International Journal of Molecular Sciences</em>. “The Crucial Role of SlGSNOR in Regulating Postharvest Tomato Fruit Ripening.” https://doi.org/10.3390/ijms25052729 (liu2024thecrucialrole pages 10-12)</li>
+<li>Yang Q et al. <strong>2024-12</strong>. <em>Current Issues in Molecular Biology</em>. “CRISPR/cas9 Allows for the Quick Improvement of Tomato Firmness Breeding.” https://doi.org/10.3390/cimb47010009 (yang2024crisprcas9allowsfor pages 1-2)</li>
+<li>Li T et al. <strong>2024-01</strong>. <em>Agronomy</em>. “Overexpression of the Rubus idaeus Polygalacturonases Gene RiPG2 Accelerates Fruit Softening in Solanum lycopersicum.” https://doi.org/10.3390/agronomy14010160 (li2024overexpressionofthe pages 8-11)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(pogson1993accumulationofthe pages 5-6): BarryJ. Pogson and ColinJ. Brady. Accumulation of the β-subunit of polygalacturonase 1 in normal and mutant tomato fruit. Planta, 191:71-78, Jul 1993. URL: https://doi.org/10.1007/bf00240897, doi:10.1007/bf00240897. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(peeters2004influenceofβ‐subunit pages 1-2): Liesbet Peeters, Diana Fachin, Chantal Smout, Ann van Loey, and Marc E. Hendrickx. Influence of β‐subunit on thermal and high‐pressure process stability of tomato polygalacturonase. Biotechnology and Bioengineering, 86:543-549, Jun 2004. URL: https://doi.org/10.1002/bit.20134, doi:10.1002/bit.20134. This article has 34 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pogson1993accumulationofthe pages 1-2): BarryJ. Pogson and ColinJ. Brady. Accumulation of the β-subunit of polygalacturonase 1 in normal and mutant tomato fruit. Planta, 191:71-78, Jul 1993. URL: https://doi.org/10.1007/bf00240897, doi:10.1007/bf00240897. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(smith1990inheritanceandeffect pages 9-10): Christopher J. S. Smith, Colin F. Watson, Peter C. Morris, Colin R. Bird, Graham B. Seymour, Julie E. Gray, Christine Arnold, Gregory A. Tucker, Wolfgang Schuch, Steven Harding, and Donald Grierson. Inheritance and effect on ripening of antisense polygalacturonase genes in transgenic tomatoes. Plant Molecular Biology, 14:369-379, Mar 1990. URL: https://doi.org/10.1007/bf00028773, doi:10.1007/bf00028773. This article has 493 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2024thecrucialrole pages 10-12): Zesheng Liu, Dengjing Huang, Yandong Yao, Xuejuan Pan, Yanqin Zhang, Yi Huang, Zhiqi Ding, Chunlei Wang, and Weibiao Liao. The crucial role of slgsnor in regulating postharvest tomato fruit ripening. International Journal of Molecular Sciences, 25:2729, Feb 2024. URL: https://doi.org/10.3390/ijms25052729, doi:10.3390/ijms25052729. This article has 6 citations.</p>
+</li>
+<li>
+<p>(li2024overexpressionofthe pages 8-11): Tiemei Li, Xiaoyu Guo, Yuxiao Chen, Jing Li, Caihong Yu, Zhifeng Guo, and Guohui Yang. Overexpression of the rubus idaeus polygalacturonases gene ripg2 accelerates fruit softening in solanum lycopersicum. Agronomy, 14:160, Jan 2024. URL: https://doi.org/10.3390/agronomy14010160, doi:10.3390/agronomy14010160. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2024overexpressionofthe media 1edf85ad): Tiemei Li, Xiaoyu Guo, Yuxiao Chen, Jing Li, Caihong Yu, Zhifeng Guo, and Guohui Yang. Overexpression of the rubus idaeus polygalacturonases gene ripg2 accelerates fruit softening in solanum lycopersicum. Agronomy, 14:160, Jan 2024. URL: https://doi.org/10.3390/agronomy14010160, doi:10.3390/agronomy14010160. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2024overexpressionofthe media 7bb70ee1): Tiemei Li, Xiaoyu Guo, Yuxiao Chen, Jing Li, Caihong Yu, Zhifeng Guo, and Guohui Yang. Overexpression of the rubus idaeus polygalacturonases gene ripg2 accelerates fruit softening in solanum lycopersicum. Agronomy, 14:160, Jan 2024. URL: https://doi.org/10.3390/agronomy14010160, doi:10.3390/agronomy14010160. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2024crisprcas9allowsfor pages 1-2): Qihong Yang, Liangyu Cai, Mila Wang, Guiyun Gan, Weiliu Li, Wenjia Li, Yaqin Jiang, Qi Yuan, Chunchun Qin, Chuying Yu, and Yikui Wang. Crispr/cas9 allows for the quick improvement of tomato firmness breeding. Current Issues in Molecular Biology, 47:9, Dec 2024. URL: https://doi.org/10.3390/cimb47010009, doi:10.3390/cimb47010009. This article has 9 citations.</p>
+</li>
+<li>
+<p>(li2024overexpressionofthe pages 11-12): Tiemei Li, Xiaoyu Guo, Yuxiao Chen, Jing Li, Caihong Yu, Zhifeng Guo, and Guohui Yang. Overexpression of the rubus idaeus polygalacturonases gene ripg2 accelerates fruit softening in solanum lycopersicum. Agronomy, 14:160, Jan 2024. URL: https://doi.org/10.3390/agronomy14010160, doi:10.3390/agronomy14010160. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PG2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000014 I have extracted Figure 5 and Figure 6 as requested. Figure 5 includes panels C and D, which show the fruit firmness and PG enzyme " src="PG2-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pogson1993accumulationofthe pages 1-2</li>
+<li>smith1990inheritanceandeffect pages 9-10</li>
+<li>pogson1993accumulationofthe pages 5-6</li>
+<li>liu2024thecrucialrole pages 10-12</li>
+<li>li2024overexpressionofthe pages 8-11</li>
+<li>li2024overexpressionofthe pages 11-12</li>
+<li>https://doi.org/10.3390/ijms25052729</li>
+<li>https://doi.org/10.3390/cimb47010009</li>
+<li>https://doi.org/10.1007/BF00028773</li>
+<li>https://doi.org/10.1002/bit.20134</li>
+<li>https://doi.org/10.1007/BF00240897;</li>
+<li>https://doi.org/10.1007/BF00240897</li>
+<li>https://doi.org/10.3390/agronomy14010160</li>
+<li>https://doi.org/10.1007/BF00028773;</li>
+<li>https://doi.org/10.1007/bf00240897,</li>
+<li>https://doi.org/10.1002/bit.20134,</li>
+<li>https://doi.org/10.1007/bf00028773,</li>
+<li>https://doi.org/10.3390/ijms25052729,</li>
+<li>https://doi.org/10.3390/agronomy14010160,</li>
+<li>https://doi.org/10.3390/cimb47010009,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P05117
+gene_symbol: PG2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:4081
+  label: Solanum lycopersicum
+description: &gt;
+  PG2 (Polygalacturonase-2, UniProt P05117) is the classic tomato fruit-ripening
+  endo-polygalacturonase (EC 3.2.1.15), a secreted glycosyl hydrolase family 28 (GH28)
+  cell-wall enzyme. It catalyzes the random hydrolysis of (1-&gt;4)-alpha-D-galacturonosyl
+  linkages in homogalacturonan / de-esterified pectic polyuronides, depolymerizing and
+  solubilizing cell-wall pectin in the apoplast of the ripening pericarp. PG activity is
+  undetectable in mature-green fruit and rises sharply as fruit change colour, driven by
+  ethylene-dependent transcriptional induction; PG2 is expressed essentially only in
+  ripening fruit (at the protein level). The mature catalytic polypeptide exists as two
+  glyco-isoforms (PG2A/PG2B, differing mainly in N-glycosylation) and can associate with a
+  wall-anchored, non-catalytic beta/converter subunit (GP1) to form the more thermostable
+  PG1 complex; PG2 itself is the catalytic subunit. Functional-genetics evidence is
+  definitive for its biological role: antisense suppression of tomato PG (the basis of the
+  Calgene &#34;Flavr Savr&#34; tomato) and Ds insertional knockouts strongly reduce pectin
+  depolymerization and extend shelf life without arresting other ripening programs (ethylene
+  production and lycopene accumulation are unaffected), and reduced SlPG2 expression
+  correlates with firmer fruit. Thus PG2 is mechanistically a pectin-degrading hydrolase
+  acting in cell-wall disassembly; &#34;fruit ripening&#34; is the developmental process the enzyme
+  serves, not its molecular function. The protein localizes to the cell wall / apoplast and
+  is N-glycosylated.
+existing_annotations:
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED from the
+# current (2026) GOA release when GOA retired the SwissProt-keyword2GO (keyword2GO) pipeline
+# for cellular organisms. Re-added here and reviewed retrospectively to assess whether the
+# removal was justified. Derived from the UniProt keyword &#34;Fruit ripening&#34;.
+- term:
+    id: GO:0009835
+    label: fruit ripening
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Fruit ripening&#34;;
+      snapshot-only, removed in the current GOA release. PG2 is a pectin-degrading hydrolase
+      ENZYME whose expression and action are confined to ripening fruit, but &#34;fruit ripening&#34;
+      is the developmental maturation process the enzyme serves, not its molecular function
+      or its direct biological-process role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GOA&#39;s removal of this annotation was JUSTIFIED. This is the canonical &#34;enzyme labelled
+      with the process it serves&#34; over-annotation pattern: GO:0009835 is defined as &#34;a
+      developmental maturation process that has as participant a fruit&#34;, whereas PG2 is a
+      single, well-characterized cell-wall glycosidase (EC 3.2.1.15) acting in the apoplast.
+      PG2 is genuinely ripening-associated - PG activity is undetectable in mature-green fruit
+      and appears only as fruit change colour [PMID:7449759], and the enzyme is expressed
+      essentially only in ripening fruit - but the precise, mechanistic biology is captured by
+      polygalacturonase activity (GO:0004650, MF) plus pectin catabolic process (GO:0045490)
+      and cell-wall disassembly (plant-type cell wall organization, GO:0009664), all of which
+      are proposed/retained below. Crucially, PG2 acts DOWNSTREAM of the ripening program
+      rather than driving it: antisense suppression of PG strongly reduces pectin
+      depolymerization yet leaves ethylene production and lycopene accumulation unchanged, so
+      the fruit still &#34;ripens&#34; while softening less [file:SOLLC/PG2/PG2-deep-research-falcon.md].
+      Annotating the gene with the whole developmental process therefore over-states its role
+      and conflates the process with the enzyme&#39;s function. Retain as a non-core, historical
+      keyword annotation but mark as over-annotated; the genuine contribution to ripening is
+      better represented by the specific MF/BP terms below.
+    supported_by:
+    - reference_id: PMID:7449759
+      supporting_text: &#34;Polygalacturonase activity is not detectable in mature green tomato
+        fruits \nbut appears as fruits begin to change colour and continues to increase during
+        \nthe ripening period.&#34;
+    - reference_id: PMID:9747798
+      supporting_text: &#34;the gene for tomato polygalacturonase (PG), a critical \nenzyme in fruit
+        ripening.&#34;
+    - reference_id: file:SOLLC/PG2/PG2-deep-research-falcon.md
+      supporting_text: &#34;PG activity is not required to initiate ethylene-mediated ripening, but
+        rather acts downstream as a cell-wall disassembly effector&#34;
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0004650
+    label: polygalacturonase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation (combined methods: ARBA, InterPro IPR000743, EC 3.2.1.15) for
+      polygalacturonase activity. This is the core, experimentally validated molecular
+      function of PG2.
+    action: ACCEPT
+    reason: &gt;
+      Correct and central. PG2 is a characterized endo-polygalacturonase: the UniProt entry
+      carries EC=3.2.1.15 with experimental evidence, and the catalytic activity (random
+      hydrolysis of (1-&gt;4)-alpha-D-galacturonosyl linkages, GO:0004650) was measured directly
+      by Chun &amp; Huber, who studied &#34;the hydrolysis of polygalacturonic acid and cell walls by
+      PG isozyme 2 (PG2)&#34; under apoplast-approximating conditions [PMID:9701584]. The PROSITE
+      POLYGALACTURONASE motif and two catalytic active-site residues (His270 proton donor,
+      Asp293) are annotated in UniProt. This is the gene&#39;s defining molecular function and
+      should be retained as core.
+    supported_by:
+    - reference_id: PMID:9701584
+      supporting_text: &#34;We examined the hydrolysis of polygalacturonic \nacid and cell walls by
+        PG isozyme 2 (PG2) under conditions widely adopted in the \nliterature&#34;
+    - reference_id: file:SOLLC/PG2/PG2-deep-research-falcon.md
+      supporting_text: &#34;they cleave internal α-1,4 linkages in **homogalacturonan/pectic
+        polyuronides**, contributing to pectin disassembly during ripening&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR000743, GH28) for the broad parent process
+      &#34;carbohydrate metabolic process&#34;. Not wrong, but uninformatively general for a
+      pectin-specific hydrolase.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      &#34;Carbohydrate metabolic process&#34; is a very high-level grouping term. PG2 does
+      metabolize a carbohydrate polymer (pectin / homogalacturonan), so the term is not
+      incorrect, but it conveys almost none of the gene&#39;s actual biology. The specific,
+      informative biological process is pectin catabolic process (GO:0045490), proposed as a
+      NEW term below and directly supported by the in-vitro hydrolysis of pectic polymers
+      [PMID:9701584] and by the antisense/in-vivo depolymerization evidence [PMID:7827495].
+      Once the specific pectin-catabolism term is present, the broad carbohydrate-metabolism
+      parent adds no information and is best regarded as an over-annotation.
+    supported_by:
+    - reference_id: PMID:9701584
+      supporting_text: &#34;The hydrolysis of cell wall pectins by tomato (Lycopersicon esculentum)
+        \npolygalacturonase (PG) in vitro is more extensive than the degradation affecting&#34;
+    - reference_id: file:SOLLC/PG2/PG2-deep-research-falcon.md
+      supporting_text: &#34;they cleave internal α-1,4 linkages in **homogalacturonan/pectic
+        polyuronides**, contributing to pectin disassembly during ripening&#34;
+- term:
+    id: GO:0009830
+    label: cell wall modification involved in abscission
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation from an ARBA machine-learning model (GO_REF:0000117) propagating an
+      abscission-related cell-wall-modification process to the GH28 polygalacturonase family.
+      The cell-wall-modification essence is right, but the &#34;abscission&#34; context is wrong for
+      this fruit-ripening-specific isozyme.
+    action: MODIFY
+    reason: &gt;
+      PG2 does modify/disassemble the cell wall, but it does so during fruit RIPENING, not in
+      abscission. The annotation is a family-level ARBA over-generalization: the GH28
+      polygalacturonase family includes abscission-zone PGs (a distinct paralogous role), and
+      the rule has been applied to PG2 by sequence similarity rather than evidence. PG2 is
+      expressed essentially only in ripening fruit, and there is no evidence for a PG2
+      abscission function. The genuine, gene-specific biology (apoplastic pectin degradation
+      driving cell-wall disassembly in the softening pericarp) is better captured by the more
+      general, context-neutral &#34;plant-type cell wall organization&#34; (GO:0009664), which
+      explicitly covers disassembly of the pectin-containing wall. Modify to that term rather
+      than retaining the incorrect abscission context.
+    proposed_replacement_terms:
+    - id: GO:0009664
+      label: plant-type cell wall organization
+    supported_by:
+    - reference_id: PMID:2152163
+      supporting_text: &#34;Tomato polygalacturonase is a cell wall enzyme secreted in large amounts
+        during \ntomato fruit ripening.&#34;
+    - reference_id: PMID:7827495
+      supporting_text: &#34;PG2 is \nresponsible for pectin solubilization and depolymerization in
+        vivo&#34;
+- term:
+    id: GO:0009901
+    label: anther dehiscence
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation from an ARBA machine-learning model (GO_REF:0000117) assigning anther
+      dehiscence to PG2. This is a different developmental context served by other members of
+      the polygalacturonase family, not by the tomato fruit-ripening PG2.
+    action: REMOVE
+    reason: &gt;
+      This is a family-level ARBA over-annotation. Anther dehiscence (GO:0009901, &#34;the
+      dehiscence of an anther to release the pollen grains&#34;) is mediated in other species by
+      anther/pollen-specific polygalacturonases (e.g. Arabidopsis QRT/ADPG paralogs), not by
+      the tomato fruit PG2. Tomato PG2 is expressed essentially only in ripening fruit at the
+      protein level [PMID:2152163], and neither the primary literature nor the deep-research
+      synthesis provides any evidence of a role in anther dehiscence (the term &#34;dehiscence&#34;
+      does not appear anywhere in the research corpus). The annotation reflects sequence
+      similarity to a distinct paralogous subfamily and should be removed.
+    supported_by:
+    - reference_id: PMID:2152163
+      supporting_text: &#34;Tomato polygalacturonase is a cell wall enzyme secreted in large amounts
+        during \ntomato fruit ripening.&#34;
+    - reference_id: file:SOLLC/PG2/PG2-deep-research-falcon.md
+      supporting_text: &#34;**PG2 (UniProt P05117; gene PG2 / PG2A / PG2B) from tomato is an
+        extracellular/apoplastic, ripening-associated endopolygalacturonase (EC 3.2.1.15)&#34;
+- term:
+    id: GO:0010047
+    label: fruit dehiscence
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation from an ARBA machine-learning model (GO_REF:0000117) assigning fruit
+      dehiscence to PG2. Tomato is a fleshy, indehiscent berry; fruit dehiscence (pod/silique
+      shatter) is a dry-fruit process served by distinct polygalacturonase paralogs.
+    action: REMOVE
+    reason: &gt;
+      Another family-level ARBA over-annotation that is biologically inapplicable to tomato.
+      Fruit dehiscence (GO:0010047, &#34;the spontaneous opening of the fruit permitting the
+      escape of seeds&#34;) is a property of dry dehiscent fruits (e.g. Arabidopsis siliques,
+      legume pods) and is mediated by dehiscence-zone polygalacturonases. The tomato fruit is
+      a fleshy indehiscent berry, and PG2&#39;s documented role is pectin depolymerization and
+      softening during ripening [PMID:7827495], not seed-release pod shatter. There is no
+      evidence (literature or deep research) for a PG2 dehiscence function. The annotation is
+      an incorrect cross-paralog transfer and should be removed.
+    supported_by:
+    - reference_id: PMID:7827495
+      supporting_text: &#34;PG2 is \nresponsible for pectin solubilization and depolymerization in
+        vivo&#34;
+    - reference_id: file:SOLLC/PG2/PG2-deep-research-falcon.md
+      supporting_text: &#34;ripening-associated **endo-polygalacturonase** (EC 3.2.1.15) implicated
+        in **pectin depolymerization** during fruit softening&#34;
+- term:
+    id: GO:0048046
+    label: apoplast
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProtKB Subcellular Location vocabulary mapping
+      (GO_REF:0000044) for apoplast localization. Directly supported by experiment; this is
+      where PG2 carries out its function.
+    action: ACCEPT
+    reason: &gt;
+      Strongly supported. PG2 is a secreted, signal-peptide-bearing glycoprotein that is
+      processed and transported to the cell wall / apoplast: Osteryoung et al. showed tomato
+      PG is &#34;a cell wall enzyme secreted in large amounts during tomato fruit ripening&#34; and
+      that the protein was &#34;properly localized in cell walls&#34; of transgenic tissue
+      [PMID:2152163]. The UniProt subcellular location is &#34;Secreted, extracellular space,
+      apoplast&#34; and &#34;Secreted, cell wall&#34;. The apoplast (which includes cell walls and
+      intercellular spaces) is precisely the compartment where PG2 degrades pectin, and the
+      low-pH / ionic conditions of the fruit apoplast define its operating environment
+      [PMID:9701584]. Accept as a core cellular-component annotation.
+    supported_by:
+    - reference_id: PMID:2152163
+      supporting_text: &#34;Tomato polygalacturonase is a cell wall enzyme secreted in large amounts
+        during \ntomato fruit ripening.&#34;
+    - reference_id: PMID:9701584
+      supporting_text: &#34;under conditions approximating the \napoplastic environment of tomato
+        fruit (pH 6.0 and K+ as the predominate \ncation)&#34;
+# --- NEW annotations proposed from the literature ---
+- term:
+    id: GO:0045490
+    label: pectin catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:9701584
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      PG2 hydrolyzes and depolymerizes pectin (homogalacturonan / pectic polyuronides). This
+      is the specific, informative biological process that should replace the over-general
+      &#34;carbohydrate metabolic process&#34; and should be present alongside the polygalacturonase
+      MF.
+    action: NEW
+    reason: &gt;
+      The genuine biological process of PG2 - breakdown of pectin - is not directly
+      represented in current GOA (only the broad GO:0005975 parent). Chun &amp; Huber measured
+      PG2-mediated hydrolysis of polygalacturonic acid and cell-wall pectins directly in vitro
+      [PMID:9701584], and Watson et al. demonstrated that in vivo &#34;PG2 is responsible for
+      pectin solubilization and depolymerization&#34; in ripening fruit [PMID:7827495]. Pectin
+      catabolic process (GO:0045490, &#34;the breakdown of pectin, a polymer containing a backbone
+      of alpha-1,4-linked D-galacturonic acid residues&#34;) is the precise process term and is
+      already used as the IBA term for this gene group in UniProt&#39;s GO cross-references. IDA is
+      justified by the direct in-vitro hydrolysis assays.
+    supported_by:
+    - reference_id: PMID:9701584
+      supporting_text: &#34;Pectin depolymerization by PG2 was extensive at pH values from 4.0 to
+        5.0 and \nwas further enhanced at high K+ levels.&#34;
+    - reference_id: PMID:7827495
+      supporting_text: &#34;PG2 is \nresponsible for pectin solubilization and depolymerization in
+        vivo&#34;
+    - reference_id: file:SOLLC/PG2/PG2-deep-research-falcon.md
+      supporting_text: &#34;PG2 largely drives depolymerization&#34;
+- term:
+    id: GO:0009664
+    label: plant-type cell wall organization
+  evidence_type: IMP
+  original_reference_id: PMID:7827495
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      By depolymerizing apoplastic pectin, PG2 contributes to disassembly of the
+      pectin-containing cell wall during fruit softening. This captures the gene&#39;s
+      developmental contribution to ripening at the correct, mechanistic level (cell-wall
+      disassembly) rather than the whole &#34;fruit ripening&#34; process.
+    action: NEW
+    reason: &gt;
+      &#34;Plant-type cell wall organization&#34; (GO:0009664) explicitly covers &#34;the disassembly of
+      the cellulose and pectin-containing cell wall&#34;, which is exactly what PG2 effects during
+      ripening. In-vivo evidence is strong: reducing PG2/beta-subunit activity changes the
+      extent of pectin solubilization and depolymerization of the wall [PMID:7827495], and
+      insertional knockout of PG produces a &gt;1000-fold reduction in PG activity [PMID:9747798],
+      with reduced PG correlating with firmer fruit (less wall disassembly). This is the
+      preferred process term to capture PG2&#39;s contribution to softening, replacing both the
+      incorrect &#34;abscission&#34; context (GO:0009830) and the over-broad developmental &#34;fruit
+      ripening&#34; (GO:0009835). IMP is justified by the antisense and insertional
+      loss-of-function phenotypes.
+    supported_by:
+    - reference_id: PMID:7827495
+      supporting_text: &#34;increased \nsolubilization and depolymerization of pectins due to the
+        action of \npolygalacturonase (PG)&#34;
+    - reference_id: PMID:9747798
+      supporting_text: &#34;there was at least a 1000-fold reduction in \npolygalacturonase levels in
+        those plants bearing Ds insertions in PG exons&#34;
+    - reference_id: file:SOLLC/PG2/PG2-deep-research-falcon.md
+      supporting_text: &#34;PG activity is not required to initiate ethylene-mediated ripening, but
+        rather acts downstream as a cell-wall disassembly effector&#34;
+core_functions:
+- description: &gt;
+    PG2 is a secreted endo-polygalacturonase (EC 3.2.1.15) that catalyzes the random
+    hydrolysis of (1-&gt;4)-alpha-D-galacturonosyl linkages in homogalacturonan / de-esterified
+    pectin, depolymerizing and solubilizing cell-wall pectic polyuronides in the apoplast.
+  molecular_function:
+    id: GO:0004650
+    label: polygalacturonase activity
+  directly_involved_in:
+  - id: GO:0045490
+    label: pectin catabolic process
+  locations:
+  - id: GO:0048046
+    label: apoplast
+  supported_by:
+  - reference_id: PMID:9701584
+    supporting_text: &#34;We examined the hydrolysis of polygalacturonic \nacid and cell walls by PG
+      isozyme 2 (PG2) under conditions widely adopted in the \nliterature&#34;
+  - reference_id: PMID:2152163
+    supporting_text: &#34;Tomato polygalacturonase is a cell wall enzyme secreted in large amounts
+      during \ntomato fruit ripening.&#34;
+- description: &gt;
+    Through apoplastic pectin depolymerization, PG2 drives disassembly of the
+    pectin-containing cell wall in the ripening pericarp, contributing to fruit softening.
+    It acts downstream of the ethylene-controlled ripening program: antisense suppression
+    and insertional knockout of PG strongly reduce pectin depolymerization and fruit
+    softening (the basis of delayed-ripening &#34;Flavr Savr&#34;-type tomatoes) without arresting
+    ethylene production or pigment accumulation.
+  molecular_function:
+    id: GO:0004650
+    label: polygalacturonase activity
+  directly_involved_in:
+  - id: GO:0009664
+    label: plant-type cell wall organization
+  locations:
+  - id: GO:0048046
+    label: apoplast
+  supported_by:
+  - reference_id: PMID:7827495
+    supporting_text: &#34;PG2 is \nresponsible for pectin solubilization and depolymerization in
+      vivo&#34;
+  - reference_id: PMID:9747798
+    supporting_text: &#34;there was at least a 1000-fold reduction in \npolygalacturonase levels in
+      those plants bearing Ds insertions in PG exons&#34;
+  - reference_id: file:SOLLC/PG2/PG2-deep-research-falcon.md
+    supporting_text: &#34;PG activity is not required to initiate ethylene-mediated ripening, but
+      rather acts downstream as a cell-wall disassembly effector&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;
+    Given that PG2 antisense suppression strongly reduces pectin depolymerization but only
+    modestly affects whole-fruit firmness and does not prevent ripening, what is the precise
+    quantitative contribution of PG2 to softening relative to other wall-modifying enzymes
+    (pectate lyase, expansins, beta-galactosidases)?
+  experts:
+  - Donald Grierson
+- question: &gt;
+    Does the wall-anchored beta/converter subunit (GP1) regulate PG2 catalytic output in vivo
+    primarily by recruiting/retaining PG2 in the wall, or by limiting its access to pectic
+    substrate?
+  experts:
+  - Dean DellaPenna
+suggested_experiments:
+- description: &gt;
+    Use viscometric and reducing-sugar assays plus size-exclusion chromatography to quantify
+    endo-polygalacturonase kinetics (Km, kcat) of purified PG2A and PG2B on homogalacturonans
+    of defined degree of methyl-esterification, confirming substrate specificity and the
+    requirement for prior pectin methylesterase de-esterification.
+  hypothesis: &gt;
+    PG2 preferentially cleaves de-esterified homogalacturonan, so its in-vivo activity is
+    gated by apoplastic pectin methylesterase action.
+  experiment_type: in vitro enzyme kinetics
+- description: &gt;
+    Generate clean CRISPR/Cas9 SlPG2 knockouts in a modern tomato cultivar and profile
+    cell-wall pectin molecular-weight distribution, fruit firmness over postharvest storage,
+    and the ripening transcriptome, separating PG2&#39;s wall-disassembly role from the broader
+    ripening program.
+  hypothesis: &gt;
+    SlPG2 loss reduces apoplastic pectin depolymerization and extends shelf life while leaving
+    ethylene-driven colour/aroma ripening intact.
+  experiment_type: targeted gene knockout and cell-wall phenotyping
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro IPR000743 (glycoside hydrolase family 28) maps to the broad
+      &#34;carbohydrate metabolic process&#34;; the gene-specific process is pectin catabolism.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+  - statement: UniProt subcellular location &#34;Secreted, extracellular space, apoplast&#34; and
+      &#34;Secreted, cell wall&#34; maps to the apoplast cellular-component term; confirmed
+      experimentally.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: ARBA rules propagate family-level (GH28) process terms (cell wall modification
+      involved in abscission, anther dehiscence, fruit dehiscence) that reflect distinct
+      polygalacturonase paralogs, not the tomato fruit-ripening PG2.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined IEA methods (ARBA, InterPro IPR000743, EC 3.2.1.15) assign
+      polygalacturonase activity, the core and experimentally validated molecular function.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotation present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired
+      the keyword2GO pipeline for cellular organisms.
+  - statement: For PG2 the keyword &#34;Fruit ripening&#34; mapped to the whole developmental process
+      GO:0009835, conflating the enzyme&#39;s function with the process it serves; its removal was
+      justified.
+- id: PMID:7449759
+  title: Changes in polygalacturonase isoenzymes during the &#39;ripening&#39; of normal and mutant
+    tomato fruit.
+  findings:
+  - statement: PG activity is undetectable in mature-green fruit and appears as fruit begin to
+      change colour, increasing through ripening; two isoenzymes (PG1, PG2) appear sequentially.
+  - statement: The ripening increase in PG activity is due to net synthesis of protein; rin and
+      Nr ripening mutants produce little or only PG1.
+- id: PMID:2152163
+  title: Analysis of tomato polygalacturonase expression in transgenic tobacco.
+  findings:
+  - statement: Tomato PG is a cell-wall enzyme secreted in large amounts during fruit ripening,
+      synthesized as a glycoprotein precursor processed to PG1, PG2A and PG2B isozymes.
+  - statement: PG is properly processed and localized to the cell wall and is enzymatically
+      active; supports apoplast/cell-wall localization.
+- id: PMID:7827495
+  title: Reduction of tomato polygalacturonase beta subunit expression affects pectin
+    solubilization and degradation during fruit ripening.
+  findings:
+  - statement: PG2 is the single catalytic PG polypeptide; PG1 is PG2 associated with a
+      non-catalytic beta subunit.
+  - statement: PG2 is responsible for pectin solubilization and depolymerization in vivo during
+      fruit ripening; the beta subunit modulates the extent of pectin metabolism.
+- id: PMID:9747798
+  title: Insertional inactivation of the tomato polygalacturonase gene.
+  findings:
+  - statement: Ds insertional knockouts in PG exons cause at least a 1000-fold reduction in
+      polygalacturonase levels; PG is described as a critical enzyme in fruit ripening.
+- id: PMID:9701584
+  title: Polygalacturonase-mediated solubilization and depolymerization of pectic polymers in
+    tomato fruit cell walls. Regulation by pH and ionic conditions.
+  findings:
+  - statement: PG isozyme 2 (PG2) hydrolyzes polygalacturonic acid and cell-wall pectins in
+      vitro; reaction characterized under apoplast-approximating pH/ionic conditions.
+  - statement: Pectin depolymerization by PG2 is extensive at pH 4.0-5.0 and enhanced by high
+      K+; establishes the catalytic activity (EC 3.2.1.15) and apoplastic operating conditions.
+- id: file:SOLLC/PG2/PG2-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation
+    of tomato PG2 (P05117).
+  findings:
+  - statement: PG2 is an extracellular/apoplastic, ripening-associated endo-polygalacturonase
+      (EC 3.2.1.15) that hydrolyzes homogalacturonan and is strongly implicated in
+      depolymerization of pectic polymers during fruit softening.
+  - statement: Antisense suppression of PG (foundation of the Flavr Savr tomato) reduces pectin
+      depolymerization without altering ethylene production or lycopene accumulation, showing
+      PG2 acts downstream of ripening as a cell-wall disassembly effector.
+  - statement: PG2A/PG2B are catalytic glyco-isoforms that can bind a wall-associated converter
+      (beta) subunit to form PG1-like complexes under apoplast-like pH (4-5.5).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

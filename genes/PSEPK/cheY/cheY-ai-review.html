@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cheY - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cheY</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88EW2" target="_blank" class="term-link">
+                        Q88EW2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cheY";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88EW2" data-a="DESCRIPTION: CheY (PP_4340) is the chemotaxis response regulato..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CheY (PP_4340) is the chemotaxis response regulator of Pseudomonas putida KT2440. It is a small (124 aa), single-domain receiver-type response regulator of the CheY/CheY-like superfamily, consisting essentially of a single REC (response regulatory) domain with a conserved phosphoaccepting aspartate (Asp52 in this protein) and a Mg2+ cofactor required for phosphochemistry. In the bacterial chemotaxis two-component signaling pathway, chemoreceptors regulate the histidine kinase CheA, which autophosphorylates and transfers the phosphoryl group to the active-site aspartate of CheY. Phosphorylated CheY (CheY-P) diffuses through the cytoplasm to the flagellar motor, where it binds the C-ring switch components (FliM/FliN) at the cytoplasmic face of the motor, shifting the rotational bias toward clockwise rotation and thereby causing cell tumbling and reorientation. The dephosphorylated state is restored by CheY-P dephosphorylation (by CheZ in canonical systems), giving the signal its transient, rapidly resettable character. Functionally, CheY acts as the diffusible output element of the chemosensory signal transduction system, converting receptor/kinase activity into changes in flagellar motor behavior and hence directed motility (chemotaxis).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW2" data-a="GO:0000160" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CheY is the response regulator (receiver domain) of the chemotaxis two-component/phosphorelay signaling system; it accepts a phosphoryl group from the histidine kinase CheA. This term correctly captures the core signaling role and is well supported by the conserved REC domain (IPR001789) and the conserved phosphoaccepting aspartate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly reflects the central, well-established function of CheY as the response-regulator output of the chemotaxis phosphorelay. The InterPro-based IEA mapping is biologically appropriate and consistent with the domain architecture and with KT2440-specific evidence that CheY (PP_4340) is phosphorylated by CheA (PP_4338).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/cheY/cheY-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deep research synthesizes KT2440-specific and general chemotaxis evidence that CheY (PP_4340) is a chemosensory response regulator activated by phosphotransfer from the histidine kinase CheA (PP_4338), the defining step of the chemotaxis phosphorelay.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW2" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CheY is a soluble, diffusible cytoplasmic response regulator that shuttles between the receptor-associated CheA kinase complex and the cytoplasmic C-ring of the flagellar motor. A cytoplasmic localization is consistent with the receiver-domain-only architecture (no signal peptide or transmembrane segments) and with the established mechanism of CheY action.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is well supported for single-domain CheY response regulators and matches the UniProt subcellular location mapping. Although the action occurs at the motor, the protein itself is a freely diffusible cytoplasmic component.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Receiver/response-regulator component of the chemotaxis phosphorelay that accepts a phosphoryl group on its conserved active-site aspartate from the histidine kinase CheA.</h3>
+                <span class="vote-buttons" data-g="Q88EW2" data-a="FUNCTION: Receiver/response-regulator component of the chemo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000156" target="_blank" class="term-link">
+                            phosphorelay response regulator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                phosphorelay signal transduction system
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                chemotaxis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36287825" target="_blank" class="term-link">
+                                PMID:36287825
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">KT2440 study describes CheY (PP_4340) as a chemosensory response regulator activated by phosphorylation from the upstream histidine kinase CheA (PP_4338), with photocrosslinking/proteomics supporting a CheY-CheA interaction.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25100612" target="_blank" class="term-link">
+                                PMID:25100612
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Pseudomonas chemotaxis review states CheA phosphorylates CheY, the diffusible response regulator that transmits the chemotaxis signal to the flagellar motor.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As phosphorylated CheY-P, binds the flagellar motor switch (C-ring; FliM/FliN) to bias rotation toward clockwise, controlling tumbling and hence chemotactic motility.</h3>
+                <span class="vote-buttons" data-g="Q88EW2" data-a="FUNCTION: As phosphorylated CheY-P, binds the flagellar moto..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                chemotaxis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25100612" target="_blank" class="term-link">
+                                PMID:25100612
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Review describes CheY as transmitting the chemotaxis signal to the flagellar motor, with CheY-P modulating motor rotational bias.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/cheY/cheY-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on cheY (PP_4340) in Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36287825" target="_blank" class="term-link">
+                            PMID:36287825
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic Code Expansion in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 CheY (PP_4340) is described as a chemosensory response regulator activated by phosphorylation from CheA (PP_4338); photocrosslinking proteomics supported a CheY-CheA interaction in KT2440.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25100612" target="_blank" class="term-link">
+                            PMID:25100612
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pseudomonas chemotaxis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CheA phosphorylates CheY; CheY-P is the diffusible response regulator that transmits the chemotaxis signal to the flagellar motor and is dephosphorylated by CheZ in canonical systems.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does deletion of PP_4340 (cheY) in P. putida KT2440 produce the expected smooth-swimming (non-tumbling) chemotaxis-defective phenotype, and which of the multiple KT2440 chemosensory pathways does it serve?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW2" data-a="Q: Does deletion of PP_4340 (cheY) in P. putida KT244..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which flagellar switch components (FliM/FliN/FliG) does P. putida CheY-P engage, and is the binding interface conserved relative to the E. coli paradigm?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW2" data-a="Q: Which flagellar switch components (FliM/FliN/FliG)..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a PP_4340 deletion mutant and assess swimming/tumbling behavior and chemotaxis toward defined attractants to confirm the predicted role in motor switching.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW2" data-a="EXPERIMENT: Construct a PP_4340 deletion mutant and assess swi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute CheA-CheY phosphotransfer in vitro with KT2440 proteins and measure phosphorylation kinetics and Mg2+ dependence at the active-site aspartate (Asp52).</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW2" data-a="EXPERIMENT: Reconstitute CheA-CheY phosphotransfer in vitro wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cheY-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EW2" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">22 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T16:39:18.018499</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="cheY-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="cheY-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000010 Figure 6c provides a comprehensive schematic illustrating the mechanism of directional switching in the bacterial flagellum. It sho</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-chey-uniprot-q88ew2-locus-pp_4340-in-pseudomonas-putida-kt2440">Research report: Functional annotation of <strong>cheY</strong> (UniProt <strong>Q88EW2</strong>; locus <strong>PP_4340</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-mandatory-identity-verification-to-avoid-symbol-ambiguity">0) Mandatory identity verification (to avoid symbol ambiguity)</h3>
+<p>The UniProt accession <strong>Q88EW2</strong> is specified as <strong>CheY</strong> (gene <strong>cheY</strong>; ordered locus name <strong>PP_4340</strong>) from <strong>Pseudomonas putida</strong> strain <strong>KT2440</strong>. Two independent KT2440-focused publications explicitly refer to <strong>CheY (PP_4340)</strong> as a chemotaxis/chemosensory response regulator, supporting that the symbol <strong>cheY</strong> in this report matches the intended protein identity and organism context rather than another bacterial CheY homolog. Specifically, PP_4340 is annotated as “Chemotaxis protein CheY” and placed within a motility/chemotaxis gene neighborhood that includes PP_4338, and it is transcriptionally downregulated in a KT2440 flagellar sigma-factor mutant. (navarro‐aviles2010physiologicalandtranscriptomic pages 4-5, he2022geneticcodeexpansion pages 6-7)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-chemotaxis-signaling-and-the-role-of-chey">1.1 Chemotaxis signaling and the role of CheY</h4>
+<p>Bacterial chemotaxis is a sensory–response pathway that modulates the <strong>bias</strong> of flagellar motor rotation (e.g., counterclockwise vs clockwise) to produce directed migration in chemical gradients. In the canonical framework, chemoreceptors regulate a histidine kinase <strong>CheA</strong>, which phosphorylates the response regulator <strong>CheY</strong>; phosphorylated CheY (CheY-P) then directly modulates the flagellar motor by binding switch components, thereby changing the probability of clockwise rotation. This CheA→CheY phosphotransfer and motor control role is widely accepted and is explicitly stated in a chemotaxis review that includes <em>Pseudomonas</em> systems. (sampedro2015pseudomonaschemotaxis. pages 3-5)</p>
+<p>A 2024 authoritative review of chemotaxis in the context of biased migration emphasizes that <strong>increasing CheA activity increases CheY-P</strong>, and that CheY-P binds motor switch complexes (FliM/FliN) to increase the <strong>clockwise (CW) bias</strong>. (antani2024reassessingthestandard pages 1-3)</p>
+<h4 id="12-chey-as-a-response-regulator-receiver-domain-protein">1.2 CheY as a response regulator “receiver” domain protein</h4>
+<p>CheY proteins are typically <strong>single-domain response regulators</strong> (receiver domains) that are activated by phosphorylation of a conserved aspartate in the active site. In a 2024 structural analysis of directional switching, CheY is modeled in its phosphorylated form with the phosphorylated residue <strong>D57</strong> oriented toward the FliG/FliM interface in the switch complex, consistent with the classical receiver-domain phosphorylation mechanism and its coupling to motor switching. (johnson2024structuralbasisof pages 7-10)</p>
+<h4 id="13-cellular-localization-where-chey-acts">1.3 Cellular localization (where CheY acts)</h4>
+<p>Functionally, CheY is a <strong>diffusible cytosolic</strong> signal carrier between the receptor-associated kinase complex and the flagellar motor, acting at the <strong>cytoplasmic face</strong> of the motor’s C-ring/switch (via interaction with FliM and related switch components). While direct fluorescence localization of <em>P. putida</em> KT2440 PP_4340 CheY was not retrieved here, the mechanistic placement of CheY action at the motor C-ring (cytoplasmic) is supported by modern structural work and by general pathway descriptions. (sampedro2015pseudomonaschemotaxis. pages 3-5, johnson2024structuralbasisof pages 1-5)</p>
+<h3 id="2-chey-pp_4340-in-pseudomonas-putida-kt2440-best-direct-evidence">2) CheY (PP_4340) in <em>Pseudomonas putida</em> KT2440: best direct evidence</h3>
+<h4 id="21-genomic-context-and-regulatory-linkage-to-motility">2.1 Genomic context and regulatory linkage to motility</h4>
+<p>A KT2440 transcriptomic study of a <strong>fliA</strong> mutant (σ factor for flagellar genes) identifies <strong>PP_4340</strong> explicitly as “Chemotaxis protein CheY” and reports it is downregulated with fold change <strong>−2.8</strong> (Table 1). The same work groups PP_4340 within a proposed operon/gene block <strong>PP4340–PP4338</strong>, consistent with cheY being part of a chemotaxis/motility module under flagellar regulon control. (navarro‐aviles2010physiologicalandtranscriptomic pages 4-5)</p>
+<h4 id="22-direct-experimental-support-for-cheychea-association-in-kt2440">2.2 Direct experimental support for CheY–CheA association in KT2440</h4>
+<p>A 2022 KT2440 synthetic biology study (genetic code expansion) uses CheY as an exemplar “chemosensory response regulator in chemotaxis” and explicitly refers to <strong>CheY (PP_4340)</strong> as activated by phosphorylation by <strong>CheA (PP_4338)</strong>. The authors incorporated a photocrosslinking amino acid (pBpa) into CheY at selected permissive positions (chosen using a CheY/CheA structural template), and proteomics of crosslinked material identified CheA among crosslinked species—supporting a CheY–CheA interaction in KT2440 under their experimental conditions. (he2022geneticcodeexpansion pages 6-7)</p>
+<h3 id="3-mechanism-phosphorylation-cycle-and-motor-switching">3) Mechanism: phosphorylation cycle and motor switching</h3>
+<h4 id="31-phosphorylation-by-chea">3.1 Phosphorylation by CheA</h4>
+<p>CheA-dependent phosphorylation of CheY is the defining biochemical step coupling receptor/kinase activity to motor control. This is stated in an authoritative <em>Pseudomonas</em> chemotaxis review, and biochemical assays in <em>Pseudomonas putida</em> context demonstrate phosphate transfer from phosphorylated CheA to CheY (radiolabel transfer with concomitant decrease in CheA signal), consistent with cognate phosphotransfer. (sampedro2015pseudomonaschemotaxis. pages 3-5, he2025coordinatedregulationof pages 3-5)</p>
+<h4 id="32-interaction-partners-at-the-flagellar-switch-flimflinflig-and-rotation-bias">3.2 Interaction partners at the flagellar switch (FliM/FliN/FliG) and rotation bias</h4>
+<p>A 2024 structural study in <em>Nature Microbiology</em> resolves key elements of how <strong>CheY-P binding to FliM</strong> stabilizes the clockwise motor conformation. It reports that CheY-P binds the extreme N-terminus of FliM, and modeling supports a consistent CheY binding interface with the phosphorylated residue <strong>D57</strong> oriented toward the <strong>FliG–FliM</strong> interface; CheY binding is consistent with the CW structural state and is proposed to “lock” the switch interface in the CW conformation. (johnson2024structuralbasisof pages 7-10)</p>
+<p>Complementarily, a 2024 Annual Review article summarizes the motor output as a sensitive, cooperative response to CheY-P: CheY-P binds <strong>FliM and FliN</strong> at the base of the motor, increasing the probability of CW rotation (CW bias), and the CW-bias response is sigmoidal with a high Hill coefficient. (antani2024reassessingthestandard pages 1-3)</p>
+<h4 id="33-quantitative-and-structural-parameters-from-2024-studies">3.3 Quantitative and structural parameters from 2024 studies</h4>
+<p>Recent structural work provides quantitative constraints on CheY-mediated switching:</p>
+<ul>
+<li><strong>Cooperativity/sensitivity of motor response:</strong> A 2024 Annual Review reports the CW-bias motor response can be described by a sigmoidal curve with <strong>Hill coefficient ~10–20</strong>, implying that relatively small changes in CheA activity and thus CheY-P can saturate motor output toward CW-only or CCW-only bias. (antani2024reassessingthestandard pages 1-3)</li>
+<li><strong>Stoichiometry of a CheY-associated CW state:</strong> A 2024 cryo-EM study reports a CW C-ring composition that includes a CheY subring, with stoichiometry <strong>34 FliG / 34 FliM / 102 FliN / 34 CheY</strong>, compared with a CCW C-ring lacking the CheY subring. This supports a direct structural coupling between CheY occupancy and the CW switching state. (tan2024structuralbasisof pages 3-4)</li>
+</ul>
+<h3 id="4-recent-developments-prioritizing-20232024-and-latest-research-relevance">4) Recent developments (prioritizing 2023–2024) and “latest research” relevance</h3>
+<h4 id="41-high-resolution-switching-mechanism-stator-relocation-and-conformational-stabilization">4.1 High-resolution switching mechanism: stator relocation and conformational stabilization</h4>
+<p>The 2024 <em>Nature Microbiology</em> work provides a modern mechanistic picture in which CheY-P binding biases the C-ring into a CW conformation, associated with changes that relocate stator interactions (outside vs inside wall models) and thereby reverse rotation direction. This refines earlier, more phenomenological models of CheY action and enables explicit structural hypotheses for how CheY-P “locks” motor interfaces during switching. (johnson2024structuralbasisof pages 7-10, johnson2024structuralbasisof pages 1-5)</p>
+<h4 id="42-updating-canonical-assumptions-diversity-and-alternative-features">4.2 Updating canonical assumptions: diversity and alternative features</h4>
+<p>Although not KT2440-specific, a 2024 <em>Annual Review of Microbiology</em> article emphasizes that many bacteria diverge from the <em>E. coli</em> paradigm in chemotaxis system architecture, sensory strategies, and protein composition; this is relevant for <em>Pseudomonas</em> because many species encode multiple chemosensory pathways and accessory components. This strengthens the interpretive stance that KT2440 CheY is canonical at the receiver-domain level, but system-level regulation may be more complex than the textbook pathway. (antani2024reassessingthestandard pages 1-3)</p>
+<h3 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h3>
+<h4 id="51-kt2440-as-an-engineering-chassis-chey-as-a-tool-for-mapping-interactions">5.1 KT2440 as an engineering chassis: CheY as a tool for mapping interactions</h4>
+<p>The 2022 KT2440 genetic code expansion study is an example of an applied, real-world implementation in which <strong>CheY (PP_4340)</strong> was engineered to incorporate a photocrosslinker for <strong>protein–protein interaction</strong> studies. In practice, this extends KT2440’s experimental toolkit for interrogating chemotaxis signaling complexes (e.g., CheY–CheA associations) in an organism widely used as a biotechnology chassis. (he2022geneticcodeexpansion pages 6-7)</p>
+<h4 id="52-chemotaxis-as-a-targetable-behavior-expert-perspective">5.2 Chemotaxis as a targetable behavior (expert perspective)</h4>
+<p>The concept that motility/chemotaxis pathways are actionable targets (e.g., for reducing pathogenic colonization) is supported by recent review-level discussion; while not KT2440-specific, it reflects the broader translational importance of chemotaxis regulators like CheY in microbial ecology and biotechnology contexts. (antani2024reassessingthestandard pages 1-3)</p>
+<h3 id="6-expert-opinions-and-analysis-authoritative-synthesis">6) Expert opinions and analysis (authoritative synthesis)</h3>
+<ul>
+<li><strong>Mechanistic consensus with refined structural detail:</strong> The strong consensus is that CheY-P is the immediate diffusible regulator that couples CheA activity to motor switching, and recent 2024 structural work provides more explicit models for the CheY-P binding interface and conformational stabilization of the CW state. (johnson2024structuralbasisof pages 7-10, antani2024reassessingthestandard pages 1-3)</li>
+<li><strong>Caution on system-level generalization:</strong> Reviews emphasize that, although CheY receiver chemistry is conserved, the broader chemotaxis network can vary substantially across taxa. Therefore, KT2440 CheY function can be annotated confidently at the level of “response regulator controlling flagellar motor bias,” but upstream wiring (numbers of chemosensory systems, coupling to other behaviors) should be treated as organism-specific and not assumed without direct evidence. (sampedro2015pseudomonaschemotaxis. pages 3-5, antani2024reassessingthestandard pages 1-3)</li>
+</ul>
+<h3 id="7-summary-of-key-statisticsdata-points-relevant-to-annotation">7) Summary of key statistics/data points relevant to annotation</h3>
+<ul>
+<li>KT2440 <strong>cheY (PP_4340)</strong> is downregulated <strong>−2.8 fold</strong> in a <strong>fliA</strong> mutant transcriptome, consistent with flagellar regulon control. (navarro‐aviles2010physiologicalandtranscriptomic pages 4-5)</li>
+<li>CheY-P motor control is highly cooperative; reported Hill coefficient <strong>~10–20</strong> for motor response to CheY-P. (antani2024reassessingthestandard pages 1-3)</li>
+<li>CW state stoichiometry includes <strong>34 CheY</strong> associated with the C-ring (in one cryo-EM model), suggesting near 1:1 CheY occupancy with FliM subunits in that CW conformation. (tan2024structuralbasisof pages 3-4)</li>
+</ul>
+<h3 id="visual-evidence-2024-directional-switching-model-schematic">Visual evidence: 2024 directional switching model schematic</h3>
+<p>A schematic depiction of CheY-P-driven directional switching and its coupling to motor conformational changes is available from a 2024 structural study (Figure 6c). (johnson2024structuralbasisof media 93561bae)</p>
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Claim/Observation</th>
+<th>Evidence summary</th>
+<th>Organism/Context (KT2440-specific vs general)</th>
+<th>Year</th>
+<th>Source (with URL)</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt Q88EW2 matches <strong>cheY / PP_4340</strong> in <em>Pseudomonas putida</em> KT2440</td>
+<td>KT2440 transcriptomic data explicitly annotate <strong>PP_4340</strong> as “Chemotaxis protein CheY” (gene <strong>cheY</strong>); the gene is part of a motility/chemotaxis region and is downregulated in a <strong>fliA</strong> mutant with fold change <strong>−2.8</strong></td>
+<td>KT2440-specific</td>
+<td>2010</td>
+<td>Navarro-Avilés &amp; Van Dillewijn, DOI: https://doi.org/10.1111/j.1758-2229.2009.00084</td>
+<td>(navarro‐aviles2010physiologicalandtranscriptomic pages 4-5)</td>
+</tr>
+<tr>
+<td><strong>PP_4340</strong> likely lies in a local chemotaxis operon/gene neighborhood</td>
+<td>The KT2440 study identifies a potential operon region <strong>PP4340 to PP4338</strong>, placing <strong>cheY (PP_4340)</strong> adjacent to other motility/chemotaxis genes</td>
+<td>KT2440-specific</td>
+<td>2010</td>
+<td>Navarro-Avilés &amp; Van Dillewijn, DOI: https://doi.org/10.1111/j.1758-2229.2009.00084</td>
+<td>(navarro‐aviles2010physiologicalandtranscriptomic pages 4-5)</td>
+</tr>
+<tr>
+<td>CheY in KT2440 functions as a <strong>chemosensory response regulator</strong> downstream of CheA</td>
+<td>In a KT2440 protein-engineering study, CheY is described as “a chemosensory response regulator in chemotaxis,” activated by phosphorylation from the upstream histidine kinase <strong>CheA (PP_4338)</strong>; photocrosslinking/proteomics supported a <strong>CheY–CheA</strong> interaction</td>
+<td>KT2440-specific</td>
+<td>2022</td>
+<td>He et al., <em>ACS Synthetic Biology</em>, DOI: https://doi.org/10.1021/acssynbio.2c00325</td>
+<td>(he2022geneticcodeexpansion pages 6-7)</td>
+</tr>
+<tr>
+<td>Core biochemical role: CheA transfers phosphate to CheY</td>
+<td>Chemotaxis review states <strong>CheA phosphorylates CheY</strong>; a <em>P. putida</em> biochemical study shows radiolabeled phosphate transfer from phosphorylated CheA to CheY</td>
+<td>General chemotaxis mechanism with <em>Pseudomonas</em> support</td>
+<td>2015; 2025</td>
+<td>Sampedro et al., https://doi.org/10.1111/1574-6976.12081; He et al., https://doi.org/10.7554/elife.100914.2</td>
+<td>(he2025coordinatedregulationof pages 3-5, sampedro2015pseudomonaschemotaxis. pages 3-5)</td>
+</tr>
+<tr>
+<td>Canonical output of CheY is control of the <strong>flagellar motor</strong></td>
+<td>Review states CheY transmits the chemotaxis signal to flagellar motors; this is the accepted functional role used to annotate Pseudomonas CheY proteins by homology</td>
+<td>General, applicable to KT2440 by homology</td>
+<td>2015</td>
+<td>Sampedro et al., <em>FEMS Microbiology Reviews</em>, https://doi.org/10.1111/1574-6976.12081</td>
+<td>(sampedro2015pseudomonaschemotaxis. pages 3-5)</td>
+</tr>
+<tr>
+<td>CheY-P is normally reset by <strong>CheZ</strong> phosphatase in canonical systems</td>
+<td>The review notes <strong>CheY-P dephosphorylation is performed by CheZ</strong>, defining the transient nature of signaling output in canonical chemotaxis pathways</td>
+<td>General</td>
+<td>2015</td>
+<td>Sampedro et al., <em>FEMS Microbiology Reviews</em>, https://doi.org/10.1111/1574-6976.12081</td>
+<td>(sampedro2015pseudomonaschemotaxis. pages 3-5)</td>
+</tr>
+<tr>
+<td>Recent structural work shows CheY-P promotes <strong>CW switching</strong> by binding the C-ring</td>
+<td>Structural studies show phosphorylated CheY binds the flagellar switch/C-ring, especially <strong>FliM</strong>, stabilizing the <strong>clockwise (CW)</strong> state and biasing motor rotation away from default <strong>counterclockwise (CCW)</strong> rotation</td>
+<td>General mechanism</td>
+<td>2024</td>
+<td>Johnson et al., <em>Nature Microbiology</em>, https://doi.org/10.1038/s41564-024-01630-z</td>
+<td>(johnson2024structuralbasisof pages 7-10, johnson2024structuralbasisof pages 1-5)</td>
+</tr>
+<tr>
+<td>CheY binding site/mechanism involves <strong>FliM/FliN</strong> and likely remodels FliG-related interfaces</td>
+<td>Review-level synthesis states CheY-P binds <strong>FliM and FliN</strong> at the motor base to raise CW bias; structural work places the phosphorylated residue near the <strong>FliG/FliM</strong> interface and supports conformational stabilization of the CW state</td>
+<td>General mechanism</td>
+<td>2024</td>
+<td>Antani et al., https://doi.org/10.1146/annurev-chembioeng-100722-114625; Johnson et al., https://doi.org/10.1038/s41564-024-01630-z</td>
+<td>(johnson2024structuralbasisof pages 7-10, antani2024reassessingthestandard pages 1-3)</td>
+</tr>
+<tr>
+<td>Conserved phosphorylation site is <strong>Asp57</strong> in model CheY proteins</td>
+<td>A 2024 structural study explicitly models the phosphorylated residue <strong>D57</strong> of CheY toward the FliG/FliM interface; this supports inference that KT2440 CheY, a canonical receiver-domain regulator, uses the conserved receiver Asp mechanism</td>
+<td>General, strong homology-based inference for KT2440</td>
+<td>2024</td>
+<td>Johnson et al., <em>Nature Microbiology</em>, https://doi.org/10.1038/s41564-024-01630-z</td>
+<td>(johnson2024structuralbasisof pages 7-10)</td>
+</tr>
+<tr>
+<td>Motor switching is highly cooperative and sensitive to CheY-P levels</td>
+<td>Review notes the motor response to CheY-P is sigmoidal with Hill coefficient about <strong>10–20</strong>, meaning small signaling changes can strongly alter CW/CCW bias</td>
+<td>General quantitative mechanism</td>
+<td>2024</td>
+<td>Antani et al., https://doi.org/10.1146/annurev-chembioeng-100722-114625</td>
+<td>(antani2024reassessingthestandard pages 1-3)</td>
+</tr>
+<tr>
+<td>Structural stoichiometry supports a dedicated CheY-associated CW motor state</td>
+<td>Cryo-EM study reports a <strong>CW C-ring</strong> with stoichiometry <strong>34 FliG / 34 FliM / 102 FliN / 34 CheY</strong> compared with a CCW C-ring lacking the CheY subring, supporting direct structural coupling of CheY binding to motor switching</td>
+<td>General quantitative mechanism</td>
+<td>2024</td>
+<td>Tan et al., <em>Cell Research</em>, https://doi.org/10.1101/2024.04.30.591856</td>
+<td>(tan2024structuralbasisof pages 3-4)</td>
+</tr>
+<tr>
+<td>Cellular localization of CheY is expected to be <strong>cytoplasmic/diffusible</strong>, acting at the pole-localized motor</td>
+<td>CheY is described as a diffusible response regulator that carries signal from CheA to the flagellar motor; recent structural/mechanistic work places its action at the cytoplasmic <strong>C-ring</strong> of the motor. Direct localization for <strong>KT2440 PP_4340</strong> was not found in the retrieved papers</td>
+<td>General mechanism; KT2440-specific localization remains indirect</td>
+<td>2015; 2024</td>
+<td>Sampedro et al., https://doi.org/10.1111/1574-6976.12081; Johnson et al., https://doi.org/10.1038/s41564-024-01630-z</td>
+<td>(sampedro2015pseudomonaschemotaxis. pages 3-5, johnson2024structuralbasisof pages 1-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest evidence linking UniProt Q88EW2 to cheY/PP_4340 in </em>Pseudomonas putida<em> KT2440 and places that evidence in the context of current CheY mechanism from recent structural and review literature. It is useful for separating direct KT2440-specific evidence from broader, well-supported functional inference.</em></p>
+<h2 id="references-urls-and-publication-dates">References (URLs and publication dates)</h2>
+<ul>
+<li>Navarro-Avilés G, Van Dillewijn P. Physiological and transcriptomic characterization of a <em>fliA</em> mutant of <em>Pseudomonas putida</em> KT2440. (2010; DOI publication metadata in record). https://doi.org/10.1111/j.1758-2229.2009.00084 (navarro‐aviles2010physiologicalandtranscriptomic pages 4-5)</li>
+<li>He X, Gao T, Chen Y, et al. Genetic Code Expansion in <em>Pseudomonas putida</em> KT2440. <em>ACS Synthetic Biology</em> (Oct 2022). https://doi.org/10.1021/acssynbio.2c00325 (he2022geneticcodeexpansion pages 6-7)</li>
+<li>Sampedro I, Parales RE, Krell T, Hill JE. Pseudomonas chemotaxis. <em>FEMS Microbiology Reviews</em> (Oct 2015). https://doi.org/10.1111/1574-6976.12081 (sampedro2015pseudomonaschemotaxis. pages 3-5)</li>
+<li>Johnson S, Deme JC, Furlong EJ, et al. Structural basis of directional switching by the bacterial flagellum. <em>Nature Microbiology</em> (Mar 2024). https://doi.org/10.1038/s41564-024-01630-z (johnson2024structuralbasisof pages 7-10, johnson2024structuralbasisof pages 1-5, johnson2024structuralbasisof media 93561bae)</li>
+<li>Antani JD, Shaji A, Gupta R, Lele PP. Reassessing the Standard Chemotaxis Framework for Understanding Biased Migration in <em>Helicobacter pylori</em>. <em>Annual Review of Chemical and Biomolecular Engineering</em> (Jul 2024). https://doi.org/10.1146/annurev-chembioeng-100722-114625 (antani2024reassessingthestandard pages 1-3)</li>
+<li>Tan J, Zhang L, Zhou X, et al. Structural basis of the bacterial flagellar motor rotational switching. <em>Cell Research</em> (preprint DOI in record; Apr 2024). https://doi.org/10.1101/2024.04.30.591856 (tan2024structuralbasisof pages 3-4)</li>
+</ul>
+<h2 id="limitations-of-the-retrieved-evidence-for-transparency">Limitations of the retrieved evidence (for transparency)</h2>
+<p>Direct KT2440 <strong>cheY (PP_4340)</strong> knockout/point-mutant phenotypes, direct cellular localization microscopy for PP_4340, and direct measurements of phosphorylation kinetics for KT2440 CheY were not retrieved in the available set. Therefore, pathway role and localization are based on (i) KT2440 gene/protein identification and CheA association evidence and (ii) high-confidence homology and modern structural mechanism from other bacteria. (he2022geneticcodeexpansion pages 6-7, johnson2024structuralbasisof pages 7-10, antani2024reassessingthestandard pages 1-3)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(navarro‐aviles2010physiologicalandtranscriptomic pages 4-5): G Navarro‐Avilés and P Van Dillewijn. Physiological and transcriptomic characterization of a flia mutant of pseudomonas putida kt2440. Unknown journal, 2010. URL: https://doi.org/10.1111/j.1758-2229.2009.00084, doi:10.1111/j.1758-2229.2009.00084.</p>
+</li>
+<li>
+<p>(he2022geneticcodeexpansion pages 6-7): Xinyuan He, Tianyu Gao, Yan Chen, Kun Liu, Jiantao Guo, and Wei Niu. Genetic code expansion in pseudomonas putida kt2440. ACS synthetic biology, 11:3724-3732, Oct 2022. URL: https://doi.org/10.1021/acssynbio.2c00325, doi:10.1021/acssynbio.2c00325. This article has 15 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sampedro2015pseudomonaschemotaxis. pages 3-5): Inmaculada Sampedro, Rebecca E. Parales, Tino Krell, and Jane E. Hill. Pseudomonas chemotaxis. FEMS microbiology reviews, 39 1:17-46, Oct 2015. URL: https://doi.org/10.1111/1574-6976.12081, doi:10.1111/1574-6976.12081. This article has 346 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(antani2024reassessingthestandard pages 1-3): Jyot D. Antani, Aakansha Shaji, Rachit Gupta, and Pushkar P. Lele. Reassessing the standard chemotaxis framework for understanding biased migration in helicobacter pylori. Jul 2024. URL: https://doi.org/10.1146/annurev-chembioeng-100722-114625, doi:10.1146/annurev-chembioeng-100722-114625. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(johnson2024structuralbasisof pages 7-10): Steven Johnson, Justin C. Deme, Emily J. Furlong, Joseph J. E. Caesar, Fabienne F. V. Chevance, Kelly T. Hughes, and Susan M. Lea. Structural basis of directional switching by the bacterial flagellum. Nature microbiology, 9:1282-1292, Mar 2024. URL: https://doi.org/10.1038/s41564-024-01630-z, doi:10.1038/s41564-024-01630-z. This article has 59 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(johnson2024structuralbasisof pages 1-5): Steven Johnson, Justin C. Deme, Emily J. Furlong, Joseph J. E. Caesar, Fabienne F. V. Chevance, Kelly T. Hughes, and Susan M. Lea. Structural basis of directional switching by the bacterial flagellum. Nature microbiology, 9:1282-1292, Mar 2024. URL: https://doi.org/10.1038/s41564-024-01630-z, doi:10.1038/s41564-024-01630-z. This article has 59 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2025coordinatedregulationof pages 3-5): Meina He, Yongxin Tao, Kexin Mu, Haoqi Feng, Ying Fan, Tong Liu, Qiaoyun Huang, Yujie Xiao, and Wenli Chen. Coordinated regulation of chemotaxis and resistance to copper by csor in pseudomonas putida. ArXiv, Jan 2025. URL: https://doi.org/10.7554/elife.100914.2, doi:10.7554/elife.100914.2. This article has 4 citations.</p>
+</li>
+<li>
+<p>(tan2024structuralbasisof pages 3-4): Jiaxing Tan, Ling Zhang, Xingtong Zhou, Siyu Han, Yan-Jie Zhou, and Yongqun Zhu. Structural basis of the bacterial flagellar motor rotational switching. Cell Research, 34:788-801, Apr 2024. URL: https://doi.org/10.1101/2024.04.30.591856, doi:10.1101/2024.04.30.591856. This article has 44 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(johnson2024structuralbasisof media 93561bae): Steven Johnson, Justin C. Deme, Emily J. Furlong, Joseph J. E. Caesar, Fabienne F. V. Chevance, Kelly T. Hughes, and Susan M. Lea. Structural basis of directional switching by the bacterial flagellum. Nature microbiology, 9:1282-1292, Mar 2024. URL: https://doi.org/10.1038/s41564-024-01630-z, doi:10.1038/s41564-024-01630-z. This article has 59 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="cheY-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000010 Figure 6c provides a comprehensive schematic illustrating the mechanism of directional switching in the bacterial flagellum. It sho" src="cheY-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>antani2024reassessingthestandard pages 1-3</li>
+<li>johnson2024structuralbasisof pages 7-10</li>
+<li>he2022geneticcodeexpansion pages 6-7</li>
+<li>tan2024structuralbasisof pages 3-4</li>
+<li>johnson2024structuralbasisof pages 1-5</li>
+<li>he2025coordinatedregulationof pages 3-5</li>
+<li>https://doi.org/10.1111/j.1758-2229.2009.00084</li>
+<li>https://doi.org/10.1021/acssynbio.2c00325</li>
+<li>https://doi.org/10.1111/1574-6976.12081;</li>
+<li>https://doi.org/10.7554/elife.100914.2</li>
+<li>https://doi.org/10.1111/1574-6976.12081</li>
+<li>https://doi.org/10.1038/s41564-024-01630-z</li>
+<li>https://doi.org/10.1146/annurev-chembioeng-100722-114625;</li>
+<li>https://doi.org/10.1146/annurev-chembioeng-100722-114625</li>
+<li>https://doi.org/10.1101/2024.04.30.591856</li>
+<li>https://doi.org/10.1111/j.1758-2229.2009.00084,</li>
+<li>https://doi.org/10.1021/acssynbio.2c00325,</li>
+<li>https://doi.org/10.1111/1574-6976.12081,</li>
+<li>https://doi.org/10.1146/annurev-chembioeng-100722-114625,</li>
+<li>https://doi.org/10.1038/s41564-024-01630-z,</li>
+<li>https://doi.org/10.7554/elife.100914.2,</li>
+<li>https://doi.org/10.1101/2024.04.30.591856,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88EW2
+gene_symbol: cheY
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  CheY (PP_4340) is the chemotaxis response regulator of Pseudomonas putida KT2440.
+  It is a small (124 aa), single-domain receiver-type response regulator of the
+  CheY/CheY-like superfamily, consisting essentially of a single REC (response
+  regulatory) domain with a conserved phosphoaccepting aspartate (Asp52 in this
+  protein) and a Mg2+ cofactor required for phosphochemistry. In the bacterial
+  chemotaxis two-component signaling pathway, chemoreceptors regulate the histidine
+  kinase CheA, which autophosphorylates and transfers the phosphoryl group to the
+  active-site aspartate of CheY. Phosphorylated CheY (CheY-P) diffuses through the
+  cytoplasm to the flagellar motor, where it binds the C-ring switch components
+  (FliM/FliN) at the cytoplasmic face of the motor, shifting the rotational bias
+  toward clockwise rotation and thereby causing cell tumbling and reorientation. The
+  dephosphorylated state is restored by CheY-P dephosphorylation (by CheZ in canonical
+  systems), giving the signal its transient, rapidly resettable character.
+  Functionally, CheY acts as the diffusible output element of the chemosensory signal
+  transduction system, converting receptor/kinase activity into changes in flagellar
+  motor behavior and hence directed motility (chemotaxis).
+existing_annotations:
+- term:
+    id: GO:0000160
+    label: phosphorelay signal transduction system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      CheY is the response regulator (receiver domain) of the chemotaxis
+      two-component/phosphorelay signaling system; it accepts a phosphoryl group from
+      the histidine kinase CheA. This term correctly captures the core signaling role
+      and is well supported by the conserved REC domain (IPR001789) and the conserved
+      phosphoaccepting aspartate.
+    action: ACCEPT
+    reason: &gt;-
+      Directly reflects the central, well-established function of CheY as the
+      response-regulator output of the chemotaxis phosphorelay. The InterPro-based IEA
+      mapping is biologically appropriate and consistent with the domain architecture
+      and with KT2440-specific evidence that CheY (PP_4340) is phosphorylated by CheA
+      (PP_4338).
+    supported_by:
+    - reference_id: file:PSEPK/cheY/cheY-deep-research-falcon.md
+      supporting_text: &gt;-
+        Deep research synthesizes KT2440-specific and general chemotaxis evidence that
+        CheY (PP_4340) is a chemosensory response regulator activated by phosphotransfer
+        from the histidine kinase CheA (PP_4338), the defining step of the chemotaxis
+        phosphorelay.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      CheY is a soluble, diffusible cytoplasmic response regulator that shuttles
+      between the receptor-associated CheA kinase complex and the cytoplasmic C-ring of
+      the flagellar motor. A cytoplasmic localization is consistent with the
+      receiver-domain-only architecture (no signal peptide or transmembrane segments)
+      and with the established mechanism of CheY action.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is well supported for single-domain CheY response
+      regulators and matches the UniProt subcellular location mapping. Although the
+      action occurs at the motor, the protein itself is a freely diffusible cytoplasmic
+      component.
+core_functions:
+- description: &gt;-
+    Receiver/response-regulator component of the chemotaxis phosphorelay that accepts a
+    phosphoryl group on its conserved active-site aspartate from the histidine kinase
+    CheA.
+  supported_by:
+  - reference_id: PMID:36287825
+    full_text_unavailable: true
+    supporting_text: &gt;-
+      KT2440 study describes CheY (PP_4340) as a chemosensory response regulator
+      activated by phosphorylation from the upstream histidine kinase CheA (PP_4338),
+      with photocrosslinking/proteomics supporting a CheY-CheA interaction.
+  - reference_id: PMID:25100612
+    full_text_unavailable: true
+    supporting_text: &gt;-
+      Pseudomonas chemotaxis review states CheA phosphorylates CheY, the diffusible
+      response regulator that transmits the chemotaxis signal to the flagellar motor.
+  molecular_function:
+    id: GO:0000156
+    label: phosphorelay response regulator activity
+  directly_involved_in:
+  - id: GO:0000160
+    label: phosphorelay signal transduction system
+  - id: GO:0006935
+    label: chemotaxis
+- description: &gt;-
+    As phosphorylated CheY-P, binds the flagellar motor switch (C-ring; FliM/FliN) to
+    bias rotation toward clockwise, controlling tumbling and hence chemotactic motility.
+  supported_by:
+  - reference_id: PMID:25100612
+    full_text_unavailable: true
+    supporting_text: &gt;-
+      Review describes CheY as transmitting the chemotaxis signal to the flagellar
+      motor, with CheY-P modulating motor rotational bias.
+  directly_involved_in:
+  - id: GO:0006935
+    label: chemotaxis
+proposed_new_terms: []
+suggested_questions:
+- question: Does deletion of PP_4340 (cheY) in P. putida KT2440 produce the expected smooth-swimming (non-tumbling) chemotaxis-defective phenotype, and which of the multiple KT2440 chemosensory pathways does it serve?
+- question: Which flagellar switch components (FliM/FliN/FliG) does P. putida CheY-P engage, and is the binding interface conserved relative to the E. coli paradigm?
+suggested_experiments:
+- description: Construct a PP_4340 deletion mutant and assess swimming/tumbling behavior and chemotaxis toward defined attractants to confirm the predicted role in motor switching.
+- description: Reconstitute CheA-CheY phosphotransfer in vitro with KT2440 proteins and measure phosphorylation kinetics and Mg2+ dependence at the active-site aspartate (Asp52).
+references:
+- id: file:PSEPK/cheY/cheY-deep-research-falcon.md
+  title: Deep research report on cheY (PP_4340) in Pseudomonas putida KT2440
+  findings: []
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:36287825
+  title: Genetic Code Expansion in Pseudomonas putida KT2440
+  findings:
+  - statement: &gt;-
+      KT2440 CheY (PP_4340) is described as a chemosensory response regulator activated
+      by phosphorylation from CheA (PP_4338); photocrosslinking proteomics supported a
+      CheY-CheA interaction in KT2440.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Corrected identifier. The deep-research report&#39;s original PMID:36346907 was a
+      wrong identifier (resolved to an unrelated kill-switch toxin paper). The intended
+      paper is He et al. 2022 (DOI 10.1021/acssynbio.2c00325); doi_to_pmid resolved this
+      to PMID:36287825, whose PubMed title &#34;Genetic Code Expansion in Pseudomonas putida
+      KT2440&#34; matches. Abstract-only in cache.
+- id: PMID:25100612
+  title: Pseudomonas chemotaxis
+  findings:
+  - statement: &gt;-
+      CheA phosphorylates CheY; CheY-P is the diffusible response regulator that
+      transmits the chemotaxis signal to the flagellar motor and is dephosphorylated by
+      CheZ in canonical systems.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Corrected identifier. The deep-research report&#39;s original PMID:26442807 was a
+      wrong identifier (resolved to an unrelated geology paper). The intended paper is
+      Sampedro et al. 2015 &#34;Pseudomonas chemotaxis&#34; (FEMS Microbiology Reviews, DOI
+      10.1111/1574-6976.12081); doi_to_pmid resolved this to PMID:25100612, whose PubMed
+      title matches. Abstract-only in cache.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

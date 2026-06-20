@@ -1,3 +1,7 @@
+---
+title: "Structure-Informed Complex Function Attribution: Human Complex IV COX2 Copper-Maturation Module"
+---
+
 # Structure-Informed Complex Function Attribution: Human Complex IV COX2 Copper-Maturation Module
 
 ## Project Context
@@ -24,10 +28,10 @@ Evaluate the human Complex IV COX2 copper-maturation module:
 
 Project artifacts already exist and can be treated as context, not final evidence:
 
-- `analysis/complex_iv_boltz/README.md`
-- `analysis/complex_iv_boltz/domain_manifest.csv`
-- `analysis/complex_iv_boltz/RESULTS_MODEL_C_DOMAINS_CU_BIOLM.md`
-- `analysis/complex_iv_boltz/RESULTS_MODEL_A_COX2_SCO1_DOMAINS_CU_BIOLM.md`
+- `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iv_boltz/README.md`
+- `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iv_boltz/domain_manifest.csv`
+- `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iv_boltz/RESULTS_MODEL_C_DOMAINS_CU_BIOLM.md`
+- `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iv_boltz/RESULTS_MODEL_A_COX2_SCO1_DOMAINS_CU_BIOLM.md`
 - `projects/PROTEIN_COMPLEX_FUNCTIONS.md`
 - `projects/OXPHOS.md`
 

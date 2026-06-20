@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: TOR1 (S. cerevisiae)
 
-Source: TOR1-deep-research-bioreason-rl.md
+Source: TOR1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

@@ -1,0 +1,2459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pqqF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pqqF</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QV3" target="_blank" class="term-link">
+                        Q88QV3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pqqF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QV3" data-a="DESCRIPTION: pqqF (PP_0381, Q88QV3) encodes a zinc-dependent pe..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>pqqF (PP_0381, Q88QV3) encodes a zinc-dependent peptidase M16-family metalloendopeptidase required for pyrroloquinoline quinone (PQQ) biosynthesis in P. putida KT2440. It lies in the chromosomal PQQ biosynthesis locus organized pqqFABCDEG, where pqqF is transcribed independently of the core pqqCDEG module. By analogy to characterized orthologs (Serratia sp. FS14 PqqF; the Methylorubrum extorquens AM1 two-component PqqF/PqqG M16B protease), PqqF is a proteolytic processing factor that acts on the ribosomally synthesized PQQ precursor peptide PqqA, cleaving it to help liberate the Glu/Tyr-derived intermediate that downstream enzymes convert to PQQ. PqqF essentiality varies across bacteria and may be substituted by nonspecific cellular proteases in some species. No KT2440-specific biochemical assay of Q88QV3 has been reported; functional assignments are inferences from family, structure, and high-confidence orthologs.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                                    GO:0004222
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QV3" data-a="GO:0004222" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the best current molecular-function annotation for PqqF. UniProt assigns PqqF to the peptidase M16 family with a bound zinc ion, and the GOA record maps it to metalloendopeptidase activity. Deep research confirms that characterized PqqF orthologs are zinc-dependent M16-family metallopeptidases that act on the PQQ precursor peptide PqqA (Serratia FS14 crystal structure; Methylorubrum two-component PqqF/PqqG protease).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The peptidase M16 family assignment, the conserved Zn-binding/active-site residues, and direct biochemical/structural evidence from PqqF orthologs all support a zinc metalloendopeptidase function in PQQ maturation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the peptidase M16 family.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0004222	metalloendopeptidase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PqqF/PqqG are **M16-family zinc metallopeptidases** acting on the PQQ precursor peptide PqqA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QV3" data-a="GO:0006508" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proteolysis is directionally correct for an M16 metalloendopeptidase that cleaves the PqqA precursor peptide, but it is too broad to represent the core biological role of this pathway enzyme. The informative biological process is pyrroloquinoline quinone biosynthesis, within which the proteolytic step liberates the PQQ precursor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The more informative biological process is pyrroloquinoline quinone biosynthesis; generic proteolysis captures only the chemistry, not the pathway context in which PqqF processes PqqA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the peptidase M16 family.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0006508	proteolysis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">zinc-dependent M16-family endopeptidase that participates in **processing the PqqA precursor peptide**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QV3" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc ion binding is consistent with the metalloendopeptidase assignment and should be retained as a non-core cofactor-binding annotation. UniProt records one zinc ion bound per subunit with conserved Zn-coordinating residues, and characterized PqqF orthologs are zinc-dependent M16 metallopeptidases.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The core function is the pathway metalloendopeptidase activity, with zinc binding as a supporting cofactor feature required for catalysis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">COFACTOR:</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0008270	zinc ion binding</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PqqF/PqqG are **M16-family zinc metallopeptidases** acting on the PQQ precursor peptide PqqA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018189" target="_blank" class="term-link">
+                                    GO:0018189
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroloquinoline quinone biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QV3" data-a="GO:0018189" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct core process annotation. PqqF is explicitly required for coenzyme PQQ biosynthesis, is part of the UniPathway PQQ pathway, and lies within the KT2440 PQQ biosynthesis locus organized pqqFABCDEG. The GO definition of PQQ biosynthesis itself notes that PQQ is made from a small peptide whose remaining residues are removed, which is precisely the proteolytic role attributed to PqqF acting on PqqA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The pathway-specific PQQ biosynthesis term captures the physiological context of the peptidase activity; deep research places PqqF within the canonical pqqFABCDEG locus and the PqqA-processing step of PQQ maturation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Required for coenzyme pyrroloquinoline quinone (PQQ)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PATHWAY: Cofactor biosynthesis; pyrroloquinoline quinone biosynthesis.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0018189	pyrroloquinoline quinone biosynthetic process</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">pqqFABCDEG</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QV3" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Metal ion binding is overly broad once zinc ion binding and metalloendopeptidase activity are present. The specific cofactor is a single zinc ion per subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Prefer the more specific zinc ion binding term for the cofactor feature; generic metal ion binding adds no information beyond GO:0008270.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0046872	metal ion binding</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pqqF/pqqF-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0008270	zinc ion binding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PqqF is a zinc-dependent peptidase M16-family metalloendopeptidase that acts on the ribosomally synthesized PQQ precursor peptide PqqA, performing the proteolytic processing step required during pyrroloquinoline quinone biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88QV3" data-a="FUNCTION: PqqF is a zinc-dependent peptidase M16-family meta..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                            metalloendopeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018189" target="_blank" class="term-link">
+                                pyrroloquinoline quinone biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/pqqF/pqqF-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Required for coenzyme pyrroloquinoline quinone (PQQ)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/pqqF/pqqF-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Belongs to the peptidase M16 family.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PqqF/PqqG are **M16-family zinc metallopeptidases** acting on the PQQ precursor peptide PqqA</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">zinc-dependent M16-family endopeptidase that participates in **processing the PqqA precursor peptide**</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pqqF/pqqF-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB entry for pqqF (Coenzyme PQQ synthesis protein F)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"Required for coenzyme pyrroloquinoline quinone (PQQ)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"Belongs to the peptidase M16 family."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"PATHWAY: Cofactor biosynthesis; pyrroloquinoline quinone biosynthesis."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pqqF/pqqF-goa.tsv
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">QuickGO GOA annotations for pqqF</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"GO:0018189	pyrroloquinoline quinone biosynthetic process"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"GO:0004222	metalloendopeptidase activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for pqqF (Q88QV3, P. putida KT2440)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"PqqF/PqqG are **M16-family zinc metallopeptidases** acting on the PQQ precursor peptide PqqA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"zinc-dependent M16-family endopeptidase that participates in **processing the PqqA precursor peptide**"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"pqqF is transcribed independently"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"two-component M16B metallopeptidase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"high activity toward PqqA in vitro and binds as a heterodimer with **KD ≈ 300 ± 70 nM**"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"catalytic cavity volume of ~**9400 Å³**, suggested to define specificity for small peptide substrates like PqqA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+                        
+                        <div class="finding-text">"PqqF is variably present and may be replaceable by non-specific proteases in some systems"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the direct PqqF substrate in KT2440 PQQ biosynthesis, and does it process the cross-linked PqqA-derived intermediate, with or without a PqqG partner?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88QV3" data-a="Q: What is the direct PqqF substrate in KT2440 PQQ bi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare PqqA-derived peptide fragments and PQQ accumulation in wild-type, pqqF deletion, and catalytic-site (Zn-binding) mutant strains using targeted LC-MS/MS, paralleling the in vitro PqqA cleavage assays established for the Methylorubrum extorquens PqqF/PqqG protease.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PqqF is the zinc metalloendopeptidase that processes PqqA-derived intermediates during KT2440 PQQ maturation.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetics plus peptidomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88QV3" data-a="EXPERIMENT: Compare PqqA-derived peptide fragments and PQQ acc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pqqF-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QV3" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">22 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-03T02:01:49.757945</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pqqF-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pqqF-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000017 Figure 1A from the document provides a schematic of the computationally predicted *pqq* operon structure in *Pseudomonas putida* KT</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-pqqf-uniprot-q88qv3-locus-pp_0381-in-pseudomonas-putida-kt2440">Comprehensive research report: <strong>pqqF</strong> (UniProt Q88QV3; locus PP_0381) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-geneprotein-identity-verification-mandatory">0) Gene/protein identity verification (mandatory)</h3>
+<p>The target protein is <strong>PqqF</strong>, annotated as <strong>“Coenzyme PQQ synthesis protein F”</strong> in <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054/DSM 6125/NCIMB 11950). In KT2440, a dedicated <strong>PQQ biosynthesis gene region</strong> contains the gene order <strong>pqqFABCDEG</strong>, and <em>pqqF</em> is explicitly included in this locus and experimentally examined at the transcript level, confirming the symbol-to-function context (PQQ locus gene) in the correct organism (KT2440) (Aug 2016) https://doi.org/10.1128/aem.00813-16 (an2016regulationofpyrroloquinoline pages 3-5, an2016regulationofpyrroloquinoline pages 1-2). This matches the UniProt-provided family expectation that PqqF is a <strong>metalloendopeptidase</strong> implicated in PQQ biogenesis; primary structural/biochemical work in other bacteria shows PqqF/PqqG are <strong>M16-family zinc metallopeptidases</strong> acting on the PQQ precursor peptide PqqA (Jul 2016; Oct 2019) https://doi.org/10.1074/jbc.m115.711226 ; https://doi.org/10.1074/jbc.ra119.009684 (wei2016crystalstructureand pages 1-2, martins2019atwocomponentprotease pages 2-3).</p>
+<p><strong>Ambiguity check:</strong> The symbol <em>pqqF</em> is used across diverse bacteria with variable operon structures; however, the KT2440 locus content and co-location with canonical <em>pqq</em> genes substantively anchors Q88QV3/PP_0381 as the PQQ-pathway PqqF rather than an unrelated M16 peptidase (an2016regulationofpyrroloquinoline pages 3-5, an2016regulationofpyrroloquinoline pages 1-2).</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-pyrroloquinoline-quinone-pqq">1.1 Pyrroloquinoline quinone (PQQ)</h4>
+<p>PQQ is a <strong>redox cofactor</strong> used by several bacterial dehydrogenases (notably PQQ-dependent glucose dehydrogenases) and is biosynthesized by a conserved enzymatic pathway from a short ribosomally produced peptide precursor (PqqA) (Apr 2014) https://doi.org/10.1021/cr400475g (klinman2014intriguesandintricacies pages 2-4).</p>
+<h4 id="12-pqq-biosynthesis-is-a-ripp-like-pathway">1.2 PQQ biosynthesis is a “RiPP-like” pathway</h4>
+<p>A widely accepted framework is that PQQ is derived from the peptide <strong>PqqA</strong>, which contains conserved <strong>Glu and Tyr residues</strong> that become incorporated into the PQQ scaffold after post-translational modification and processing (Apr 2014) https://doi.org/10.1021/cr400475g (klinman2014intriguesandintricacies pages 2-4). Mechanistically:<br />
+- <strong>PqqE</strong> is a radical SAM enzyme implicated in the difficult C–C bond formation step between residues in PqqA (Apr 2014) https://doi.org/10.1021/cr400475g (klinman2014intriguesandintricacies pages 2-4).<br />
+- <strong>PqqD</strong> acts as a small protein partner/chaperone engaging PqqE and influencing its structural/electronic properties (Apr 2014) https://doi.org/10.1021/cr400475g (klinman2014intriguesandintricacies pages 2-4).<br />
+- <strong>PqqB</strong> is suggested (from structural homology) to be a metallo-oxygenase-like component involved in intermediate processing (Apr 2014) https://doi.org/10.1021/cr400475g (klinman2014intriguesandintricacies pages 2-4).<br />
+- <strong>PqqC</strong> catalyzes the final oxidative conversion to PQQ via an <strong>eight-electron oxidation</strong>, consuming O2 and producing H2O2 (Apr 2014) https://doi.org/10.1021/cr400475g (klinman2014intriguesandintricacies pages 2-4).</p>
+<h4 id="13-where-pqqf-fits-conceptually">1.3 Where PqqF fits conceptually</h4>
+<p><strong>PqqF</strong> (and in some taxa, <strong>PqqG</strong>) are best understood as <strong>proteolytic processing factors</strong> required to excise/liberate the modified Glu/Tyr-containing portion of PqqA after PqqE/PqqD-dependent crosslinking, enabling downstream enzymes (e.g., PqqB) to act on an appropriate small intermediate (Oct 2019) https://doi.org/10.1074/jbc.ra119.009684 (martins2019atwocomponentprotease pages 1-2).</p>
+<p>A key nuance in “current understanding” is that <strong>PqqF is not universally essential across bacteria</strong>: comparative analyses and reviews note that <em>pqqF</em> can be absent from many annotated pqq operons, implying functional replacement by other cellular proteases in some organisms (Apr 2014) https://doi.org/10.1021/cr400475g (klinman2014intriguesandintricacies pages 2-4). This variability is consistent with primary and comparative accounts that low-level PQQ can sometimes be detected without PqqF, suggesting redundancy (rosefigura2010investigationofthe pages 12-15, rosefigura2010investigationofthe pages 82-85).</p>
+<hr />
+<h3 id="2-functional-annotation-of-pqqf-q88qv3-in-pseudomonas-putida-kt2440">2) Functional annotation of <strong>PqqF (Q88QV3)</strong> in <em>Pseudomonas putida</em> KT2440</h3>
+<h4 id="21-genomic-context-and-transcriptional-organization-in-kt2440">2.1 Genomic context and transcriptional organization in KT2440</h4>
+<p>In <em>P. putida</em> KT2440, the PQQ biosynthesis locus is described as a <strong>seven-gene region</strong> organized <strong>pqqF, pqqA, pqqB, pqqC, pqqD, pqqE, pqqG</strong> (Aug 2016) https://doi.org/10.1128/aem.00813-16 (an2016regulationofpyrroloquinoline pages 3-5). A computational prediction supported multiple promoters/terminators: promoters upstream of <em>pqqF</em>, <em>pqqA</em>, and <em>pqqC</em>, with terminators between <em>pqqA–pqqB</em> and <em>pqqB–pqqC</em>, and a terminator between <em>pqqF</em> and <em>pqqA</em> (an2016regulationofpyrroloquinoline pages 3-5, an2016regulationofpyrroloquinoline media e93443c6).</p>
+<p>Experimentally, semiquantitative RT-PCR supported that <strong>pqqF is transcribed independently</strong> (no intergenic band consistent with a continuous <em>pqqF–pqqA</em> transcript), whereas <strong>pqqG is co-transcribed with pqqCDE</strong> (bands consistent with <em>pqqC–pqqD–pqqE–pqqG</em> transcript continuity) (Aug 2016) https://doi.org/10.1128/aem.00813-16 (an2016regulationofpyrroloquinoline pages 7-8).</p>
+<p><strong>Interpretation (expert synthesis):</strong> This transcript architecture is consistent with PqqF being an accessory/processing function whose expression can be decoupled from the “core” biosynthetic module (<em>pqqCDEG</em>), potentially allowing the cell to tune proteolytic capacity separately from radical chemistry/oxidative steps (an2016regulationofpyrroloquinoline pages 7-8, an2016regulationofpyrroloquinoline media e93443c6).</p>
+<h4 id="22-primary-biochemical-function-predicted-peptidase-acting-on-pqqa-derived-intermediates">2.2 Primary biochemical function: predicted peptidase acting on PqqA-derived intermediates</h4>
+<p>Direct biochemical characterization of <strong>KT2440 PqqF (Q88QV3)</strong> was not retrieved in the accessible literature set; thus, catalytic claims for Q88QV3 must be made as <strong>inference from high-confidence orthologous systems and protein family</strong>.</p>
+<p>The most direct mechanistic evidence for PqqF-like proteins in PQQ biosynthesis includes:<br />
+- <strong>Serratia sp. FS14 PqqF</strong> is a zinc-dependent M16-family metallopeptidase (clamshell architecture typical of M16 proteases) with a central chamber volume of ~<strong>9400 Å³</strong>, hypothesized to constrain substrate size to a small peptide such as PqqA (Jul 2016) https://doi.org/10.1074/jbc.m115.711226 (wei2016crystalstructureand pages 1-2).<br />
+- In <strong>Methylorubrum extorquens AM1</strong>, PqqF and PqqG form a <strong>two-component M16B metallopeptidase</strong> that shows high activity toward PqqA in vitro and binds as a heterodimer with <strong>KD ≈ 300 ± 70 nM</strong> (Oct 2019) https://doi.org/10.1074/jbc.ra119.009684 (martins2019atwocomponentprotease pages 2-3).</p>
+<p>Taken together, the best-supported functional assignment for KT2440 PqqF (Q88QV3) is:<br />
+- <strong>Molecular function:</strong> zinc-dependent endopeptidase/peptidase.<br />
+- <strong>Primary substrate (pathway context):</strong> the ribosomally produced PQQ precursor peptide <strong>PqqA</strong>, most plausibly after PqqE/PqqD-dependent crosslinking, to liberate a smaller intermediate for downstream processing (martins2019atwocomponentprotease pages 1-2, klinman2014intriguesandintricacies pages 2-4).<br />
+- <strong>Substrate specificity:</strong> species dependent. In Methylorubrum, the PqqF/PqqG complex exhibited unusual preference for cleaving at <strong>serine side chain contexts</strong> during PqqA processing (Oct 2019) https://doi.org/10.1074/jbc.ra119.009684 (martins2019atwocomponentprotease pages 1-2, martins2019atwocomponentprotease pages 2-3). Whether KT2440 PqqF shares this serine-preference is <strong>not experimentally established</strong> in the retrieved KT2440-specific sources.</p>
+<h4 id="23-cellular-localization-where-the-function-occurs">2.3 Cellular localization (where the function occurs)</h4>
+<p>No direct subcellular localization (e.g., fractionation, microscopy, signal peptide) for <strong>PqqF itself</strong> in KT2440 was found in the retrieved full texts. However, pathway physiology in Gram-negative bacteria provides a strong cellular context:<br />
+- In KT2440, PQQ-dependent glucose dehydrogenase (GDH) activity is assayed from <strong>membrane fractions</strong>, and the authors describe membrane-bound and soluble (periplasmic) GDHs in Gram-negative bacteria, indicating the functional PQQ-dependent oxidation system operates in the <strong>periplasmic/membrane-associated compartment</strong> (Aug 2016) https://doi.org/10.1128/aem.00813-16 (an2016regulationofpyrroloquinoline pages 1-2).<br />
+- In KT2440, the enzyme shows very high apparent affinity for PQQ (<strong>Km &lt; 0.1 µM</strong>, estimated), and membrane fractionation did not fully release PQQ from GDH, consistent with tight association in the membrane/periplasmic system (Aug 2016) https://doi.org/10.1128/aem.00813-16 (an2016regulationofpyrroloquinoline pages 7-8).</p>
+<p><strong>Expert synthesis:</strong> PQQ ultimately functions in periplasmic dehydrogenases, but <strong>PQQ biosynthesis enzymes (including PqqF)</strong> are generally expected to be <strong>cytosolic</strong> unless specific export/periplasmic maturation mechanisms exist. Because KT2440-specific localization evidence for PqqF is absent from retrieved sources, the safest annotation is “intracellular; exact compartment not experimentally determined here,” while noting that the <em>functionally deployed</em> PQQ cofactor is coupled to periplasmic dehydrogenase activity (an2016regulationofpyrroloquinoline pages 1-2).</p>
+<h4 id="24-pathway-role-and-essentiality-what-is-known-vs-inferred">2.4 Pathway role and essentiality: what is known vs inferred</h4>
+<p>Across species, authoritative review evidence indicates:<br />
+- <strong>Core essential genes</strong>: <em>pqqA, pqqC, pqqD, pqqE</em> are “absolutely required” in knockout studies for PQQ production (Apr 2014) https://doi.org/10.1021/cr400475g (klinman2014intriguesandintricacies pages 2-4).<br />
+- <strong>PqqF essentiality varies</strong>: PqqF is absent from many operons, and the review explicitly notes it has not been shown to be required in all systems; non-specific cellular proteases may carry out excision instead (Apr 2014) https://doi.org/10.1021/cr400475g (klinman2014intriguesandintricacies pages 2-4).</p>
+<p>In contrast, in Serratia sp. FS14, genetic evidence indicates <em>pqqF</em> was essential for PQQ-linked phenotypes used as a readout in that system (Jul 2016) https://doi.org/10.1074/jbc.m115.711226 (wei2016crystalstructureand pages 1-2). In KT2440, the retrieved study centered on regulation (not gene essentiality knockouts), so essentiality of KT2440 <em>pqqF</em> remains <strong>unresolved</strong> from the available KT2440-specific evidence.</p>
+<hr />
+<h3 id="3-recent-developments-and-latest-research-prioritize-20232024">3) Recent developments and latest research (prioritize 2023–2024)</h3>
+<p>A directly relevant 2024 publication focuses on using <strong>pqqE</strong> as a molecular marker for traceability of Gram-negative phosphate-solubilizing bacteria associated with plants (Aug 2024) https://doi.org/10.1007/s00294-024-01296-4 (paper retrieved but not deeply evidenced in the available excerpts). Its relevance to PqqF is primarily as <strong>recent synthesis</strong> of typical operon organization where <em>pqqA–E</em> are operonic and <strong>pqqF</strong> (and sometimes <strong>pqqG</strong>) are accessory genes in some bacteria (anzuay2024employmentofpqqe; snippet in tool output).</p>
+<p>A dedicated 2024 review on microbial PQQ synthesis was identified by search but was <strong>unobtainable through the current tooling</strong> (World Journal of Microbiology and Biotechnology; DOI: 10.1007/s11274-023-03833-8), limiting how comprehensively 2023–2024 developments can be covered here.</p>
+<p><strong>Net assessment:</strong> the strongest mechanistic advances regarding the PqqF/PqqG step in PQQ maturation remain the 2016 structural and 2019 biochemical studies that explicitly address the previously “missing” protease step (wei2016crystalstructureand pages 1-2, martins2019atwocomponentprotease pages 1-2).</p>
+<hr />
+<h3 id="4-current-applications-and-real-world-implementations-linked-to-pqqfpqq-pathway">4) Current applications and real-world implementations linked to pqqF/PQQ pathway</h3>
+<p>While pqqF itself is a biosynthetic accessory gene, its pathway product <strong>PQQ</strong> has clear real-world roles through <strong>PQQ-dependent glucose dehydrogenase (GDH)</strong> in Gram-negative bacteria:</p>
+<ol>
+<li>
+<p><strong>Phosphate solubilization and rhizosphere function</strong>: In KT2440, the study ties <strong>gcd</strong> and <em>pqq</em> gene expression to conditions of <strong>low/zero soluble phosphate</strong> and frames PQQ-dependent GDH as central to gluconic acid production relevant to phosphate solubilization physiology (Aug 2016) https://doi.org/10.1128/aem.00813-16 (an2016regulationofpyrroloquinoline pages 7-8, an2016regulationofpyrroloquinoline pages 1-2).</p>
+</li>
+<li>
+<p><strong>Biocatalysis and oxidative biotransformations</strong>: PQQ-dependent dehydrogenases are widely exploited conceptually for oxidation chemistry, and pathway engineering frequently targets PQQ availability as a cofactor supply constraint. In KT2440 specifically, the obtained evidence is about regulation/physiology rather than an engineered implementation, but it provides a foundation for tuning PQQ output through regulatory control of the <em>pqq</em> region (an2016regulationofpyrroloquinoline pages 7-8).</p>
+</li>
+<li>
+<p><strong>Analytical/proteomics tool potential</strong> (niche): The serine-side-chain cleavage specificity reported for the Methylorubrum PqqF/PqqG protease complex was proposed as potentially useful in proteomic analyses of serine-phosphorylated proteins (Oct 2019) https://doi.org/10.1074/jbc.ra119.009684 (martins2019atwocomponentprotease pages 1-2). This is an expert-proposed application rather than established practice.</p>
+</li>
+</ol>
+<hr />
+<h3 id="5-quantitative-statistics-and-data-from-accessible-primary-sources">5) Quantitative statistics and data (from accessible primary sources)</h3>
+<p>Key quantitative findings relevant to functional annotation include:</p>
+<ul>
+<li>
+<p><strong>PqqF/PqqG binding affinity</strong>: ITC-derived <strong>KD = 300 ± 70 nM</strong> for the PqqF–PqqG complex in <em>Methylorubrum extorquens</em> (Oct 2019) https://doi.org/10.1074/jbc.ra119.009684 (martins2019atwocomponentprotease pages 2-3).</p>
+</li>
+<li>
+<p><strong>In vitro proteolysis assay regime</strong>: Proteolysis assays commonly used ~<strong>2 µM enzyme</strong> with <strong>20 µM PqqA substrate</strong>, monitored by LC–MS (Oct 2019) https://doi.org/10.1074/jbc.ra119.009684 (martins2019atwocomponentprotease pages 8-10).</p>
+</li>
+<li>
+<p><strong>Structural constraint relevant to substrate size</strong>: Serratia PqqF adopts a closed clamshell and has a catalytic cavity volume of ~<strong>9400 Å³</strong>, suggested to define specificity for small peptide substrates like PqqA (Jul 2016) https://doi.org/10.1074/jbc.m115.711226 (wei2016crystalstructureand pages 1-2).</p>
+</li>
+<li>
+<p><strong>KT2440 GDH apparent affinity for PQQ</strong>: Apparent <strong>Km &lt; 0.1 µM</strong> for PQQ-dependent GDH (membrane-associated) in <em>P. putida</em> KT2440 (Aug 2016) https://doi.org/10.1128/aem.00813-16 (an2016regulationofpyrroloquinoline pages 7-8).</p>
+</li>
+</ul>
+<hr />
+<h3 id="6-visual-evidence-kt2440-pqq-operon-schematic">6) Visual evidence: KT2440 pqq operon schematic</h3>
+<p>The following figure supports the KT2440 locus organization, predicted promoters/terminators, and RT-PCR primer placement used to infer independent transcription of <em>pqqF</em> and operonic organization of <em>pqqCDEG</em>:</p>
+<p>(an2016regulationofpyrroloquinoline media e93443c6)</p>
+<hr />
+<h3 id="7-integrated-expert-interpretation-authoritative-synthesis">7) Integrated expert interpretation (authoritative synthesis)</h3>
+<ol>
+<li>
+<p><strong>Most defensible primary functional annotation for KT2440 PqqF (Q88QV3):</strong> a zinc-dependent M16-family endopeptidase that participates in <strong>processing the PqqA precursor peptide</strong> (direct evidence for this step comes from high-quality primary studies in other bacteria, especially the biochemical demonstration of a PqqF/PqqG protease complex acting on PqqA) (martins2019atwocomponentprotease pages 1-2, martins2019atwocomponentprotease pages 2-3).</p>
+</li>
+<li>
+<p><strong>Why PqqF can be hard to validate genetically across organisms:</strong> Authoritative review analysis emphasizes that while PqqA/C/D/E are core and essential, PqqF is variably present and may be replaceable by non-specific proteases in some systems (klinman2014intriguesandintricacies pages 2-4). This provides a mechanistic rationale for why <em>pqqF</em> knockout phenotypes can differ by species or may be subtle.</p>
+</li>
+<li>
+<p><strong>KT2440-specific regulatory architecture supports its accessory role:</strong> Independent transcription of <em>pqqF</em> in KT2440 is consistent with “accessory, conditionally important” processing capacity that can be regulated separately from the core oxidative/radical steps and from deployment of PQQ in periplasmic GDH (an2016regulationofpyrroloquinoline pages 7-8, an2016regulationofpyrroloquinoline media e93443c6).</p>
+</li>
+</ol>
+<hr />
+<h2 id="evidence-summary-table">Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Organism / strain</th>
+<th>Gene(s)</th>
+<th>Protein family / subfamily</th>
+<th>Key experimental evidence</th>
+<th>Proposed / observed substrate and cleavage specificity</th>
+<th>Notes on essentiality / pathway role</th>
+<th>Citation IDs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td><strong>pqqF</strong> (within <em>pqqFABCDEG</em> region), <strong>pqqG</strong></td>
+<td>Context consistent with PqqF/PqqG as PQQ-pathway protease-associated genes; direct family assignment in KT2440 paper is not biochemical but operon organization matches known PQQ systems</td>
+<td>Strain-specific operon/transcription analysis showed a seven-gene region organized as <em>pqqFABCDEG</em>; <em>pqqF</em> is transcribed independently, while <em>pqqG</em> is cotranscribed with <em>pqqCDE</em>. Membrane-fraction assays and extracellular PQQ measurements linked the pathway to PQQ-dependent GDH physiology. Figure 1A supports predicted promoters/terminators and transcript structure</td>
+<td>No direct cleavage assay for KT2440 PqqF/PqqG reported. Functional context places them in maturation of the PqqA-derived PQQ precursor; GDH activity occurs in the periplasm/membrane-associated system, but no direct subcellular localization of PqqF/PqqG was shown</td>
+<td>Evidence in KT2440 is strongest for gene organization/regulation, not direct protease biochemistry. Supports assignment of <em>pqqF</em>/<em>pqqG</em> to the PQQ biosynthetic locus and pathway control under phosphate limitation</td>
+<td>(an2016regulationofpyrroloquinoline pages 7-8, an2016regulationofpyrroloquinoline pages 3-5, an2016regulationofpyrroloquinoline pages 1-2, an2016regulationofpyrroloquinoline media e93443c6)</td>
+</tr>
+<tr>
+<td><em>Serratia</em> sp. FS14</td>
+<td><strong>pqqF</strong></td>
+<td>M16 Zn-metallopeptidase; structurally classified with inverzincin-like/M16A-type clamshell proteases</td>
+<td>X-ray crystal structure solved (PDB 5CIO); protein forms a closed clamshell with ~9400 Å³ chamber. Active-site Zn coordination and catalytic residues were identified. Genetic evidence: deletion of <em>pqqF</em> abolished a glucose-responsive phenotype used as a readout of PQQ biosynthesis</td>
+<td>Proposed substrate is the modified PqqA precursor peptide; authors infer cleavage around the conserved Glu/Tyr-derived cross-linked moiety to help liberate the PQQ precursor. Direct cleavage specificity remained incompletely resolved in this study</td>
+<td>In FS14, <em>pqqF</em> behaved as essential for PQQ biosynthesis by genetics, but exact proteolytic step remained inferential</td>
+<td>(wei2016crystalstructureand pages 1-2, wei2016crystalstructureand pages 2-4, wei2016crystalstructureand pages 10-11)</td>
+</tr>
+<tr>
+<td><em>Methylorubrum extorquens</em> AM1</td>
+<td><strong>pqqF</strong>, <strong>pqqG</strong></td>
+<td>Two-component M16B heterodimeric metallopeptidase</td>
+<td>Direct biochemical characterization of purified PqqF/PqqG showed high activity toward PqqA. Pull-down, SPR, and ITC demonstrated complex formation with ~1:1 stoichiometry and <strong>K</strong>_D ~300 ± 70 nM. Homology modeling against known M16B proteases supported the heterodimer architecture</td>
+<td>Observed substrate: PqqA peptide precursor. Time-course LC-MS data indicated strong preference for cleavage at serine-containing positions; authors proposed initial processing of cross-linked PqqA* followed by assistance from other cellular proteases</td>
+<td>Strongest direct evidence that PqqF/PqqG act as the PQQ-pathway processing protease. Also illustrates that in some bacteria the protease function is split between PqqF and PqqG rather than encoded by a single PqqF polypeptide</td>
+<td>(martins2019atwocomponentprotease pages 2-3, martins2019atwocomponentprotease pages 8-10, martins2019atwocomponentprotease pages 1-2, martins2019atwocomponentprotease pages 24-25)</td>
+</tr>
+<tr>
+<td>Cross-species pathway consensus</td>
+<td><strong>pqqF</strong> and sometimes <strong>pqqG</strong></td>
+<td>Protease-like PQQ accessory factors; generally M16-family Zn-dependent peptidases</td>
+<td>Reviews and comparative analyses place PqqA, PqqC, PqqD, and PqqE as core conserved PQQ-biosynthetic functions, whereas PqqF is variably present and PqqG is additional/poorly characterized in some taxa</td>
+<td>Proposed role is proteolytic excision of the Glu/Tyr-derived precursor from PqqA after PqqE/PqqD-dependent cross-link formation; exact cleavage pattern and whether nonspecific proteases assist vary by organism</td>
+<td>Essentiality is species dependent: some systems require <em>pqqF</em> genetically, whereas others produce low levels of PQQ without it, implying functional redundancy or replacement by other proteases</td>
+<td>(rosefigura2010investigationofthe pages 12-15, klinman2014intriguesandintricacies pages 2-4, rosefigura2010investigationofthe pages 82-85)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest available evidence for PqqF and PqqG in PQQ biosynthesis across key organisms. It highlights where evidence is direct biochemical proof versus operon-level or structural inference, which is useful for functional annotation of </em>Pseudomonas putida<em> KT2440 pqqF.</em></p>
+<hr />
+<h2 id="references-urls-and-publication-dates">References (URLs and publication dates)</h2>
+<ul>
+<li>
+<p>An, R.; Moe, L. A. <strong>Regulation of Pyrroloquinoline Quinone-Dependent Glucose Dehydrogenase Activity in the Model Rhizosphere-Dwelling Bacterium <em>Pseudomonas putida</em> KT2440.</strong> <em>Applied and Environmental Microbiology</em> (Aug 2016). https://doi.org/10.1128/aem.00813-16 (an2016regulationofpyrroloquinoline pages 7-8, an2016regulationofpyrroloquinoline pages 3-5, an2016regulationofpyrroloquinoline pages 1-2, an2016regulationofpyrroloquinoline media e93443c6)</p>
+</li>
+<li>
+<p>Wei, Q.; Ran, T.; Ma, C.; He, J.; Xu, D.; Wang, W. <strong>Crystal Structure and Function of PqqF Protein in the Pyrroloquinoline Quinone Biosynthetic Pathway.</strong> <em>Journal of Biological Chemistry</em> (Jul 2016). https://doi.org/10.1074/jbc.m115.711226 (wei2016crystalstructureand pages 1-2, wei2016crystalstructureand pages 2-4, wei2016crystalstructureand pages 10-11)</p>
+</li>
+<li>
+<p>Martins, A. M.; Latham, J. A.; Martel, P. J.; Barr, I.; Iavarone, A. T.; Klinman, J. P. <strong>A two-component protease in <em>Methylorubrum extorquens</em> with high activity toward the peptide precursor of the redox cofactor pyrroloquinoline quinone.</strong> <em>Journal of Biological Chemistry</em> (Oct 2019). https://doi.org/10.1074/jbc.ra119.009684 (martins2019atwocomponentprotease pages 2-3, martins2019atwocomponentprotease pages 8-10, martins2019atwocomponentprotease pages 1-2, martins2019atwocomponentprotease pages 24-25)</p>
+</li>
+<li>
+<p>Klinman, J. P.; Bonnot, F. <strong>Intrigues and intricacies of the biosynthetic pathways for the enzymatic quinocofactors: PQQ, TTQ, CTQ, TPQ, and LTQ.</strong> <em>Chemical Reviews</em> (Apr 2014). https://doi.org/10.1021/cr400475g (klinman2014intriguesandintricacies pages 2-4)</p>
+</li>
+<li>
+<p>RoseFigura, J. M. <strong>Investigation of the structure and mechanism of a PQQ biosynthetic pathway component, PqqC, and a bioinformatics analysis of potential PQQ producing …</strong> (2010; dissertation-like source as retrieved). (rosefigura2010investigationofthe pages 82-85, rosefigura2010investigationofthe pages 12-15)</p>
+</li>
+<li>
+<p>(Recent, 2024) Anzuay, M. S. et al. <strong>Employment of pqqE gene as molecular marker for the traceability of Gram negative phosphate solubilizing bacteria associated to plants.</strong> <em>Current Genetics</em> (Aug 2024). https://doi.org/10.1007/s00294-024-01296-4 (retrieved but not deeply excerpted in evidence snippets; included here as the most recent obtainable source from 2023–2024 tool search)</p>
+</li>
+</ul>
+<h3 id="notes-on-limitations">Notes on limitations</h3>
+<ul>
+<li>No KT2440-specific <strong>biochemical assay</strong> of Q88QV3 activity (PqqA cleavage, kinetics, metal dependence) or <strong>direct localization experiment</strong> for PqqF was retrieved in the available texts; KT2440-specific statements are therefore limited to operon structure, transcriptional organization, and pathway physiology/regulation.</li>
+<li>A highly relevant 2024 review on microbial PQQ synthesis was identified but not obtainable via the current retrieval tools, constraining the breadth of 2023–2024 “latest research” synthesis.</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(an2016regulationofpyrroloquinoline pages 3-5): Ran An and Luke A. Moe. Regulation of pyrroloquinoline quinone-dependent glucose dehydrogenase activity in the model rhizosphere-dwelling bacterium pseudomonas putida kt2440. Applied and Environmental Microbiology, 82:4955-4964, Aug 2016. URL: https://doi.org/10.1128/aem.00813-16, doi:10.1128/aem.00813-16. This article has 164 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(an2016regulationofpyrroloquinoline pages 1-2): Ran An and Luke A. Moe. Regulation of pyrroloquinoline quinone-dependent glucose dehydrogenase activity in the model rhizosphere-dwelling bacterium pseudomonas putida kt2440. Applied and Environmental Microbiology, 82:4955-4964, Aug 2016. URL: https://doi.org/10.1128/aem.00813-16, doi:10.1128/aem.00813-16. This article has 164 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2016crystalstructureand pages 1-2): Qiaoe Wei, Tingting Ran, Chencui Ma, Jianhua He, Dongqing Xu, and Weiwu Wang. Crystal structure and function of pqqf protein in the pyrroloquinoline quinone biosynthetic pathway. Journal of Biological Chemistry, 291:15575-15587, Jul 2016. URL: https://doi.org/10.1074/jbc.m115.711226, doi:10.1074/jbc.m115.711226. This article has 37 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martins2019atwocomponentprotease pages 2-3): Ana M. Martins, John A. Latham, Paulo J. Martel, Ian Barr, Anthony T. Iavarone, and Judith P. Klinman. A two-component protease in methylorubrum extorquens with high activity toward the peptide precursor of the redox cofactor pyrroloquinoline quinone. Journal of Biological Chemistry, 294:15025-15036, Oct 2019. URL: https://doi.org/10.1074/jbc.ra119.009684, doi:10.1074/jbc.ra119.009684. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(klinman2014intriguesandintricacies pages 2-4): Judith P. Klinman and Florence Bonnot. Intrigues and intricacies of the biosynthetic pathways for the enzymatic quinocofactors: pqq, ttq, ctq, tpq, and ltq. Chemical reviews, 114 8:4343-65, Apr 2014. URL: https://doi.org/10.1021/cr400475g, doi:10.1021/cr400475g. This article has 225 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martins2019atwocomponentprotease pages 1-2): Ana M. Martins, John A. Latham, Paulo J. Martel, Ian Barr, Anthony T. Iavarone, and Judith P. Klinman. A two-component protease in methylorubrum extorquens with high activity toward the peptide precursor of the redox cofactor pyrroloquinoline quinone. Journal of Biological Chemistry, 294:15025-15036, Oct 2019. URL: https://doi.org/10.1074/jbc.ra119.009684, doi:10.1074/jbc.ra119.009684. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rosefigura2010investigationofthe pages 12-15): JM RoseFigura. Investigation of the structure and mechanism of a pqq biosynthetic pathway component, pqqc, and a bioinformatics analysis of potential pqq producing …. Unknown journal, 2010.</p>
+</li>
+<li>
+<p>(rosefigura2010investigationofthe pages 82-85): JM RoseFigura. Investigation of the structure and mechanism of a pqq biosynthetic pathway component, pqqc, and a bioinformatics analysis of potential pqq producing …. Unknown journal, 2010.</p>
+</li>
+<li>
+<p>(an2016regulationofpyrroloquinoline media e93443c6): Ran An and Luke A. Moe. Regulation of pyrroloquinoline quinone-dependent glucose dehydrogenase activity in the model rhizosphere-dwelling bacterium pseudomonas putida kt2440. Applied and Environmental Microbiology, 82:4955-4964, Aug 2016. URL: https://doi.org/10.1128/aem.00813-16, doi:10.1128/aem.00813-16. This article has 164 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(an2016regulationofpyrroloquinoline pages 7-8): Ran An and Luke A. Moe. Regulation of pyrroloquinoline quinone-dependent glucose dehydrogenase activity in the model rhizosphere-dwelling bacterium pseudomonas putida kt2440. Applied and Environmental Microbiology, 82:4955-4964, Aug 2016. URL: https://doi.org/10.1128/aem.00813-16, doi:10.1128/aem.00813-16. This article has 164 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martins2019atwocomponentprotease pages 8-10): Ana M. Martins, John A. Latham, Paulo J. Martel, Ian Barr, Anthony T. Iavarone, and Judith P. Klinman. A two-component protease in methylorubrum extorquens with high activity toward the peptide precursor of the redox cofactor pyrroloquinoline quinone. Journal of Biological Chemistry, 294:15025-15036, Oct 2019. URL: https://doi.org/10.1074/jbc.ra119.009684, doi:10.1074/jbc.ra119.009684. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2016crystalstructureand pages 2-4): Qiaoe Wei, Tingting Ran, Chencui Ma, Jianhua He, Dongqing Xu, and Weiwu Wang. Crystal structure and function of pqqf protein in the pyrroloquinoline quinone biosynthetic pathway. Journal of Biological Chemistry, 291:15575-15587, Jul 2016. URL: https://doi.org/10.1074/jbc.m115.711226, doi:10.1074/jbc.m115.711226. This article has 37 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2016crystalstructureand pages 10-11): Qiaoe Wei, Tingting Ran, Chencui Ma, Jianhua He, Dongqing Xu, and Weiwu Wang. Crystal structure and function of pqqf protein in the pyrroloquinoline quinone biosynthetic pathway. Journal of Biological Chemistry, 291:15575-15587, Jul 2016. URL: https://doi.org/10.1074/jbc.m115.711226, doi:10.1074/jbc.m115.711226. This article has 37 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martins2019atwocomponentprotease pages 24-25): Ana M. Martins, John A. Latham, Paulo J. Martel, Ian Barr, Anthony T. Iavarone, and Judith P. Klinman. A two-component protease in methylorubrum extorquens with high activity toward the peptide precursor of the redox cofactor pyrroloquinoline quinone. Journal of Biological Chemistry, 294:15025-15036, Oct 2019. URL: https://doi.org/10.1074/jbc.ra119.009684, doi:10.1074/jbc.ra119.009684. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pqqF-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000017 Figure 1A from the document provides a schematic of the computationally predicted *pqq* operon structure in *Pseudomonas putida* KT" src="pqqF-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>klinman2014intriguesandintricacies pages 2-4</li>
+<li>martins2019atwocomponentprotease pages 1-2</li>
+<li>an2016regulationofpyrroloquinoline pages 3-5</li>
+<li>an2016regulationofpyrroloquinoline pages 7-8</li>
+<li>wei2016crystalstructureand pages 1-2</li>
+<li>martins2019atwocomponentprotease pages 2-3</li>
+<li>an2016regulationofpyrroloquinoline pages 1-2</li>
+<li>martins2019atwocomponentprotease pages 8-10</li>
+<li>rosefigura2010investigationofthe pages 12-15</li>
+<li>rosefigura2010investigationofthe pages 82-85</li>
+<li>wei2016crystalstructureand pages 2-4</li>
+<li>wei2016crystalstructureand pages 10-11</li>
+<li>martins2019atwocomponentprotease pages 24-25</li>
+<li>https://doi.org/10.1128/aem.00813-16</li>
+<li>https://doi.org/10.1074/jbc.m115.711226</li>
+<li>https://doi.org/10.1074/jbc.ra119.009684</li>
+<li>https://doi.org/10.1021/cr400475g</li>
+<li>https://doi.org/10.1007/s00294-024-01296-4</li>
+<li>https://doi.org/10.1128/aem.00813-16,</li>
+<li>https://doi.org/10.1074/jbc.m115.711226,</li>
+<li>https://doi.org/10.1074/jbc.ra119.009684,</li>
+<li>https://doi.org/10.1021/cr400475g,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QV3
+gene_symbol: pqqF
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: pqqF (PP_0381, Q88QV3) encodes a zinc-dependent peptidase M16-family metalloendopeptidase
+  required for pyrroloquinoline quinone (PQQ) biosynthesis in P. putida KT2440. It lies in
+  the chromosomal PQQ biosynthesis locus organized pqqFABCDEG, where pqqF is transcribed
+  independently of the core pqqCDEG module. By analogy to characterized orthologs (Serratia
+  sp. FS14 PqqF; the Methylorubrum extorquens AM1 two-component PqqF/PqqG M16B protease),
+  PqqF is a proteolytic processing factor that acts on the ribosomally synthesized PQQ precursor
+  peptide PqqA, cleaving it to help liberate the Glu/Tyr-derived intermediate that downstream
+  enzymes convert to PQQ. PqqF essentiality varies across bacteria and may be substituted by
+  nonspecific cellular proteases in some species. No KT2440-specific biochemical assay of Q88QV3
+  has been reported; functional assignments are inferences from family, structure, and
+  high-confidence orthologs.
+existing_annotations:
+- term:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the best current molecular-function annotation for PqqF. UniProt assigns PqqF
+      to the peptidase M16 family with a bound zinc ion, and the GOA record maps it to
+      metalloendopeptidase activity. Deep research confirms that characterized PqqF orthologs are
+      zinc-dependent M16-family metallopeptidases that act on the PQQ precursor peptide PqqA
+      (Serratia FS14 crystal structure; Methylorubrum two-component PqqF/PqqG protease).
+    action: ACCEPT
+    reason: The peptidase M16 family assignment, the conserved Zn-binding/active-site residues, and
+      direct biochemical/structural evidence from PqqF orthologs all support a zinc metalloendopeptidase
+      function in PQQ maturation.
+    supported_by:
+    - reference_id: file:PSEPK/pqqF/pqqF-uniprot.txt
+      supporting_text: Belongs to the peptidase M16 family.
+    - reference_id: file:PSEPK/pqqF/pqqF-goa.tsv
+      supporting_text: &#34;GO:0004222\tmetalloendopeptidase activity&#34;
+    - reference_id: file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+      supporting_text: PqqF/PqqG are **M16-family zinc metallopeptidases** acting on the PQQ precursor
+        peptide PqqA
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Proteolysis is directionally correct for an M16 metalloendopeptidase that cleaves the
+      PqqA precursor peptide, but it is too broad to represent the core biological role of this
+      pathway enzyme. The informative biological process is pyrroloquinoline quinone biosynthesis,
+      within which the proteolytic step liberates the PQQ precursor.
+    action: KEEP_AS_NON_CORE
+    reason: The more informative biological process is pyrroloquinoline quinone biosynthesis; generic
+      proteolysis captures only the chemistry, not the pathway context in which PqqF processes PqqA.
+    supported_by:
+    - reference_id: file:PSEPK/pqqF/pqqF-uniprot.txt
+      supporting_text: Belongs to the peptidase M16 family.
+    - reference_id: file:PSEPK/pqqF/pqqF-goa.tsv
+      supporting_text: &#34;GO:0006508\tproteolysis&#34;
+    - reference_id: file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+      supporting_text: zinc-dependent M16-family endopeptidase that participates in **processing the
+        PqqA precursor peptide**
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Zinc ion binding is consistent with the metalloendopeptidase assignment and should be
+      retained as a non-core cofactor-binding annotation. UniProt records one zinc ion bound per
+      subunit with conserved Zn-coordinating residues, and characterized PqqF orthologs are
+      zinc-dependent M16 metallopeptidases.
+    action: KEEP_AS_NON_CORE
+    reason: The core function is the pathway metalloendopeptidase activity, with zinc binding as a
+      supporting cofactor feature required for catalysis.
+    supported_by:
+    - reference_id: file:PSEPK/pqqF/pqqF-uniprot.txt
+      supporting_text: &#39;COFACTOR:&#39;
+    - reference_id: file:PSEPK/pqqF/pqqF-goa.tsv
+      supporting_text: &#34;GO:0008270\tzinc ion binding&#34;
+    - reference_id: file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+      supporting_text: PqqF/PqqG are **M16-family zinc metallopeptidases** acting on the PQQ precursor
+        peptide PqqA
+- term:
+    id: GO:0018189
+    label: pyrroloquinoline quinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the correct core process annotation. PqqF is explicitly required for coenzyme
+      PQQ biosynthesis, is part of the UniPathway PQQ pathway, and lies within the KT2440 PQQ
+      biosynthesis locus organized pqqFABCDEG. The GO definition of PQQ biosynthesis itself notes
+      that PQQ is made from a small peptide whose remaining residues are removed, which is precisely
+      the proteolytic role attributed to PqqF acting on PqqA.
+    action: ACCEPT
+    reason: The pathway-specific PQQ biosynthesis term captures the physiological context of the
+      peptidase activity; deep research places PqqF within the canonical pqqFABCDEG locus and the
+      PqqA-processing step of PQQ maturation.
+    supported_by:
+    - reference_id: file:PSEPK/pqqF/pqqF-uniprot.txt
+      supporting_text: Required for coenzyme pyrroloquinoline quinone (PQQ)
+    - reference_id: file:PSEPK/pqqF/pqqF-uniprot.txt
+      supporting_text: &#39;PATHWAY: Cofactor biosynthesis; pyrroloquinoline quinone biosynthesis.&#39;
+    - reference_id: file:PSEPK/pqqF/pqqF-goa.tsv
+      supporting_text: &#34;GO:0018189\tpyrroloquinoline quinone biosynthetic process&#34;
+    - reference_id: file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+      supporting_text: pqqFABCDEG
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Metal ion binding is overly broad once zinc ion binding and metalloendopeptidase
+      activity are present. The specific cofactor is a single zinc ion per subunit.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Prefer the more specific zinc ion binding term for the cofactor feature; generic metal
+      ion binding adds no information beyond GO:0008270.
+    supported_by:
+    - reference_id: file:PSEPK/pqqF/pqqF-goa.tsv
+      supporting_text: &#34;GO:0046872\tmetal ion binding&#34;
+    - reference_id: file:PSEPK/pqqF/pqqF-goa.tsv
+      supporting_text: &#34;GO:0008270\tzinc ion binding&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/pqqF/pqqF-uniprot.txt
+  title: UniProtKB entry for pqqF (Coenzyme PQQ synthesis protein F)
+  findings:
+  - supporting_text: Required for coenzyme pyrroloquinoline quinone (PQQ)
+    reference_section_type: OTHER
+  - supporting_text: Belongs to the peptidase M16 family.
+    reference_section_type: OTHER
+  - supporting_text: &#39;PATHWAY: Cofactor biosynthesis; pyrroloquinoline quinone biosynthesis.&#39;
+    reference_section_type: OTHER
+- id: file:PSEPK/pqqF/pqqF-goa.tsv
+  title: QuickGO GOA annotations for pqqF
+  findings:
+  - supporting_text: &#34;GO:0018189\tpyrroloquinoline quinone biosynthetic process&#34;
+    reference_section_type: OTHER
+  - supporting_text: &#34;GO:0004222\tmetalloendopeptidase activity&#34;
+    reference_section_type: OTHER
+- id: file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+  title: Falcon deep research report for pqqF (Q88QV3, P. putida KT2440)
+  findings:
+  - supporting_text: PqqF/PqqG are **M16-family zinc metallopeptidases** acting on the PQQ precursor
+      peptide PqqA
+    reference_section_type: OTHER
+  - supporting_text: zinc-dependent M16-family endopeptidase that participates in **processing the
+      PqqA precursor peptide**
+    reference_section_type: OTHER
+  - supporting_text: pqqF is transcribed independently
+    reference_section_type: OTHER
+  - supporting_text: two-component M16B metallopeptidase
+    reference_section_type: OTHER
+  - supporting_text: high activity toward PqqA in vitro and binds as a heterodimer with **KD ≈ 300
+      ± 70 nM**
+    reference_section_type: OTHER
+  - supporting_text: catalytic cavity volume of ~**9400 Å³**, suggested to define specificity for
+      small peptide substrates like PqqA
+    reference_section_type: OTHER
+  - supporting_text: PqqF is variably present and may be replaceable by non-specific proteases in
+      some systems
+    reference_section_type: OTHER
+core_functions:
+- description: PqqF is a zinc-dependent peptidase M16-family metalloendopeptidase that acts on the
+    ribosomally synthesized PQQ precursor peptide PqqA, performing the proteolytic processing step
+    required during pyrroloquinoline quinone biosynthesis.
+  molecular_function:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  directly_involved_in:
+  - id: GO:0018189
+    label: pyrroloquinoline quinone biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/pqqF/pqqF-uniprot.txt
+    supporting_text: Required for coenzyme pyrroloquinoline quinone (PQQ)
+  - reference_id: file:PSEPK/pqqF/pqqF-uniprot.txt
+    supporting_text: Belongs to the peptidase M16 family.
+  - reference_id: file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+    supporting_text: PqqF/PqqG are **M16-family zinc metallopeptidases** acting on the PQQ precursor
+      peptide PqqA
+  - reference_id: file:PSEPK/pqqF/pqqF-deep-research-falcon.md
+    supporting_text: zinc-dependent M16-family endopeptidase that participates in **processing the
+      PqqA precursor peptide**
+proposed_new_terms: []
+suggested_questions:
+- question: What is the direct PqqF substrate in KT2440 PQQ biosynthesis, and does it process the
+    cross-linked PqqA-derived intermediate, with or without a PqqG partner?
+suggested_experiments:
+- hypothesis: PqqF is the zinc metalloendopeptidase that processes PqqA-derived intermediates during
+    KT2440 PQQ maturation.
+  description: Compare PqqA-derived peptide fragments and PQQ accumulation in wild-type, pqqF deletion,
+    and catalytic-site (Zn-binding) mutant strains using targeted LC-MS/MS, paralleling the in vitro
+    PqqA cleavage assays established for the Methylorubrum extorquens PqqF/PqqG protease.
+  experiment_type: genetics plus peptidomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

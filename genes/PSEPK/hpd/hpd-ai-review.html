@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hpd - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hpd</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88HC7" target="_blank" class="term-link">
+                        Q88HC7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hpd";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88HC7" data-a="DESCRIPTION: hpd (PP_3433) encodes 4-hydroxyphenylpyruvate diox..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>hpd (PP_3433) encodes 4-hydroxyphenylpyruvate dioxygenase (HPPD; EC 1.13.11.27), a cytoplasmic non-heme Fe(II)-dependent oxygenase of the 4HPPD (VOC superfamily) family. It catalyzes the conversion of 4-hydroxyphenylpyruvate to homogentisate, coupling oxidative decarboxylation, aromatic hydroxylation, and a 1,2-side-chain migration in a single reaction that consumes molecular oxygen. This is the committed, gateway step of the homogentisate central catabolic pathway, through which Pseudomonas putida degrades L-tyrosine, L-phenylalanine, and 3-hydroxyphenylacetate to the central metabolites fumarate and acetoacetate. Loss of hpd abolishes growth on tyrosine or phenylalanine as sole carbon source, confirming its essential role in routing aromatic amino acids into central metabolism.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003868" target="_blank" class="term-link">
+                                    GO:0003868
+                                </a>
+                            </span>
+                            <span class="term-label">4-hydroxyphenylpyruvate dioxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HC7" data-a="GO:0003868" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. Q88HC7 belongs to the 4HPPD family (TIGR01263, IPR005956, PANTHER PTHR11959:SF1) and carries the conserved His/His/Glu Fe(II)-binding triad (residues 162, 241, 323). The HPPD function is strongly supported in P. putida by genetics, proteomics and RB-TnSeq fitness data (see hpd-deep-research-falcon.md; PMID:15262943).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by family/domain assignment and by experimental evidence that hpd is required for growth on tyrosine/phenylalanine via the homogentisate pathway in P. putida.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                    GO:0006572
+                                </a>
+                            </span>
+                            <span class="term-label">L-tyrosine catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HC7" data-a="GO:0006572" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPPD performs the gateway step (4-HPP to homogentisate) of the homogentisate pathway, the route by which P. putida degrades L-tyrosine. hpd mutants cannot grow on tyrosine as sole carbon source.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate biological process; well supported by the homogentisate pathway literature in P. putida.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009072" target="_blank" class="term-link">
+                                    GO:0009072
+                                </a>
+                            </span>
+                            <span class="term-label">aromatic amino acid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HC7" data-a="GO:0009072" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but more general than the specific catabolic role. The homogentisate pathway degrades both tyrosine and phenylalanine, so an aromatic-amino-acid-level term is defensible, but the more informative term is the catabolic process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct but the generic metabolic term under-specifies the function. Replace with the catabolic process term, which captures the documented degradative role.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009074" target="_blank" class="term-link">
+                                    aromatic amino acid catabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016701" target="_blank" class="term-link">
+                                    GO:0016701
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on single donors with incorporation of molecular oxygen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HC7" data-a="GO:0016701" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a high-level parent of the specific 4-hydroxyphenylpyruvate dioxygenase activity (GO:0003868), which is already annotated. It is not wrong but is redundant and uninformative given the specific child term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Grouping/parent term subsumed by the specific GO:0003868 annotation; retained for completeness but adds no specific functional information.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>4-hydroxyphenylpyruvate dioxygenase catalyzing the oxidative conversion of 4-hydroxyphenylpyruvate to homogentisate, the committed step of the homogentisate pathway for aromatic amino acid (tyrosine/phenylalanine) catabolism</h3>
+                <span class="vote-buttons" data-g="Q88HC7" data-a="FUNCTION: 4-hydroxyphenylpyruvate dioxygenase catalyzing the..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003868" target="_blank" class="term-link">
+                            4-hydroxyphenylpyruvate dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                L-tyrosine catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                PMID:15262943
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">hpd encodes 4-hydroxyphenylpyruvate dioxygenase converting 4-hydroxyphenylpyruvate to homogentisate; hpd mutants are unable to grow on L-phenylalanine or L-tyrosine as sole carbon source.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                            PMID:15262943
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The homogentisate pathway: a central catabolic pathway involved in the degradation of L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate in Pseudomonas putida</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hpd-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HC7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **hpd (PP_3433; UniProt Q88HC7)** in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">32 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:10:06.317905</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="hpd-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="hpd-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000023 Figure 1 on page 5063 (page 2 of the PDF) illustrates the homogentisate pathway and the role of the *hpd* gene (encoding 4-hydroxyp</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-hpd-pp_3433-uniprot-q88hc7-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>hpd (PP_3433; UniProt Q88HC7)</strong> in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-target-verification-critical-disambiguation">1. Target verification (critical disambiguation)</h2>
+<p>The UniProt target <strong>Q88HC7</strong> corresponds to <strong>hpd / PP_3433</strong> in <em>Pseudomonas putida</em> KT2440 and is annotated as <strong>4-hydroxyphenylpyruvate dioxygenase</strong> (HPPD; <strong>EC 1.13.11.27</strong>). Independent KT2440-focused sources explicitly identify <strong>hpd</strong> as an HPPD-family enzyme acting in aromatic amino-acid catabolism (tyrosine/phenylalanine → homogentisate), including genome-based pathway analysis and pathway-specific genetic studies. (jimenez2002genomicanalysisof pages 12-14, ariasbarrau2004thehomogentisatepathway pages 1-2)</p>
+<p>Early KT2440 genome annotation also identifies the <strong>hpd</strong> product as a ~<strong>358 aa</strong> protein (ORF03099) with high similarity to other bacterial HPPDs, supporting that the retrieved literature is about the correct protein family (4HPPD/HPPD family) and not an unrelated “hpd” symbol in a different pathway/organism. (jimenez2002genomicanalysisof pages 12-14)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-enzyme-definition-and-primary-reaction">2.1 Enzyme definition and primary reaction</h3>
+<p><strong>4-hydroxyphenylpyruvate dioxygenase (HPPD/Hpd)</strong> catalyzes the oxidative transformation of <strong>4-hydroxyphenylpyruvate (4-HPP)</strong> to <strong>homogentisate (HGA)</strong>. This step links peripheral tyrosine/phenylalanine transformations to the <strong>homogentisate central pathway</strong>. (ariasbarrau2004thehomogentisatepathway pages 1-2, neuckermans2019arobustbacterial pages 1-2)</p>
+<p>In <em>P. putida</em>, this function is specifically attributed to <strong>hpd (PP_3433)</strong>, with pathway schematics showing Hpd acting upstream of homogentisate ring-cleavage and downstream β-ketoacid steps. (ariasbarrau2004thehomogentisatepathway media 6c561743)</p>
+<h3 id="22-enzyme-class-cofactors-and-catalytic-mechanism">2.2 Enzyme class, cofactors, and catalytic mechanism</h3>
+<p>HPPD is a <strong>non-heme Fe(II)-dependent oxygenase</strong>. Structural/mechanistic literature describes a conserved active-site metal-binding motif with <strong>two histidines and one glutamate</strong> coordinating Fe(II), and an oxidative chemistry that couples <strong>O2 activation</strong>, <strong>oxidative decarboxylation</strong>, <strong>aromatic hydroxylation</strong>, and an unusual <strong>1,2 side-chain migration</strong> to yield homogentisate. (santucci20174hydroxyphenylpyruvatedioxygenaseand pages 6-7, santucci20174hydroxyphenylpyruvatedioxygenaseand pages 7-8)</p>
+<p>Although these mechanistic studies focus heavily on plant/animal enzymes, the same catalytic logic and cofactor requirements apply broadly across HPPD homologs (including bacteria) and support functional inference for <em>P. putida</em> Hpd. (santucci20174hydroxyphenylpyruvatedioxygenaseand pages 2-3, trezza2024molecularandevolution pages 1-2)</p>
+<h3 id="23-pathway-context-in-pseudomonas-homogentisate-as-a-convergent-node">2.3 Pathway context in <em>Pseudomonas</em>: homogentisate as a convergent node</h3>
+<p>In <em>P. putida</em>, the <strong>homogentisate pathway</strong> is described as a central catabolic route for degradation of <strong>L-tyrosine</strong>, <strong>L-phenylalanine</strong>, and related aromatics, converging on homogentisate and yielding central metabolites (e.g., <strong>fumarate and acetoacetate</strong>) via downstream enzymes (HmgA/HmgC/HmgB). (ariasbarrau2004thehomogentisatepathway pages 1-2, ariasbarrau2004thehomogentisatepathway pages 5-6)</p>
+<p>A pathway figure from Arias-Barrau et al. shows (i) the genetic organization of peripheral/central modules and (ii) the biochemical steps with Hpd converting 4-HPP to homogentisate, which then enters the boxed “central” homogentisate pathway. (ariasbarrau2004thehomogentisatepathway media 6c561743)</p>
+<h2 id="3-p-putida-kt2440-specific-functional-evidence">3. <em>P. putida</em> KT2440-specific functional evidence</h2>
+<h3 id="31-genomic-context-supports-pathway-assignment">3.1 Genomic context supports pathway assignment</h3>
+<p>In KT2440 genome reconstructions, <strong>hpd</strong> is colocated in a broader aromatic catabolic region that includes genes for homogentisate processing (e.g., <strong>hmgA</strong>) and downstream steps (e.g., maleylacetoacetate isomerase, fumarylacetoacetate hydrolase family enzymes), consistent with the role of hpd as a gateway into homogentisate metabolism. (jimenez2002genomicanalysisof pages 12-14)</p>
+<h3 id="32-proteomics-induction-during-aromatic-amino-acid-catabolism">3.2 Proteomics: induction during aromatic amino-acid catabolism</h3>
+<p>Proteomic profiling of KT2440 under aromatic-catabolic conditions found that <strong>Hpd</strong> and <strong>HmgA</strong> are induced in response to <strong>phenylalanine</strong>, consistent with active use of the homogentisate route for aromatic amino-acid assimilation. (kim2006analysisofaromatic pages 1-2)</p>
+<h3 id="33-geneticsphysiology-requirement-for-growth-on-phetyr">3.3 Genetics/physiology: requirement for growth on Phe/Tyr</h3>
+<p>Disruption of <strong>hpd</strong> in <em>Pseudomonas putida</em> strains tested in the homogentisate-pathway study caused a strong utilization phenotype: <strong>hpd mutants were unable to grow on minimal medium with phenylalanine or tyrosine as sole carbon/energy source</strong>, consistent with Hpd being essential for routing these substrates into central metabolism. (ariasbarrau2004thehomogentisatepathway pages 8-10)</p>
+<h3 id="34-global-regulation-crc-mediated-catabolic-repression">3.4 Global regulation: Crc-mediated catabolic repression</h3>
+<p>The global regulator <strong>Crc</strong> controls catabolic gene expression in <em>P. putida</em>; proteomic comparison of WT versus <strong>crc</strong> mutant strains indicates that Crc mediates catabolite repression affecting <strong>hpd</strong> and <strong>hmgA</strong> among other aromatic-catabolic pathway components. (morales2004thepseudomonasputida pages 1-2)</p>
+<h2 id="4-recent-developments-and-latest-research-prioritizing-20232024">4. Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="41-functional-genomics-machine-learning-refines-modules-for-aromatic-amino-acid-catabolism-2024">4.1 Functional genomics + machine learning refines modules for aromatic amino-acid catabolism (2024)</h3>
+<p>A 2024 <em>mSystems</em> study analyzed a compendium of <strong>RB-TnSeq fitness</strong> data from <em>P. putida</em> KT2440 across <strong>179 conditions</strong>, applying independent component analysis to infer functional gene modules (“fModules”). In this dataset-driven framework, <strong>hpd</strong> clustered with phenylalanine/tyrosine catabolism genes and showed <strong>substantial growth defects upon transposon disruption during growth on L-phenylalanine</strong>, providing modern, high-throughput functional confirmation that hpd is critical for aromatic amino-acid utilization in KT2440. (borchert2024machinelearninganalysis pages 7-11)</p>
+<p>This approach also highlights how integrated fitness-genomics can drive annotation improvements: the same study reports reannotation logic for a related aminotransferase (AmaC) based on essentiality patterns on L-Phe/L-Tyr, illustrating the direction of current functional-annotation practice in <em>Pseudomonas</em> (data compendia + ML + targeted validation). (borchert2024machinelearninganalysis pages 7-11)</p>
+<h3 id="42-current-biochemical-understanding-of-hppd-gatingactive-site-integrity-2024">4.2 Current biochemical understanding of HPPD gating/active-site integrity (2024)</h3>
+<p>A 2024 in silico/mechanistic analysis emphasizes the role of the <strong>C-terminal gating element</strong> and water exclusion in maintaining productive catalysis in HPPD-family enzymes. While focused on human HPPD, the work summarizes features with cross-lineage relevance (Fe(II)-dependent catalysis, conserved coordination triad, and gating that helps exclude water from the active site), providing a contemporary mechanistic lens that can inform interpretation of bacterial HPPDs and inhibitor responses. (trezza2024molecularandevolution pages 1-2)</p>
+<h2 id="5-current-applications-and-real-world-implementations">5. Current applications and real-world implementations</h2>
+<h3 id="51-metabolic-engineering-increasing-product-yields-by-blocking-tyrosine-loss-via-hpd">5.1 Metabolic engineering: increasing product yields by blocking tyrosine loss via hpd</h3>
+<p>Because hpd initiates a major tyrosine-degradation route, it can compete with engineered pathways that require tyrosine as a precursor.</p>
+<p>In an engineered <em>P. putida</em> S12 background producing <strong>p-hydroxybenzoate</strong>, targeted disruption of <strong>hpd</strong> increased titers and yields in shake-flask cultures (mineral medium, 20 mM glucose):<br />
+- Titer increased from <strong>1.8 mM → 2.3 mM</strong><br />
+- Carbon yield <strong>Yps</strong> increased <strong>10.5 → 13.4 C-mol%</strong> (reported as <strong>22%</strong> relative improvement)<br />
+- Specific production rate <strong>qp</strong> increased <strong>1.6 → 2.3 μmol (g CDW·min)−1</strong><br />
+- <strong>qp,max</strong> increased <strong>3.8 → 4.4 μmol (g CDW·min)−1</strong><br />
+These data show hpd is a practical engineering target to reduce tyrosine drain into catabolism and increase aromatic-product yields. (verhoef2010comparativetranscriptomicsand pages 9-11)</p>
+<h3 id="52-production-physiology-timing-shifts-upon-hpd-knockout">5.2 Production physiology: timing shifts upon hpd knockout</h3>
+<p>In a phenol-production context in <em>P. putida</em> S12 derivatives, an <strong>hpd knockout</strong> substantially changed the temporal production profile: <strong>62%</strong> of phenol was produced after growth in the hpd mutant versus <strong>28%</strong> in the parent strain. This supports that Hpd impacts carbon partitioning and overflow metabolism during aromatic-product formation. (wierckx2008transcriptomeanalysisof pages 5-7)</p>
+<h3 id="53-chemical-biology-relevance-hppd-is-a-well-characterized-inhibitor-target">5.3 Chemical biology relevance: HPPD is a well-characterized inhibitor target</h3>
+<p>HPPD enzymes are inhibited by <strong>β-triketones</strong> (e.g., nitisinone/NTBC), which chelate the active-site Fe(II) and block HPP→HGA conversion; in bacterial assay systems, HPPD inhibition reduces HGA formation and downstream pigment formation, providing a convenient functional readout. While these examples are not KT2440-specific, they are directly relevant to designing experiments probing <em>P. putida</em> Hpd activity and susceptibility. (neuckermans2019arobustbacterial pages 1-2, santucci20174hydroxyphenylpyruvatedioxygenaseand pages 7-8)</p>
+<h2 id="6-cellular-localization-and-site-of-action">6. Cellular localization and site of action</h2>
+<p>The retrieved KT2440-focused literature does not report a direct experimental subcellular localization for PP_3433/Hpd (e.g., cytosolic vs. periplasmic fractionation). Therefore, localization should be treated as <strong>inference</strong> rather than established fact in KT2440 based on the current evidence set. (ariasbarrau2004thehomogentisatepathway pages 8-10, jimenez2002genomicanalysisof pages 12-14)</p>
+<p>Functionally, Hpd acts in intracellular aromatic amino-acid catabolism as part of the enzymatic chain converting L-Tyr/L-Phe-derived intermediates into central metabolism, as depicted in pathway schematics. (ariasbarrau2004thehomogentisatepathway media 6c561743)</p>
+<h2 id="7-quantitative-summary-of-key-statistics">7. Quantitative summary of key statistics</h2>
+<ul>
+<li><strong>Growth requirement:</strong> hpd mutants cannot grow with <strong>L-Phe or L-Tyr as sole carbon source</strong> in minimal medium in the homogentisate-pathway genetics work. (ariasbarrau2004thehomogentisatepathway pages 8-10)</li>
+<li><strong>Engineering impact (Δhpd):</strong> p-hydroxybenzoate <strong>1.8→2.3 mM</strong>, <strong>Yps 10.5→13.4 C-mol%</strong>, <strong>qp 1.6→2.3 μmol gCDW−1 min−1</strong>, <strong>qp,max 3.8→4.4 μmol gCDW−1 min−1</strong>. (verhoef2010comparativetranscriptomicsand pages 9-11)</li>
+<li><strong>Transcriptomics:</strong> hpd (PP3433) reported as upregulated (e.g., <strong>2.8-fold</strong> in one engineered strain comparison; additional table values reported as “1.5 below threshold” in another comparison context). (wierckx2008transcriptomeanalysisof pages 4-5, verhoef2010comparativetranscriptomicsand pages 8-9)</li>
+<li><strong>Functional genomics (2024):</strong> RB-TnSeq compendium across <strong>179 conditions</strong> supports strong fitness association of <strong>hpd</strong> with L-phenylalanine utilization in KT2440 (qualitative growth defect of transposon mutants on L-Phe). (borchert2024machinelearninganalysis pages 7-11)</li>
+</ul>
+<h2 id="8-evidence-table-curated">8. Evidence table (curated)</h2>
+<p>The following table consolidates the main functional-annotation claims and supporting evidence.</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Aspect</th>
+<th>Key finding (with quantitative values where available)</th>
+<th>Organism/strain</th>
+<th>Evidence type</th>
+<th>Source (author year journal)</th>
+<th>URL</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reaction / primary function</td>
+<td><strong>hpd / PP_3433</strong> encodes <strong>4-hydroxyphenylpyruvate dioxygenase (EC 1.13.11.27)</strong>, catalyzing <strong>4-hydroxyphenylpyruvate → homogentisate</strong> in tyrosine catabolism; HPPD is a <strong>non-heme Fe(II)-dependent oxygenase</strong></td>
+<td><em>Pseudomonas putida</em> KT2440; broader HPPD family</td>
+<td>Pathway genetics; biochemical review</td>
+<td>Arias-Barrau et al. 2004 <em>J Bacteriol</em>; Santucci et al. 2017 <em>J Med Chem</em></td>
+<td>https://doi.org/10.1128/jb.186.15.5062-5077.2004 ; https://doi.org/10.1021/acs.jmedchem.6b01395</td>
+<td>(ariasbarrau2004thehomogentisatepathway pages 1-2, santucci20174hydroxyphenylpyruvatedioxygenaseand pages 2-3)</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>Hpd performs the <strong>peripheral step feeding the homogentisate central pathway</strong>; downstream HmgA/HmgC/HmgB convert homogentisate to <strong>fumarate + acetoacetate</strong></td>
+<td><em>P. putida</em> KT2440 / <em>P. putida</em> U</td>
+<td>Genetics; pathway reconstruction</td>
+<td>Arias-Barrau et al. 2004 <em>J Bacteriol</em></td>
+<td>https://doi.org/10.1128/jb.186.15.5062-5077.2004</td>
+<td>(ariasbarrau2004thehomogentisatepathway pages 1-2, ariasbarrau2004thehomogentisatepathway media 6c561743)</td>
+</tr>
+<tr>
+<td>Genomic context / identity verification</td>
+<td>Early KT2440 genome annotation identifies <strong>ORF03099 / hpd</strong>, a <strong>358-aa Hpd</strong> with <strong>88% aa identity</strong> to <em>P. fluorescens</em> HPPD; located in a chromosomal region containing <strong>hmgA, mai, fah</strong> and related aromatic-amino-acid catabolic genes</td>
+<td><em>P. putida</em> KT2440</td>
+<td>Genomics / comparative annotation</td>
+<td>Jiménez et al. 2002 <em>Environ Microbiol</em></td>
+<td>https://doi.org/10.1046/j.1462-2920.2002.00370.x</td>
+<td>(jimenez2002genomicanalysisof pages 12-14)</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>The <strong>Crc global regulator represses/catabolically controls</strong> expression of <strong>hpd</strong> and <strong>hmgA</strong> in the homogentisate pathway during growth in rich medium</td>
+<td><em>P. putida</em></td>
+<td>Proteomics; regulatory genetics</td>
+<td>Morales et al. 2004 <em>J Bacteriol</em></td>
+<td>https://doi.org/10.1128/jb.186.5.1337-1344.2004</td>
+<td>(morales2004thepseudomonasputida pages 1-2)</td>
+</tr>
+<tr>
+<td>Omics evidence in KT2440</td>
+<td>Proteomics showed <strong>Hpd and HmgA are induced by phenylalanine</strong>, supporting assignment of Hpd to the phenylalanine/tyrosine → homogentisate route</td>
+<td><em>P. putida</em> KT2440</td>
+<td>Proteomics</td>
+<td>Kim et al. 2006 <em>PROTEOMICS</em></td>
+<td>https://doi.org/10.1002/pmic.200500329</td>
+<td>(kim2006analysisofaromatic pages 1-2)</td>
+</tr>
+<tr>
+<td>Mutant phenotype / carbon utilization</td>
+<td><strong>hpd mutants were unable to grow on minimal medium with phenylalanine or tyrosine as sole carbon/energy source</strong>; mutants accumulated a colored oxidation product consistent with pathway blockage upstream of homogentisate utilization</td>
+<td><em>P. putida</em> derivatives; pathway validated against KT2440 homologous locus</td>
+<td>Genetics / growth phenotype</td>
+<td>Arias-Barrau et al. 2004 <em>J Bacteriol</em></td>
+<td>https://doi.org/10.1128/jb.186.15.5062-5077.2004</td>
+<td>(ariasbarrau2004thehomogentisatepathway pages 8-10)</td>
+</tr>
+<tr>
+<td>Engineering phenotype</td>
+<td>Targeted <strong>hpd disruption</strong> increased p-hydroxybenzoate production from <strong>1.8 to 2.3 mM</strong>; <strong>Yps 10.5 → 13.4 C-mol%</strong> (<strong>22% improvement</strong>); <strong>qp 1.6 → 2.3 μmol gCDW⁻¹ min⁻¹</strong>; <strong>qp,max 3.8 → 4.4 μmol gCDW⁻¹ min⁻¹</strong></td>
+<td><em>P. putida</em> S12palB1 → S12palB2 (Δhpd)</td>
+<td>Metabolic engineering; phenotype</td>
+<td>Verhoef et al. 2010 <em>Appl Microbiol Biotechnol</em></td>
+<td>https://doi.org/10.1007/s00253-010-2626-z</td>
+<td>(verhoef2010comparativetranscriptomicsand pages 9-11)</td>
+</tr>
+<tr>
+<td>Transcriptomic signal during production strain engineering</td>
+<td>In a p-hydroxybenzoate-producing strain, <strong>hpd (PP3433)</strong> was upregulated with reported table values <strong>1.5 (below threshold)</strong> and <strong>2.8</strong>, consistent with tyrosine degradation competing with product formation</td>
+<td><em>P. putida</em> S12palB1</td>
+<td>Transcriptomics / proteomics</td>
+<td>Verhoef et al. 2010 <em>Appl Microbiol Biotechnol</em></td>
+<td>https://doi.org/10.1007/s00253-010-2626-z</td>
+<td>(verhoef2010comparativetranscriptomicsand pages 8-9)</td>
+</tr>
+<tr>
+<td>Related production phenotype</td>
+<td>In phenol-production engineering, <strong>hpd</strong> was upregulated <strong>2.8-fold</strong>; an <strong>hpd knockout</strong> shifted phenol production post-growth, with <strong>62%</strong> of phenol formed after growth versus <strong>28%</strong> in the parent strain</td>
+<td><em>P. putida</em> S12-derived strains</td>
+<td>Transcriptomics; knockout phenotype</td>
+<td>Wierckx et al. 2008 <em>J Bacteriol</em></td>
+<td>https://doi.org/10.1128/jb.01379-07</td>
+<td>(wierckx2008transcriptomeanalysisof pages 5-7, wierckx2008transcriptomeanalysisof pages 4-5)</td>
+</tr>
+<tr>
+<td>Recent 2024 RB-TnSeq findings</td>
+<td>Machine-learning analysis of <strong>RB-TnSeq fitness data (179 conditions)</strong> placed <strong>hpd</strong> in a module for <strong>L-phenylalanine/tyrosine catabolism</strong>; <strong>hpd transposon knockouts showed substantial growth defects on L-Phe</strong>, supporting a direct role in aromatic amino-acid assimilation</td>
+<td><em>P. putida</em> KT2440</td>
+<td>RB-TnSeq fitness genomics / ML analysis</td>
+<td>Borchert et al. 2024 <em>mSystems</em></td>
+<td>https://doi.org/10.1128/msystems.00942-23</td>
+<td>(borchert2024machinelearninganalysis pages 7-11)</td>
+</tr>
+<tr>
+<td>Mechanistic annotation support</td>
+<td>HPPD enzymes are typically <strong>tetrameric in bacteria</strong>, use a conserved <strong>His/His/Glu metal-binding triad</strong>, and catalysis requires <strong>substrate-bound Fe(II) plus O2</strong>; these features support inference for PP_3433 as a canonical bacterial HPPD-family enzyme</td>
+<td>Bacterial HPPDs broadly</td>
+<td>Structural / mechanistic review</td>
+<td>Santucci et al. 2017 <em>J Med Chem</em>; Trezza et al. 2024 <em>Biomedicines</em></td>
+<td>https://doi.org/10.1021/acs.jmedchem.6b01395 ; https://doi.org/10.3390/biomedicines12061196</td>
+<td>(santucci20174hydroxyphenylpyruvatedioxygenaseand pages 6-7, trezza2024molecularandevolution pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main evidence supporting functional annotation of Pseudomonas putida KT2440 hpd (PP_3433; UniProt Q88HC7), including its enzymatic reaction, pathway placement, regulation, phenotypes, and recent 2024 functional-genomics support.</em></p>
+<h2 id="9-visual-evidence">9. Visual evidence</h2>
+<p>A pathway/genetic schematic demonstrating Hpd’s placement and reaction within the homogentisate pathway in <em>P. putida</em> is shown in Arias-Barrau et al. (Figure 1), including Hpd-mediated conversion of 4-hydroxyphenylpyruvate to homogentisate and entry into the central homogentisate pathway. (ariasbarrau2004thehomogentisatepathway media 6c561743)</p>
+<h2 id="10-conclusions-authoritative-synthesis">10. Conclusions (authoritative synthesis)</h2>
+<p>Collectively, KT2440 genomic context, proteomic induction, genetic growth phenotypes, and modern RB-TnSeq fitness analysis converge on a consistent functional annotation: <strong>hpd (PP_3433; UniProt Q88HC7)</strong> encodes a canonical <strong>Fe(II)-dependent 4-hydroxyphenylpyruvate dioxygenase (EC 1.13.11.27)</strong> that performs the key gateway step <strong>4-HPP → homogentisate</strong> in the <strong>homogentisate pathway</strong>, enabling assimilation of aromatic amino acids into central metabolism. (jimenez2002genomicanalysisof pages 12-14, kim2006analysisofaromatic pages 1-2, ariasbarrau2004thehomogentisatepathway pages 8-10, borchert2024machinelearninganalysis pages 7-11)</p>
+<p>From an application standpoint, <strong>hpd is a validated metabolic-engineering knob</strong>: disabling it can increase availability of tyrosine-derived precursors and improve yields/titers of aromatic products in engineered <em>Pseudomonas</em>. (verhoef2010comparativetranscriptomicsand pages 9-11)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(jimenez2002genomicanalysisof pages 12-14): José Ignacio Jiménez, Baltasar Miñambres, José Luis García, and Eduardo Díaz. Genomic analysis of the aromatic catabolic pathways from pseudomonas putida kt2440. Environmental microbiology, 4 12:824-41, Dec 2002. URL: https://doi.org/10.1046/j.1462-2920.2002.00370.x, doi:10.1046/j.1462-2920.2002.00370.x. This article has 699 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ariasbarrau2004thehomogentisatepathway pages 1-2): Elsa Arias-Barrau, Elías R. Olivera, José M. Luengo, Cristina Fernández, Beatriz Galán, José L. García, Eduardo Díaz, and Baltasar Miñambres. The homogentisate pathway: a central catabolic pathway involved in the degradation of l-phenylalanine, l-tyrosine, and 3-hydroxyphenylacetate in pseudomonas putida. Journal of Bacteriology, 186:5062-5077, Aug 2004. URL: https://doi.org/10.1128/jb.186.15.5062-5077.2004, doi:10.1128/jb.186.15.5062-5077.2004. This article has 317 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(neuckermans2019arobustbacterial pages 1-2): Jessie Neuckermans, Alan Mertens, Dinja De Win, Ulrich Schwaneberg, and Joery De Kock. A robust bacterial assay for high-throughput screening of human 4-hydroxyphenylpyruvate dioxygenase inhibitors. Scientific Reports, Oct 2019. URL: https://doi.org/10.1038/s41598-019-50533-1, doi:10.1038/s41598-019-50533-1. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ariasbarrau2004thehomogentisatepathway media 6c561743): Elsa Arias-Barrau, Elías R. Olivera, José M. Luengo, Cristina Fernández, Beatriz Galán, José L. García, Eduardo Díaz, and Baltasar Miñambres. The homogentisate pathway: a central catabolic pathway involved in the degradation of l-phenylalanine, l-tyrosine, and 3-hydroxyphenylacetate in pseudomonas putida. Journal of Bacteriology, 186:5062-5077, Aug 2004. URL: https://doi.org/10.1128/jb.186.15.5062-5077.2004, doi:10.1128/jb.186.15.5062-5077.2004. This article has 317 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santucci20174hydroxyphenylpyruvatedioxygenaseand pages 6-7): Annalisa Santucci, Giulia Bernardini, Daniela Braconi, Elena Petricci, and Fabrizio Manetti. 4-hydroxyphenylpyruvate dioxygenase and its inhibition in plants and animals: small molecules as herbicides and agents for the treatment of human inherited diseases. Journal of medicinal chemistry, 60 10:4101-4125, Feb 2017. URL: https://doi.org/10.1021/acs.jmedchem.6b01395, doi:10.1021/acs.jmedchem.6b01395. This article has 116 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santucci20174hydroxyphenylpyruvatedioxygenaseand pages 7-8): Annalisa Santucci, Giulia Bernardini, Daniela Braconi, Elena Petricci, and Fabrizio Manetti. 4-hydroxyphenylpyruvate dioxygenase and its inhibition in plants and animals: small molecules as herbicides and agents for the treatment of human inherited diseases. Journal of medicinal chemistry, 60 10:4101-4125, Feb 2017. URL: https://doi.org/10.1021/acs.jmedchem.6b01395, doi:10.1021/acs.jmedchem.6b01395. This article has 116 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santucci20174hydroxyphenylpyruvatedioxygenaseand pages 2-3): Annalisa Santucci, Giulia Bernardini, Daniela Braconi, Elena Petricci, and Fabrizio Manetti. 4-hydroxyphenylpyruvate dioxygenase and its inhibition in plants and animals: small molecules as herbicides and agents for the treatment of human inherited diseases. Journal of medicinal chemistry, 60 10:4101-4125, Feb 2017. URL: https://doi.org/10.1021/acs.jmedchem.6b01395, doi:10.1021/acs.jmedchem.6b01395. This article has 116 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(trezza2024molecularandevolution pages 1-2): Alfonso Trezza, Ancuta Birgauan, Michela Geminiani, Anna Visibelli, and Annalisa Santucci. Molecular and evolution in silico studies unlock the h4-hppd c-terminal tail gating mechanism. Biomedicines, 12:1196, May 2024. URL: https://doi.org/10.3390/biomedicines12061196, doi:10.3390/biomedicines12061196. This article has 4 citations.</p>
+</li>
+<li>
+<p>(ariasbarrau2004thehomogentisatepathway pages 5-6): Elsa Arias-Barrau, Elías R. Olivera, José M. Luengo, Cristina Fernández, Beatriz Galán, José L. García, Eduardo Díaz, and Baltasar Miñambres. The homogentisate pathway: a central catabolic pathway involved in the degradation of l-phenylalanine, l-tyrosine, and 3-hydroxyphenylacetate in pseudomonas putida. Journal of Bacteriology, 186:5062-5077, Aug 2004. URL: https://doi.org/10.1128/jb.186.15.5062-5077.2004, doi:10.1128/jb.186.15.5062-5077.2004. This article has 317 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2006analysisofaromatic pages 1-2): Young Hwan Kim, Kun Cho, Sung‐Ho Yun, Jin Young Kim, Kyung‐Hoon Kwon, Jong Shin Yoo, and Seung Il Kim. Analysis of aromatic catabolic pathways in pseudomonas putida kt 2440 using a combined proteomic approach: 2‐de/ms and cleavable isotope‐coded affinity tag analysis. PROTEOMICS, 6:1301-1318, Feb 2006. URL: https://doi.org/10.1002/pmic.200500329, doi:10.1002/pmic.200500329. This article has 210 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ariasbarrau2004thehomogentisatepathway pages 8-10): Elsa Arias-Barrau, Elías R. Olivera, José M. Luengo, Cristina Fernández, Beatriz Galán, José L. García, Eduardo Díaz, and Baltasar Miñambres. The homogentisate pathway: a central catabolic pathway involved in the degradation of l-phenylalanine, l-tyrosine, and 3-hydroxyphenylacetate in pseudomonas putida. Journal of Bacteriology, 186:5062-5077, Aug 2004. URL: https://doi.org/10.1128/jb.186.15.5062-5077.2004, doi:10.1128/jb.186.15.5062-5077.2004. This article has 317 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(morales2004thepseudomonasputida pages 1-2): Gracia Morales, Juan Francisco Linares, Ana Beloso, Juan Pablo Albar, José Luis Martínez, and Fernando Rojo. The pseudomonas putida crc global regulator controls the expression of genes from several chromosomal catabolic pathways for aromatic compounds. Journal of Bacteriology, 186:1337-1344, Mar 2004. URL: https://doi.org/10.1128/jb.186.5.1337-1344.2004, doi:10.1128/jb.186.5.1337-1344.2004. This article has 171 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(borchert2024machinelearninganalysis pages 7-11): Andrew J. Borchert, Alissa C. Bleem, Hyun Gyu Lim, Kevin Rychel, Keven D. Dooley, Zoe A. Kellermyer, Tracy L. Hodges, Bernhard O. Palsson, and Gregg T. Beckham. Machine learning analysis of rb-tnseq fitness data predicts functional gene modules in <i>pseudomonas putida</i> kt2440. Mar 2024. URL: https://doi.org/10.1128/msystems.00942-23, doi:10.1128/msystems.00942-23. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(verhoef2010comparativetranscriptomicsand pages 9-11): Suzanne Verhoef, Hendrik Ballerstedt, Rita J. M. Volkers, Johannes H. de Winde, and Harald J. Ruijssenaars. Comparative transcriptomics and proteomics of p-hydroxybenzoate producing pseudomonas putida s12: novel responses and implications for strain improvement. Applied Microbiology and Biotechnology, 87:679-690, May 2010. URL: https://doi.org/10.1007/s00253-010-2626-z, doi:10.1007/s00253-010-2626-z. This article has 91 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wierckx2008transcriptomeanalysisof pages 5-7): Nick J. P. Wierckx, Hendrik Ballerstedt, Jan A. M. de Bont, Johannes H. de Winde, Harald J. Ruijssenaars, and Jan Wery. Transcriptome analysis of a phenol-producing <i>pseudomonas putida</i> s12 construct: genetic and physiological basis for improved production. Apr 2008. URL: https://doi.org/10.1128/jb.01379-07, doi:10.1128/jb.01379-07. This article has 70 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wierckx2008transcriptomeanalysisof pages 4-5): Nick J. P. Wierckx, Hendrik Ballerstedt, Jan A. M. de Bont, Johannes H. de Winde, Harald J. Ruijssenaars, and Jan Wery. Transcriptome analysis of a phenol-producing <i>pseudomonas putida</i> s12 construct: genetic and physiological basis for improved production. Apr 2008. URL: https://doi.org/10.1128/jb.01379-07, doi:10.1128/jb.01379-07. This article has 70 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(verhoef2010comparativetranscriptomicsand pages 8-9): Suzanne Verhoef, Hendrik Ballerstedt, Rita J. M. Volkers, Johannes H. de Winde, and Harald J. Ruijssenaars. Comparative transcriptomics and proteomics of p-hydroxybenzoate producing pseudomonas putida s12: novel responses and implications for strain improvement. Applied Microbiology and Biotechnology, 87:679-690, May 2010. URL: https://doi.org/10.1007/s00253-010-2626-z, doi:10.1007/s00253-010-2626-z. This article has 91 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hpd-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000023 Figure 1 on page 5063 (page 2 of the PDF) illustrates the homogentisate pathway and the role of the *hpd* gene (encoding 4-hydroxyp" src="hpd-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>jimenez2002genomicanalysisof pages 12-14</li>
+<li>kim2006analysisofaromatic pages 1-2</li>
+<li>ariasbarrau2004thehomogentisatepathway pages 8-10</li>
+<li>morales2004thepseudomonasputida pages 1-2</li>
+<li>borchert2024machinelearninganalysis pages 7-11</li>
+<li>trezza2024molecularandevolution pages 1-2</li>
+<li>verhoef2010comparativetranscriptomicsand pages 9-11</li>
+<li>wierckx2008transcriptomeanalysisof pages 5-7</li>
+<li>verhoef2010comparativetranscriptomicsand pages 8-9</li>
+<li>ariasbarrau2004thehomogentisatepathway pages 1-2</li>
+<li>neuckermans2019arobustbacterial pages 1-2</li>
+<li>ariasbarrau2004thehomogentisatepathway pages 5-6</li>
+<li>wierckx2008transcriptomeanalysisof pages 4-5</li>
+<li>https://doi.org/10.1128/jb.186.15.5062-5077.2004</li>
+<li>https://doi.org/10.1021/acs.jmedchem.6b01395</li>
+<li>https://doi.org/10.1046/j.1462-2920.2002.00370.x</li>
+<li>https://doi.org/10.1128/jb.186.5.1337-1344.2004</li>
+<li>https://doi.org/10.1002/pmic.200500329</li>
+<li>https://doi.org/10.1007/s00253-010-2626-z</li>
+<li>https://doi.org/10.1128/jb.01379-07</li>
+<li>https://doi.org/10.1128/msystems.00942-23</li>
+<li>https://doi.org/10.3390/biomedicines12061196</li>
+<li>https://doi.org/10.1046/j.1462-2920.2002.00370.x,</li>
+<li>https://doi.org/10.1128/jb.186.15.5062-5077.2004,</li>
+<li>https://doi.org/10.1038/s41598-019-50533-1,</li>
+<li>https://doi.org/10.1021/acs.jmedchem.6b01395,</li>
+<li>https://doi.org/10.3390/biomedicines12061196,</li>
+<li>https://doi.org/10.1002/pmic.200500329,</li>
+<li>https://doi.org/10.1128/jb.186.5.1337-1344.2004,</li>
+<li>https://doi.org/10.1128/msystems.00942-23,</li>
+<li>https://doi.org/10.1007/s00253-010-2626-z,</li>
+<li>https://doi.org/10.1128/jb.01379-07,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88HC7
+gene_symbol: hpd
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: hpd (PP_3433) encodes 4-hydroxyphenylpyruvate dioxygenase (HPPD; EC 1.13.11.27), a cytoplasmic non-heme Fe(II)-dependent oxygenase of the 4HPPD (VOC superfamily) family. It catalyzes the conversion of 4-hydroxyphenylpyruvate to homogentisate, coupling oxidative decarboxylation, aromatic hydroxylation, and a 1,2-side-chain migration in a single reaction that consumes molecular oxygen. This is the committed, gateway step of the homogentisate central catabolic pathway, through which Pseudomonas putida degrades L-tyrosine, L-phenylalanine, and 3-hydroxyphenylacetate to the central metabolites fumarate and acetoacetate. Loss of hpd abolishes growth on tyrosine or phenylalanine as sole carbon source, confirming its essential role in routing aromatic amino acids into central metabolism.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:15262943
+  title: &#39;The homogentisate pathway: a central catabolic pathway involved in the degradation of L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate in Pseudomonas putida&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#39;Arias-Barrau et al. 2004 J Bacteriol 186:5062-5077. PMID:15262943 confirmed via PubMed search (title/authors/organism match). Establishes hpd role in the homogentisate pathway in P. putida; hpd mutants cannot grow on Phe/Tyr.&#39;
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Genome sequence reference cited in the UniProt entry for Q88HC7 (PP_3433).
+core_functions:
+- description: 4-hydroxyphenylpyruvate dioxygenase catalyzing the oxidative conversion of 4-hydroxyphenylpyruvate to homogentisate, the committed step of the homogentisate pathway for aromatic amino acid (tyrosine/phenylalanine) catabolism
+  molecular_function:
+    id: GO:0003868
+    label: 4-hydroxyphenylpyruvate dioxygenase activity
+  supported_by:
+  - reference_id: PMID:15262943
+    supporting_text: hpd encodes 4-hydroxyphenylpyruvate dioxygenase converting 4-hydroxyphenylpyruvate to homogentisate; hpd mutants are unable to grow on L-phenylalanine or L-tyrosine as sole carbon source.
+    full_text_unavailable: true
+  directly_involved_in:
+  - id: GO:0006572
+    label: L-tyrosine catabolic process
+existing_annotations:
+- term:
+    id: GO:0003868
+    label: 4-hydroxyphenylpyruvate dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function. Q88HC7 belongs to the 4HPPD family (TIGR01263, IPR005956, PANTHER PTHR11959:SF1) and carries the conserved His/His/Glu Fe(II)-binding triad (residues 162, 241, 323). The HPPD function is strongly supported in P. putida by genetics, proteomics and RB-TnSeq fitness data (see hpd-deep-research-falcon.md; PMID:15262943).
+    action: ACCEPT
+    reason: Directly supported by family/domain assignment and by experimental evidence that hpd is required for growth on tyrosine/phenylalanine via the homogentisate pathway in P. putida.
+- term:
+    id: GO:0006572
+    label: L-tyrosine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: HPPD performs the gateway step (4-HPP to homogentisate) of the homogentisate pathway, the route by which P. putida degrades L-tyrosine. hpd mutants cannot grow on tyrosine as sole carbon source.
+    action: ACCEPT
+    reason: Accurate biological process; well supported by the homogentisate pathway literature in P. putida.
+- term:
+    id: GO:0009072
+    label: aromatic amino acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Correct but more general than the specific catabolic role. The homogentisate pathway degrades both tyrosine and phenylalanine, so an aromatic-amino-acid-level term is defensible, but the more informative term is the catabolic process.
+    action: MODIFY
+    reason: The annotation is correct but the generic metabolic term under-specifies the function. Replace with the catabolic process term, which captures the documented degradative role.
+    proposed_replacement_terms:
+    - id: GO:0009074
+      label: aromatic amino acid catabolic process
+- term:
+    id: GO:0016701
+    label: oxidoreductase activity, acting on single donors with incorporation of molecular oxygen
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This is a high-level parent of the specific 4-hydroxyphenylpyruvate dioxygenase activity (GO:0003868), which is already annotated. It is not wrong but is redundant and uninformative given the specific child term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Grouping/parent term subsumed by the specific GO:0003868 annotation; retained for completeness but adds no specific functional information.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,3 +1,9 @@
+---
+title: "IBA Annotation Quality Project"
+maturity: COMPLETE
+tags: [PIPELINE, FLAGSHIP]
+---
+
 # IBA Annotation Quality Project
 
 ## Overview

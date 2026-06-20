@@ -53,11 +53,19 @@ should affect the gene review. Address the focus type directly:
 4. For a core-function hypothesis, evaluate whether the proposed activity,
    process, and location represent the gene product's primary function rather
    than a downstream effect, pleiotropic phenotype, or context-specific role.
+5. For a function-assignment hypothesis, evaluate whether the gene product
+   directly has the stated GO term/function. Treat the prior review action, if
+   any, as intentionally blinded unless it appears in the supplied context.
 
 Use primary literature whenever possible. Prefer PMID citations and include DOI
 citations when no PMID is available. Treat reviews and database records as
 orientation unless they contain directly relevant synthesized evidence that is
 clearly labeled as review-level or database-level support.
+
+Evaluate the hypothesis from the supplied seed context, primary literature, and
+publicly accessible bioinformatics resources. Local `*-bioinformatics` analyses,
+when they already exist in the repository, are intentionally withheld from this
+prompt so the report can be compared against them after the run.
 
 ## Required Output
 

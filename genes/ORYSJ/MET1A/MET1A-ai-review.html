@@ -1,0 +1,3432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MET1A - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MET1A</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q7Y1I7" target="_blank" class="term-link">
+                        Q7Y1I7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Oryza sativa subsp. japonica</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MET1A";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q7Y1I7" data-a="DESCRIPTION: MET1A (OsMET1a / OsMET1-1; UniProt Q7Y1I7; LOC_Os0..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MET1A (OsMET1a / OsMET1-1; UniProt Q7Y1I7; LOC_Os03g58400 / Os03g0798300) is a rice DNMT1-like maintenance DNA (cytosine-5) methyltransferase (EC 2.1.1.37). Its core molecular function is the S-adenosyl-L-methionine-dependent transfer of a methyl group to the C5 position of cytosine in DNA, acting primarily at symmetric CG (CpG) sites to copy methylation patterns onto the nascent strand after DNA replication - i.e. maintenance CG methylation underpinning epigenetic inheritance. The protein has the canonical DNMT1 architecture: two N-terminal RFTS/replication-foci-targeting regions, two BAH (bromo-adjacent homology) chromatin-reading domains, and a C-terminal SAM-dependent C5 methyltransferase catalytic domain with the conserved active-site cysteine (Act_site 1197). Rice carries two closely related MET1 paralogs, OsMET1a (OsMET1-1, this gene) and OsMET1b (OsMET1-2). Both contain all binding and catalytic domains required for a functional CG methylase, but OsMET1b is the dominant, far more highly expressed enzyme: ribonuclease protection assays show steady-state OsMET1-2 mRNA is 7- to 12-fold higher than OsMET1-1 in callus, root and inflorescence [PMID:14513380], and an OsMET1-1 knock-in mutant produces no discernible developmental phenotype, indicating a minor and/or redundant role for OsMET1a in CG-methylation maintenance compared with OsMET1b [file:ORYSJ/MET1A/MET1A-deep-research-falcon.md]. The most quantitative causal data for the rice MET1 pathway come from loss of the major paralog OsMET1b, where gene-body mCG falls ~86% (27.35% to 3.95%), transposon mCG falls ~77%, transposons are derepressed, and OsMET1a is transcriptionally induced ~2.5-fold together with a VIM-like cofactor (~4.5-fold) - placing OsMET1a squarely in the CG maintenance machinery and its compensatory/buffering responses [file:ORYSJ/MET1A/MET1A-deep-research-falcon.md]. MET1A acts in the nucleus on chromosomal DNA. By maintaining CG methylation it contributes (secondarily) to transposon/heterochromatin silencing and methylation-dependent gene silencing, but its defining role is the maintenance methyltransferase reaction itself, not a particular downstream regulatory outcome. Direct in vitro biochemical assays of OsMET1a substrate preference and a dedicated subcellular localization experiment have not been reported; nuclear localization (UniProt, ECO:0000305) and CG specificity are inferred from the enzyme class, domain architecture, and the rice MET1 genetics literature.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation propagated across the DNMT1/MET1 phylogenetic group. As a DNA (cytosine-5) methyltransferase acting on chromosomal DNA, MET1A functions in the nucleus.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core cellular-component annotation and well supported. UniProt assigns MET1A to the nucleus (ECO:0000305), consistent with a maintenance DNA methyltransferase that copies CG methylation onto chromosomal DNA during/after replication. The deep-research synthesis reaches the same conclusion. The IBA term is at the correct level of specificity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Based on its demonstrated role as a DNA methyltransferase maintaining genomic CG methylation, its functional site of action is most plausibly the **nucleus**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0003677" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation propagated from the DNMT1/MET1 group. MET1A binds DNA: it is a DNA-dependent enzyme whose substrate is double-stranded (hemimethylated) genomic DNA.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and supported by the protein&#39;s enzyme class and domain architecture (DNA-binding keyword in UniProt; C5-methyltransferase catalytic domain acting on DNA). DNA binding is a generic term but it is not wrong; the more informative molecular function is the cytosine-5 methyltransferase activity (GO:0003886, retained below). Accept the IBA DNA-binding annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                                        PMID:14513380
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">each encoding a cytosine-5 DNA methyltransferase (MTase)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsMET1-1 and OsMET1-2 are highly similar and contain all **binding and catalytic domains required for a functional CG methylase**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003682" target="_blank" class="term-link">
+                                    GO:0003682
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0003682" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR001025, BAH domain). MET1A contains two BAH (bromo-adjacent homology) domains, chromatin-reading modules of DNMT1/MET1 enzymes.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by domain content. UniProt annotates two BAH domains (residues 742-874 and 910-1049) in MET1A, and the InterPro BAH-to-GO mapping assigns chromatin binding. BAH domains in DNMT1/MET1 read chromatin/nucleosome marks to target maintenance methylation to replicating heterochromatin, so chromatin binding is an appropriate, if generic, molecular-function annotation for this enzyme.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">UniProt/domain annotation for Q7Y1I7 further supports a DNMT1-like architecture with **BAH** and **C5-methyltransferase** domains</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003886" target="_blank" class="term-link">
+                                    GO:0003886
+                                </a>
+                            </span>
+                            <span class="term-label">DNA (cytosine-5-)-methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0003886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (RHEA:13681 / EC 2.1.1.37). This is the defining, core molecular function of MET1A: SAM-dependent transfer of a methyl group to C5 of cytosine in DNA.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function and is strongly supported. UniProt assigns EC 2.1.1.37 with the explicit catalytic reaction (a 2&#39;-deoxycytidine in DNA + SAM = a 5-methyl-2&#39;-deoxycytidine in DNA + S-adenosyl-L-homocysteine + H+), and the protein belongs to the class I-like SAM-binding methyltransferase superfamily, C5-methyltransferase family, with the conserved active-site cysteine at position 1197. The biochemical paper describes OsMET1-1 directly as a cytosine-5 DNA methyltransferase. This is precisely the activity that the bare retired keyword term &#34;methylation&#34; (GO:0032259) failed to capture.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                                        PMID:14513380
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">each encoding a cytosine-5 DNA methyltransferase (MTase)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MET1A is annotated as a SAM-dependent **DNA (cytosine-5) methyltransferase (EC 2.1.1.37)** that transfers a methyl group to the **C5 position of cytosine** in DNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation derived from the UniProtKB/Swiss-Prot subcellular-location mapping (SL-0191, Nucleus); duplicates the IBA nucleus annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with the IBA nucleus annotation and with the UniProt subcellular location (Nucleus, ECO:0000305). Duplicate cellular-component annotations with different evidence codes are acceptable. A maintenance DNA methyltransferase acts on chromosomal DNA in the nucleus.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">a DNA methyltransferase acting on chromosomal DNA is most plausibly **nuclear**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008168" target="_blank" class="term-link">
+                                    GO:0008168
+                                </a>
+                            </span>
+                            <span class="term-label">methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0008168" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR001525, C5_MeTfrase). &#34;Methyltransferase activity&#34; is the high-level parent of the gene&#39;s specific DNA (cytosine-5) methyltransferase activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;Methyltransferase activity&#34; is a broad grouping term. MET1A is a methyltransferase, so the term is not wrong, but it is uninformative once the specific child term DNA (cytosine-5-)- methyltransferase activity (GO:0003886, retained above) is present - the specific term drops both the substrate (DNA) and the position (C5 of cytosine). Retaining a bare &#34;methyltransferase activity&#34; alongside the specific MF adds no information. Mark as over-annotated; the specific MF is the one to keep.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MET1A is annotated as a SAM-dependent **DNA (cytosine-5) methyltransferase (EC 2.1.1.37)** that transfers a methyl group to the **C5 position of cytosine** in DNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045814" target="_blank" class="term-link">
+                                    GO:0045814
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of gene expression, epigenetic</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0045814" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (ARBA machine-learning model). CG methylation by MET1 contributes to epigenetic gene silencing, but this is a downstream consequence rather than MET1A&#39;s defining function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Biologically reasonable but non-core. Maintenance CG methylation by MET1 enzymes contributes to methylation-dependent epigenetic gene silencing - RNAi knockdown of OsMET1-1 reactivated a silenced transgene, consistent with the involvement of maintenance methylation in silencing [PMID:14513380]. However, &#34;negative regulation of gene expression, epigenetic&#34; is a pleiotropic downstream outcome of the enzyme&#39;s activity, not the molecular reaction the gene product carries out. Keep, but mark as non-core; the core annotation is the methyltransferase activity and the maintenance-methylation process.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                                        PMID:14513380
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Restoration of uidA expression in the bombarded calli was consistent with the inactivation of maintenance methylation and with previous evidence for the involvement of methylation in silencing of this line.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">linking CG maintenance methylation to TE repression and transcriptome stability</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006346" target="_blank" class="term-link">
+                                    GO:0006346
+                                </a>
+                            </span>
+                            <span class="term-label">DNA methylation-dependent constitutive heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14513380
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of two rice DNA methyltransferase genes and...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0006346" data-r="PMID:14513380" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation citing PMID:14513380. RNAi knockdown of OsMET1-1 in rice callus reactivated a methylation-silenced transgene, implicating MET1A-mediated maintenance methylation in heterochromatin/silencing - a downstream contribution rather than the core enzymatic role.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is reasonably supported by the cited reference but represents a secondary role. Teerawanichpan et al. used RNAi inverted-repeat constructs against OsMET1-1 and restored expression of a silenced 35S-uidA-nos transgene, consistent with loss of maintenance methylation [PMID:14513380]. MET1-mediated CG maintenance does contribute to transposon/heterochromatin silencing (loss of the major paralog OsMET1b causes broad transposon derepression). However, OsMET1a is the minor paralog (7-12x lower expression; no knock-in phenotype), and constitutive-heterochromatin formation is a downstream, pleiotropic consequence of CG maintenance rather than MET1A&#39;s defining function. Keep as non-core; the core process is maintenance CG methylation (see the SPKW MODIFY entry to GO:0141119).
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                                        PMID:14513380
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Restoration of uidA expression in the bombarded calli was consistent with the inactivation of maintenance methylation and with previous evidence for the involvement of methylation in silencing of this line.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                                        PMID:14513380
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the steady-state level of OsMET1-2 was 7- to 12-fold higher than that for OsMET1-1 in callus, root and inflorescence</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044027" target="_blank" class="term-link">
+                                    GO:0044027
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of gene expression via chromosomal CpG island methylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0044027" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from human DNMT1 (UniProtKB:P34881). CG methylation by MET1A can repress gene expression at CpG-rich regions, but the CpG-island concept is mammalian and this is a downstream regulatory outcome, not the core function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The essence (CG methylation leading to transcriptional repression) is consistent with MET1 biology - maintenance CG methylation is associated with silencing, and RNAi of OsMET1-1 reactivated a methylation-silenced transgene [PMID:14513380]. However, the term is an ISS transfer from human DNMT1 framed around mammalian &#34;CpG islands&#34; (gene-promoter CG-dense regions), a concept that does not map cleanly onto plant genome methylation, where CG, CHG and CHH methylation predominate over much of the genome including transposons. It is best retained as a non-core, similarity-based annotation describing a downstream regulatory consequence rather than MET1A&#39;s defining maintenance-methyltransferase reaction.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                                        PMID:14513380
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Restoration of uidA expression in the bombarded calli was consistent with the inactivation of maintenance methylation and with previous evidence for the involvement of methylation in silencing of this line.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsMET1a is described as a **maintenance DNA methyltransferase responsible for CG methylation**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032259" target="_blank" class="term-link">
+                                    GO:0032259
+                                </a>
+                            </span>
+                            <span class="term-label">methylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0032259" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Methyltransferase&#34;; snapshot-only, removed in the current GOA release. &#34;Methylation&#34; (GO:0032259) is the bare, substrate-agnostic process term (&#34;a methyl group is covalently attached to a molecule&#34;) - it drops the substrate (DNA), the position (C5 of cytosine) and the maintenance specificity that define MET1A.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the classic enzyme-class-keyword -&gt; bare-process conflation (Tier A). MET1A is a DNA (cytosine-5) methyltransferase (EC 2.1.1.37) whose specific biological process is maintenance of CG DNA methylation after replication, not generic &#34;methylation&#34;. The generic term GO:0032259 is uninformative: it would equally fit a protein, RNA, or small-molecule methyltransferase. The substrate-specific, MET1-specific process term is GO:0141119 &#34;chromosomal DNA methylation maintenance following DNA replication&#34;, whose GO definition explicitly states that CG methylation is maintained by &#34;a maintenance DNA methyltransferase called DNMT1 in mammals and MET1 (DNA METHYLTRANSFERASE 1) in plants&#34; together with the VIM cofactor - matching OsMET1a exactly (including the ~4.5-fold VIM co-induction seen when the major paralog OsMET1b is lost). NOTE: the older generic process terms &#34;DNA methylation&#34; (GO:0006306) and &#34;maintenance of DNA methylation&#34;-type &#34;negative regulation of gene expression via chromosomal DNA cytosine methylation&#34; (GO:0010216) are now OBSOLETE in the authoritative GO release, so GO:0141119 is the correct non-obsolete replacement. Removing the bare keyword term loses nothing of value, but the underlying maintenance-methylation biology should be captured by GO:0141119, so a MODIFY (rather than a plain MARK_AS_OVER_ANNOTATED) is the right action. Tier A.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141119" target="_blank" class="term-link">
+                                    chromosomal DNA methylation maintenance following DNA replication
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                                        PMID:14513380
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Restoration of uidA expression in the bombarded calli was consistent with the inactivation of maintenance methylation and with previous evidence for the involvement of methylation in silencing of this line.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Maintenance methylation refers to the **copying of symmetric methylation patterns (especially CG) onto the nascent strand following semi-conservative DNA replication**, enabling epigenetic inheritance across cell divisions. In rice, **CG methylation is mainly maintained by MET1 enzymes**, specifically **OsMET1a (OsMET1-1)** and **OsMET1b (OsMET1-2)**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MET1A is annotated as a SAM-dependent **DNA (cytosine-5) methyltransferase (EC 2.1.1.37)** that transfers a methyl group to the **C5 position of cytosine** in DNA, primarily maintaining **CG methylation**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141119" target="_blank" class="term-link">
+                                    GO:0141119
+                                </a>
+                            </span>
+                            <span class="term-label">chromosomal DNA methylation maintenance following DNA replication</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Y1I7" data-a="GO:0141119" data-r="file:ORYSJ/MET1A/MET1A-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed substrate-specific process annotation capturing MET1A&#39;s core biological role: maintenance of symmetric CG methylation by copying the parental methylation pattern onto the newly replicated strand. This is the precise term that should replace the retired bare &#34;methylation&#34; (GO:0032259) keyword annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MET1A is a DNMT1/MET1-class maintenance CG methyltransferase. The GO definition of GO:0141119 names MET1 in plants as the maintenance DNA methyltransferase and VIM as its cofactor, exactly matching the rice MET1a biology synthesized in the deep-research report (OsMET1a/OsMET1b maintain CG methylation; loss of the major paralog OsMET1b collapses gene-body mCG from 27.35% to 3.95% and co-induces OsMET1a ~2.5-fold and a VIM-like factor ~4.5-fold). The current GOA has no substrate-specific maintenance-methylation process term for MET1A; this is the appropriate, non-obsolete replacement for the generic SPKW &#34;methylation&#34; term. ISS is used because rice OsMET1a-specific in vitro/in vivo maintenance assays were not retrieved; the assignment rests on enzyme class, DNMT1-like domain architecture (RFTS + BAH + C5-MTase), and orthology to characterized MET1/DNMT1 maintenance methyltransferases.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Maintenance methylation refers to the **copying of symmetric methylation patterns (especially CG) onto the nascent strand following semi-conservative DNA replication**, enabling epigenetic inheritance across cell divisions. In rice, **CG methylation is mainly maintained by MET1 enzymes**, specifically **OsMET1a (OsMET1-1)** and **OsMET1b (OsMET1-2)**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                                        PMID:14513380
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">each encoding a cytosine-5 DNA methyltransferase (MTase)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MET1A is a rice DNMT1/MET1-family maintenance DNA (cytosine-5) methyltransferase that catalyzes SAM-dependent transfer of a methyl group to the C5 position of cytosine in DNA, acting at symmetric CG sites to copy the parental methylation pattern onto the newly replicated strand in the nucleus. This maintenance of CG DNA methylation is its defining molecular and biological role and underpins epigenetic inheritance.
+</h3>
+                <span class="vote-buttons" data-g="Q7Y1I7" data-a="FUNCTION: MET1A is a rice DNMT1/MET1-family maintenance DNA ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003886" target="_blank" class="term-link">
+                            DNA (cytosine-5-)-methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141119" target="_blank" class="term-link">
+                                chromosomal DNA methylation maintenance following DNA replication
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                                PMID:14513380
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">each encoding a cytosine-5 DNA methyltransferase (MTase)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">MET1A is annotated as a SAM-dependent **DNA (cytosine-5) methyltransferase (EC 2.1.1.37)** that transfers a methyl group to the **C5 position of cytosine** in DNA, primarily maintaining **CG methylation**</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As the minor of two rice MET1 paralogs, MET1A participates in replication-coupled maintenance of CG methylation; the resulting maintenance methylation feeds downstream into methylation-dependent transcriptional gene silencing and transposon/heterochromatin repression. RNAi knockdown of OsMET1-1 reactivates a methylation-silenced transgene, consistent with inactivation of maintenance methylation.
+</h3>
+                <span class="vote-buttons" data-g="Q7Y1I7" data-a="FUNCTION: As the minor of two rice MET1 paralogs, MET1A part..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003886" target="_blank" class="term-link">
+                            DNA (cytosine-5-)-methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141119" target="_blank" class="term-link">
+                                chromosomal DNA methylation maintenance following DNA replication
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                                PMID:14513380
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Restoration of uidA expression in the bombarded calli was consistent with the inactivation of maintenance methylation and with previous evidence for the involvement of methylation in silencing of this line.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">In rice, **CG methylation is mainly maintained by MET1 enzymes**, specifically **OsMET1a (OsMET1-1)** and **OsMET1b (OsMET1-2)**</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro-to-GO mappings assign chromatin binding (IPR001025, BAH domain) and methyltransferase activity (IPR001525, C5 methyltransferase) to MET1A based on its DNMT1-like domain architecture.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The CpG-island-mediated negative-regulation annotation (GO:0044027) was transferred by ISS from human DNMT1 (UniProtKB:P34881); the mammalian CpG-island framing maps only loosely onto plant genome methylation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Core DNMT1/MET1 functions (nucleus, DNA binding, DNA cytosine-5 methyltransferase activity) are conserved across the phylogenetic group and propagated to MET1A by IBA.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For MET1A, the keyword &#34;Methyltransferase&#34; mapped to the bare process term &#34;methylation&#34; (GO:0032259), which drops the substrate (DNA) and the C5-cytosine / maintenance specificity; the substrate-specific process is GO:0141119.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nuclear localization (SL-0191) mapped to GO:0005634; consistent with the IBA nucleus annotation and the role of a chromosomal-DNA maintenance methyltransferase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA model assigned &#34;negative regulation of gene expression, epigenetic&#34; (GO:0045814), a downstream pleiotropic consequence of MET1-mediated CG methylation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA methods (RHEA:13681 / EC 2.1.1.37) assign the core molecular function DNA (cytosine-5-)-methyltransferase activity (GO:0003886).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14513380" target="_blank" class="term-link">
+                            PMID:14513380
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of two rice DNA methyltransferase genes and RNAi-mediated reactivation of a silenced transgene in rice callus.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OsMET1-1 (MET1A) and OsMET1-2 each encode a cytosine-5 DNA methyltransferase of the Dnmt1/MET1 class, with two-thirds regulatory and one-third catalytic domain.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Steady-state OsMET1-2 mRNA is 7- to 12-fold higher than OsMET1-1 in callus, root and inflorescence, indicating OsMET1a is the minor, lower-expressed paralog.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNAi knockdown of OsMET1-1 reactivated a silenced 35S-uidA-nos transgene in rice callus, consistent with inactivation of maintenance methylation and the involvement of methylation in transcriptional silencing.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12869764" target="_blank" class="term-link">
+                            PMID:12869764
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Collection, mapping, and annotation of over 28,000 cDNA clones from japonica rice.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale rice full-length cDNA collection, sequencing, genome-mapping and InterPro-based annotation paper; not a gene-specific functional study for MET1A.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of rice MET1A (Q7Y1I7).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MET1A (OsMET1a / OsMET1-1; LOC_Os03g58400) is a DNMT1-like maintenance DNA (cytosine-5) methyltransferase (EC 2.1.1.37) that transfers a methyl group to the C5 position of cytosine in DNA, primarily maintaining symmetric CG methylation after replication.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Rice CG methylation is mainly maintained by MET1 enzymes (OsMET1a and OsMET1b); OsMET1b is the dominant, more highly expressed paralog, and an OsMET1-1 knock-in mutant showed no discernible developmental phenotype, indicating a minor/redundant role for OsMET1a.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of the major paralog OsMET1b collapses gene-body mCG from 27.35% to 3.95% (~86% loss), reduces transposon mCG ~77%, derepresses transposons, and co-induces OsMET1a ~2.5-fold and a VIM-family cofactor ~4.5-fold, placing OsMET1a in the CG-maintenance machinery and its buffering responses.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A maintenance DNA methyltransferase acting on chromosomal DNA is most plausibly nuclear; no direct OsMET1a localization or in vitro substrate-preference assay was retrieved, so these are inferences from enzyme class and orthology.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does rice OsMET1a have intrinsic maintenance CG-methyltransferase activity in vitro, and does it preferentially methylate hemimethylated CG substrates as expected for a DNMT1/MET1 maintenance enzyme?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Bao Liu</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7Y1I7" data-a="Q: Does rice OsMET1a have intrinsic maintenance CG-me..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the division of labour between OsMET1a and the dominant paralog OsMET1b - is OsMET1a a genuine backup maintenance methylase induced when OsMET1b is lost, or does it have locus- or tissue-specific maintenance targets?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Xiaofeng Cao</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7Y1I7" data-a="Q: What is the division of labour between OsMET1a and..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant OsMET1a and assay SAM-dependent methyl transfer on hemimethylated versus unmethylated CG, CHG and CHH oligonucleotide substrates to confirm maintenance CG specificity directly.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OsMET1a is a maintenance methyltransferase with strong preference for hemimethylated CG (CpG) sites, consistent with the DNMT1/MET1 class.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro methyltransferase activity assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7Y1I7" data-a="EXPERIMENT: Express and purify recombinant OsMET1a and assay S..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate clean osmet1a single and osmet1a osmet1b double knockouts (e.g. by CRISPR) and perform whole-genome bisulfite sequencing to quantify the CG-methylation contribution attributable specifically to OsMET1a, including in the OsMET1b-deficient background where OsMET1a is induced.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OsMET1a makes a measurable but minor contribution to genome-wide CG maintenance that becomes detectable (or essential) only when OsMET1b is absent.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic knockout combined with whole-genome bisulfite sequencing</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7Y1I7" data-a="EXPERIMENT: Generate clean osmet1a single and osmet1a osmet1b ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine the subcellular localization and replication-coupling of OsMET1a using a functional OsMET1a-GFP fusion and co-localization with replication-fork/PCNA markers in dividing rice cells.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OsMET1a localizes to the nucleus and is recruited to replication foci during S phase, consistent with a replication-coupled maintenance methyltransferase.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: fluorescent-protein localization and replication co-localization assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7Y1I7" data-a="EXPERIMENT: Determine the subcellular localization and replica..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MET1A-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7Y1I7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">21 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T00:00:49.493043</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="MET1A-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="MET1A-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000013 The DNA methylation levels and differential methylation in the OsMET1 mutant are shown in Figure 2 on page 3. Specifically, Figure </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-rice-met1a-osmet1a-uniprot-q7y1i7-osmet1-1-loc_os03g58400-os03g0798300">Research Report: Rice <strong>MET1A / OsMET1a</strong> (UniProt <strong>Q7Y1I7</strong>; OsMET1-1; LOC_Os03g58400; Os03g0798300)</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p><strong>MET1A (OsMET1a/OsMET1-1)</strong> encodes a DNMT1-like <strong>maintenance DNA (cytosine-5) methyltransferase</strong> in <em>Oryza sativa</em> (japonica), primarily responsible for maintaining <strong>symmetric CG (CpG) methylation</strong> after DNA replication as part of epigenetic inheritance. In rice, MET1A is one of two closely related MET1 paralogs (OsMET1-1/OsMET1a and OsMET1-2/OsMET1b), and available evidence indicates <strong>OsMET1b is the major, more highly expressed CG maintenance enzyme</strong>, while <strong>OsMET1a is lower-expressed and can appear phenotypically redundant in some mutant/knock-in contexts</strong>. Quantitative whole-genome bisulfite sequencing in an OsMET1b loss-of-function background shows profound CG methylation loss (e.g., <strong>gene-body mCG 27.35% → 3.95%</strong>) and strong transposon derepression, accompanied by <strong>compensatory upregulation of OsMET1a (~2.5-fold)</strong> and a <strong>VIM-like factor (~4.5-fold)</strong>, linking OsMET1a into the broader CG-maintenance machinery and its buffering responses. (hu2014mutationofa pages 1-2, hu2014mutationofa pages 3-4, hu2014mutationofa pages 4-5, yin2024impactofabiotic pages 8-10, hu2014mutationofa media f7e45d7c)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-dna-methylation-contexts-and-maintenance-methylation">1.1 DNA methylation contexts and “maintenance” methylation</h4>
+<p>Plant cytosine methylation occurs in <strong>CG, CHG, and CHH</strong> sequence contexts (H = A/C/T). Maintenance methylation refers to the <strong>copying of symmetric methylation patterns (especially CG) onto the nascent strand following semi-conservative DNA replication</strong>, enabling epigenetic inheritance across cell divisions. In rice, <strong>CG methylation is mainly maintained by MET1 enzymes</strong>, specifically <strong>OsMET1a (OsMET1-1)</strong> and <strong>OsMET1b (OsMET1-2)</strong>. (yin2024impactofabiotic pages 8-10)</p>
+<h4 id="12-met1-family-dnmt1-like-enzymes">1.2 MET1 family (DNMT1-like) enzymes</h4>
+<p>Hu et al. (2014) describe rice <strong>OsMET1-1 and OsMET1-2</strong> as highly similar and “composed of all binding and catalytic domains required for a functional CG methylase,” supporting their annotation as DNMT1-like maintenance CG methyltransferases. (hu2014mutationofa pages 1-2)</p>
+<p><strong>Enzymatic reaction (functional annotation):</strong> MET1A is annotated as a SAM-dependent <strong>DNA (cytosine-5) methyltransferase (EC 2.1.1.37)</strong> that transfers a methyl group to the <strong>C5 position of cytosine</strong> in DNA, primarily maintaining <strong>CG methylation</strong>. Direct rice OsMET1a enzymatic assays were not retrieved in the accessible texts here; thus, the reaction chemistry is inferred from its enzyme class and from the direct statements that it is responsible for CG methylation maintenance. (hu2014mutationofa pages 1-2, kumar2022pup1qtlregulates pages 18-19, yin2024impactofabiotic pages 8-10)</p>
+<h4 id="13-pathway-context-rddm-chromatin-and-te-silencing">1.3 Pathway context: RdDM, chromatin, and TE silencing</h4>
+<p>Rice MET1-mediated CG methylation functions within an integrated epigenetic network that includes:<br />
+- <strong>RdDM (RNA-directed DNA methylation)</strong>, which is critical for many CHH methylation loci and is linked to small RNA populations (notably 24-nt siRNAs). (hu2014mutationofa pages 5-6, yin2024impactofabiotic pages 8-10)<br />
+- <strong>Chromatin remodeling and heterochromatin</strong>, including DDM1-dependent methylation and cross-compensation between DDM1 and RdDM (“double insurance” model) for transposon silencing described in a 2024 rice-focused review. (yin2024impactofabiotic pages 8-10)</p>
+<h3 id="2-geneprotein-identity-verification-and-disambiguation">2) Gene/protein identity verification and disambiguation</h3>
+<p>The target protein is <strong>OsMET1a / MET1A (OsMET1-1)</strong> from <em>Oryza sativa</em> ssp. japonica, mapped to <strong>LOC_Os03g58400</strong> in rice stress methylome work and consistently contrasted with the paralog <strong>OsMET1b/OsMET1-2</strong> in rice methylation genetics literature. This supports that the report is about the intended rice MET1A protein (UniProt Q7Y1I7), not a MET1 gene from another organism. (hu2014mutationofa pages 1-2, kumar2022pup1qtlregulates pages 18-19, yin2024impactofabiotic pages 8-10)</p>
+<h3 id="3-molecular-function-substrate-specificity-and-mechanism">3) Molecular function, substrate specificity, and mechanism</h3>
+<h4 id="31-primary-function">3.1 Primary function</h4>
+<p>OsMET1a is described as a <strong>maintenance DNA methyltransferase responsible for CG methylation</strong>. (kumar2022pup1qtlregulates pages 18-19, yin2024impactofabiotic pages 8-10)</p>
+<h4 id="32-substrate-specificity-sequence-context">3.2 Substrate specificity (sequence context)</h4>
+<p>The most specific evidence available indicates MET1 enzymes in rice maintain <strong>CG methylation</strong>. In a rice mutant study focusing on the major paralog (OsMET1-2/OsMET1b), <strong>89% of hypomethylated differentially methylated cytosines were in CG context</strong>, consistent with MET1-class specificity for CG sites and supporting MET1A’s pathway-level specificity as a CG maintenance enzyme. (hu2014mutationofa pages 3-4)</p>
+<h3 id="4-expression-patterns-and-regulatory-features">4) Expression patterns and regulatory features</h3>
+<h4 id="41-relative-expression-vs-paralog-osmet1b-osmet1-2">4.1 Relative expression vs paralog OsMET1b (OsMET1-2)</h4>
+<p>In the rice MET1 paralog pair, <strong>OsMET1-2 transcripts accumulate more abundantly than those of OsMET1-1 in all examined wild-type tissues</strong>, suggesting OsMET1b is the dominant paralog under many conditions. (hu2014mutationofa pages 1-2)</p>
+<p>A 2024 review similarly describes <strong>OsMET1b as the primary enzyme with broader/higher expression</strong>, with OsMET1a as the other CG maintenance paralog. (yin2024impactofabiotic pages 8-10)</p>
+<h4 id="42-compensatory-induction-when-the-major-cg-methylase-is-lost">4.2 Compensatory induction when the major CG methylase is lost</h4>
+<p>In OsMET1-2 loss-of-function seedlings, <strong>OsMET1-1 (OsMET1a) expression is moderately but significantly upregulated (~2.5-fold)</strong>, consistent with compensation within the CG maintenance pathway. (hu2014mutationofa pages 3-4)</p>
+<h4 id="43-stress-associated-regulation-phosphate-starvation-and-promoter-methylation">4.3 Stress-associated regulation: phosphate starvation and promoter methylation</h4>
+<p>In a rice phosphate starvation stress study using WGBS and transcriptomics in a Pup1-introgressed line (NIL-23) versus Pusa-44, <strong>OsMET1a (LOC_Os03g58400)</strong> expression is reported to track with <strong>promoter methylation state</strong>: promoter hypomethylation is associated with increased OsMET1a expression in NIL-23 roots, while promoter hypermethylation is associated with reduced expression in Pusa-44 under the same stress. (kumar2022pup1qtlregulates pages 18-19)</p>
+<h3 id="5-subcellular-localization">5) Subcellular localization</h3>
+<p>No direct subcellular localization experiment (e.g., GFP fusion or fractionation) for OsMET1a was retrieved in the accessible texts. Based on its demonstrated role as a DNA methyltransferase maintaining genomic CG methylation, its functional site of action is most plausibly the <strong>nucleus</strong>; however, this should be treated as inference pending direct localization data. (hu2014mutationofa pages 1-2, yin2024impactofabiotic pages 8-10)</p>
+<h3 id="6-mutant-phenotypes-and-functional-genetics-mechanistic-interpretation">6) Mutant phenotypes and functional genetics (mechanistic interpretation)</h3>
+<h4 id="61-osmet1a-specific-genetics-knock-in">6.1 OsMET1a-specific genetics (knock-in)</h4>
+<p>A rice study summarized by Hu et al. (2014) reports that a <strong>knock-in mutant of OsMET1-1 (OsMET1a)</strong> “failed to produce discernible developmental phenotypes,” interpreted as suggesting <strong>minimal and/or redundant function for OsMET1a</strong> in maintaining CG methylation compared with OsMET1-2. (hu2014mutationofa pages 1-2)</p>
+<h4 id="62-pathway-defining-phenotypes-from-the-major-paralog-osmet1b-osmet1-2">6.2 Pathway-defining phenotypes from the major paralog OsMET1b (OsMET1-2)</h4>
+<p>While not an OsMET1a mutant per se, the OsMET1-2 knockout phenotype provides strong mechanistic evidence for MET1-class CG maintenance in rice and demonstrates what loss of MET1-mediated CG methylation causes in this genome:<br />
+- <strong>Gene-body CG methylation decreased by 86%</strong> (from <strong>27.35% in WT to 3.95%</strong> in OsMET1-2−/−). (hu2014mutationofa pages 3-4)<br />
+- <strong>Transposable element (TE) mCG decreased by 77%</strong>, and remaining mCG was relatively enriched in TEs compared with genes, indicating differential maintenance across genomic features. (hu2014mutationofa pages 3-4, hu2014mutationofa pages 5-6)<br />
+- Broad expression impacts were observed, including <strong>3,744 affected genes</strong> (47.5% up; 52.5% down) and <strong>21.9% of transcribed TEs (594/2,716) differentially expressed</strong>, with <strong>82.3% of those TEs upregulated</strong> (489/594), linking CG maintenance methylation to TE repression and transcriptome stability. (hu2014mutationofa pages 4-5, hu2014mutationofa pages 5-6)</p>
+<p>These quantitative results are visually supported by a figure/table in Hu et al. (2014) (Figure 2), which includes global/context methylation summaries and feature-level methylation profiles. (hu2014mutationofa media f7e45d7c, hu2014mutationofa media e05be17b)</p>
+<h4 id="63-partners-and-buffering-mechanisms-vim-and-rddm-cross-talk">6.3 Partners and buffering mechanisms: VIM and RdDM cross-talk</h4>
+<p>In the OsMET1-2 mutant, a <strong>VIM-family gene (LOC_Os05g01230)</strong> is upregulated about <strong>4.5-fold</strong>, and the authors note VIM proteins cooperate with CG methylases in CG methylation maintenance. (hu2014mutationofa pages 3-4)</p>
+<p>Hu et al. further propose that residual/regained CG methylation in the OsMET1-2 mutant could involve <strong>OsMET1-1 together with VIMs</strong>, potentially in interplay with <strong>RdDM</strong>, particularly in heterochromatic TE-rich regions; small-RNA and CHH methylation patterns in the mutant support MET1–RdDM pathway interactions. (hu2014mutationofa pages 3-4, hu2014mutationofa pages 5-6)</p>
+<h3 id="7-recent-developments-prioritizing-20232024">7) Recent developments (prioritizing 2023–2024)</h3>
+<p>Direct, OsMET1a-focused primary studies from 2023–2024 were not retrieved in the accessible document set; however, <strong>rice-focused 2024 review literature</strong> consolidates current understanding relevant to MET1A functional annotation:<br />
+- A 2024 review in <em>Plants</em> frames rice CG maintenance methylation as being mediated mainly by <strong>OsMET1a (OsMET1-1) and OsMET1b (OsMET1-2)</strong>, with <strong>OsMET1b as the primary enzyme</strong> with broader/higher expression, and emphasizes integration with non-CG methylation systems (CMTs, DRM2/RdDM) and chromatin remodeling (DDM1) for TE silencing and stress responses. (Yin et al., Sep 2024; https://doi.org/10.3390/plants13192700) (yin2024impactofabiotic pages 8-10, yin2024impactofabiotic pages 24-25)<br />
+- A 2024 review in <em>Agronomy</em> provides a contemporaneous synthesis of DNA methylation enzyme classes and highlights that MET1 is the CG maintenance methyltransferase and that MET1 function is integrated with methylation readers such as <strong>VIM</strong> proteins (primarily described in <em>Arabidopsis</em> but conceptually relevant to MET1-class biology). (Qiao et al., Dec 2024; https://doi.org/10.3390/agronomy15010094) (qiao2024theroleofa pages 1-3)</p>
+<h3 id="8-current-applications-and-real-world-implementations">8) Current applications and real-world implementations</h3>
+<h4 id="81-stress-biology-and-crop-improvement-via-methylome-profiling">8.1 Stress biology and crop improvement via methylome profiling</h4>
+<p>The Pup1 QTL phosphate-starvation study demonstrates a <strong>real-world implementation</strong> of integrating <strong>whole-genome bisulfite sequencing</strong> with transcriptomics to link methylation changes to stress-responsive gene regulation in rice, including OsMET1a regulation by promoter methylation. It reports genome-scale methylation and DMR counts under stress, such as <strong>13–15% of total cytosines methylated</strong> in the rice genome (in their materials), <strong>6,068 hypo-DMRs vs 5,279 hyper-DMRs</strong> under phosphate starvation stress, and methylation-associated upregulation of hundreds of genes (e.g., CHH hypomethylation associated with upregulation of 489 genes in shoot and 382 genes in root of NIL-23 under stress). (Kumar et al., May 2022; https://doi.org/10.3389/fpls.2022.871890) (kumar2022pup1qtlregulates pages 18-19)</p>
+<p>Although this does not establish OsMET1a as a single causal determinant of tolerance, it supports that OsMET1a is a measurable, regulated component of the stress-associated methylation machinery in rice roots. (kumar2022pup1qtlregulates pages 18-19)</p>
+<h4 id="82-toward-targeted-epigenetic-engineering">8.2 Toward targeted epigenetic engineering</h4>
+<p>The 2024 rice-focused review emphasizes that rice DNA methylation pathways (including MET1-mediated CG maintenance, RdDM, and chromatin remodeling) are central to stress responses and are therefore potential targets for breeding strategies that modulate epigenetic state. However, the retrieved evidence base here does not include a rice MET1A-targeted epigenome-editing implementation; thus, this remains a prospective application in the context of current reviews. (yin2024impactofabiotic pages 8-10)</p>
+<h3 id="9-expert-interpretation-and-limitations-of-current-evidence-for-osmet1a-specifically">9) Expert interpretation and limitations of current evidence for OsMET1A specifically</h3>
+<ol>
+<li><strong>OsMET1a is clearly placed in the CG maintenance pathway</strong>, but direct evidence suggests it is <strong>less dominant than OsMET1b</strong> in many tissues and may show <strong>functional redundancy</strong> under some experimental disruptions (no obvious phenotype in a reported knock-in). (hu2014mutationofa pages 1-2, yin2024impactofabiotic pages 8-10)</li>
+<li>The most quantitative causal data currently accessible here come from <strong>OsMET1b (OsMET1-2) loss-of-function</strong>, not OsMET1a. Those data are nonetheless informative for functional annotation because OsMET1a is induced in this background and belongs to the same enzyme class and pathway. (hu2014mutationofa pages 3-4, hu2014mutationofa pages 4-5)</li>
+<li><strong>Subcellular localization and direct biochemical activity data</strong> (e.g., in vitro assays for OsMET1a substrate preference for hemimethylated CG DNA) were not available in the retrieved texts; these are important evidence gaps for a full mechanistic annotation. (hu2014mutationofa pages 1-2, terada2010creloxpmediatedmarker pages 8-9)</li>
+</ol>
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Direct evidence for OsMET1a/MET1A</th>
+<th>Inference / context (clearly labeled)</th>
+<th>Key sources (year; DOI/URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity / synonyms</td>
+<td>UniProt target Q7Y1I7 is rice <strong>DNA (cytosine-5)-methyltransferase 1A</strong>, short name <strong>OsMET1a</strong>; gene <strong>MET1A</strong>; synonyms <strong>MET1-1 / OsMET1-1</strong>; loci <strong>Os03g0798300 / LOC_Os03g58400</strong>. Rice literature distinguishes <strong>OsMET1-1 (OsMET1a)</strong> from <strong>OsMET1-2 (OsMET1b)</strong>, confirming the target is the OsMET1-1 paralog, not a different MET1 gene (hu2014mutationofa pages 1-2, kumar2022pup1qtlregulates pages 18-19, yin2024impactofabiotic pages 8-10)</td>
+<td>Because the literature repeatedly maps OsMET1a to LOC_Os03g58400 and contrasts it with OsMET1-2, the symbol is sufficiently disambiguated for functional annotation of Q7Y1I7 (hu2014mutationofa pages 1-2, kumar2022pup1qtlregulates pages 18-19)</td>
+<td>Hu et al. 2014, PNAS, DOI: 10.1073/pnas.1410761111, https://doi.org/10.1073/pnas.1410761111 (hu2014mutationofa pages 1-2); Kumar et al. 2022, Front Plant Sci, DOI: 10.3389/fpls.2022.871890, https://doi.org/10.3389/fpls.2022.871890 (kumar2022pup1qtlregulates pages 18-19); Yin et al. 2024, Plants, DOI: 10.3390/plants13192700, https://doi.org/10.3390/plants13192700 (yin2024impactofabiotic pages 8-10)</td>
+</tr>
+<tr>
+<td>Molecular function &amp; reaction</td>
+<td>Rice MET1 proteins are described as <strong>maintenance CG methyltransferases</strong>; OsMET1a/OsMET1-1 is identified as a maintenance DNA methyltransferase responsible for <strong>CG methylation</strong>. Hu et al. state OsMET1-1 and OsMET1-2 contain all binding and catalytic domains required for a functional CG methylase; Kumar et al. identify OsMET1a as MET1 responsible for CG methylation (hu2014mutationofa pages 1-2, kumar2022pup1qtlregulates pages 18-19, yin2024impactofabiotic pages 8-10)</td>
+<td>The exact catalytic chemistry for Q7Y1I7 is inferred from the MET1/C5-methyltransferase class and UniProt family/domain assignment: <strong>SAM-dependent transfer of a methyl group to C5 of cytosine in DNA</strong>, acting primarily at <strong>hemimethylated CG sites after replication</strong>. This is consistent with general MET1 biology described in recent reviews, but a rice OsMET1a-specific biochemical assay was not retrieved here (yin2024impactofabiotic pages 8-10, qiao2024theroleofa pages 1-3)</td>
+<td>Hu et al. 2014, https://doi.org/10.1073/pnas.1410761111 (hu2014mutationofa pages 1-2); Kumar et al. 2022, https://doi.org/10.3389/fpls.2022.871890 (kumar2022pup1qtlregulates pages 18-19); Yin et al. 2024, https://doi.org/10.3390/plants13192700 (yin2024impactofabiotic pages 8-10); Qiao et al. 2024, https://doi.org/10.3390/agronomy15010094 (qiao2024theroleofa pages 1-3)</td>
+</tr>
+<tr>
+<td>Domains / family</td>
+<td>Hu et al. report that OsMET1-1 and OsMET1-2 are highly similar and contain all <strong>binding and catalytic domains required for a functional CG methylase</strong> (hu2014mutationofa pages 1-2)</td>
+<td>UniProt/domain annotation for Q7Y1I7 further supports a DNMT1-like architecture with <strong>BAH</strong> and <strong>C5-methyltransferase</strong> domains, consistent with a class I-like SAM-binding methyltransferase; this supports maintenance-methylase function when direct domain mapping from primary papers is limited in the retrieved evidence (hu2014mutationofa pages 1-2)</td>
+<td>Hu et al. 2014, https://doi.org/10.1073/pnas.1410761111 (hu2014mutationofa pages 1-2)</td>
+</tr>
+<tr>
+<td>Expression pattern / relative importance</td>
+<td>In WT rice tissues, <strong>OsMET1-2 transcripts accumulated more abundantly than OsMET1-1 in all examined tissues</strong>, implying OsMET1a is the lower-expressed paralog. A reported <strong>OsMET1-1 knock-in mutant failed to show discernible developmental phenotypes</strong>, suggesting a minimal and/or redundant role relative to OsMET1-2 (hu2014mutationofa pages 1-2)</td>
+<td>The cited but not directly retrieved Yamauchi et al. study is described as showing <strong>dosage-dependent spatiotemporal expression</strong> of MET1a, indicating expression and/or phenotype may depend on gene dosage and developmental context, but detailed primary data were not available in the conversation evidence (li2021genomewideidentificationand pages 15-16, terada2010creloxpmediatedmarker pages 8-9)</td>
+<td>Hu et al. 2014, https://doi.org/10.1073/pnas.1410761111 (hu2014mutationofa pages 1-2); Li et al. 2021, https://doi.org/10.1186/s12864-021-07600-7 (li2021genomewideidentificationand pages 15-16); Terada et al. 2010, https://doi.org/10.5511/plantbiotechnology.27.29 (terada2010creloxpmediatedmarker pages 8-9)</td>
+</tr>
+<tr>
+<td>Pathways / partners: VIM</td>
+<td>In OsMET1-2 knockout seedlings, a rice <strong>VIM-family gene</strong> (LOC_Os05g01230) was upregulated about <strong>4.5-fold</strong>; the paper notes VIM proteins cooperate with CG methylases to maintain CG methylation (hu2014mutationofa pages 3-4)</td>
+<td>Direct physical interaction between <strong>OsMET1a</strong> and a rice VIM protein was not shown in the retrieved evidence. The partner relationship is therefore supported as <strong>pathway-level inference</strong> from MET1/VIM cooperation in CG maintenance and compensatory responses in rice MET1 mutants (hu2014mutationofa pages 3-4, qiao2024theroleofa pages 1-3)</td>
+<td>Hu et al. 2014, https://doi.org/10.1073/pnas.1410761111 (hu2014mutationofa pages 3-4); Qiao et al. 2024, https://doi.org/10.3390/agronomy15010094 (qiao2024theroleofa pages 1-3)</td>
+</tr>
+<tr>
+<td>Pathways / partners: RdDM</td>
+<td>Rice MET1 function is linked to <strong>RNA-directed DNA methylation (RdDM)</strong>. Hu et al. propose residual/regained mCG in an OsMET1-2 mutant may be maintained partly via RdDM, especially in heterochromatic TE-rich regions; altered 24-nt small RNAs and CHH methylation support MET1–RdDM interplay (hu2014mutationofa pages 3-4, hu2014mutationofa pages 5-6)</td>
+<td>For <strong>OsMET1a specifically</strong>, RdDM involvement is inferential rather than directly demonstrated. Recent rice reviews state CHH methylation is controlled by RdDM, and MET1-mediated CG maintenance interacts with broader methylation pathways and TE silencing networks (yin2024impactofabiotic pages 8-10, yin2024impactofabiotic pages 24-25)</td>
+<td>Hu et al. 2014, https://doi.org/10.1073/pnas.1410761111 (hu2014mutationofa pages 3-4, hu2014mutationofa pages 5-6); Yin et al. 2024, https://doi.org/10.3390/plants13192700 (yin2024impactofabiotic pages 8-10, yin2024impactofabiotic pages 24-25)</td>
+</tr>
+<tr>
+<td>Pathways / partners: DDM1 / chromatin context</td>
+<td>Recent rice review evidence states <strong>DDM1-dependent methylation</strong> and <strong>RdDM</strong> can compensate to maintain TE silencing; DDM1 is essential for cytosine methylation in repeats/TEs in rice and acts independently of siRNA at some loci (yin2024impactofabiotic pages 8-10)</td>
+<td>No direct OsMET1a–DDM1 interaction was shown in the retrieved OsMET1a-specific studies. The relationship is best described as <strong>shared participation in the rice DNA methylation / heterochromatin maintenance network</strong> (yin2024impactofabiotic pages 8-10, yin2024impactofabiotic pages 24-25)</td>
+<td>Yin et al. 2024, https://doi.org/10.3390/plants13192700 (yin2024impactofabiotic pages 8-10, yin2024impactofabiotic pages 24-25)</td>
+</tr>
+<tr>
+<td>Key quantitative findings relevant to MET1 pathway</td>
+<td>In <strong>OsMET1-2</strong> mutants, <strong>OsMET1-1 expression increased ~2.5-fold</strong>, VIM gene expression increased ~4.5-fold, gene-body <strong>mCG fell 86% (27.35% to 3.95%)</strong>, TE mCG fell <strong>77%</strong>, and <strong>89%</strong> of hypo-differentially methylated cytosines were in CG context; <strong>594/2,716 TEs (21.9%)</strong> changed expression, with <strong>489 (82.3%) upregulated</strong> (hu2014mutationofa pages 3-4, hu2014mutationofa pages 4-5, hu2014mutationofa pages 5-6, hu2014mutationofa media f7e45d7c)</td>
+<td>These quantitative data come from mutation of the <strong>major paralog OsMET1-2</strong>, not direct disruption of OsMET1a. They are nevertheless informative for annotating OsMET1a because OsMET1a is transcriptionally induced in this background and belongs to the same maintenance-CG pathway (hu2014mutationofa pages 3-4, hu2014mutationofa pages 4-5)</td>
+<td>Hu et al. 2014, https://doi.org/10.1073/pnas.1410761111 (hu2014mutationofa pages 3-4, hu2014mutationofa pages 4-5, hu2014mutationofa pages 5-6, hu2014mutationofa media f7e45d7c)</td>
+</tr>
+<tr>
+<td>Stress-responsive regulation / applications relevance</td>
+<td>Under phosphate starvation, <strong>OsMET1a promoter hypomethylation correlated with increased OsMET1a expression</strong> in roots of the tolerant NIL-23 line, whereas promoter hypermethylation correlated with lower expression in Pusa-44; this supports stress-responsive transcriptional regulation of OsMET1a (kumar2022pup1qtlregulates pages 18-19)</td>
+<td>This study supports OsMET1a as a responsive node in stress-associated methylation circuitry, but it does <strong>not</strong> directly prove OsMET1a is causal for phosphate tolerance. It is better interpreted as evidence for regulatory responsiveness of the CG-maintenance system under nutrient stress (kumar2022pup1qtlregulates pages 18-19, yin2024impactofabiotic pages 8-10)</td>
+<td>Kumar et al. 2022, https://doi.org/10.3389/fpls.2022.871890 (kumar2022pup1qtlregulates pages 18-19); Yin et al. 2024, https://doi.org/10.3390/plants13192700 (yin2024impactofabiotic pages 8-10)</td>
+</tr>
+<tr>
+<td>Overall functional annotation conclusion</td>
+<td>Direct evidence supports annotating Q7Y1I7/OsMET1a as a <strong>rice nuclear DNA cytosine-5 maintenance methyltransferase for CG methylation</strong>, acting in epigenetic inheritance and genome/TE regulation, with lower expression and apparently more redundant contribution than OsMET1-2 (hu2014mutationofa pages 1-2, kumar2022pup1qtlregulates pages 18-19, yin2024impactofabiotic pages 8-10)</td>
+<td>Localization was not directly shown in the retrieved OsMET1a papers, but a DNA methyltransferase acting on chromosomal DNA is most plausibly <strong>nuclear</strong>; this should be labeled as inference unless a localization experiment is cited. Recent applications are broader crop epigenetics/epigenome-editing concepts rather than OsMET1a-targeted implementations (yin2024impactofabiotic pages 8-10, qiao2024theroleofa pages 1-3)</td>
+<td>Hu et al. 2014, https://doi.org/10.1073/pnas.1410761111 (hu2014mutationofa pages 1-2); Kumar et al. 2022, https://doi.org/10.3389/fpls.2022.871890 (kumar2022pup1qtlregulates pages 18-19); Yin et al. 2024, https://doi.org/10.3390/plants13192700 (yin2024impactofabiotic pages 8-10); Qiao et al. 2024, https://doi.org/10.3390/agronomy15010094 (qiao2024theroleofa pages 1-3)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes identity, function, pathway context, and key quantitative findings for rice OsMET1a/MET1A using only evidence retrieved in the conversation. It separates direct experimental support from broader pathway-level inferences to aid careful functional annotation.</em></p>
+<h3 id="key-cited-sources-with-publication-dates-and-urls">Key cited sources (with publication dates and URLs)</h3>
+<ul>
+<li>Hu L. et al. <strong>“Mutation of a major CG methylase in rice causes genome-wide hypomethylation, dysregulated genome expression, and seedling lethality.”</strong> <em>PNAS</em> (July <strong>2014</strong>). https://doi.org/10.1073/pnas.1410761111 (hu2014mutationofa pages 1-2, hu2014mutationofa pages 3-4, hu2014mutationofa pages 4-5, hu2014mutationofa pages 5-6, hu2014mutationofa media f7e45d7c)</li>
+<li>Kumar S. et al. <strong>“Pup1 QTL Regulates Gene Expression Through Epigenetic Modification of DNA Under Phosphate Starvation Stress in Rice.”</strong> <em>Frontiers in Plant Science</em> (May <strong>2022</strong>). https://doi.org/10.3389/fpls.2022.871890 (kumar2022pup1qtlregulates pages 18-19)</li>
+<li>Yin M. et al. <strong>“Impact of Abiotic Stress on Rice and the Role of DNA Methylation in Stress Response Mechanisms.”</strong> <em>Plants</em> (Sept <strong>2024</strong>). https://doi.org/10.3390/plants13192700 (yin2024impactofabiotic pages 8-10, yin2024impactofabiotic pages 24-25)</li>
+<li>Qiao S. et al. <strong>“The Role of Plant DNA Methylation in Development, Stress Response, and Crop Breeding.”</strong> <em>Agronomy</em> (Dec <strong>2024</strong>). https://doi.org/10.3390/agronomy15010094 (qiao2024theroleofa pages 1-3)</li>
+<li>Terada R. et al. <strong>“Cre-loxP mediated marker elimination and gene reactivation at the waxy locus…”</strong> <em>Plant Biotechnology</em> (Mar <strong>2010</strong>). https://doi.org/10.5511/plantbiotechnology.27.29 (cites a MET1a targeting study reporting dosage-dependent spatiotemporal expression, but the primary MET1a targeting paper was not retrieved here) (terada2010creloxpmediatedmarker pages 8-9)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(hu2014mutationofa pages 1-2): Lanjuan Hu, Ning Li, Chunming Xu, Silin Zhong, Xiuyun Lin, Jingjing Yang, Tianqi Zhou, Anzhi Yuliang, Ying Wu, Yun-Ru Chen, Xiaofeng Cao, Assaf Zemach, Sachin Rustgi, Diter von Wettstein, and Bao Liu. Mutation of a major cg methylase in rice causes genome-wide hypomethylation, dysregulated genome expression, and seedling lethality. Proceedings of the National Academy of Sciences, 111:10642-10647, Jul 2014. URL: https://doi.org/10.1073/pnas.1410761111, doi:10.1073/pnas.1410761111. This article has 216 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2014mutationofa pages 3-4): Lanjuan Hu, Ning Li, Chunming Xu, Silin Zhong, Xiuyun Lin, Jingjing Yang, Tianqi Zhou, Anzhi Yuliang, Ying Wu, Yun-Ru Chen, Xiaofeng Cao, Assaf Zemach, Sachin Rustgi, Diter von Wettstein, and Bao Liu. Mutation of a major cg methylase in rice causes genome-wide hypomethylation, dysregulated genome expression, and seedling lethality. Proceedings of the National Academy of Sciences, 111:10642-10647, Jul 2014. URL: https://doi.org/10.1073/pnas.1410761111, doi:10.1073/pnas.1410761111. This article has 216 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2014mutationofa pages 4-5): Lanjuan Hu, Ning Li, Chunming Xu, Silin Zhong, Xiuyun Lin, Jingjing Yang, Tianqi Zhou, Anzhi Yuliang, Ying Wu, Yun-Ru Chen, Xiaofeng Cao, Assaf Zemach, Sachin Rustgi, Diter von Wettstein, and Bao Liu. Mutation of a major cg methylase in rice causes genome-wide hypomethylation, dysregulated genome expression, and seedling lethality. Proceedings of the National Academy of Sciences, 111:10642-10647, Jul 2014. URL: https://doi.org/10.1073/pnas.1410761111, doi:10.1073/pnas.1410761111. This article has 216 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yin2024impactofabiotic pages 8-10): Ming Yin, Shanwen Wang, Yanfang Wang, Ronghua Wei, Yawei Liang, Liying Zuo, Mingyue Huo, Zekai Huang, Jie Lang, Xiuqin Zhao, Fan Zhang, Jianlong Xu, Binying Fu, Zichao Li, and Wensheng Wang. Impact of abiotic stress on rice and the role of dna methylation in stress response mechanisms. Plants, 13:2700, Sep 2024. URL: https://doi.org/10.3390/plants13192700, doi:10.3390/plants13192700. This article has 29 citations.</p>
+</li>
+<li>
+<p>(hu2014mutationofa media f7e45d7c): Lanjuan Hu, Ning Li, Chunming Xu, Silin Zhong, Xiuyun Lin, Jingjing Yang, Tianqi Zhou, Anzhi Yuliang, Ying Wu, Yun-Ru Chen, Xiaofeng Cao, Assaf Zemach, Sachin Rustgi, Diter von Wettstein, and Bao Liu. Mutation of a major cg methylase in rice causes genome-wide hypomethylation, dysregulated genome expression, and seedling lethality. Proceedings of the National Academy of Sciences, 111:10642-10647, Jul 2014. URL: https://doi.org/10.1073/pnas.1410761111, doi:10.1073/pnas.1410761111. This article has 216 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kumar2022pup1qtlregulates pages 18-19): Suresh Kumar, Karishma Seem, Santosh Kumar, K. K. Vinod, Viswanathan Chinnusamy, and Trilochan Mohapatra. Pup1 qtl regulates gene expression through epigenetic modification of dna under phosphate starvation stress in rice. Frontiers in Plant Science, May 2022. URL: https://doi.org/10.3389/fpls.2022.871890, doi:10.3389/fpls.2022.871890. This article has 33 citations.</p>
+</li>
+<li>
+<p>(hu2014mutationofa pages 5-6): Lanjuan Hu, Ning Li, Chunming Xu, Silin Zhong, Xiuyun Lin, Jingjing Yang, Tianqi Zhou, Anzhi Yuliang, Ying Wu, Yun-Ru Chen, Xiaofeng Cao, Assaf Zemach, Sachin Rustgi, Diter von Wettstein, and Bao Liu. Mutation of a major cg methylase in rice causes genome-wide hypomethylation, dysregulated genome expression, and seedling lethality. Proceedings of the National Academy of Sciences, 111:10642-10647, Jul 2014. URL: https://doi.org/10.1073/pnas.1410761111, doi:10.1073/pnas.1410761111. This article has 216 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2014mutationofa media e05be17b): Lanjuan Hu, Ning Li, Chunming Xu, Silin Zhong, Xiuyun Lin, Jingjing Yang, Tianqi Zhou, Anzhi Yuliang, Ying Wu, Yun-Ru Chen, Xiaofeng Cao, Assaf Zemach, Sachin Rustgi, Diter von Wettstein, and Bao Liu. Mutation of a major cg methylase in rice causes genome-wide hypomethylation, dysregulated genome expression, and seedling lethality. Proceedings of the National Academy of Sciences, 111:10642-10647, Jul 2014. URL: https://doi.org/10.1073/pnas.1410761111, doi:10.1073/pnas.1410761111. This article has 216 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yin2024impactofabiotic pages 24-25): Ming Yin, Shanwen Wang, Yanfang Wang, Ronghua Wei, Yawei Liang, Liying Zuo, Mingyue Huo, Zekai Huang, Jie Lang, Xiuqin Zhao, Fan Zhang, Jianlong Xu, Binying Fu, Zichao Li, and Wensheng Wang. Impact of abiotic stress on rice and the role of dna methylation in stress response mechanisms. Plants, 13:2700, Sep 2024. URL: https://doi.org/10.3390/plants13192700, doi:10.3390/plants13192700. This article has 29 citations.</p>
+</li>
+<li>
+<p>(qiao2024theroleofa pages 1-3): Shuai Qiao, Wei Song, Wentao Hu, Fang Wang, Anzhong Liao, Wenfang Tan, and Songtao Yang. The role of plant dna methylation in development, stress response, and crop breeding. Agronomy, 15:94, Dec 2024. URL: https://doi.org/10.3390/agronomy15010094, doi:10.3390/agronomy15010094. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(terada2010creloxpmediatedmarker pages 8-9): Rie Terada, Miki Nagahara, Kazuhiko Furukawa, Miki Shimamoto, Katsushi Yamaguchi, and Shigeru Iida. Cre-loxp mediated marker elimination and gene reactivation at the waxy locus created in rice genome based on strong positive–negative selection. Plant Biotechnology, 27:29-37, Mar 2010. URL: https://doi.org/10.5511/plantbiotechnology.27.29, doi:10.5511/plantbiotechnology.27.29. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2021genomewideidentificationand pages 15-16): Dan Li, Bian-E Feng, Yong-Jie Liu, Jie Gong, Yi-Miao Tang, Li-Ping Zhang, Bin-Shuang Pang, Ren-Wei Sun, Feng-Ting Zhang, Zhao-Bo Chen, Yong-Bo Wang, Xian-Chao Chen, Ai-Ping Wang, Chang-Ping Zhao, and Shi-Qing Gao. Genome-wide identification and transcriptional characterization of dna methyltransferases conferring temperature-sensitive male sterility in wheat. BMC Genomics, Apr 2021. URL: https://doi.org/10.1186/s12864-021-07600-7, doi:10.1186/s12864-021-07600-7. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="MET1A-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000013 The DNA methylation levels and differential methylation in the OsMET1 mutant are shown in Figure 2 on page 3. Specifically, Figure " src="MET1A-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>yin2024impactofabiotic pages 8-10</li>
+<li>hu2014mutationofa pages 1-2</li>
+<li>hu2014mutationofa pages 3-4</li>
+<li>qiao2024theroleofa pages 1-3</li>
+<li>li2021genomewideidentificationand pages 15-16</li>
+<li>terada2010creloxpmediatedmarker pages 8-9</li>
+<li>hu2014mutationofa pages 4-5</li>
+<li>hu2014mutationofa pages 5-6</li>
+<li>yin2024impactofabiotic pages 24-25</li>
+<li>https://doi.org/10.3390/plants13192700</li>
+<li>https://doi.org/10.3390/agronomy15010094</li>
+<li>https://doi.org/10.3389/fpls.2022.871890</li>
+<li>https://doi.org/10.1073/pnas.1410761111</li>
+<li>https://doi.org/10.1186/s12864-021-07600-7</li>
+<li>https://doi.org/10.5511/plantbiotechnology.27.29</li>
+<li>https://doi.org/10.1073/pnas.1410761111,</li>
+<li>https://doi.org/10.3390/plants13192700,</li>
+<li>https://doi.org/10.3389/fpls.2022.871890,</li>
+<li>https://doi.org/10.3390/agronomy15010094,</li>
+<li>https://doi.org/10.5511/plantbiotechnology.27.29,</li>
+<li>https://doi.org/10.1186/s12864-021-07600-7,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q7Y1I7
+gene_symbol: MET1A
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:39947
+  label: Oryza sativa subsp. japonica
+description: &gt;
+  MET1A (OsMET1a / OsMET1-1; UniProt Q7Y1I7; LOC_Os03g58400 / Os03g0798300) is a rice
+  DNMT1-like maintenance DNA (cytosine-5) methyltransferase (EC 2.1.1.37). Its core
+  molecular function is the S-adenosyl-L-methionine-dependent transfer of a methyl group
+  to the C5 position of cytosine in DNA, acting primarily at symmetric CG (CpG) sites to
+  copy methylation patterns onto the nascent strand after DNA replication - i.e. maintenance
+  CG methylation underpinning epigenetic inheritance. The protein has the canonical DNMT1
+  architecture: two N-terminal RFTS/replication-foci-targeting regions, two BAH
+  (bromo-adjacent homology) chromatin-reading domains, and a C-terminal SAM-dependent C5
+  methyltransferase catalytic domain with the conserved active-site cysteine (Act_site 1197).
+  Rice carries two closely related MET1 paralogs, OsMET1a (OsMET1-1, this gene) and OsMET1b
+  (OsMET1-2). Both contain all binding and catalytic domains required for a functional CG
+  methylase, but OsMET1b is the dominant, far more highly expressed enzyme: ribonuclease
+  protection assays show steady-state OsMET1-2 mRNA is 7- to 12-fold higher than OsMET1-1 in
+  callus, root and inflorescence [PMID:14513380], and an OsMET1-1 knock-in mutant produces no
+  discernible developmental phenotype, indicating a minor and/or redundant role for OsMET1a
+  in CG-methylation maintenance compared with OsMET1b
+  [file:ORYSJ/MET1A/MET1A-deep-research-falcon.md]. The most quantitative causal data for the
+  rice MET1 pathway come from loss of the major paralog OsMET1b, where gene-body mCG falls
+  ~86% (27.35% to 3.95%), transposon mCG falls ~77%, transposons are derepressed, and OsMET1a
+  is transcriptionally induced ~2.5-fold together with a VIM-like cofactor (~4.5-fold) - placing
+  OsMET1a squarely in the CG maintenance machinery and its compensatory/buffering responses
+  [file:ORYSJ/MET1A/MET1A-deep-research-falcon.md]. MET1A acts in the nucleus on chromosomal
+  DNA. By maintaining CG methylation it contributes (secondarily) to transposon/heterochromatin
+  silencing and methylation-dependent gene silencing, but its defining role is the maintenance
+  methyltransferase reaction itself, not a particular downstream regulatory outcome. Direct
+  in vitro biochemical assays of OsMET1a substrate preference and a dedicated subcellular
+  localization experiment have not been reported; nuclear localization (UniProt, ECO:0000305)
+  and CG specificity are inferred from the enzyme class, domain architecture, and the rice MET1
+  genetics literature.
+existing_annotations:
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;
+      IBA annotation propagated across the DNMT1/MET1 phylogenetic group. As a DNA
+      (cytosine-5) methyltransferase acting on chromosomal DNA, MET1A functions in the nucleus.
+    action: ACCEPT
+    reason: &gt;
+      Core cellular-component annotation and well supported. UniProt assigns MET1A to the
+      nucleus (ECO:0000305), consistent with a maintenance DNA methyltransferase that copies CG
+      methylation onto chromosomal DNA during/after replication. The deep-research synthesis
+      reaches the same conclusion. The IBA term is at the correct level of specificity.
+    supported_by:
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        Based on its demonstrated role as a DNA methyltransferase maintaining genomic CG
+        methylation, its functional site of action is most plausibly the **nucleus**
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;
+      IBA annotation propagated from the DNMT1/MET1 group. MET1A binds DNA: it is a
+      DNA-dependent enzyme whose substrate is double-stranded (hemimethylated) genomic DNA.
+    action: ACCEPT
+    reason: &gt;
+      Correct and supported by the protein&#39;s enzyme class and domain architecture (DNA-binding
+      keyword in UniProt; C5-methyltransferase catalytic domain acting on DNA). DNA binding is a
+      generic term but it is not wrong; the more informative molecular function is the
+      cytosine-5 methyltransferase activity (GO:0003886, retained below). Accept the IBA
+      DNA-binding annotation.
+    supported_by:
+    - reference_id: PMID:14513380
+      supporting_text: each encoding a cytosine-5 DNA methyltransferase (MTase)
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        OsMET1-1 and OsMET1-2 are highly similar and contain all **binding and catalytic
+        domains required for a functional CG methylase**
+- term:
+    id: GO:0003682
+    label: chromatin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR001025, BAH domain). MET1A contains two BAH
+      (bromo-adjacent homology) domains, chromatin-reading modules of DNMT1/MET1 enzymes.
+    action: ACCEPT
+    reason: &gt;
+      Supported by domain content. UniProt annotates two BAH domains (residues 742-874 and
+      910-1049) in MET1A, and the InterPro BAH-to-GO mapping assigns chromatin binding. BAH
+      domains in DNMT1/MET1 read chromatin/nucleosome marks to target maintenance methylation
+      to replicating heterochromatin, so chromatin binding is an appropriate, if generic,
+      molecular-function annotation for this enzyme.
+    supported_by:
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        UniProt/domain annotation for Q7Y1I7 further supports a DNMT1-like architecture with
+        **BAH** and **C5-methyltransferase** domains
+- term:
+    id: GO:0003886
+    label: DNA (cytosine-5-)-methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation (RHEA:13681 / EC 2.1.1.37). This is the defining, core molecular function
+      of MET1A: SAM-dependent transfer of a methyl group to C5 of cytosine in DNA.
+    action: ACCEPT
+    reason: &gt;
+      This is the core molecular function and is strongly supported. UniProt assigns EC
+      2.1.1.37 with the explicit catalytic reaction (a 2&#39;-deoxycytidine in DNA + SAM = a
+      5-methyl-2&#39;-deoxycytidine in DNA + S-adenosyl-L-homocysteine + H+), and the protein
+      belongs to the class I-like SAM-binding methyltransferase superfamily, C5-methyltransferase
+      family, with the conserved active-site cysteine at position 1197. The biochemical paper
+      describes OsMET1-1 directly as a cytosine-5 DNA methyltransferase. This is precisely the
+      activity that the bare retired keyword term &#34;methylation&#34; (GO:0032259) failed to capture.
+    supported_by:
+    - reference_id: PMID:14513380
+      supporting_text: each encoding a cytosine-5 DNA methyltransferase (MTase)
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        MET1A is annotated as a SAM-dependent **DNA (cytosine-5) methyltransferase (EC
+        2.1.1.37)** that transfers a methyl group to the **C5 position of cytosine** in DNA
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation derived from the UniProtKB/Swiss-Prot subcellular-location mapping
+      (SL-0191, Nucleus); duplicates the IBA nucleus annotation.
+    action: ACCEPT
+    reason: &gt;
+      Correct and consistent with the IBA nucleus annotation and with the UniProt subcellular
+      location (Nucleus, ECO:0000305). Duplicate cellular-component annotations with different
+      evidence codes are acceptable. A maintenance DNA methyltransferase acts on chromosomal DNA
+      in the nucleus.
+    supported_by:
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        a DNA methyltransferase acting on chromosomal DNA is most plausibly **nuclear**
+- term:
+    id: GO:0008168
+    label: methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR001525, C5_MeTfrase). &#34;Methyltransferase activity&#34; is the
+      high-level parent of the gene&#39;s specific DNA (cytosine-5) methyltransferase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      &#34;Methyltransferase activity&#34; is a broad grouping term. MET1A is a methyltransferase, so the
+      term is not wrong, but it is uninformative once the specific child term DNA (cytosine-5-)-
+      methyltransferase activity (GO:0003886, retained above) is present - the specific term
+      drops both the substrate (DNA) and the position (C5 of cytosine). Retaining a bare
+      &#34;methyltransferase activity&#34; alongside the specific MF adds no information. Mark as
+      over-annotated; the specific MF is the one to keep.
+    supported_by:
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        MET1A is annotated as a SAM-dependent **DNA (cytosine-5) methyltransferase (EC
+        2.1.1.37)** that transfers a methyl group to the **C5 position of cytosine** in DNA
+- term:
+    id: GO:0045814
+    label: negative regulation of gene expression, epigenetic
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation (ARBA machine-learning model). CG methylation by MET1 contributes to
+      epigenetic gene silencing, but this is a downstream consequence rather than MET1A&#39;s
+      defining function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      Biologically reasonable but non-core. Maintenance CG methylation by MET1 enzymes
+      contributes to methylation-dependent epigenetic gene silencing - RNAi knockdown of
+      OsMET1-1 reactivated a silenced transgene, consistent with the involvement of maintenance
+      methylation in silencing [PMID:14513380]. However, &#34;negative regulation of gene
+      expression, epigenetic&#34; is a pleiotropic downstream outcome of the enzyme&#39;s activity, not
+      the molecular reaction the gene product carries out. Keep, but mark as non-core; the core
+      annotation is the methyltransferase activity and the maintenance-methylation process.
+    supported_by:
+    - reference_id: PMID:14513380
+      supporting_text: &gt;-
+        Restoration of uidA expression in the bombarded calli was consistent with the
+        inactivation of maintenance methylation and with previous evidence for the involvement
+        of methylation in silencing of this line.
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        linking CG maintenance methylation to TE repression and transcriptome stability
+- term:
+    id: GO:0006346
+    label: DNA methylation-dependent constitutive heterochromatin formation
+  evidence_type: IMP
+  original_reference_id: PMID:14513380
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IMP annotation citing PMID:14513380. RNAi knockdown of OsMET1-1 in rice callus reactivated
+      a methylation-silenced transgene, implicating MET1A-mediated maintenance methylation in
+      heterochromatin/silencing - a downstream contribution rather than the core enzymatic role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The annotation is reasonably supported by the cited reference but represents a secondary
+      role. Teerawanichpan et al. used RNAi inverted-repeat constructs against OsMET1-1 and
+      restored expression of a silenced 35S-uidA-nos transgene, consistent with loss of
+      maintenance methylation [PMID:14513380]. MET1-mediated CG maintenance does contribute to
+      transposon/heterochromatin silencing (loss of the major paralog OsMET1b causes broad
+      transposon derepression). However, OsMET1a is the minor paralog (7-12x lower expression;
+      no knock-in phenotype), and constitutive-heterochromatin formation is a downstream,
+      pleiotropic consequence of CG maintenance rather than MET1A&#39;s defining function. Keep as
+      non-core; the core process is maintenance CG methylation (see the SPKW MODIFY entry to
+      GO:0141119).
+    supported_by:
+    - reference_id: PMID:14513380
+      supporting_text: &gt;-
+        Restoration of uidA expression in the bombarded calli was consistent with the
+        inactivation of maintenance methylation and with previous evidence for the involvement
+        of methylation in silencing of this line.
+    - reference_id: PMID:14513380
+      supporting_text: &gt;-
+        the steady-state level of OsMET1-2 was 7- to 12-fold higher than that for OsMET1-1 in
+        callus, root and inflorescence
+- term:
+    id: GO:0044027
+    label: negative regulation of gene expression via chromosomal CpG island methylation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      ISS annotation transferred from human DNMT1 (UniProtKB:P34881). CG methylation by MET1A
+      can repress gene expression at CpG-rich regions, but the CpG-island concept is mammalian
+      and this is a downstream regulatory outcome, not the core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The essence (CG methylation leading to transcriptional repression) is consistent with
+      MET1 biology - maintenance CG methylation is associated with silencing, and RNAi of
+      OsMET1-1 reactivated a methylation-silenced transgene [PMID:14513380]. However, the term
+      is an ISS transfer from human DNMT1 framed around mammalian &#34;CpG islands&#34; (gene-promoter
+      CG-dense regions), a concept that does not map cleanly onto plant genome methylation,
+      where CG, CHG and CHH methylation predominate over much of the genome including
+      transposons. It is best retained as a non-core, similarity-based annotation describing a
+      downstream regulatory consequence rather than MET1A&#39;s defining maintenance-methyltransferase
+      reaction.
+    supported_by:
+    - reference_id: PMID:14513380
+      supporting_text: &gt;-
+        Restoration of uidA expression in the bombarded calli was consistent with the
+        inactivation of maintenance methylation and with previous evidence for the involvement
+        of methylation in silencing of this line.
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        OsMET1a is described as a **maintenance DNA methyltransferase responsible for CG
+        methylation**
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED from
+# the current (2026) GOA release when GOA retired the keyword2GO (keyword2GO/SPKW)
+# pipeline for cellular organisms. Reviewed retrospectively to assess whether removal
+# was justified. This is the single TRUE SPKW-unique annotation for MET1A.
+- term:
+    id: GO:0032259
+    label: methylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Methyltransferase&#34;;
+      snapshot-only, removed in the current GOA release. &#34;Methylation&#34; (GO:0032259) is the
+      bare, substrate-agnostic process term (&#34;a methyl group is covalently attached to a
+      molecule&#34;) - it drops the substrate (DNA), the position (C5 of cytosine) and the
+      maintenance specificity that define MET1A.
+    action: MODIFY
+    reason: &gt;
+      This is the classic enzyme-class-keyword -&gt; bare-process conflation (Tier A). MET1A is a
+      DNA (cytosine-5) methyltransferase (EC 2.1.1.37) whose specific biological process is
+      maintenance of CG DNA methylation after replication, not generic &#34;methylation&#34;. The
+      generic term GO:0032259 is uninformative: it would equally fit a protein, RNA, or
+      small-molecule methyltransferase. The substrate-specific, MET1-specific process term is
+      GO:0141119 &#34;chromosomal DNA methylation maintenance following DNA replication&#34;, whose GO
+      definition explicitly states that CG methylation is maintained by &#34;a maintenance DNA
+      methyltransferase called DNMT1 in mammals and MET1 (DNA METHYLTRANSFERASE 1) in plants&#34;
+      together with the VIM cofactor - matching OsMET1a exactly (including the ~4.5-fold VIM
+      co-induction seen when the major paralog OsMET1b is lost). NOTE: the older generic process
+      terms &#34;DNA methylation&#34; (GO:0006306) and &#34;maintenance of DNA methylation&#34;-type
+      &#34;negative regulation of gene expression via chromosomal DNA cytosine methylation&#34;
+      (GO:0010216) are now OBSOLETE in the authoritative GO release, so GO:0141119 is the
+      correct non-obsolete replacement. Removing the bare keyword term loses nothing of value,
+      but the underlying maintenance-methylation biology should be captured by GO:0141119, so a
+      MODIFY (rather than a plain MARK_AS_OVER_ANNOTATED) is the right action. Tier A.
+    proposed_replacement_terms:
+    - id: GO:0141119
+      label: chromosomal DNA methylation maintenance following DNA replication
+    supported_by:
+    - reference_id: PMID:14513380
+      supporting_text: &gt;-
+        Restoration of uidA expression in the bombarded calli was consistent with the
+        inactivation of maintenance methylation and with previous evidence for the involvement
+        of methylation in silencing of this line.
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        Maintenance methylation refers to the **copying of symmetric methylation patterns
+        (especially CG) onto the nascent strand following semi-conservative DNA replication**,
+        enabling epigenetic inheritance across cell divisions. In rice, **CG methylation is
+        mainly maintained by MET1 enzymes**, specifically **OsMET1a (OsMET1-1)** and **OsMET1b
+        (OsMET1-2)**
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        MET1A is annotated as a SAM-dependent **DNA (cytosine-5) methyltransferase (EC
+        2.1.1.37)** that transfers a methyl group to the **C5 position of cytosine** in DNA,
+        primarily maintaining **CG methylation**
+# --- NEW annotation proposed from the literature ---
+- term:
+    id: GO:0141119
+    label: chromosomal DNA methylation maintenance following DNA replication
+  evidence_type: ISS
+  original_reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+  review:
+    summary: &gt;
+      Proposed substrate-specific process annotation capturing MET1A&#39;s core biological role:
+      maintenance of symmetric CG methylation by copying the parental methylation pattern onto
+      the newly replicated strand. This is the precise term that should replace the retired bare
+      &#34;methylation&#34; (GO:0032259) keyword annotation.
+    action: NEW
+    reason: &gt;
+      MET1A is a DNMT1/MET1-class maintenance CG methyltransferase. The GO definition of
+      GO:0141119 names MET1 in plants as the maintenance DNA methyltransferase and VIM as its
+      cofactor, exactly matching the rice MET1a biology synthesized in the deep-research report
+      (OsMET1a/OsMET1b maintain CG methylation; loss of the major paralog OsMET1b collapses
+      gene-body mCG from 27.35% to 3.95% and co-induces OsMET1a ~2.5-fold and a VIM-like factor
+      ~4.5-fold). The current GOA has no substrate-specific maintenance-methylation process term
+      for MET1A; this is the appropriate, non-obsolete replacement for the generic SPKW
+      &#34;methylation&#34; term. ISS is used because rice OsMET1a-specific in vitro/in vivo maintenance
+      assays were not retrieved; the assignment rests on enzyme class, DNMT1-like domain
+      architecture (RFTS + BAH + C5-MTase), and orthology to characterized MET1/DNMT1 maintenance
+      methyltransferases.
+    supported_by:
+    - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+      supporting_text: &gt;-
+        Maintenance methylation refers to the **copying of symmetric methylation patterns
+        (especially CG) onto the nascent strand following semi-conservative DNA replication**,
+        enabling epigenetic inheritance across cell divisions. In rice, **CG methylation is
+        mainly maintained by MET1 enzymes**, specifically **OsMET1a (OsMET1-1)** and **OsMET1b
+        (OsMET1-2)**
+    - reference_id: PMID:14513380
+      supporting_text: each encoding a cytosine-5 DNA methyltransferase (MTase)
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: InterPro-to-GO mappings assign chromatin binding (IPR001025, BAH domain) and
+      methyltransferase activity (IPR001525, C5 methyltransferase) to MET1A based on its
+      DNMT1-like domain architecture.
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings:
+  - statement: The CpG-island-mediated negative-regulation annotation (GO:0044027) was
+      transferred by ISS from human DNMT1 (UniProtKB:P34881); the mammalian CpG-island framing
+      maps only loosely onto plant genome methylation.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: Core DNMT1/MET1 functions (nucleus, DNA binding, DNA cytosine-5 methyltransferase
+      activity) are conserved across the phylogenetic group and propagated to MET1A by IBA.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the
+      keyword2GO pipeline for cellular organisms.
+  - statement: For MET1A, the keyword &#34;Methyltransferase&#34; mapped to the bare process term
+      &#34;methylation&#34; (GO:0032259), which drops the substrate (DNA) and the C5-cytosine /
+      maintenance specificity; the substrate-specific process is GO:0141119.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings:
+  - statement: Nuclear localization (SL-0191) mapped to GO:0005634; consistent with the IBA
+      nucleus annotation and the role of a chromosomal-DNA maintenance methyltransferase.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: ARBA model assigned &#34;negative regulation of gene expression, epigenetic&#34;
+      (GO:0045814), a downstream pleiotropic consequence of MET1-mediated CG methylation.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined IEA methods (RHEA:13681 / EC 2.1.1.37) assign the core molecular
+      function DNA (cytosine-5-)-methyltransferase activity (GO:0003886).
+- id: PMID:14513380
+  title: Characterization of two rice DNA methyltransferase genes and RNAi-mediated
+    reactivation of a silenced transgene in rice callus.
+  findings:
+  - statement: OsMET1-1 (MET1A) and OsMET1-2 each encode a cytosine-5 DNA methyltransferase of
+      the Dnmt1/MET1 class, with two-thirds regulatory and one-third catalytic domain.
+  - statement: Steady-state OsMET1-2 mRNA is 7- to 12-fold higher than OsMET1-1 in callus, root
+      and inflorescence, indicating OsMET1a is the minor, lower-expressed paralog.
+  - statement: RNAi knockdown of OsMET1-1 reactivated a silenced 35S-uidA-nos transgene in rice
+      callus, consistent with inactivation of maintenance methylation and the involvement of
+      methylation in transcriptional silencing.
+- id: PMID:12869764
+  title: Collection, mapping, and annotation of over 28,000 cDNA clones from japonica
+    rice.
+  findings:
+  - statement: Large-scale rice full-length cDNA collection, sequencing, genome-mapping and
+      InterPro-based annotation paper; not a gene-specific functional study for MET1A.
+- id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation
+    of rice MET1A (Q7Y1I7).
+  findings:
+  - statement: MET1A (OsMET1a / OsMET1-1; LOC_Os03g58400) is a DNMT1-like maintenance DNA
+      (cytosine-5) methyltransferase (EC 2.1.1.37) that transfers a methyl group to the C5
+      position of cytosine in DNA, primarily maintaining symmetric CG methylation after
+      replication.
+  - statement: Rice CG methylation is mainly maintained by MET1 enzymes (OsMET1a and OsMET1b);
+      OsMET1b is the dominant, more highly expressed paralog, and an OsMET1-1 knock-in mutant
+      showed no discernible developmental phenotype, indicating a minor/redundant role for
+      OsMET1a.
+  - statement: Loss of the major paralog OsMET1b collapses gene-body mCG from 27.35% to 3.95%
+      (~86% loss), reduces transposon mCG ~77%, derepresses transposons, and co-induces OsMET1a
+      ~2.5-fold and a VIM-family cofactor ~4.5-fold, placing OsMET1a in the CG-maintenance
+      machinery and its buffering responses.
+  - statement: A maintenance DNA methyltransferase acting on chromosomal DNA is most plausibly
+      nuclear; no direct OsMET1a localization or in vitro substrate-preference assay was
+      retrieved, so these are inferences from enzyme class and orthology.
+core_functions:
+- description: &gt;
+    MET1A is a rice DNMT1/MET1-family maintenance DNA (cytosine-5) methyltransferase that
+    catalyzes SAM-dependent transfer of a methyl group to the C5 position of cytosine in DNA,
+    acting at symmetric CG sites to copy the parental methylation pattern onto the newly
+    replicated strand in the nucleus. This maintenance of CG DNA methylation is its defining
+    molecular and biological role and underpins epigenetic inheritance.
+  molecular_function:
+    id: GO:0003886
+    label: DNA (cytosine-5-)-methyltransferase activity
+  directly_involved_in:
+  - id: GO:0141119
+    label: chromosomal DNA methylation maintenance following DNA replication
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:14513380
+    supporting_text: each encoding a cytosine-5 DNA methyltransferase (MTase)
+  - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+    supporting_text: &gt;-
+      MET1A is annotated as a SAM-dependent **DNA (cytosine-5) methyltransferase (EC
+      2.1.1.37)** that transfers a methyl group to the **C5 position of cytosine** in DNA,
+      primarily maintaining **CG methylation**
+- description: &gt;
+    As the minor of two rice MET1 paralogs, MET1A participates in replication-coupled
+    maintenance of CG methylation; the resulting maintenance methylation feeds downstream into
+    methylation-dependent transcriptional gene silencing and transposon/heterochromatin
+    repression. RNAi knockdown of OsMET1-1 reactivates a methylation-silenced transgene,
+    consistent with inactivation of maintenance methylation.
+  molecular_function:
+    id: GO:0003886
+    label: DNA (cytosine-5-)-methyltransferase activity
+  directly_involved_in:
+  - id: GO:0141119
+    label: chromosomal DNA methylation maintenance following DNA replication
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:14513380
+    supporting_text: &gt;-
+      Restoration of uidA expression in the bombarded calli was consistent with the
+      inactivation of maintenance methylation and with previous evidence for the involvement
+      of methylation in silencing of this line.
+  - reference_id: file:ORYSJ/MET1A/MET1A-deep-research-falcon.md
+    supporting_text: &gt;-
+      In rice, **CG methylation is mainly maintained by MET1 enzymes**, specifically
+      **OsMET1a (OsMET1-1)** and **OsMET1b (OsMET1-2)**
+proposed_new_terms: []
+suggested_questions:
+- question: Does rice OsMET1a have intrinsic maintenance CG-methyltransferase activity in vitro,
+    and does it preferentially methylate hemimethylated CG substrates as expected for a DNMT1/MET1
+    maintenance enzyme?
+  experts:
+  - Bao Liu
+- question: What is the division of labour between OsMET1a and the dominant paralog OsMET1b -
+    is OsMET1a a genuine backup maintenance methylase induced when OsMET1b is lost, or does it
+    have locus- or tissue-specific maintenance targets?
+  experts:
+  - Xiaofeng Cao
+suggested_experiments:
+- description: Express and purify recombinant OsMET1a and assay SAM-dependent methyl transfer
+    on hemimethylated versus unmethylated CG, CHG and CHH oligonucleotide substrates to confirm
+    maintenance CG specificity directly.
+  hypothesis: OsMET1a is a maintenance methyltransferase with strong preference for
+    hemimethylated CG (CpG) sites, consistent with the DNMT1/MET1 class.
+  experiment_type: in vitro methyltransferase activity assay
+- description: Generate clean osmet1a single and osmet1a osmet1b double knockouts (e.g. by
+    CRISPR) and perform whole-genome bisulfite sequencing to quantify the CG-methylation
+    contribution attributable specifically to OsMET1a, including in the OsMET1b-deficient
+    background where OsMET1a is induced.
+  hypothesis: OsMET1a makes a measurable but minor contribution to genome-wide CG maintenance
+    that becomes detectable (or essential) only when OsMET1b is absent.
+  experiment_type: genetic knockout combined with whole-genome bisulfite sequencing
+- description: Determine the subcellular localization and replication-coupling of OsMET1a using
+    a functional OsMET1a-GFP fusion and co-localization with replication-fork/PCNA markers in
+    dividing rice cells.
+  hypothesis: OsMET1a localizes to the nucleus and is recruited to replication foci during
+    S phase, consistent with a replication-coupled maintenance methyltransferase.
+  experiment_type: fluorescent-protein localization and replication co-localization assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

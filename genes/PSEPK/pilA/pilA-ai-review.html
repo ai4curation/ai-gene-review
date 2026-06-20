@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pilA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pilA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88Q62" target="_blank" class="term-link">
+                        Q88Q62
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pilA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88Q62" data-a="DESCRIPTION: PilA (PP_0634) is the major type IV pilin of Pseud..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PilA (PP_0634) is the major type IV pilin of Pseudomonas putida KT2440, the principal structural subunit that polymerizes into type IV pili (T4P) — dynamic, retractile filaments on the bacterial cell surface. It belongs to the N-methyl-phenylalanine (type IVa) pilin family, with a hydrophobic N-terminal alpha-helix (a predicted transmembrane segment) that mediates subunit packing within the filament core, and a globular C-terminal head bearing a conserved disulfide-bonded loop. Like other T4a pilins, it is synthesized as a prepilin whose leader peptide is cleaved and whose new N-terminal phenylalanine is N-methylated by the prepilin peptidase PilD before the mature subunit is stored in the inner membrane and assembled into the filament. Cycles of pilus extension and retraction allow the assembled type IV pilus to mediate surface adhesion, twitching motility, microcolony and biofilm formation, and, in many species, DNA uptake during natural transformation. In P. putida, pilin expression is induced upon surface attachment and biofilm growth, consistent with a role in surface colonization.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007155" target="_blank" class="term-link">
+                                    GO:0007155
+                                </a>
+                            </span>
+                            <span class="term-label">cell adhesion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q62" data-a="GO:0007155" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Type IV pili are adhesive surface filaments, and the major pilin PilA mediates attachment to surfaces and other cells. Cell adhesion is a genuine, if general, function of this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Adhesion is a well-established function of type IV pili and of the major pilin subunit. The InterPro2GO inference from the Pilin domain (IPR001082) is biologically appropriate, and surface-attachment-induced pilin expression in P. putida supports an adhesion role. The term is general but not incorrect; a more specific adhesion-during-biofilm term could be considered if experimental evidence in KT2440 were available.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009289" target="_blank" class="term-link">
+                                    GO:0009289
+                                </a>
+                            </span>
+                            <span class="term-label">pilus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q62" data-a="GO:0009289" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PilA is the major structural subunit of a pilus, so the pilus localization is correct. However, PilA specifically forms a type IV pilus (N-methyl-phenylalanine pilin family), for which a more precise term exists.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The generic &#34;pilus&#34; term is correct but under-specific. PilA belongs to the N-Me-Phe (type IVa) pilin family and assembles into a type IV pilus, so the more informative child term GO:0044096 (type IV pilus) better captures the localization.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044096" target="_blank" class="term-link">
+                                    type IV pilus
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015627" target="_blank" class="term-link">
+                                    GO:0015627
+                                </a>
+                            </span>
+                            <span class="term-label">type II protein secretion system complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q62" data-a="GO:0015627" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from the InterPro pilin-domain mapping (IPR000983, GSPG_pilin), which is shared between type IV major pilins and the pseudopilins of the type II secretion system. PilA is a type IV pilin, not a T2SS pseudopilin, so it is not part of the type II secretion system complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The T4P major pilin and T2SS major pseudopilin share an ancestral pilin fold and InterPro signature, which causes InterPro2GO to over-propagate T2SS terms onto type IV pilins. PilA (PP_0634) is the major pilin of the type IV pilus system; its structural component is the type IV pilus, not the T2SS complex. This is a domain-homology over-annotation and should be removed.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015628" target="_blank" class="term-link">
+                                    GO:0015628
+                                </a>
+                            </span>
+                            <span class="term-label">protein secretion by the type II secretion system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q62" data-a="GO:0015628" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same InterPro2GO artifact as the T2SS complex annotation. PilA is a type IV pilin and does not function in type II protein secretion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This BP term is inferred from the shared pilin/pseudopilin domain signature and does not reflect PilA&#39;s actual role. PilA builds the type IV pilus and participates in type IV pilus assembly and twitching motility, not type II secretion. Remove as a domain-homology over-annotation; the appropriate processes (type IV pilus assembly, type IV pilus-dependent motility) are proposed as new terms.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Major structural subunit of the type IV pilus; PilA polymerizes to form the dynamic surface filament that constitutes the type IV pilus.</h3>
+                <span class="vote-buttons" data-g="Q88Q62" data-a="FUNCTION: Major structural subunit of the type IV pilus; Pil..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044096" target="_blank" class="term-link">
+                                type IV pilus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                                PMID:12534463
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">KT2440 PilA (PP_0634) is annotated as the major type IV pilin and belongs to the N-Me-Phe (type IVa) pilin family; the major pilin is the small subunit that polymerizes to form the helical surface filament of the type IV pilus (applied by family/domain homology to KT2440 PilA Q88Q62).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Through assembly into the type IV pilus, PilA mediates surface adhesion, twitching motility, and biofilm/microcolony formation; pilin expression is induced upon surface attachment in P. putida.</h3>
+                <span class="vote-buttons" data-g="Q88Q62" data-a="FUNCTION: Through assembly into the type IV pilus, PilA medi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043107" target="_blank" class="term-link">
+                                type IV pilus-dependent motility
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11673428" target="_blank" class="term-link">
+                                PMID:11673428
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">In P. putida, PilA was not detected in planktonic culture but was detected after surface attachment and throughout biofilm development, with pilus-related genes upregulated within hours of attachment (strain ATCC 39168).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11673428" target="_blank" class="term-link">
+                            PMID:11673428
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of phenotypic changes in Pseudomonas putida in response to surface-associated growth.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PilA (PP_0634) deletion in KT2440 abolish twitching motility and reduce surface attachment/biofilm formation, as expected for a major type IV pilin?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88Q62" data-a="Q: Does PilA (PP_0634) deletion in KT2440 abolish twi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is the KT2440 type IV pilus assembled given the reported absence of the canonical assembly ATPase PilB, and is xcpR (or another ATPase) functionally substituting?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88Q62" data-a="Q: How is the KT2440 type IV pilus assembled given th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a markerless pilA (PP_0634) deletion in KT2440 and assay twitching motility (subsurface stab/agar interstitial assay), surface adhesion, and biofilm formation, with complementation to confirm specificity.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88Q62" data-a="EXPERIMENT: Construct a markerless pilA (PP_0634) deletion in ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Verify PilA maturation by detecting N-terminal N-methylation/leader cleavage (mass spectrometry on purified pili) and confirm surface pilus assembly by immuno-EM or pilus shearing/Western blot.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88Q62" data-a="EXPERIMENT: Verify PilA maturation by detecting N-terminal N-m..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pilA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88Q62" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **pilA** (UniProt **Q88Q62**, locus **PP_0634**) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">35 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:26:51.855946</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pilA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pilA-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000018 Figure 1 is the most informative schematic showing the overall structure and assembly components of the type IVa pilus (T4aP). It d</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-pila-uniprot-q88q62-locus-pp_0634-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>pilA</strong> (UniProt <strong>Q88Q62</strong>, locus <strong>PP_0634</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-scope-identity-verification-and-evidence-limits">0) Scope, identity verification, and evidence limits</h2>
+<h3 id="target-identity-verification-critical">Target identity verification (critical)</h3>
+<p>The gene symbol <strong>pilA</strong> is highly ambiguous across bacteria; here the target is <strong>UniProt Q88Q62</strong> from <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950). In the retrieved literature, <strong>PP_0634</strong> in KT2440 is explicitly mapped as the ortholog of <em>Pseudomonas aeruginosa</em> <strong>pilA</strong> (major type IV pilin gene) in a type IV pili/adherence gene mapping table, supporting that KT2440 <strong>PP_0634 encodes PilA</strong>. (udaondo2025transcriptionalregulatorysystems pages 12-14)</p>
+<p>A sequence-comparison study of type IVa pilins includes a <em>P. putida</em> KT2440 entry (accession <strong>NP_742795</strong>) among “other bacteria with type IVa pilin genes,” consistent with PilA of KT2440 being a <strong>type IVa pilin-family protein</strong> and aligning with the UniProt description of Q88Q62 as Pilin. (harvey2009singleresiduechangesin pages 4-5)</p>
+<h3 id="evidence-limitation-kt2440-specific-phenotypes">Evidence limitation (KT2440-specific phenotypes)</h3>
+<p>Within the retrieved full texts, I did <strong>not</strong> find direct KT2440 experiments (e.g., KT2440 pilA knockout/complementation) that quantify PilA-dependent twitching motility, adhesion, biofilm formation, or competence. Therefore, <strong>KT2440-specific molecular identity is directly supported</strong>, while <strong>functional/mechanistic annotation relies heavily on conserved, well-established type IVa pilus (T4aP) biology</strong> from authoritative reviews and <em>Pseudomonas</em> model systems, supplemented by a primary <em>Pseudomonas putida</em> paper (strain GB-1) directly describing PilD/PilA processing and methylation and noting relevant gene clusters in KT2440. (vrind2003identificationofa pages 2-3, vrind2003identificationofa pages 1-2)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-type-iv-pili-t4p-and-type-4-filaments-t4f">1.1 Type IV pili (T4P) and “type 4 filaments” (T4F)</h3>
+<p>Type IV pili (T4P) are members of the broader <strong>type 4 filament (T4F)</strong> superfamily: filamentous polymers made of type 4 pilin subunits assembled by a conserved multi-protein machinery. Core conserved components include the pilin(s), a <strong>prepilin peptidase</strong>, an <strong>extension ATPase</strong>, and a <strong>platform protein</strong>; addition of a <strong>PilT-like retraction motor</strong> enables retraction in retractile systems. (pelicic2023mechanismofassembly pages 2-3, pelicic2023mechanismofassembly pages 5-6)</p>
+<h3 id="12-what-pila-is">1.2 What PilA is</h3>
+<p><strong>PilA</strong> denotes the <strong>major pilin</strong> (major structural subunit) of type IVa pili in many Gram-negative bacteria, including <em>Pseudomonas</em> model systems; large numbers of PilA monomers polymerize to form the extracellular pilus fiber. (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10, jacobsen2020structureandfunction pages 1-3)</p>
+<h3 id="13-prepilin-processing-and-n-terminal-methylation">1.3 Prepilin processing and N-terminal methylation</h3>
+<p>Type IV pilins are synthesized as <strong>prepilins</strong> carrying an N-terminal leader peptide (“SPIII signal peptide” in T4F terminology). A dedicated inner-membrane prepilin peptidase—classically <strong>PilD</strong> in many bacteria—<strong>cleaves the leader peptide</strong> to yield the mature pilin that can be assembled into pili; PilD is frequently described as <strong>bifunctional</strong>, also catalyzing <strong>N-terminal methylation</strong> of the newly exposed N-terminus. (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10)</p>
+<p>In <em>Pseudomonas aeruginosa</em>, primary mechanistic work emphasizes that <strong>PilD cleavage is required for assembly</strong>, whereas N-terminal methylation is conserved but can be <strong>not strictly required</strong> for pilus assembly in certain settings. (kuchma2022surfaceinducedcampsignaling pages 1-2)</p>
+<h2 id="2-functional-annotation-of-p-putida-kt2440-pila-q88q62-pp_0634">2) Functional annotation of <em>P. putida</em> KT2440 PilA (Q88Q62 / PP_0634)</h2>
+<h3 id="21-molecular-function-major-pilin-subunit-structural">2.1 Molecular function: major pilin subunit (structural)</h3>
+<p><strong>Primary function (best-supported):</strong> PilA (Q88Q62 / PP_0634) is inferred to be the <strong>major pilin subunit</strong> that polymerizes into the extracellular <strong>type IV pilus filament</strong> in <em>P. putida</em> KT2440, based on direct mapping of PP_0634 to pilA within a type IV pili/adherence gene set and sequence-family placement among type IVa pilins. (udaondo2025transcriptionalregulatorysystems pages 12-14, harvey2009singleresiduechangesin pages 4-5)</p>
+<p><strong>Protein family/domain consistency (literature-based):</strong> The KT2440 PilA sequence is treated as a type IVa pilin in comparative analysis of a characteristic C-terminal disulfide-bonded loop region across pilins, consistent with a PilA-like fold. (harvey2009singleresiduechangesin pages 4-5)</p>
+<h3 id="22-subcellular-localization-and-cellular-context">2.2 Subcellular localization and cellular context</h3>
+<h4 id="221-where-pila-resides-before-assembly">2.2.1 Where PilA resides before assembly</h4>
+<p>Authoritative structural reviews describe pilins as being <strong>stored in the inner membrane</strong> after synthesis/processing, where they serve as a reservoir of subunits for pilus assembly. (mccallum2019thedynamicstructures pages 1-3)</p>
+<h4 id="222-where-pila-functions-after-assembly">2.2.2 Where PilA functions after assembly</h4>
+<p>Upon polymerization, PilA subunits form a <strong>surface-exposed pilus fiber</strong> that is extruded through an outer-membrane secretin pore (<strong>PilQ</strong> in <em>Pseudomonas</em> systems). (tala2022characterizationofpseudomonas pages 15-21, mccallum2019thedynamicstructures media 6fa112b3)</p>
+<h3 id="23-maturationprocessing-steps-relevant-to-kt2440-pila">2.3 Maturation/processing steps relevant to KT2440 PilA</h3>
+<p>Direct <em>Pseudomonas putida</em> evidence (strain GB-1) states that <strong>xcpA (also called pilD)</strong> encodes a leader peptidase (prepilin peptidase) required for <strong>processing and methylation</strong> of the <strong>PilA prepilin</strong> precursor; it also notes that the unannotated KT2440 genome contains related secretion/pilus gene clusters. This supports the inference that KT2440 PilA is matured by a PilD-like prepilin peptidase. (vrind2003identificationofa pages 2-3, vrind2003identificationofa pages 1-2)</p>
+<p>More broadly, pilin maturation is described as: (i) insertion/targeting such that the prepilin is positioned in the inner membrane, (ii) <strong>PilD cleavage</strong> of the leader peptide, and (iii) <strong>N-terminal methylation</strong> of the newly exposed amino terminus by PilD in systems possessing the methylase domain. (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10, pelicic2023mechanismofassembly pages 5-6)</p>
+<h3 id="24-pathway-placement-type-iv-pilus-biogenesis-and-dynamics">2.4 Pathway placement: type IV pilus biogenesis and dynamics</h3>
+<h4 id="241-core-biogenesis-machinery">2.4.1 Core biogenesis machinery</h4>
+<p>T4aP biogenesis requires a conserved envelope-spanning apparatus, including:<br />
+- <strong>PilC</strong> (platform protein) and ATPases for dynamics: <strong>PilB</strong> for extension/polymerization and <strong>PilT/PilU</strong> for retraction/depolymerization in <em>P. aeruginosa</em> systems. (kuchma2022surfaceinducedcampsignaling pages 1-2, tala2022characterizationofpseudomonas pages 15-21)<br />
+- The <strong>PilMNOP</strong> alignment/stabilization complex and <strong>PilQ</strong> secretin pore for outer-membrane transit. (tala2022characterizationofpseudomonas pages 15-21, mccallum2019thedynamicstructures media 6fa112b3)</p>
+<p>A structural review provides filament parameters and emphasizes how the PilA N-terminal α-helix packs into a hydrophobic core in the assembled filament while other loops are surface exposed, supporting PilA’s role as a structural subunit optimized for extracellular interaction. (mccallum2019thedynamicstructures pages 1-3)</p>
+<h4 id="242-retraction-driven-functions-twitching-motility-sensing">2.4.2 Retraction-driven functions (twitching motility, sensing)</h4>
+<p>T4P systems are classically implicated in <strong>twitching motility</strong>, adhesion, DNA uptake (competence), and biofilm-related behaviors across many bacteria. (singh2022landmarkdiscoveriesand pages 5-7, jacobsen2020structureandfunction pages 1-3)</p>
+<p>In <em>P. aeruginosa</em>, T4P retraction is also linked to surface-sensing signaling (cAMP induction), and PilT-driven retraction is required and sufficient for robust surface-dependent cAMP signaling in one mechanistic study. While this is not KT2440-specific, it provides an example of how PilA-containing pili can couple mechanical engagement to signaling. (kuchma2022surfaceinducedcampsignaling pages 1-2)</p>
+<h2 id="3-recent-developments-and-latest-research-prioritizing-20232024">3) Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="31-2023-unified-mechanistic-model-of-type-4-filament-assembly">3.1 2023: Unified mechanistic model of type 4 filament assembly</h3>
+<p>A 2023 review synthesizes a holistic mechanistic model of T4F assembly, emphasizing conserved components (prepilin peptidase, extension ATPase, platform) and the role of PilT-like motors in enabling retractile behavior. This kind of synthesis is directly relevant when functionally annotating PilA homologs in non-pathogenic environmental bacteria (like <em>P. putida</em> KT2440) because it clarifies which aspects of function can be inferred from conserved machinery. (pelicic2023mechanismofassembly pages 2-3, pelicic2023mechanismofassembly pages 5-6)</p>
+<h3 id="32-2024-population-genomics-of-the-p-putida-group-highlights-surface-adhesion-systems">3.2 2024: Population genomics of the <em>P. putida</em> group highlights surface-adhesion systems</h3>
+<p>A 2024 review on the genomic diversity of the <em>Pseudomonas putida</em> group notes (at a group level) the presence of <strong>type IV pili assembly genes</strong> and indicates their importance for adhesion to surfaces. While not specific to PP_0634, it supports the ecological relevance of T4P in <em>P. putida</em> group lifestyles. (vrind2003identificationofa pages 2-3)</p>
+<h3 id="33-2024-applied-strain-engineering-targeting-piliappendage-biogenesis-for-fermentation">3.3 2024: Applied strain engineering targeting pili/appendage biogenesis for fermentation</h3>
+<p>A 2024 applied study engineered <em>P. putida</em> (strain PCL1760, not KT2440) by deleting genes including <strong>pilQ</strong> (outer-membrane secretin of T4P systems) along with <strong>flhA</strong> and <strong>algA</strong>, aiming to reduce motility/biofilm burdens in bioreactors. This is a real-world implementation demonstrating industrial motivation to modulate pili-related functions, even though it does not directly probe PilA. (frolov2024constructionofthe pages 1-2)</p>
+<h2 id="4-current-applications-and-real-world-implementations">4) Current applications and real-world implementations</h2>
+<h3 id="41-bioprocessingfermentation-reducing-biofilm-and-motility-burdens">4.1 Bioprocessing/fermentation: reducing biofilm and motility burdens</h3>
+<p>In the 2024 fermentation-focused work, deletion of genes involved in alginate, flagellar export, and pili formation (including <strong>pilQ</strong>) reduced biofilm formation by <strong>~40% after 72 h</strong> and increased viable counts in bioreactor-like growth conditions (see §5 for numerical data). This illustrates a practical application of manipulating surface-attachment/motility machinery (where PilA is the major pilus subunit) to improve industrial robustness. (frolov2024constructionofthe pages 1-2)</p>
+<h3 id="42-mechanobiology-and-surface-sensing-model-system-insight">4.2 Mechanobiology and surface sensing (model-system insight)</h3>
+<p>Although focused on <em>P. aeruginosa</em>, contemporary mechanistic studies and reviews emphasize that T4P can act as <strong>mechanosensors</strong>, transmitting force through the pilus to regulate second-messenger pathways (cAMP or c-di-GMP) during early surface colonization. Such frameworks inform hypotheses for environmental pseudomonads including KT2440. (kuchma2022surfaceinducedcampsignaling pages 1-2)</p>
+<h2 id="5-quantitative-statistics-and-data-recent-and-authoritative">5) Quantitative statistics and data (recent and authoritative)</h2>
+<h3 id="51-structuralbiophysical-parameters-of-type-iv-pili-relevant-to-pila-fibers">5.1 Structural/biophysical parameters of type IV pili (relevant to PilA fibers)</h3>
+<p>From a structural review of T4aP:<br />
+- The assembled filament’s helical parameters are reported as a <strong>helical rise ≈10 Å</strong> and <strong>twist 80–100°</strong> in structural analyses. (mccallum2019thedynamicstructures pages 1-3)</p>
+<p>From a major review summarizing the field:<br />
+- Single pilus retraction forces have been reported up to <strong>~80 pN</strong>, consistent with powerful mechanical functions such as surface motility and mechanosensing. (singh2022landmarkdiscoveriesand pages 5-7)</p>
+<h3 id="52-industrialengineering-metrics-in-p-putida-pili-related-intervention">5.2 Industrial/engineering metrics in <em>P. putida</em> (pili-related intervention)</h3>
+<p>In <em>P. putida</em> PCL1760 derivatives with <strong>pilQ</strong> (plus flhA, algA) deleted:<br />
+- Biofilm formation was <strong>40% lower after 72 h</strong>. (frolov2024constructionofthe pages 1-2)<br />
+- Rich medium bioreactor-like growth: <strong>1.39 × 10^10 CFU/mL</strong> (mutant) vs <strong>6.4 × 10^9 CFU/mL</strong> (wild type). (frolov2024constructionofthe pages 1-2)<br />
+- Mineral medium bioreactor-like growth: <strong>6.11 × 10^9 CFU/mL</strong> (mutant) vs <strong>1.36 × 10^9 CFU/mL</strong> (wild type). (frolov2024constructionofthe pages 1-2)</p>
+<p>These data demonstrate the magnitude of performance changes possible when modifying surface-appendage pathways related to type IV pili. (frolov2024constructionofthe pages 1-2)</p>
+<h2 id="6-expert-opinions-and-synthesis-from-authoritative-sources">6) Expert opinions and synthesis from authoritative sources</h2>
+<h3 id="61-consensus-view-pila-is-central-to-t4p-as-a-multifunctional-nanofiber-subunit">6.1 Consensus view: PilA is central to T4P as a multifunctional nanofiber subunit</h3>
+<p>Authoritative reviews converge on the concept that the major pilin (PilA) is the foundational building block of a retractable nanofiber that supports multiple behaviors (twitching, adhesion, competence, biofilm dynamics), and that its conserved maturation (PilD cleavage ± methylation) is essential to make subunits assembly-competent. (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10, jacobsen2020structureandfunction pages 1-3)</p>
+<h3 id="62-modern-frontier-integrating-structure-dynamics-and-signaling">6.2 Modern frontier: integrating structure, dynamics, and signaling</h3>
+<p>Recent Pseudomonas-focused mechanistic work frames T4P not only as a motility machine but as an input into intracellular signaling cascades (e.g., surface-induced cAMP) and emphasizes disentangling which pilus features are required for signaling versus motility. This is important for functional annotation because it argues that PilA-containing pili can have separable roles beyond locomotion (e.g., sensing and regulation). (kuchma2022surfaceinducedcampsignaling pages 1-2)</p>
+<h2 id="7-visual-schematic-architecture">7) Visual schematic (architecture)</h2>
+<p>A widely used architectural schematic of the type IVa pilus machine, showing the location of the <strong>PilA filament</strong> and associated inner-membrane motors/platform and outer-membrane secretin, is available from McCallum et al. (2019). (mccallum2019thedynamicstructures media 6fa112b3)</p>
+<h2 id="8-practical-functional-annotation-for-q88q62-pp_0634-in-kt2440-recommended-language">8) Practical functional annotation for Q88Q62 (PP_0634) in KT2440 (recommended language)</h2>
+<h3 id="81-recommended-primary-annotation-high-confidence">8.1 Recommended primary annotation (high confidence)</h3>
+<ul>
+<li><strong>Protein:</strong> PilA (major type IV pilin) (udaondo2025transcriptionalregulatorysystems pages 12-14, harvey2009singleresiduechangesin pages 4-5)</li>
+<li><strong>System:</strong> Type IVa pilus biogenesis / adherence-associated locus (udaondo2025transcriptionalregulatorysystems pages 12-14)</li>
+<li><strong>Molecular role:</strong> Major structural subunit polymerized into extracellular pilus fiber (inference consistent with T4aP biology) (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10)</li>
+<li><strong>Processing:</strong> Prepilin leader cleavage and N-terminal methylation by PilD-like prepilin peptidase (directly described for <em>P. putida</em> in GB-1 and broadly conserved) (vrind2003identificationofa pages 2-3, mccallum2019thedynamicstructures pages 1-3)</li>
+<li><strong>Localization:</strong> Inner membrane (pre-assembly reservoir) and cell surface (assembled pilus fiber) (mccallum2019thedynamicstructures pages 1-3, mccallum2019thedynamicstructures media 6fa112b3)</li>
+</ul>
+<h3 id="82-recommended-secondary-putative-process-terms-lower-confidence-for-kt2440-without-direct-mutant-phenotype">8.2 Recommended secondary (putative) process terms (lower confidence for KT2440 without direct mutant phenotype)</h3>
+<ul>
+<li><strong>Putative biological processes:</strong> twitching motility, surface adhesion, early biofilm formation, surface sensing (supported for T4P generally and in <em>Pseudomonas</em> models but not directly demonstrated for KT2440 PilA in the retrieved corpus) (singh2022landmarkdiscoveriesand pages 5-7, kuchma2022surfaceinducedcampsignaling pages 1-2)</li>
+</ul>
+<h2 id="9-evidence-summary-table">9) Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Claim/Concept</th>
+<th>Evidence summary</th>
+<th>Organism/system (KT2440 vs other)</th>
+<th>Quantitative data (if any)</th>
+<th>Primary source (first author year, journal)</th>
+<th>Publication date (month/year)</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0634 maps to pilA in <em>Pseudomonas putida</em> KT2440</td>
+<td>Comparative mapping of adherence/type IV pili genes lists <em>P. aeruginosa</em> <strong>pilA</strong> (PA4525) corresponding to <em>P. putida</em> KT2440 <strong>PP_0634</strong>, supporting that UniProt Q88Q62/PP_0634 is the KT2440 <strong>pilA</strong> ortholog (udaondo2025transcriptionalregulatorysystems pages 12-14).</td>
+<td>KT2440</td>
+<td>None reported</td>
+<td>Udaondo 2025, <em>Int. J. Mol. Sci.</em></td>
+<td>05/2025</td>
+<td>https://doi.org/10.3390/ijms26104677</td>
+</tr>
+<tr>
+<td>KT2440 PilA is a type IVa pilin-family protein</td>
+<td>A sequence survey of type IVa pilins includes a <em>P. putida</em> KT2440 entry (NP_742795) among “other bacteria with type IVa pilin genes”; the KT2440 sequence carries the conserved C-terminal disulfide-bonded loop features typical of type IVa pilins (harvey2009singleresiduechangesin pages 4-5).</td>
+<td>KT2440</td>
+<td>DSL sequence listed as <strong>CTTDIEDDLAPKGC</strong> (harvey2009singleresiduechangesin pages 4-5)</td>
+<td>Harvey 2009, <em>J. Bacteriol.</em></td>
+<td>11/2009</td>
+<td>https://doi.org/10.1128/jb.00943-09</td>
+</tr>
+<tr>
+<td>PilA is the major pilin subunit of type IV pili</td>
+<td>Reviews define PilA as the major pilin/prepilin whose polymerization forms the type IVa pilus fiber; thousands of PilA-like subunits can build a filament (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10, jacobsen2020structureandfunction pages 1-3).</td>
+<td>Other <em>Pseudomonas</em> / general T4P biology</td>
+<td>None specific</td>
+<td>McCallum 2019, <em>Microbiol. Spectrum</em></td>
+<td>04/2019</td>
+<td>https://doi.org/10.1128/microbiolspec.psib-0006-2018</td>
+</tr>
+<tr>
+<td>PilA precursor processing requires prepilin peptidase PilD and includes N-terminal methylation</td>
+<td>Authoritative reviews and primary studies state that PilA is synthesized as a prepilin with an N-terminal leader peptide that is cleaved by <strong>PilD</strong>; PilD is bifunctional and methylates the nascent N terminus. Cleavage is essential for pilus biogenesis, whereas methylation is conserved and in some systems not strictly required for assembly (kuchma2022surfaceinducedcampsignaling pages 1-2, pelicic2023mechanismofassembly pages 5-6, singh2022landmarkdiscoveriesand pages 9-10, graupner2000typeivpilus pages 5-6, wellerstuart2015genomicandfunctionala pages 60-63).</td>
+<td>Other <em>Pseudomonas</em> / general T4P biology</td>
+<td>Prepilin hydrophobic stretch typically <strong>20–25 aa</strong> (pelicic2023mechanismofassembly pages 5-6)</td>
+<td>Kuchma 2022, <em>J. Bacteriol.</em></td>
+<td>10/2022</td>
+<td>https://doi.org/10.1128/jb.00186-22</td>
+</tr>
+<tr>
+<td>Direct <em>P. putida</em> evidence linking PilD to PilA processing/methylation</td>
+<td>In <em>P. putida</em> GB-1, <strong>xcpA/pilD</strong> is described as a leader peptidase (prepilin peptidase) required for processing and methylation of the PilA prepilin; the paper also notes that KT2440 contains related Xcp/Gsp-like clusters, supporting the presence of cognate maturation machinery in <em>P. putida</em> genomes (vrind2003identificationofa pages 2-3, vrind2003identificationofa pages 1-2).</td>
+<td><em>P. putida</em> GB-1 with mention of KT2440 gene clusters</td>
+<td>None reported</td>
+<td>De Vrind 2003, <em>Mol. Microbiol.</em></td>
+<td>02/2003</td>
+<td>https://doi.org/10.1046/j.1365-2958.2003.03339.x</td>
+</tr>
+<tr>
+<td>Localization and architecture of the T4P machine relevant to PilA function</td>
+<td>Pilins are stored in the <strong>inner membrane</strong> before assembly; assembled pili extend through the <strong>outer-membrane secretin PilQ</strong>. The motor/platform subcomplex includes <strong>PilC</strong> with ATPases <strong>PilB</strong> (extension) and <strong>PilT/PilU</strong> (retraction), while PilMNOP stabilizes the envelope-spanning apparatus (mccallum2019thedynamicstructures pages 1-3, kuchma2022surfaceinducedcampsignaling pages 1-2, tala2022characterizationofpseudomonas pages 15-21, mccallum2019thedynamicstructures media 6fa112b3).</td>
+<td>Other <em>Pseudomonas</em> / general T4P biology</td>
+<td>Pilus diameter about <strong>6 nm</strong> and can extend <strong>tens of microns</strong> (tala2022characterizationofpseudomonas pages 15-21)</td>
+<td>Talà 2022, dissertation</td>
+<td>01/2022</td>
+<td>https://doi.org/10.5075/epfl-thesis-8646</td>
+</tr>
+<tr>
+<td>Structural organization of PilA in the filament</td>
+<td>PilA has a long N-terminal α-helix and C-terminal globular domain; in assembled pili the α1N helices pack into a hydrophobic core, while the αβ-loop/D-loop are surface exposed and variable, consistent with extracellular interaction roles (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10).</td>
+<td>Other <em>Pseudomonas</em> / general T4P biology</td>
+<td>Helical rise about <strong>10 Å</strong>; twist about <strong>80–100°</strong> (mccallum2019thedynamicstructures pages 1-3)</td>
+<td>McCallum 2019, <em>Microbiol. Spectrum</em></td>
+<td>04/2019</td>
+<td>https://doi.org/10.1128/microbiolspec.psib-0006-2018</td>
+</tr>
+<tr>
+<td>Biophysical output of T4P retraction</td>
+<td>T4P retraction is ATP-driven and can generate very large forces; classic and modern measurements summarized in review literature report single-pilus forces up to about <strong>80 pN</strong>, supporting roles in twitching motility, surface engagement, and mechanosensing (singh2022landmarkdiscoveriesand pages 5-7).</td>
+<td>General T4P biology</td>
+<td>Force up to <strong>~80 pN</strong> (singh2022landmarkdiscoveriesand pages 5-7)</td>
+<td>Singh 2022, <em>MMBR</em></td>
+<td>09/2022</td>
+<td>https://doi.org/10.1128/mmbr.00076-22</td>
+</tr>
+<tr>
+<td>Functional pathway context of PilA</td>
+<td>T4P systems support twitching motility, adhesion, biofilm formation, DNA uptake/natural competence, and surface sensing; in <em>P. aeruginosa</em>, PilT-driven retraction is required for robust surface-induced cAMP signaling, illustrating how PilA-containing pili connect mechanics to signaling (kuchma2022surfaceinducedcampsignaling pages 1-2, jacobsen2020structureandfunction pages 1-3, pelicic2023mechanismofassembly pages 2-3, singh2022landmarkdiscoveriesand pages 5-7).</td>
+<td>Other <em>Pseudomonas</em> / general T4P biology</td>
+<td>Intracellular spread speed reported for WT <em>P. aeruginosa</em> cytosolic twitching <strong>&gt;0.05 μm s−1</strong> in one study (kuchma2022surfaceinducedcampsignaling pages 1-2)</td>
+<td>Kuchma 2022, <em>J. Bacteriol.</em></td>
+<td>10/2022</td>
+<td>https://doi.org/10.1128/jb.00186-22</td>
+</tr>
+<tr>
+<td>Evidence limit for KT2440-specific phenotypes</td>
+<td>Available evidence directly verifies <strong>identity/family assignment</strong> of PP_0634 as KT2440 PilA, but the gathered sources did <strong>not</strong> provide a KT2440-specific pilA mutant phenotype for twitching, adhesion, biofilm, or competence; these functions are therefore best treated as family-based inference unless future KT2440 experiments are found (udaondo2025transcriptionalregulatorysystems pages 12-14, harvey2009singleresiduechangesin pages 4-5).</td>
+<td>KT2440</td>
+<td>None</td>
+<td>Udaondo 2025, <em>Int. J. Mol. Sci.</em>; Harvey 2009, <em>J. Bacteriol.</em></td>
+<td>05/2025; 11/2009</td>
+<td>https://doi.org/10.3390/ijms26104677 ; https://doi.org/10.1128/jb.00943-09</td>
+</tr>
+<tr>
+<td>Applied implementation: engineering pili-related functions for fermentation</td>
+<td>A 2024 applied study engineered <em>P. putida</em> PCL1760 by deleting <strong>algA, flhA, and pilQ</strong> (not pilA) to reduce motility/biofilm. This shows real-world value of targeting T4P biogenesis for industrial strain optimization, though it is not direct evidence on KT2440 PilA itself (frolov2024constructionofthe pages 1-2, frolov2024constructionofthe pages 8-10).</td>
+<td><em>P. putida</em> PCL1760 (not KT2440)</td>
+<td>Biofilm <strong>40% lower after 72 h</strong>; rich medium <strong>1.39×10^10 vs 6.4×10^9 CFU/mL</strong> mutant vs WT; mineral medium <strong>6.11×10^9 vs 1.36×10^9 CFU/mL</strong> mutant vs WT (frolov2024constructionofthe pages 1-2, frolov2024constructionofthe pages 8-10)</td>
+<td>Frolov 2024, <em>Fermentation</em></td>
+<td>11/2024</td>
+<td>https://doi.org/10.3390/fermentation10120606</td>
+</tr>
+<tr>
+<td>Energetic rationale for appendage engineering</td>
+<td>The same applied study cites energetic costs of motility appendages, helping explain why disabling flagellar/pilus systems can improve bioreactor growth; this provides context for why PilA/T4P-related systems matter in biotechnology (frolov2024constructionofthe pages 8-10).</td>
+<td><em>P. putida</em> PCL1760 / broader <em>Pseudomonas</em> context</td>
+<td>Flagellar biosynthesis about <strong>2%</strong> of biosynthetic resources; rotation about <strong>0.1%</strong> of cell energy (frolov2024constructionofthe pages 8-10)</td>
+<td>Frolov 2024, <em>Fermentation</em></td>
+<td>11/2024</td>
+<td>https://doi.org/10.3390/fermentation10120606</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles direct KT2440-specific evidence for PP_0634 as pilA together with carefully labeled family-level type IV pilus biology needed for functional annotation. It also includes an applied Pseudomonas implementation example showing why pili-related systems matter in biotechnology.</em></p>
+<h2 id="references-urls-and-dates">References (URLs and dates)</h2>
+<p>The most directly relevant sources used above include:<br />
+- Udaondo et al., 2025-05, <em>Int. J. Mol. Sci.</em> (PP_0634 ↔ pilA mapping): https://doi.org/10.3390/ijms26104677 (udaondo2025transcriptionalregulatorysystems pages 12-14)<br />
+- Harvey et al., 2009-11, <em>J. Bacteriol.</em> (KT2440 pilin sequence in type IVa pilin comparison): https://doi.org/10.1128/jb.00943-09 (harvey2009singleresiduechangesin pages 4-5)<br />
+- McCallum et al., 2019-04, <em>Microbiology Spectrum</em> (T4aP structure, PilD processing, filament parameters): https://doi.org/10.1128/microbiolspec.psib-0006-2018 (mccallum2019thedynamicstructures pages 1-3, mccallum2019thedynamicstructures media 6fa112b3)<br />
+- Pelicic, 2023-03, <em>Microbiology</em> (T4F assembly mechanisms): https://doi.org/10.1099/mic.0.001311 (pelicic2023mechanismofassembly pages 5-6, pelicic2023mechanismofassembly pages 2-3)<br />
+- Singh et al., 2022-09, <em>MMBR</em> (landmarks; force up to ~80 pN): https://doi.org/10.1128/mmbr.00076-22 (singh2022landmarkdiscoveriesand pages 5-7, singh2022landmarkdiscoveriesand pages 9-10)<br />
+- Kuchma &amp; O’Toole, 2022-10, <em>J. Bacteriol.</em> (PilA processing, PilB/PilT/PilU, surface-induced cAMP signaling): https://doi.org/10.1128/jb.00186-22 (kuchma2022surfaceinducedcampsignaling pages 1-2)<br />
+- De Vrind et al., 2003-02, <em>Mol. Microbiol.</em> (<em>P. putida</em> PilD required for PilA processing/methylation; KT2440 clusters): https://doi.org/10.1046/j.1365-2958.2003.03339.x (vrind2003identificationofa pages 2-3, vrind2003identificationofa pages 1-2)<br />
+- Frolov et al., 2024-11, <em>Fermentation</em> (industrial strain engineering targeting pilQ; quantitative outcomes): https://doi.org/10.3390/fermentation10120606 (frolov2024constructionofthe pages 1-2, frolov2024constructionofthe pages 8-10)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(udaondo2025transcriptionalregulatorysystems pages 12-14): Zulema Udaondo, Kelsey Aguirre Schilder, Ana Rosa Márquez Blesa, Mireia Tena-Garitaonaindia, José Canto Mangana, and Abdelali Daddaoua. Transcriptional regulatory systems in pseudomonas: a comparative analysis of helix-turn-helix domains and two-component signal transduction networks. International Journal of Molecular Sciences, 26:4677, May 2025. URL: https://doi.org/10.3390/ijms26104677, doi:10.3390/ijms26104677. This article has 1 citations.</p>
+</li>
+<li>
+<p>(harvey2009singleresiduechangesin pages 4-5): Hanjeong Harvey, Marc Habash, Francisca Aidoo, and Lori L. Burrows. Single-residue changes in the c-terminal disulfide-bonded loop of the<i>pseudomonas aeruginosa</i>type iv pilin influence pilus assembly and twitching motility. Nov 2009. URL: https://doi.org/10.1128/jb.00943-09, doi:10.1128/jb.00943-09. This article has 57 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vrind2003identificationofa pages 2-3): Johannes De Vrind, Arjan De Groot, Geert Jan Brouwers, Jan Tommassen, and Elisabeth De Vrind‐de Jong. Identification of a novel gsp‐related pathway required for secretion of the manganese‐oxidizing factor of pseudomonas putida strain gb‐1. Molecular Microbiology, 47:993-1006, Feb 2003. URL: https://doi.org/10.1046/j.1365-2958.2003.03339.x, doi:10.1046/j.1365-2958.2003.03339.x. This article has 65 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vrind2003identificationofa pages 1-2): Johannes De Vrind, Arjan De Groot, Geert Jan Brouwers, Jan Tommassen, and Elisabeth De Vrind‐de Jong. Identification of a novel gsp‐related pathway required for secretion of the manganese‐oxidizing factor of pseudomonas putida strain gb‐1. Molecular Microbiology, 47:993-1006, Feb 2003. URL: https://doi.org/10.1046/j.1365-2958.2003.03339.x, doi:10.1046/j.1365-2958.2003.03339.x. This article has 65 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pelicic2023mechanismofassembly pages 2-3): Vladimir Pelicic. Mechanism of assembly of type 4 filaments: everything you always wanted to know (but were afraid to ask). Mar 2023. URL: https://doi.org/10.1099/mic.0.001311, doi:10.1099/mic.0.001311. This article has 49 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pelicic2023mechanismofassembly pages 5-6): Vladimir Pelicic. Mechanism of assembly of type 4 filaments: everything you always wanted to know (but were afraid to ask). Mar 2023. URL: https://doi.org/10.1099/mic.0.001311, doi:10.1099/mic.0.001311. This article has 49 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mccallum2019thedynamicstructures pages 1-3): Matthew McCallum, Lori L. Burrows, and P. Lynne Howell. The dynamic structures of the type iv pilus. Apr 2019. URL: https://doi.org/10.1128/microbiolspec.psib-0006-2018, doi:10.1128/microbiolspec.psib-0006-2018. This article has 92 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(singh2022landmarkdiscoveriesand pages 9-10): Pradip Kumar Singh, Janay Little, and Michael S. Donnenberg. Landmark discoveries and recent advances in type iv pilus research. Microbiology and Molecular Biology Reviews, Sep 2022. URL: https://doi.org/10.1128/mmbr.00076-22, doi:10.1128/mmbr.00076-22. This article has 37 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jacobsen2020structureandfunction pages 1-3): Theis Jacobsen, Benjamin Bardiaux, Olivera Francetic, Nadia Izadi-Pruneyre, and Michael Nilges. Structure and function of minor pilins of type iv pili. Medical Microbiology and Immunology, 209:301-308, Nov 2020. URL: https://doi.org/10.1007/s00430-019-00642-5, doi:10.1007/s00430-019-00642-5. This article has 118 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuchma2022surfaceinducedcampsignaling pages 1-2): Sherry L. Kuchma and George A. O’Toole. Surface-induced camp signaling requires multiple features of the pseudomonas aeruginosa type iv pili. Oct 2022. URL: https://doi.org/10.1128/jb.00186-22, doi:10.1128/jb.00186-22. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tala2022characterizationofpseudomonas pages 15-21): Characterization of Pseudomonas aeruginosa mechanosensing through label-free imaging of type IV pili This article has 1 citations.</p>
+</li>
+<li>
+<p>(mccallum2019thedynamicstructures media 6fa112b3): Matthew McCallum, Lori L. Burrows, and P. Lynne Howell. The dynamic structures of the type iv pilus. Apr 2019. URL: https://doi.org/10.1128/microbiolspec.psib-0006-2018, doi:10.1128/microbiolspec.psib-0006-2018. This article has 92 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(singh2022landmarkdiscoveriesand pages 5-7): Pradip Kumar Singh, Janay Little, and Michael S. Donnenberg. Landmark discoveries and recent advances in type iv pilus research. Microbiology and Molecular Biology Reviews, Sep 2022. URL: https://doi.org/10.1128/mmbr.00076-22, doi:10.1128/mmbr.00076-22. This article has 37 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frolov2024constructionofthe pages 1-2): Mikhail Frolov, Galim Alimzhanovich Kungurov, Emil Elmirovich Valiakhmetov, Artur Sergeyevich Gogov, Natalia Viktorovna Trachtmann, and Shamil Zavdatovich Validov. Construction of the pseudomonas putida strain with low motility and reduced biofilm formation for application in fermentation. Fermentation, 10:606, Nov 2024. URL: https://doi.org/10.3390/fermentation10120606, doi:10.3390/fermentation10120606. This article has 2 citations.</p>
+</li>
+<li>
+<p>(graupner2000typeivpilus pages 5-6): Stefan Graupner, Verena Frey, Rozita Hashemi, Michael G. Lorenz, Gudrun Brandes, and Wilfried Wackernagel. Type iv pilus genes pila andpilc of pseudomonas stutzeri are required for natural genetic transformation, and pila can be replaced by corresponding genes from nontransformable species. Journal of Bacteriology, 182:2184-2190, Apr 2000. URL: https://doi.org/10.1128/jb.182.8.2184-2190.2000, doi:10.1128/jb.182.8.2184-2190.2000. This article has 79 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wellerstuart2015genomicandfunctionala pages 60-63): T Weller-Stuart. Genomic and functional characterization of motility in pantoea ananatis. Unknown journal, 2015.</p>
+</li>
+<li>
+<p>(frolov2024constructionofthe pages 8-10): Mikhail Frolov, Galim Alimzhanovich Kungurov, Emil Elmirovich Valiakhmetov, Artur Sergeyevich Gogov, Natalia Viktorovna Trachtmann, and Shamil Zavdatovich Validov. Construction of the pseudomonas putida strain with low motility and reduced biofilm formation for application in fermentation. Fermentation, 10:606, Nov 2024. URL: https://doi.org/10.3390/fermentation10120606, doi:10.3390/fermentation10120606. This article has 2 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pilA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000018 Figure 1 is the most informative schematic showing the overall structure and assembly components of the type IVa pilus (T4aP). It d" src="pilA-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>udaondo2025transcriptionalregulatorysystems pages 12-14</li>
+<li>harvey2009singleresiduechangesin pages 4-5</li>
+<li>kuchma2022surfaceinducedcampsignaling pages 1-2</li>
+<li>mccallum2019thedynamicstructures pages 1-3</li>
+<li>vrind2003identificationofa pages 2-3</li>
+<li>frolov2024constructionofthe pages 1-2</li>
+<li>singh2022landmarkdiscoveriesand pages 5-7</li>
+<li>pelicic2023mechanismofassembly pages 5-6</li>
+<li>tala2022characterizationofpseudomonas pages 15-21</li>
+<li>frolov2024constructionofthe pages 8-10</li>
+<li>vrind2003identificationofa pages 1-2</li>
+<li>pelicic2023mechanismofassembly pages 2-3</li>
+<li>singh2022landmarkdiscoveriesand pages 9-10</li>
+<li>jacobsen2020structureandfunction pages 1-3</li>
+<li>graupner2000typeivpilus pages 5-6</li>
+<li>wellerstuart2015genomicandfunctionala pages 60-63</li>
+<li>https://doi.org/10.3390/ijms26104677</li>
+<li>https://doi.org/10.1128/jb.00943-09</li>
+<li>https://doi.org/10.1128/microbiolspec.psib-0006-2018</li>
+<li>https://doi.org/10.1128/jb.00186-22</li>
+<li>https://doi.org/10.1046/j.1365-2958.2003.03339.x</li>
+<li>https://doi.org/10.5075/epfl-thesis-8646</li>
+<li>https://doi.org/10.1128/mmbr.00076-22</li>
+<li>https://doi.org/10.3390/fermentation10120606</li>
+<li>https://doi.org/10.1099/mic.0.001311</li>
+<li>https://doi.org/10.3390/ijms26104677,</li>
+<li>https://doi.org/10.1128/jb.00943-09,</li>
+<li>https://doi.org/10.1046/j.1365-2958.2003.03339.x,</li>
+<li>https://doi.org/10.1099/mic.0.001311,</li>
+<li>https://doi.org/10.1128/microbiolspec.psib-0006-2018,</li>
+<li>https://doi.org/10.1128/mmbr.00076-22,</li>
+<li>https://doi.org/10.1007/s00430-019-00642-5,</li>
+<li>https://doi.org/10.1128/jb.00186-22,</li>
+<li>https://doi.org/10.3390/fermentation10120606,</li>
+<li>https://doi.org/10.1128/jb.182.8.2184-2190.2000,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88Q62
+gene_symbol: pilA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: PilA (PP_0634) is the major type IV pilin of Pseudomonas putida KT2440, the principal structural subunit that polymerizes into type IV pili (T4P) — dynamic, retractile filaments on the bacterial cell surface. It belongs to the N-methyl-phenylalanine (type IVa) pilin family, with a hydrophobic N-terminal alpha-helix (a predicted transmembrane segment) that mediates subunit packing within the filament core, and a globular C-terminal head bearing a conserved disulfide-bonded loop. Like other T4a pilins, it is synthesized as a prepilin whose leader peptide is cleaved and whose new N-terminal phenylalanine is N-methylated by the prepilin peptidase PilD before the mature subunit is stored in the inner membrane and assembled into the filament. Cycles of pilus extension and retraction allow the assembled type IV pilus to mediate surface adhesion, twitching motility, microcolony and biofilm formation, and, in many species, DNA uptake during natural transformation. In P. putida, pilin expression is induced upon surface attachment and biofilm growth, consistent with a role in surface colonization.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Nelson et al. 2002, the KT2440 reference-genome paper establishing the pilA/PP_0634 locus. Confirmed against the UniProt cross-reference (PMID:12534463, DOI 10.1046/j.1462-2920.2002.00366.x, Environ Microbiol 4:799-808).
+- id: PMID:11673428
+  title: Characterization of phenotypic changes in Pseudomonas putida in response to surface-associated growth.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Sauer &amp; Camper 2001 (J Bacteriol 183:6579-6589, DOI 10.1128/JB.183.22.6579-6589.2001). PubMed-verified (PMID:11673428); abstract explicitly states &#34;PilA was observed in 12-h biofilms but not in planktonic culture&#34; with type IV pili genes differentially regulated on surface attachment. Supports the adhesion/biofilm role of the pilin at the species level (P. putida, strain not KT2440).
+existing_annotations:
+- term:
+    id: GO:0007155
+    label: cell adhesion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Type IV pili are adhesive surface filaments, and the major pilin PilA mediates attachment to surfaces and other cells. Cell adhesion is a genuine, if general, function of this protein.
+    action: ACCEPT
+    reason: Adhesion is a well-established function of type IV pili and of the major pilin subunit. The InterPro2GO inference from the Pilin domain (IPR001082) is biologically appropriate, and surface-attachment-induced pilin expression in P. putida supports an adhesion role. The term is general but not incorrect; a more specific adhesion-during-biofilm term could be considered if experimental evidence in KT2440 were available.
+- term:
+    id: GO:0009289
+    label: pilus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: PilA is the major structural subunit of a pilus, so the pilus localization is correct. However, PilA specifically forms a type IV pilus (N-methyl-phenylalanine pilin family), for which a more precise term exists.
+    action: MODIFY
+    reason: The generic &#34;pilus&#34; term is correct but under-specific. PilA belongs to the N-Me-Phe (type IVa) pilin family and assembles into a type IV pilus, so the more informative child term GO:0044096 (type IV pilus) better captures the localization.
+    proposed_replacement_terms:
+    - id: GO:0044096
+      label: type IV pilus
+- term:
+    id: GO:0015627
+    label: type II protein secretion system complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  review:
+    summary: This annotation derives from the InterPro pilin-domain mapping (IPR000983, GSPG_pilin), which is shared between type IV major pilins and the pseudopilins of the type II secretion system. PilA is a type IV pilin, not a T2SS pseudopilin, so it is not part of the type II secretion system complex.
+    action: REMOVE
+    reason: The T4P major pilin and T2SS major pseudopilin share an ancestral pilin fold and InterPro signature, which causes InterPro2GO to over-propagate T2SS terms onto type IV pilins. PilA (PP_0634) is the major pilin of the type IV pilus system; its structural component is the type IV pilus, not the T2SS complex. This is a domain-homology over-annotation and should be removed.
+- term:
+    id: GO:0015628
+    label: protein secretion by the type II secretion system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Same InterPro2GO artifact as the T2SS complex annotation. PilA is a type IV pilin and does not function in type II protein secretion.
+    action: REMOVE
+    reason: This BP term is inferred from the shared pilin/pseudopilin domain signature and does not reflect PilA&#39;s actual role. PilA builds the type IV pilus and participates in type IV pilus assembly and twitching motility, not type II secretion. Remove as a domain-homology over-annotation; the appropriate processes (type IV pilus assembly, type IV pilus-dependent motility) are proposed as new terms.
+core_functions:
+- description: Major structural subunit of the type IV pilus; PilA polymerizes to form the dynamic surface filament that constitutes the type IV pilus.
+  supported_by:
+  - reference_id: PMID:12534463
+    supporting_text: KT2440 PilA (PP_0634) is annotated as the major type IV pilin and belongs to the N-Me-Phe (type IVa) pilin family; the major pilin is the small subunit that polymerizes to form the helical surface filament of the type IV pilus (applied by family/domain homology to KT2440 PilA Q88Q62).
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  locations:
+  - id: GO:0044096
+    label: type IV pilus
+- description: Through assembly into the type IV pilus, PilA mediates surface adhesion, twitching motility, and biofilm/microcolony formation; pilin expression is induced upon surface attachment in P. putida.
+  supported_by:
+  - reference_id: PMID:11673428
+    supporting_text: In P. putida, PilA was not detected in planktonic culture but was detected after surface attachment and throughout biofilm development, with pilus-related genes upregulated within hours of attachment (strain ATCC 39168).
+    full_text_unavailable: true
+  directly_involved_in:
+  - id: GO:0043107
+    label: type IV pilus-dependent motility
+suggested_questions:
+- question: Does PilA (PP_0634) deletion in KT2440 abolish twitching motility and reduce surface attachment/biofilm formation, as expected for a major type IV pilin?
+- question: How is the KT2440 type IV pilus assembled given the reported absence of the canonical assembly ATPase PilB, and is xcpR (or another ATPase) functionally substituting?
+suggested_experiments:
+- description: Construct a markerless pilA (PP_0634) deletion in KT2440 and assay twitching motility (subsurface stab/agar interstitial assay), surface adhesion, and biofilm formation, with complementation to confirm specificity.
+- description: Verify PilA maturation by detecting N-terminal N-methylation/leader cleavage (mass spectrometry on purified pili) and confirm surface pilus assembly by immuno-EM or pilus shearing/Western blot.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

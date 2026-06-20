@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: daf-2 (C. elegans)
 
-Source: daf-2-deep-research-bioreason-rl.md
+Source: daf-2-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 2/5

@@ -13,6 +13,14 @@ def make_gene_workspace(tmp_path: Path) -> Path:
     genes_root = tmp_path / "genes"
     gene_dir = genes_root / "human" / "TEST"
     gene_dir.mkdir(parents=True)
+    bioinformatics_dir = gene_dir / "TEST-bioinformatics"
+    bioinformatics_dir.mkdir()
+    (bioinformatics_dir / "RESULTS.md").write_text(
+        "# TEST Bioinformatics Results\n\n"
+        "Local analysis supports replacing generic protein binding with a more "
+        "specific adaptor-function hypothesis.\n",
+        encoding="utf-8",
+    )
     write_yaml(
         gene_dir / "TEST-ai-review.yaml",
         {
@@ -32,6 +40,13 @@ def make_gene_workspace(tmp_path: Path) -> Path:
                             {
                                 "reference_id": "PMID:2",
                                 "supporting_text": "Interacts with a pathway component.",
+                            },
+                            {
+                                "reference_id": "file:human/TEST/TEST-bioinformatics/RESULTS.md",
+                                "supporting_text": (
+                                    "Local analysis supports replacing generic "
+                                    "protein binding."
+                                ),
                             }
                         ],
                     },
@@ -119,6 +134,64 @@ def test_candidate_records_cover_review_and_prediction_sources(tmp_path: Path) -
         "computational_prediction"
     )
     assert "PMID:4" in by_slug["core-function-1-go-0003677"].reference_context
+
+
+def test_provider_prompt_redacts_cited_local_bioinformatics(tmp_path: Path) -> None:
+    genes_root = make_gene_workspace(tmp_path)
+    records = ghr.candidate_records(genes_root, "human", "TEST")
+    record = ghr.select_record(records, annotation_term_id="GO:0005515")
+    reference_ids = ghr.reference_ids_from_context(record.reference_context)
+
+    comparison_context = ghr.format_local_bioinformatics_context(
+        reference_ids,
+        genes_root=genes_root,
+    )
+
+    assert "file:human/TEST/TEST-bioinformatics/RESULTS.md" in comparison_context
+    assert "# TEST Bioinformatics Results" in comparison_context
+    assert "Included full local report" in comparison_context
+
+    command = ghr.build_command(
+        record,
+        provider="openscientist",
+        genes_root=genes_root,
+        template=Path("templates/gene_hypothesis_deep_research.md"),
+        extra_args=[],
+    )
+    command_text = "\n".join(command)
+
+    assert "file:human/TEST/TEST-bioinformatics/RESULTS.md" not in command_text
+    assert "# TEST Bioinformatics Results" not in command_text
+    assert "Local analysis supports replacing generic protein binding" not in command_text
+    assert "reference_context=- PMID:1\n- PMID:2" in command
+
+
+def test_function_assignment_prompt_blinds_prior_review_decision(
+    tmp_path: Path,
+) -> None:
+    genes_root = make_gene_workspace(tmp_path)
+    records = ghr.candidate_records(genes_root, "human", "TEST")
+    decision_record = ghr.select_record(records, annotation_term_id="GO:0005515")
+
+    record = ghr.function_assignment_record(decision_record)
+    command = ghr.build_command(
+        record,
+        provider="openscientist",
+        genes_root=genes_root,
+        template=Path("templates/gene_hypothesis_deep_research.md"),
+        extra_args=[],
+    )
+    command_text = "\n".join(command)
+
+    assert record.focus_type == "function_assignment"
+    assert record.slug == "function-hypothesis-go-0005515"
+    assert record.hypothesis_text == "TEST has protein binding (GO:0005515)."
+    assert "review action REMOVE" not in command_text
+    assert "Generic binding is not informative" not in command_text
+    assert "specific adapter or assembly role" not in command_text
+    assert "file:human/TEST/TEST-bioinformatics/RESULTS.md" not in command_text
+    assert "# TEST Bioinformatics Results" not in command_text
+    assert "hypothesis_text=TEST has protein binding (GO:0005515)." in command
 
 
 def test_select_record_and_build_command_use_sidecar_output(tmp_path: Path) -> None:

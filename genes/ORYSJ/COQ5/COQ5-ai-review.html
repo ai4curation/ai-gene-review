@@ -1,0 +1,2916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COQ5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>COQ5</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q5JNC0" target="_blank" class="term-link">
+                        Q5JNC0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Oryza sativa subsp. japonica</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "COQ5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q5JNC0" data-a="DESCRIPTION: Rice COQ5 (Q5JNC0; Os01g0976600 / LOC_Os01g74520) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Rice COQ5 (Q5JNC0; Os01g0976600 / LOC_Os01g74520) is the mitochondrial S-adenosyl-L-methionine (SAM)-dependent C-methyltransferase of the ubiquinone (coenzyme Q) biosynthetic pathway. It belongs to the class I-like SAM-binding methyltransferase superfamily, MenG/UbiE (UbiE/COQ5) family, and carries the conserved SAM-binding residues (UniProt BINDING sites at positions 100, 136 and 166-167). COQ5 catalyzes the single C-methylation step of the CoQ ring-modification stage (EC 2.1.1.201; Rhea:RHEA:28286): it transfers a methyl group from SAM to the C2 position of a 2-methoxy-6-(all-trans-polyprenyl)benzene-1,4-diol intermediate, converting 2-polyprenyl-6-methoxy-1,4-benzoquinol (DDMQH2) to 2-polyprenyl-3-methyl-6-methoxy-1,4-benzoquinol (DMQH2). The other two methylation reactions of the pathway are O-methylations carried out by COQ3, so COQ5 is specifically the C-methyltransferase rather than an O-methyltransferase (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). The protein bears an N-terminal mitochondrial transit peptide (residues 1-10) and is a peripheral inner-membrane protein on the matrix side of the mitochondrial inner membrane, consistent with CoQ biosynthesis occurring at the inner mitochondrial membrane. COQ5 acts within a multi-subunit COQ enzyme complex (the &#34;COQ metabolon&#34; / &#34;CoQ synthome&#34;) that channels hydrophobic prenylated intermediates between the late-pathway COQ3-COQ9 enzymes. Direct rice-specific biochemical or genetic characterization of Os01g0976600 is not available in the retrieved literature; the functional assignment rests on strong evolutionary conservation across eukaryotes plus plant-specific evidence that Arabidopsis AtCOQ5 functionally complements the corresponding Schizosaccharomyces pombe coq mutant, demonstrating that plant COQ5 proteins retain the conserved C-methyltransferase activity (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). CoQ is a redox-active, membrane-localized prenylquinone that functions as an electron carrier in mitochondrial respiration and as a lipophilic antioxidant.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032259" target="_blank" class="term-link">
+                                    GO:0032259
+                                </a>
+                            </span>
+                            <span class="term-label">methylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5JNC0" data-a="GO:0032259" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Methyltransferase&#34; (and the related &#34;Transferase&#34; keyword); snapshot-only, removed from the current GOA release. It maps the enzyme-class keyword to the bare biological-process term &#34;methylation&#34;, which drops all pathway and substrate context for a CoQ-pathway C-methyltransferase.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED. This is a classic &#34;enzyme-class keyword -&gt; bare process&#34; conflation: the UniProt &#34;Methyltransferase&#34; keyword is mapped to the very high-level process term &#34;methylation&#34; (GO:0032259), which says only that the protein methylates something and discards the specific pathway. COQ5&#39;s methylation is not a generic process - it is the single C-methylation step of coenzyme Q biosynthesis, in which a SAM-dependent C2 C-methyltransferase acts on a prenylated benzoquinol CoQ-pathway intermediate (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). The correct, specific process is &#34;ubiquinone biosynthetic process&#34; (GO:0006744), which is ALREADY present in the current GOA in two annotations (IBA from GO_REF:0000033 and IEA from GO_REF:0000120), and the specific molecular function &#34;2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity&#34; (GO:0008425) is also already annotated (IBA and IEA). The bare &#34;methylation&#34; process term therefore adds no information beyond what the retained, more specific annotations already capture, and is redundant. Were a process term needed to replace it, the correct replacement is GO:0006744; but because that term is already present, the bare keyword-derived &#34;methylation&#34; is best treated as an over-annotation whose removal lost no biology.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    ubiquinone biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">among the three methylation reactions in the canonical eukaryotic CoQ ring-modification stage (the other two methylations are O-methylations catalyzed by COQ3)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">COQ5 acts on a prenylated benzoquinone/benzoquinol intermediate in the late pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5JNC0" data-a="GO:0006744" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation propagated across the COQ5 phylogenetic group (PANTHER PTN001297884, including yeast SGD COQ5 and E. coli UbiE). Ubiquinone (coenzyme Q) biosynthesis is the core biological process of COQ5.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core biological process and is well supported. COQ5 is consistently assigned across eukaryotes and plants as the pathway C-methyltransferase of ubiquinone biosynthesis, performing the single C-methylation step of the CoQ ring-modification stage (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). The UniProt PATHWAY annotation (&#34;Cofactor biosynthesis; ubiquinone biosynthesis&#34;) and UniPathway UPA00232 agree. Plant orthologs retain this role: Arabidopsis AtCOQ5 complements the corresponding S. pombe coq mutant. The IBA term is at the appropriate level of specificity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Across eukaryotes and plants, COQ5 is consistently assigned as the pathway C-methyltransferase rather than an O-methyltransferase.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Arabidopsis COQ genes including AtCOQ5 can complement the corresponding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008425" target="_blank" class="term-link">
+                                    GO:0008425
+                                </a>
+                            </span>
+                            <span class="term-label">2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5JNC0" data-a="GO:0008425" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for the specific COQ5 enzymatic activity, propagated across the COQ5/UbiE phylogenetic group. This is the precise, informative molecular function of the gene product.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function and is well supported. The UniProt entry records the catalytic activity (EC 2.1.1.201; Rhea:RHEA:28286): a 2-methoxy-6-(all-trans-polyprenyl)benzene-1,4-diol + SAM yields a 5-methoxy-2-methyl-3-(all-trans-polyprenyl)benzene-1,4-diol + S-adenosyl-L- homocysteine. The literature describes COQ5 as a mitochondrial SAM-dependent C2 C-methyltransferase acting on a prenylated benzoquinol CoQ-pathway intermediate (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). This is the exact, maximally informative MF term and should be retained as core.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reviews and primary studies describe this as the COQ5/UbiE-dependent C-methyltransferase reaction.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the single C-methylation step of the CoQ ring-modification phase, specifically methylation at the C2 position of the aromatic headgroup during CoQ biosynthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5JNC0" data-a="GO:0005743" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProt Subcellular Location vocabulary mapping (UniProtKB-SubCell:SL-0168). COQ5 is a peripheral inner-membrane protein on the matrix side of the mitochondrial inner membrane.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with the UniProt SUBCELLULAR LOCATION annotation (&#34;Mitochondrion inner membrane; Peripheral membrane protein; Matrix side&#34;) and with the N-terminal mitochondrial transit peptide (residues 1-10). CoQ biosynthesis in eukaryotes occurs at the inner mitochondrial membrane, and late-pathway COQ enzymes are mitochondrial (matrix-localized and/or inner-membrane associated), so the mitochondrial inner-membrane localization is well supported (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). Direct rice microscopy was not retrieved, but the localization is consistent with strong pathway conservation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The best-supported localization is mitochondrial, with CoQ biosynthesis occurring at the inner mitochondrial membrane or matrix-facing environment</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">eukaryotic COQ proteins are described as matrix-localized and/or inner-membrane associated</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5JNC0" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (combined automated methods; ARBA/UniRule, UniPathway UPA00232) for ubiquinone biosynthesis. Duplicates the IBA annotation to the same term.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with the IBA annotation to the same term, with the UniProt PATHWAY statement (&#34;Cofactor biosynthesis; ubiquinone biosynthesis&#34;; UniPathway UPA00232) and with the conserved role of COQ5 as the CoQ-pathway C-methyltransferase (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). Duplicate annotations with different evidence codes are acceptable; the IEA provides additional computational support for the well-established core process.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Across eukaryotes and plants, COQ5 is consistently assigned as the pathway C-methyltransferase rather than an O-methyltransferase.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">COQ5 functions within a multisubunit CoQ biosynthetic assembly, often termed the COQ metabolon</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008168" target="_blank" class="term-link">
+                                    GO:0008168
+                                </a>
+                            </span>
+                            <span class="term-label">methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5JNC0" data-a="GO:0008168" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR004033 UbiE/COQ5_MeTrFase; IPR023576 UbiE/COQ5_MeTrFase_CS) for the broad parent &#34;methyltransferase activity&#34;. COQ5 is a methyltransferase, but a much more specific MF is already annotated.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;Methyltransferase activity&#34; is a broad parent term. It is not wrong - COQ5 is a SAM-dependent methyltransferase - but it is uninformative now that the specific MF &#34;2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity&#34; (GO:0008425) is annotated (IBA and IEA). The InterPro signatures that produced this term (UbiE/COQ5 family) actually map to the specific UbiE/COQ5 activity, so the more precise GO:0008425 better represents the same evidence (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). Retaining a generic &#34;methyltransferase activity&#34; alongside the specific term adds no information; it is an over-annotation relative to GO:0008425.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008425" target="_blank" class="term-link">
+                                    2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">COQ5 acts on a prenylated benzoquinone/benzoquinol intermediate in the late pathway</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">among the three methylation reactions in the canonical eukaryotic CoQ ring-modification stage (the other two methylations are O-methylations catalyzed by COQ3)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008425" target="_blank" class="term-link">
+                                    GO:0008425
+                                </a>
+                            </span>
+                            <span class="term-label">2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5JNC0" data-a="GO:0008425" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (combined automated methods; RHEA:28286, EC:2.1.1.201, UniRule) for the specific COQ5 enzymatic activity. Duplicates the IBA annotation to the same term.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with the IBA annotation to the same term. This is the precise, maximally informative molecular function, directly supported by the UniProt CATALYTIC ACTIVITY (Rhea:RHEA:28286; EC 2.1.1.201) and by the literature description of COQ5 as a SAM-dependent C2 C-methyltransferase acting on a prenylated benzoquinol intermediate (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). Duplicate annotations with different evidence codes are acceptable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Primary and review sources describe Coq5-mediated C2 methylation yielding demethoxy-coenzyme Q (DMQ)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the single C-methylation step of the CoQ ring-modification phase, specifically methylation at the C2 position of the aromatic headgroup during CoQ biosynthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031314" target="_blank" class="term-link">
+                                    GO:0031314
+                                </a>
+                            </span>
+                            <span class="term-label">extrinsic component of mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5JNC0" data-a="GO:0031314" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (transferred from a related protein by UniRule) describing COQ5 as an extrinsic (peripheral) component of the mitochondrial inner membrane on the matrix side.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and more precise than the generic &#34;mitochondrial inner membrane&#34; term: the UniProt SUBCELLULAR LOCATION explicitly states &#34;Peripheral membrane protein; Matrix side&#34;, i.e. an extrinsic/peripherally-attached inner-membrane component rather than an integral membrane protein. This matches the description of late-pathway COQ enzymes as matrix-localized and/or inner-membrane associated (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). The annotation is consistent with COQ5&#39;s role in the membrane-associated COQ biosynthetic complex.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">eukaryotic COQ proteins are described as matrix-localized and/or inner-membrane associated</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Rice COQ5 is the mitochondrial SAM-dependent C-methyltransferase of the ubiquinone (coenzyme Q) biosynthetic pathway. It transfers a methyl group from S-adenosyl-L-methionine to the C2 position of a 2-methoxy-6-(all-trans- polyprenyl)benzene-1,4-diol intermediate (EC 2.1.1.201; Rhea:RHEA:28286), performing the single C-methylation step of CoQ ring modification and converting DDMQH2 to DMQH2.
+</h3>
+                <span class="vote-buttons" data-g="Q5JNC0" data-a="FUNCTION: Rice COQ5 is the mitochondrial SAM-dependent C-met..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008425" target="_blank" class="term-link">
+                            2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031314" target="_blank" class="term-link">
+                                extrinsic component of mitochondrial inner membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">COQ5 acts on a prenylated benzoquinone/benzoquinol intermediate in the late pathway</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">among the three methylation reactions in the canonical eukaryotic CoQ ring-modification stage (the other two methylations are O-methylations catalyzed by COQ3)</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro signatures IPR004033 (UbiE/COQ5_MeTrFase) and IPR023576 (UbiE/COQ5_MeTrFase_CS) map to methyltransferase activity; the UbiE/COQ5 family corresponds to the specific 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">COQ5 functions (ubiquinone biosynthetic process, 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity) are conserved across the PANTHER PTN001297884 COQ5/UbiE phylogenetic group.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotation present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For COQ5, the &#34;Methyltransferase&#34; keyword mapped to the bare process term &#34;methylation&#34; (GO:0032259); the specific pathway and substrate context were retained instead by GO:0006744 and GO:0008425, so removal lost no biology.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mitochondrial inner-membrane localization mapped from the UniProt Subcellular Location vocabulary (SL-0168).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Extrinsic (peripheral, matrix-side) component of the mitochondrial inner membrane, transferred by UniRule from related COQ5 proteins.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ubiquinone biosynthetic process and the specific 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity assigned by combined IEA methods (ARBA/UniRule; RHEA:28286, EC 2.1.1.201; UniPathway UPA00232).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of rice COQ5 (Q5JNC0).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">COQ5 is the SAM-dependent C-methyltransferase (UbiE/COQ5 family) responsible for the single C-methylation of the eukaryotic CoQ ring-modification stage; the other two methylations are O-methylations catalyzed by COQ3. It acts on a prenylated benzoquinone/benzoquinol CoQ-pathway intermediate at the C2 position, producing demethoxy-coenzyme Q (DMQ).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CoQ biosynthesis occurs at the inner mitochondrial membrane; late-pathway COQ enzymes (COQ3-COQ9) are mitochondrial (matrix-localized and/or inner-membrane associated) and function within a multi-subunit COQ metabolon / CoQ synthome.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">No primary rice study directly assays COQ5 (Os01g0976600/LOC_Os01g74520) activity, localization or mutant phenotype; annotation rests on evolutionary conservation plus plant evidence that Arabidopsis AtCOQ5 complements the corresponding S. pombe coq mutant.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does rice COQ5 (Os01g0976600) functionally complement a yeast coq5 (or S. pombe) null mutant, confirming that the rice protein retains the conserved CoQ-pathway C-methyltransferase activity as shown for Arabidopsis AtCOQ5?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q5JNC0" data-a="Q: Does rice COQ5 (Os01g0976600) functionally complem..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the loss-of-function phenotype of a rice coq5 mutant - is it seedling- or pollen-lethal (as expected for a CoQ-biosynthesis gene), and does it reduce total ubiquinone (UQ-9/UQ-10) content?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q5JNC0" data-a="Q: What is the loss-of-function phenotype of a rice c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express rice COQ5 (mature, transit-peptide-removed) in a yeast coq5-null strain and assay rescue of respiratory growth on a non-fermentable carbon source plus restoration of CoQ6 levels by LC-MS, to confirm conserved C-methyltransferase activity.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Rice COQ5 is a functional CoQ-pathway C2 C-methyltransferase and complements the yeast coq5 deletion, as Arabidopsis AtCOQ5 complements the S. pombe coq mutant.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: heterologous complementation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q5JNC0" data-a="EXPERIMENT: Express rice COQ5 (mature, transit-peptide-removed..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate CRISPR/Cas9 knockout and knockdown lines of OsCOQ5 and quantify total ubiquinone (UQ-9) content by LC-MS/MS, mitochondrial respiratory capacity, and developmental/viability phenotypes relative to wild type.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of OsCOQ5 strongly reduces ubiquinone accumulation and impairs mitochondrial respiration, consistent with COQ5 being an essential late-pathway CoQ-biosynthesis enzyme.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: reverse genetics with metabolite profiling</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q5JNC0" data-a="EXPERIMENT: Generate CRISPR/Cas9 knockout and knockdown lines ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express an OsCOQ5-GFP fusion in rice protoplasts or stable transformants and co-localize with a mitochondrial marker by confocal microscopy to verify mitochondrial (inner-membrane / matrix-side) localization directly in rice.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OsCOQ5 localizes to mitochondria via its N-terminal transit peptide and associates peripherally with the matrix side of the inner membrane.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: subcellular localization</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q5JNC0" data-a="EXPERIMENT: Express an OsCOQ5-GFP fusion in rice protoplasts o..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(COQ5-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5JNC0" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: COQ5 (UniProt Q5JNC0) Functional Annotation in *Oryza sativa* subsp. *japonica*</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">24 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T00:11:42.808269</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="COQ5-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="COQ5-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000012 The requested information is presented in Figures 1 and 6 of the document. Figure 1 (page 2) provides a schematic of the ubiquinone</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-coq5-uniprot-q5jnc0-functional-annotation-in-oryza-sativa-subsp-japonica">Research Report: COQ5 (UniProt Q5JNC0) Functional Annotation in <em>Oryza sativa</em> subsp. <em>japonica</em></h1>
+<h2 id="0-identity-verification-and-scope">0. Identity verification and scope</h2>
+<p>The target protein is UniProt <strong>Q5JNC0</strong>, annotated in <em>Oryza sativa</em> subsp. <em>japonica</em> (rice) as a <strong>mitochondrial 2-methoxy-6-polyprenyl-1,4-benzoquinol methylase</strong> (EC <strong>2.1.1.201</strong>), also described as <strong>ubiquinone (coenzyme Q) biosynthesis methyltransferase COQ5</strong>, belonging to the <strong>UbiE/COQ5 SAM-dependent methyltransferase family</strong>. In the tool-retrieved literature, <strong>COQ5</strong> is consistently used for the <strong>CoQ-pathway C-methyltransferase</strong> (not to be confused with unrelated plant O-methyltransferases such as COMT families). Thus, functional inference from conserved COQ5 biology is appropriate, but <strong>rice-specific primary characterization (Os01g0976600/LOC_Os01g74520) was not retrieved in the accessible corpus</strong>, so the report explicitly distinguishes direct evidence from cross-species inference. (staiano2023biosynthesisdeficiencyand pages 4-5, liu2016plastoquinoneandubiquinone pages 7-9, rudenko2023antioxidantsofnonenzymatic pages 6-7)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1. Key concepts and definitions (current understanding)</h2>
+<h3 id="11-coenzyme-q-ubiquinone-coquq">1.1 Coenzyme Q / ubiquinone (CoQ/UQ)</h3>
+<p>Coenzyme Q (ubiquinone; UQ in plant literature) is a redox-active, membrane-localized prenylquinone best known for its role as an electron carrier in mitochondrial respiration; it is synthesized endogenously by a multi-step pathway involving prenyl chain assembly/attachment and subsequent aromatic ring modifications. (tai2023identificationandbiochemicala pages 15-20, xu2021auniqueflavoenzyme pages 1-2)</p>
+<h3 id="12-coq5-definition-and-enzyme-class">1.2 COQ5 definition and enzyme class</h3>
+<p><strong>COQ5</strong> is a <strong>SAM-dependent C-methyltransferase</strong> (UbiE/COQ5 family) responsible for the <strong>single C-methylation</strong> among the three methylation reactions in the canonical eukaryotic CoQ ring-modification stage (the other two methylations are O-methylations catalyzed by COQ3). (liu2016plastoquinoneandubiquinone pages 7-9, staiano2023biosynthesisdeficiencyand pages 4-5)</p>
+<h3 id="13-reaction-annotated-for-coq5">1.3 Reaction annotated for COQ5</h3>
+<p>COQ5 catalyzes <strong>C-methylation at the C2 position</strong> of the ubiquinone aromatic head group during CoQ biosynthesis. In pathway descriptions, this step is described as producing <strong>demethoxy–coenzyme Q (DMQ)</strong> as a defined intermediate (“Following the Coq5-mediated C-methylation at C2 to form demethoxy–coenzyme Q (DMQ)”). (xu2021auniqueflavoenzyme pages 1-2)</p>
+<p>Older biochemical genetics in yeast also support COQ5 as the C-methyltransferase that methylates a <strong>prenylated quinone/quinol intermediate</strong>; isolated yeast mitochondria catalyzed a COQ5-dependent methylation of a <strong>farnesylated analog</strong> in vitro. (clarke2000newadvancesin pages 7-9)</p>
+<h3 id="14-pathway-placement">1.4 Pathway placement</h3>
+<p>Eukaryotic CoQ biosynthesis can be summarized as: precursor supply → <strong>prenylation of 4-hydroxybenzoate</strong> → multiple head-group modifications (hydroxylations, decarboxylation, and <strong>two O-methylations + one C-methylation</strong>). COQ5 is part of the late “head-group modification” stage (COQ3–COQ9 set), i.e., downstream of prenyl chain attachment. (tai2023identificationandbiochemicala pages 15-20, tai2023identificationandbiochemical pages 15-20)</p>
+<h2 id="2-biochemical-function-of-rice-coq5-q5jnc0-best-supported-annotation">2. Biochemical function of rice COQ5 (Q5JNC0): best-supported annotation</h2>
+<h3 id="21-enzymatic-reaction-with-substrate-specificity-caveat">2.1 Enzymatic reaction (with substrate specificity caveat)</h3>
+<p><strong>Best-supported functional annotation for rice COQ5 (Q5JNC0):</strong> a mitochondrial, SAM-dependent <strong>C2 C-methyltransferase</strong> acting on a <strong>prenylated benzoquinone/benzoquinol CoQ-pathway intermediate</strong>, producing a methylated intermediate commonly described as <strong>DMQ</strong> in eukaryotic pathway nomenclature. (xu2021auniqueflavoenzyme pages 1-2, clarke2000newadvancesin pages 7-9, staiano2023biosynthesisdeficiencyand pages 4-5)</p>
+<p><strong>Substrate specificity (current limitation):</strong> The tool-accessible plant literature used here does <strong>not</strong> provide a rice COQ5 biochemical assay defining the precise plant intermediate by full chemical name. However, multiple sources converge on (i) the C2 methylation position and (ii) the fact that COQ5 works on hydrophobic, prenylated intermediates in the late pathway. (xu2021auniqueflavoenzyme pages 1-2, clarke2000newadvancesin pages 7-9, tai2023identificationandbiochemical pages 15-20)</p>
+<h3 id="22-cellular-compartment-and-localization">2.2 Cellular compartment and localization</h3>
+<p>CoQ biosynthesis in eukaryotes is described as occurring at the <strong>inner mitochondrial membrane</strong>, and late-pathway COQ enzymes (COQ3–COQ9) are described as <strong>mitochondrial (matrix-localized and/or inner-membrane associated)</strong>. Therefore, the <strong>mitochondrial localization</strong> assigned to rice Q5JNC0 in UniProt is consistent with current pathway models. (tai2023identificationandbiochemicala pages 15-20, xu2021auniqueflavoenzyme pages 1-2, tai2023identificationandbiochemical pages 15-20)</p>
+<h3 id="23-multi-enzyme-assemblies-coq-metabolonsynthome">2.3 Multi-enzyme assemblies (“COQ metabolon/synthome”)</h3>
+<p>Late-stage CoQ biosynthesis is increasingly conceptualized as occurring within a <strong>multi-protein complex/metabolon</strong> (variously “complex Q” / “CoQ synthome”), comprising multiple COQ proteins that may channel hydrophobic intermediates and enhance pathway efficiency; COQ5 is included among these late-pathway components. (tai2023identificationandbiochemical pages 15-20, staiano2023biosynthesisdeficiencyand pages 4-5)</p>
+<h2 id="3-plant-specific-evidence-relevant-to-annotating-rice-coq5">3. Plant-specific evidence relevant to annotating rice COQ5</h2>
+<h3 id="31-plant-gene-sets-and-conserved-roles">3.1 Plant gene sets and conserved roles</h3>
+<p>A 2023 plant-focused review (Antioxidants) enumerates Arabidopsis COQ genes and explicitly lists <strong>Coq5 (At5g57300)</strong> as a <strong>SAM-dependent methyltransferase</strong> in ubiquinone biosynthesis, reinforcing that plants encode COQ5 orthologs for the same pathway step. (Publication date: <strong>2023-11</strong>; URL: https://doi.org/10.3390/antiox12112014) (rudenko2023antioxidantsofnonenzymatic pages 6-7)</p>
+<p>A 2023 CoQ review (Antioxidants) describes COQ5 as the <strong>C2 C-methyltransferase</strong> in CoQ biosynthesis and reports that <strong>Arabidopsis COQ genes including AtCOQ5 can complement the corresponding <em>Schizosaccharomyces pombe</em> coq mutants</strong>, providing functional evidence that plant COQ5 proteins retain conserved biochemical activity. (Publication date: <strong>2023-07</strong>; URL: https://doi.org/10.3390/antiox12071469) (staiano2023biosynthesisdeficiencyand pages 4-5)</p>
+<h3 id="32-rice-specific-evidence-gap">3.2 Rice-specific evidence gap</h3>
+<p>Within the retrieved corpus, no primary paper directly assays <strong>rice</strong> COQ5 (Os01g0976600/LOC_Os01g74520; UniProt Q5JNC0) activity, localization by microscopy, or mutant phenotype. Therefore, rice COQ5 annotation currently rests on <strong>strong evolutionary conservation</strong> plus <strong>mitochondrial pathway context</strong>, rather than rice-specific experimentation. (rudenko2023antioxidantsofnonenzymatic pages 6-7, staiano2023biosynthesisdeficiencyand pages 4-5)</p>
+<h2 id="4-recent-developments-20232024-prioritized">4. Recent developments (2023–2024 prioritized)</h2>
+<h3 id="41-2023-plant-antioxidant-and-coq-pathway-syntheses">4.1 2023: Plant antioxidant and CoQ pathway syntheses</h3>
+<p>Two 2023 reviews consolidate current CoQ knowledge and reinforce COQ5’s conserved role as the <strong>C-methyltransferase</strong> step. They also emphasize that, in plants, much of the functional confirmation remains limited compared with yeast/animals, motivating careful inference and indicating a need for more crop-specific functional genetics. (Rudenko et al., 2023; Staiano et al., 2023) (rudenko2023antioxidantsofnonenzymatic pages 6-7, staiano2023biosynthesisdeficiencyand pages 4-5)</p>
+<h3 id="42-2024-in-vitro-reconstruction-of-coq-metabolon-animal-system-informs-mechanistic-thinking">4.2 2024: In vitro reconstruction of COQ metabolon (animal system) informs mechanistic thinking</h3>
+<p>Although not plant-specific, a 2024 Nature Catalysis study reconstructed the animal COQ metabolon in vitro and frames COQ3/4/5/6/7/9 as the “iconic” metabolon components; this strengthens the general concept that COQ5 function is shaped by protein–protein interactions and pathway organization rather than as a fully independent enzyme. (Publication date: <strong>2024-01</strong>; URL: https://doi.org/10.1038/s41929-023-01087-z) (nicoll2024invitroconstruction; not among cited evidence IDs from gather_evidence in this run—therefore not cited for claims here).</p>
+<p><em>Note:</em> Because this tool run did not return citable evidence snippets/IDs for the 2024 metabolon paper, specific mechanistic claims from that paper are not used as evidence in this report.</p>
+<h2 id="5-current-applications-and-real-world-implementations-plant-systems">5. Current applications and real-world implementations (plant systems)</h2>
+<h3 id="51-phytoremediation-selenium-volatilization-via-plant-coq5">5.1 Phytoremediation / selenium volatilization via plant COQ5</h3>
+<p>A primary plant study identified a <strong>broccoli COQ5 methyltransferase (BoCOQ5-2)</strong> and demonstrated functional impacts beyond core respiration: expression increased selenium volatilization in heterologous systems.</p>
+<ul>
+<li>Quantitative result: bacteria expressing BoCOQ5-2 showed an <strong>over 160-fold increase</strong> in volatile selenium compounds upon selenate exposure.</li>
+<li>In planta result: transgenic Arabidopsis expressing BoCOQ5-2 volatilized <strong>~3× more</strong> selenium than controls under selenite treatment, showed increased selenium tolerance, and suppressed ROS generation induced by selenite.</li>
+</ul>
+<p>These results show that COQ5/CoQ-pathway manipulation can be deployed as a <strong>biotechnological lever</strong> for stress mitigation and <strong>phytoremediation strategies</strong>, even when COQ5 is not in sulfur/selenium metabolism per se. (Publication date: <strong>2009-08</strong>; URL: https://doi.org/10.1104/pp.109.142521) (latimer2021adedicatedflavindependent pages 10-11)</p>
+<h3 id="52-adjacent-coq-pathway-engineering-for-stress-tolerance">5.2 Adjacent CoQ pathway engineering for stress tolerance</h3>
+<p>Plant CoQ pathway engineering has also been tested by manipulating other steps (e.g., prenylation enzyme COQ2/PPT1 equivalents). Reviews cite that expression of yeast <strong>coq2</strong> in tobacco increased oxidative-stress tolerance, and overexpression of a polyprenyltransferase (SmPPT) in Salvia conferred salt tolerance, illustrating that mitochondrial prenylquinone pathways are targets for abiotic-stress engineering in plants. (liu2016plastoquinoneandubiquinone pages 15-16, latimer2021adedicatedflavindependent pages 10-11)</p>
+<h2 id="6-quantitative-statistics-and-data-relevant-to-pathway-control-context-for-coq5">6. Quantitative statistics and data relevant to pathway control (context for COQ5)</h2>
+<p>Direct quantitative data for rice COQ5 are absent in the retrieved corpus. However, quantitative Arabidopsis genetics for a late-pathway enzyme provides pathway-level context: silencing of <strong>At1g24340 (CoqF; a distinct UQ hydroxylase, not COQ5)</strong> reduced <strong>UQ-9 content by 40–74%</strong> across RNAi lines, indicating that late mitochondrial steps can exert strong control over total CoQ accumulation. (Publication date: <strong>2021-11</strong>; URL: https://doi.org/10.1016/j.jbc.2021.101283) (latimer2021adedicatedflavindependent pages 1-2, latimer2021adedicatedflavindependent media 1a346ebc)</p>
+<h2 id="7-evidence-summary-table">7. Evidence summary table</h2>
+<p>The following table compiles the most defensible claims for <strong>rice COQ5 (Q5JNC0)</strong> and clearly flags where evidence is cross-species.</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key findings</th>
+<th>Evidence type (review/primary, organism)</th>
+<th>Key citation IDs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enzyme class</td>
+<td>Rice COQ5 (UniProt Q5JNC0; Os01g0976600/LOC_Os01g74520 in the supplied target metadata) is most plausibly a class I-like SAM-dependent methyltransferase of the UbiE/COQ5 family that functions in ubiquinone (CoQ) biosynthesis. Across eukaryotes and plants, COQ5 is consistently assigned as the pathway C-methyltransferase rather than an O-methyltransferase.</td>
+<td>UniProt-target metadata plus reviews/primary literature; cross-species inference from plants, fungi, animals</td>
+<td>(staiano2023biosynthesisdeficiencyand pages 4-5, liu2016plastoquinoneandubiquinone pages 7-9, clarke2000newadvancesin pages 7-9)</td>
+</tr>
+<tr>
+<td>Reaction catalyzed</td>
+<td>COQ5 catalyzes the single C-methylation step of the CoQ ring-modification phase, specifically methylation at the C2 position of the aromatic headgroup during CoQ biosynthesis. Reviews and primary studies describe this as the COQ5/UbiE-dependent C-methyltransferase reaction.</td>
+<td>Reviews and primary literature; eukaryotes/plants/yeast</td>
+<td>(staiano2023biosynthesisdeficiencyand pages 4-5, xu2021auniqueflavoenzyme pages 1-2, clarke2000newadvancesin pages 7-9)</td>
+</tr>
+<tr>
+<td>Substrate/product/intermediate names</td>
+<td>The exact rice substrate has not been directly characterized in the retrieved literature, but COQ5 acts on a prenylated benzoquinone/benzoquinol intermediate in the late pathway. Primary and review sources describe Coq5-mediated C2 methylation yielding demethoxy-coenzyme Q (DMQ), and pathway discussions place COQ5 among reactions acting on prenylated intermediates such as PPHB-derived ring-modified species; older yeast work demonstrated C-methylation of a farnesylated analog in isolated mitochondria.</td>
+<td>Primary and reviews; yeast/eukaryotes with pathway inference for plants</td>
+<td>(xu2021auniqueflavoenzyme pages 1-2, clarke2000newadvancesin pages 7-9, tai2023identificationandbiochemical pages 15-20)</td>
+</tr>
+<tr>
+<td>Pathway step</td>
+<td>COQ5 acts after prenyl-chain attachment to 4-hydroxybenzoate and during the late head-group modification stage, which comprises hydroxylations, decarboxylation, and three methylations. In plants, COQ5 is one of the core mitochondrial UQ-pathway enzymes alongside COQ3/4/6/8 and prenylation enzyme PPT1/COQ2 upstream.</td>
+<td>Reviews; plants/eukaryotes</td>
+<td>(staiano2023biosynthesisdeficiencyand pages 4-5, tai2023identificationandbiochemicala pages 15-20, tai2023identificationandbiochemical pages 15-20, rudenko2023antioxidantsofnonenzymatic pages 6-7)</td>
+</tr>
+<tr>
+<td>Subcellular location</td>
+<td>The best-supported localization is mitochondrial, with CoQ biosynthesis occurring at the inner mitochondrial membrane or matrix-facing environment. Although direct rice localization evidence was not found in the retrieved corpus, plant UQ-pathway enzymes are generally mitochondrial, and eukaryotic COQ proteins are described as matrix-localized and/or inner-membrane associated.</td>
+<td>Reviews and primary literature; plants/eukaryotes</td>
+<td>(staiano2023biosynthesisdeficiencyand pages 4-5, tai2023identificationandbiochemicala pages 15-20, liu2016plastoquinoneandubiquinone pages 7-9, xu2021auniqueflavoenzyme pages 1-2, tai2023identificationandbiochemical pages 15-20)</td>
+</tr>
+<tr>
+<td>Complex/metabolon context</td>
+<td>COQ5 functions within a multisubunit CoQ biosynthetic assembly, often termed the COQ metabolon, CoQ synthome, or complex Q. Recent work emphasizes that COQ3, COQ4, COQ5, COQ6, COQ7/F-pathway counterparts, COQ8, and COQ9 organize pathway reactions and likely channel reactive hydrophobic intermediates in mitochondrial membrane domains.</td>
+<td>Recent review/primary; animals/yeast with pathway relevance to plants</td>
+<td>(staiano2023biosynthesisdeficiencyand pages 4-5, tai2023identificationandbiochemical pages 15-20)</td>
+</tr>
+<tr>
+<td>Plant evidence</td>
+<td>Direct rice experiments were not retrieved, so functional annotation relies on plant conservation. In Arabidopsis, AtCOQ5 is listed as a core UQ-pathway methyltransferase, and Arabidopsis COQ5 functionally complements the corresponding S. pombe mutant, supporting conserved biochemical activity in plants.</td>
+<td>Reviews with cross-species complementation; Arabidopsis/fission yeast</td>
+<td>(rudenko2023antioxidantsofnonenzymatic pages 6-7, staiano2023biosynthesisdeficiencyand pages 4-5)</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>No rice-specific quantitative measurements for COQ5 expression, enzyme activity, or mutant phenotypes were found in the retrieved evidence. For plant CoQ-pathway context, silencing of Arabidopsis At1g24340/CoqF (a different UQ-pathway enzyme, not COQ5) reduced UQ-9 content by 40% to 74%, illustrating that perturbation of late mitochondrial UQ-pathway steps can strongly depress CoQ accumulation.</td>
+<td>Primary literature; Arabidopsis (pathway context, not COQ5-specific)</td>
+<td>(latimer2021adedicatedflavindependent pages 1-2, latimer2021adedicatedflavindependent media 1a346ebc)</td>
+</tr>
+<tr>
+<td>Applications / real-world implementation</td>
+<td>No rice COQ5-specific engineering study was retrieved. More broadly, plant UQ-pathway engineering has shown utility: expression of yeast coq2 in tobacco increased oxidative-stress tolerance, SmPPT overexpression in Salvia conferred salt tolerance, and broccoli COQ5 overexpression increased selenium volatilization &gt;160-fold in bacteria and ~3-fold in transgenic Arabidopsis while improving Se tolerance and reducing ROS, indicating that COQ-pathway enzymes can be leveraged for stress biology and phytoremediation.</td>
+<td>Reviews and primary literature; tobacco, Salvia, broccoli/Arabidopsis, bacteria</td>
+<td>(liu2016plastoquinoneandubiquinone pages 15-16, latimer2021adedicatedflavindependent pages 10-11)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported functional annotation for rice COQ5 (Q5JNC0) using only the cited evidence IDs. It distinguishes direct rice evidence from cross-species inference and highlights where data remain indirect or missing.</em></p>
+<h2 id="8-expert-synthesis-and-implications-for-functional-annotation-of-rice-coq5">8. Expert synthesis and implications for functional annotation of rice COQ5</h2>
+<ol>
+<li><strong>Primary function:</strong> The weight of biochemical genetics and modern pathway descriptions supports annotating rice COQ5 as a <strong>SAM-dependent C2 C-methyltransferase</strong> in mitochondrial CoQ biosynthesis, producing a methylated CoQ intermediate (often described as <strong>DMQ</strong>) from a prenylated aromatic precursor. (xu2021auniqueflavoenzyme pages 1-2, clarke2000newadvancesin pages 7-9, staiano2023biosynthesisdeficiencyand pages 4-5)</li>
+<li><strong>Localization:</strong> The most consistent model places COQ5 action in the <strong>mitochondrial inner membrane/matrix-facing biosynthetic environment</strong>, aligned with the UniProt “mitochondrial precursor” annotation for Q5JNC0. (tai2023identificationandbiochemicala pages 15-20, xu2021auniqueflavoenzyme pages 1-2, tai2023identificationandbiochemical pages 15-20)</li>
+<li><strong>Systems context:</strong> COQ5 likely operates as part of a <strong>multi-enzyme CoQ biosynthetic ensemble</strong>, which is important for interpreting genotype–phenotype relationships (loss of one component can destabilize pathway flux). (tai2023identificationandbiochemical pages 15-20, staiano2023biosynthesisdeficiencyand pages 4-5)</li>
+<li><strong>Translational potential:</strong> Plant manipulation of COQ pathway enzymes (including COQ5 in broccoli) can deliver measurable phenotypes in stress tolerance and volatilization-based remediation, supporting the broader relevance of COQ5-family enzymes beyond “housekeeping respiration.” (latimer2021adedicatedflavindependent pages 10-11)</li>
+</ol>
+<h2 id="9-references-urls-and-publication-dates">9. References (URLs and publication dates)</h2>
+<ul>
+<li>Rudenko NN et al. <strong>Antioxidants of Non-Enzymatic Nature…</strong> <em>Antioxidants</em> (2023-11). https://doi.org/10.3390/antiox12112014 (rudenko2023antioxidantsofnonenzymatic pages 6-7)</li>
+<li>Staiano C et al. <strong>Biosynthesis, Deficiency, and Supplementation of Coenzyme Q.</strong> <em>Antioxidants</em> (2023-07). https://doi.org/10.3390/antiox12071469 (staiano2023biosynthesisdeficiencyand pages 4-5)</li>
+<li>Xu J-J et al. <strong>A unique flavoenzyme operates in ubiquinone biosynthesis…</strong> <em>Science Advances</em> (2021-12). https://doi.org/10.1126/sciadv.abl3594 (xu2021auniqueflavoenzyme pages 1-2)</li>
+<li>Liu M, Lu S. <strong>Plastoquinone and Ubiquinone in Plants…</strong> <em>Frontiers in Plant Science</em> (2016-12). https://doi.org/10.3389/fpls.2016.01898 (liu2016plastoquinoneandubiquinone pages 7-9, liu2016plastoquinoneandubiquinone pages 15-16)</li>
+<li>Clarke CF. <strong>New advances in coenzyme Q biosynthesis.</strong> <em>Protoplasma</em> (2000-09). https://doi.org/10.1007/bf01282151 (clarke2000newadvancesin pages 7-9)</li>
+<li>Zhou X et al. <strong>Involvement of a Broccoli COQ5 Methyltransferase…</strong> <em>Plant Physiology</em> (2009-08). https://doi.org/10.1104/pp.109.142521 (latimer2021adedicatedflavindependent pages 10-11)</li>
+<li>Latimer S et al. <strong>A dedicated flavin-dependent monooxygenase…</strong> <em>Journal of Biological Chemistry</em> (2021-11). https://doi.org/10.1016/j.jbc.2021.101283 (latimer2021adedicatedflavindependent pages 1-2, latimer2021adedicatedflavindependent media 1a346ebc)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(staiano2023biosynthesisdeficiencyand pages 4-5): Carmine Staiano, Laura García-Corzo, David Mantle, Nadia Turton, Lauren E. Millichap, Gloria Brea-Calvo, and Iain Hargreaves. Biosynthesis, deficiency, and supplementation of coenzyme q. Antioxidants, 12:1469, Jul 2023. URL: https://doi.org/10.3390/antiox12071469, doi:10.3390/antiox12071469. This article has 24 citations.</p>
+</li>
+<li>
+<p>(liu2016plastoquinoneandubiquinone pages 7-9): Miaomiao Liu and Shanfa Lu. Plastoquinone and ubiquinone in plants: biosynthesis, physiological function and metabolic engineering. Frontiers in Plant Science, Dec 2016. URL: https://doi.org/10.3389/fpls.2016.01898, doi:10.3389/fpls.2016.01898. This article has 226 citations.</p>
+</li>
+<li>
+<p>(rudenko2023antioxidantsofnonenzymatic pages 6-7): Natalia N. Rudenko, Daria V. Vetoshkina, Tatiana V. Merenkova, and Maria M. Borisova-Mubarakshina. Antioxidants of non-enzymatic nature: their function in higher plant cells and the ways of boosting their biosynthesis. Antioxidants, Nov 2023. URL: https://doi.org/10.3390/antiox12112014, doi:10.3390/antiox12112014. This article has 120 citations.</p>
+</li>
+<li>
+<p>(tai2023identificationandbiochemicala pages 15-20): J Tai. Identification and biochemical characterization of mitochondrial transporters in coenzyme q biosynthesis. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(xu2021auniqueflavoenzyme pages 1-2): Jing-Jing Xu, Xiao-Fan Zhang, Yan Jiang, Hang Fan, Jian-Xu Li, Chen-Yi Li, Qing Zhao, Lei Yang, Yong-Hong Hu, Cathie Martin, and Xiao-Ya Chen. A unique flavoenzyme operates in ubiquinone biosynthesis in photosynthesis-related eukaryotes. Dec 2021. URL: https://doi.org/10.1126/sciadv.abl3594, doi:10.1126/sciadv.abl3594. This article has 23 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(clarke2000newadvancesin pages 7-9): Catherine F. Clarke. New advances in coenzyme q biosynthesis. Protoplasma, 213:134-147, Sep 2000. URL: https://doi.org/10.1007/bf01282151, doi:10.1007/bf01282151. This article has 61 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tai2023identificationandbiochemical pages 15-20): J Tai. Identification and biochemical characterization of mitochondrial transporters in coenzyme q biosynthesis. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(latimer2021adedicatedflavindependent pages 10-11): Scott Latimer, Shea A. Keene, Lauren R. Stutts, Antoine Berger, Ann C. Bernert, Eric Soubeyrand, Janet Wright, Catherine F. Clarke, Anna K. Block, Thomas A. Colquhoun, Christian Elowsky, Alan Christensen, Mark A. Wilson, and Gilles J. Basset. A dedicated flavin-dependent monooxygenase catalyzes the hydroxylation of demethoxyubiquinone into ubiquinone (coenzyme q) in arabidopsis. Journal of Biological Chemistry, 297:101283, Nov 2021. URL: https://doi.org/10.1016/j.jbc.2021.101283, doi:10.1016/j.jbc.2021.101283. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2016plastoquinoneandubiquinone pages 15-16): Miaomiao Liu and Shanfa Lu. Plastoquinone and ubiquinone in plants: biosynthesis, physiological function and metabolic engineering. Frontiers in Plant Science, Dec 2016. URL: https://doi.org/10.3389/fpls.2016.01898, doi:10.3389/fpls.2016.01898. This article has 226 citations.</p>
+</li>
+<li>
+<p>(latimer2021adedicatedflavindependent pages 1-2): Scott Latimer, Shea A. Keene, Lauren R. Stutts, Antoine Berger, Ann C. Bernert, Eric Soubeyrand, Janet Wright, Catherine F. Clarke, Anna K. Block, Thomas A. Colquhoun, Christian Elowsky, Alan Christensen, Mark A. Wilson, and Gilles J. Basset. A dedicated flavin-dependent monooxygenase catalyzes the hydroxylation of demethoxyubiquinone into ubiquinone (coenzyme q) in arabidopsis. Journal of Biological Chemistry, 297:101283, Nov 2021. URL: https://doi.org/10.1016/j.jbc.2021.101283, doi:10.1016/j.jbc.2021.101283. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(latimer2021adedicatedflavindependent media 1a346ebc): Scott Latimer, Shea A. Keene, Lauren R. Stutts, Antoine Berger, Ann C. Bernert, Eric Soubeyrand, Janet Wright, Catherine F. Clarke, Anna K. Block, Thomas A. Colquhoun, Christian Elowsky, Alan Christensen, Mark A. Wilson, and Gilles J. Basset. A dedicated flavin-dependent monooxygenase catalyzes the hydroxylation of demethoxyubiquinone into ubiquinone (coenzyme q) in arabidopsis. Journal of Biological Chemistry, 297:101283, Nov 2021. URL: https://doi.org/10.1016/j.jbc.2021.101283, doi:10.1016/j.jbc.2021.101283. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="COQ5-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000012 The requested information is presented in Figures 1 and 6 of the document. Figure 1 (page 2) provides a schematic of the ubiquinone" src="COQ5-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>xu2021auniqueflavoenzyme pages 1-2</li>
+<li>clarke2000newadvancesin pages 7-9</li>
+<li>rudenko2023antioxidantsofnonenzymatic pages 6-7</li>
+<li>staiano2023biosynthesisdeficiencyand pages 4-5</li>
+<li>latimer2021adedicatedflavindependent pages 10-11</li>
+<li>liu2016plastoquinoneandubiquinone pages 7-9</li>
+<li>tai2023identificationandbiochemicala pages 15-20</li>
+<li>tai2023identificationandbiochemical pages 15-20</li>
+<li>liu2016plastoquinoneandubiquinone pages 15-16</li>
+<li>latimer2021adedicatedflavindependent pages 1-2</li>
+<li>https://doi.org/10.3390/antiox12112014</li>
+<li>https://doi.org/10.3390/antiox12071469</li>
+<li>https://doi.org/10.1038/s41929-023-01087-z</li>
+<li>https://doi.org/10.1104/pp.109.142521</li>
+<li>https://doi.org/10.1016/j.jbc.2021.101283</li>
+<li>https://doi.org/10.1126/sciadv.abl3594</li>
+<li>https://doi.org/10.3389/fpls.2016.01898</li>
+<li>https://doi.org/10.1007/bf01282151</li>
+<li>https://doi.org/10.3390/antiox12071469,</li>
+<li>https://doi.org/10.3389/fpls.2016.01898,</li>
+<li>https://doi.org/10.3390/antiox12112014,</li>
+<li>https://doi.org/10.1126/sciadv.abl3594,</li>
+<li>https://doi.org/10.1007/bf01282151,</li>
+<li>https://doi.org/10.1016/j.jbc.2021.101283,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q5JNC0
+gene_symbol: COQ5
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:39947
+  label: Oryza sativa subsp. japonica
+description: &gt;
+  Rice COQ5 (Q5JNC0; Os01g0976600 / LOC_Os01g74520) is the mitochondrial
+  S-adenosyl-L-methionine (SAM)-dependent C-methyltransferase of the ubiquinone
+  (coenzyme Q) biosynthetic pathway. It belongs to the class I-like SAM-binding
+  methyltransferase superfamily, MenG/UbiE (UbiE/COQ5) family, and carries the
+  conserved SAM-binding residues (UniProt BINDING sites at positions 100, 136 and
+  166-167). COQ5 catalyzes the single C-methylation step of the CoQ ring-modification
+  stage (EC 2.1.1.201; Rhea:RHEA:28286): it transfers a methyl group from SAM to the
+  C2 position of a 2-methoxy-6-(all-trans-polyprenyl)benzene-1,4-diol intermediate,
+  converting 2-polyprenyl-6-methoxy-1,4-benzoquinol (DDMQH2) to
+  2-polyprenyl-3-methyl-6-methoxy-1,4-benzoquinol (DMQH2). The other two methylation
+  reactions of the pathway are O-methylations carried out by COQ3, so COQ5 is
+  specifically the C-methyltransferase rather than an O-methyltransferase
+  (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). The protein bears an N-terminal
+  mitochondrial transit peptide (residues 1-10) and is a peripheral inner-membrane
+  protein on the matrix side of the mitochondrial inner membrane, consistent with
+  CoQ biosynthesis occurring at the inner mitochondrial membrane. COQ5 acts within a
+  multi-subunit COQ enzyme complex (the &#34;COQ metabolon&#34; / &#34;CoQ synthome&#34;) that
+  channels hydrophobic prenylated intermediates between the late-pathway COQ3-COQ9
+  enzymes. Direct rice-specific biochemical or genetic characterization of
+  Os01g0976600 is not available in the retrieved literature; the functional
+  assignment rests on strong evolutionary conservation across eukaryotes plus
+  plant-specific evidence that Arabidopsis AtCOQ5 functionally complements the
+  corresponding Schizosaccharomyces pombe coq mutant, demonstrating that plant COQ5
+  proteins retain the conserved C-methyltransferase activity
+  (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). CoQ is a redox-active,
+  membrane-localized prenylquinone that functions as an electron carrier in
+  mitochondrial respiration and as a lipophilic antioxidant.
+existing_annotations:
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED
+# from the current (2026) GOA release when GOA retired the keyword2GO pipeline
+# for cellular organisms. Reviewed retrospectively to assess whether removal was
+# justified. This is the TRUE SPKW-unique annotation (closure-filtered): the bare
+# process term &#34;methylation&#34; derived from the UniProt &#34;Methyltransferase&#34; keyword.
+- term:
+    id: GO:0032259
+    label: methylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword
+      &#34;Methyltransferase&#34; (and the related &#34;Transferase&#34; keyword); snapshot-only,
+      removed from the current GOA release. It maps the enzyme-class keyword to the
+      bare biological-process term &#34;methylation&#34;, which drops all pathway and
+      substrate context for a CoQ-pathway C-methyltransferase.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GOA&#39;s removal of this annotation was JUSTIFIED. This is a classic
+      &#34;enzyme-class keyword -&gt; bare process&#34; conflation: the UniProt
+      &#34;Methyltransferase&#34; keyword is mapped to the very high-level process term
+      &#34;methylation&#34; (GO:0032259), which says only that the protein methylates
+      something and discards the specific pathway. COQ5&#39;s methylation is not a
+      generic process - it is the single C-methylation step of coenzyme Q
+      biosynthesis, in which a SAM-dependent C2 C-methyltransferase acts on a
+      prenylated benzoquinol CoQ-pathway intermediate
+      (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). The correct, specific process
+      is &#34;ubiquinone biosynthetic process&#34; (GO:0006744), which is ALREADY present
+      in the current GOA in two annotations (IBA from GO_REF:0000033 and IEA from
+      GO_REF:0000120), and the specific molecular function
+      &#34;2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity&#34;
+      (GO:0008425) is also already annotated (IBA and IEA). The bare &#34;methylation&#34;
+      process term therefore adds no information beyond what the retained, more
+      specific annotations already capture, and is redundant. Were a process term
+      needed to replace it, the correct replacement is GO:0006744; but because that
+      term is already present, the bare keyword-derived &#34;methylation&#34; is best
+      treated as an over-annotation whose removal lost no biology.
+    proposed_replacement_terms:
+    - id: GO:0006744
+      label: ubiquinone biosynthetic process
+    supported_by:
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        among the three methylation reactions in the canonical eukaryotic CoQ
+        ring-modification stage (the other two methylations are O-methylations
+        catalyzed by COQ3)
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        COQ5 acts on a prenylated benzoquinone/benzoquinol intermediate in the late
+        pathway
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IBA annotation propagated across the COQ5 phylogenetic group (PANTHER
+      PTN001297884, including yeast SGD COQ5 and E. coli UbiE). Ubiquinone (coenzyme
+      Q) biosynthesis is the core biological process of COQ5.
+    action: ACCEPT
+    reason: &gt;
+      This is the core biological process and is well supported. COQ5 is consistently
+      assigned across eukaryotes and plants as the pathway C-methyltransferase of
+      ubiquinone biosynthesis, performing the single C-methylation step of the CoQ
+      ring-modification stage (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). The
+      UniProt PATHWAY annotation (&#34;Cofactor biosynthesis; ubiquinone biosynthesis&#34;)
+      and UniPathway UPA00232 agree. Plant orthologs retain this role: Arabidopsis
+      AtCOQ5 complements the corresponding S. pombe coq mutant. The IBA term is at the
+      appropriate level of specificity.
+    supported_by:
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        Across eukaryotes and plants, COQ5 is consistently assigned as the pathway
+        C-methyltransferase rather than an O-methyltransferase.
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        Arabidopsis COQ genes including AtCOQ5 can complement the corresponding
+- term:
+    id: GO:0008425
+    label: 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;
+      IBA annotation for the specific COQ5 enzymatic activity, propagated across the
+      COQ5/UbiE phylogenetic group. This is the precise, informative molecular
+      function of the gene product.
+    action: ACCEPT
+    reason: &gt;
+      This is the core molecular function and is well supported. The UniProt entry
+      records the catalytic activity (EC 2.1.1.201; Rhea:RHEA:28286): a
+      2-methoxy-6-(all-trans-polyprenyl)benzene-1,4-diol + SAM yields a
+      5-methoxy-2-methyl-3-(all-trans-polyprenyl)benzene-1,4-diol + S-adenosyl-L-
+      homocysteine. The literature describes COQ5 as a mitochondrial SAM-dependent
+      C2 C-methyltransferase acting on a prenylated benzoquinol CoQ-pathway
+      intermediate (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). This is the exact,
+      maximally informative MF term and should be retained as core.
+    supported_by:
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        Reviews and primary studies describe this as the COQ5/UbiE-dependent
+        C-methyltransferase reaction.
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        the single C-methylation step of the CoQ ring-modification phase, specifically
+        methylation at the C2 position of the aromatic headgroup during CoQ biosynthesis
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProt Subcellular Location vocabulary mapping
+      (UniProtKB-SubCell:SL-0168). COQ5 is a peripheral inner-membrane protein on the
+      matrix side of the mitochondrial inner membrane.
+    action: ACCEPT
+    reason: &gt;
+      Correct and consistent with the UniProt SUBCELLULAR LOCATION annotation
+      (&#34;Mitochondrion inner membrane; Peripheral membrane protein; Matrix side&#34;) and
+      with the N-terminal mitochondrial transit peptide (residues 1-10). CoQ
+      biosynthesis in eukaryotes occurs at the inner mitochondrial membrane, and
+      late-pathway COQ enzymes are mitochondrial (matrix-localized and/or
+      inner-membrane associated), so the mitochondrial inner-membrane localization is
+      well supported (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). Direct rice
+      microscopy was not retrieved, but the localization is consistent with strong
+      pathway conservation.
+    supported_by:
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        The best-supported localization is mitochondrial, with CoQ biosynthesis
+        occurring at the inner mitochondrial membrane or matrix-facing environment
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        eukaryotic COQ proteins are described as matrix-localized and/or
+        inner-membrane associated
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation (combined automated methods; ARBA/UniRule, UniPathway UPA00232)
+      for ubiquinone biosynthesis. Duplicates the IBA annotation to the same term.
+    action: ACCEPT
+    reason: &gt;
+      Correct and consistent with the IBA annotation to the same term, with the
+      UniProt PATHWAY statement (&#34;Cofactor biosynthesis; ubiquinone biosynthesis&#34;;
+      UniPathway UPA00232) and with the conserved role of COQ5 as the CoQ-pathway
+      C-methyltransferase (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). Duplicate
+      annotations with different evidence codes are acceptable; the IEA provides
+      additional computational support for the well-established core process.
+    supported_by:
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        Across eukaryotes and plants, COQ5 is consistently assigned as the pathway
+        C-methyltransferase rather than an O-methyltransferase.
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        COQ5 functions within a multisubunit CoQ biosynthetic assembly, often termed
+        the COQ metabolon
+- term:
+    id: GO:0008168
+    label: methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR004033 UbiE/COQ5_MeTrFase; IPR023576
+      UbiE/COQ5_MeTrFase_CS) for the broad parent &#34;methyltransferase activity&#34;. COQ5
+      is a methyltransferase, but a much more specific MF is already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      &#34;Methyltransferase activity&#34; is a broad parent term. It is not wrong - COQ5 is a
+      SAM-dependent methyltransferase - but it is uninformative now that the specific
+      MF &#34;2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity&#34;
+      (GO:0008425) is annotated (IBA and IEA). The InterPro signatures that produced
+      this term (UbiE/COQ5 family) actually map to the specific UbiE/COQ5 activity, so
+      the more precise GO:0008425 better represents the same evidence
+      (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). Retaining a generic
+      &#34;methyltransferase activity&#34; alongside the specific term adds no information; it
+      is an over-annotation relative to GO:0008425.
+    proposed_replacement_terms:
+    - id: GO:0008425
+      label: 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+    supported_by:
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        COQ5 acts on a prenylated benzoquinone/benzoquinol intermediate in the late
+        pathway
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        among the three methylation reactions in the canonical eukaryotic CoQ
+        ring-modification stage (the other two methylations are O-methylations
+        catalyzed by COQ3)
+- term:
+    id: GO:0008425
+    label: 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation (combined automated methods; RHEA:28286, EC:2.1.1.201,
+      UniRule) for the specific COQ5 enzymatic activity. Duplicates the IBA
+      annotation to the same term.
+    action: ACCEPT
+    reason: &gt;
+      Correct and consistent with the IBA annotation to the same term. This is the
+      precise, maximally informative molecular function, directly supported by the
+      UniProt CATALYTIC ACTIVITY (Rhea:RHEA:28286; EC 2.1.1.201) and by the
+      literature description of COQ5 as a SAM-dependent C2 C-methyltransferase acting
+      on a prenylated benzoquinol intermediate
+      (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). Duplicate annotations with
+      different evidence codes are acceptable.
+    supported_by:
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        Primary and review sources describe Coq5-mediated C2 methylation yielding
+        demethoxy-coenzyme Q (DMQ)
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        the single C-methylation step of the CoQ ring-modification phase, specifically
+        methylation at the C2 position of the aromatic headgroup during CoQ biosynthesis
+- term:
+    id: GO:0031314
+    label: extrinsic component of mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation (transferred from a related protein by UniRule) describing COQ5
+      as an extrinsic (peripheral) component of the mitochondrial inner membrane on
+      the matrix side.
+    action: ACCEPT
+    reason: &gt;
+      Correct and more precise than the generic &#34;mitochondrial inner membrane&#34; term:
+      the UniProt SUBCELLULAR LOCATION explicitly states &#34;Peripheral membrane protein;
+      Matrix side&#34;, i.e. an extrinsic/peripherally-attached inner-membrane component
+      rather than an integral membrane protein. This matches the description of
+      late-pathway COQ enzymes as matrix-localized and/or inner-membrane associated
+      (file:ORYSJ/COQ5/COQ5-deep-research-falcon.md). The annotation is consistent
+      with COQ5&#39;s role in the membrane-associated COQ biosynthetic complex.
+    supported_by:
+    - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+      supporting_text: &gt;-
+        eukaryotic COQ proteins are described as matrix-localized and/or
+        inner-membrane associated
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: &gt;-
+      InterPro signatures IPR004033 (UbiE/COQ5_MeTrFase) and IPR023576
+      (UbiE/COQ5_MeTrFase_CS) map to methyltransferase activity; the UbiE/COQ5
+      family corresponds to the specific 2-methoxy-6-polyprenyl-1,4-benzoquinol
+      methyltransferase activity.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: &gt;-
+      COQ5 functions (ubiquinone biosynthetic process,
+      2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity) are
+      conserved across the PANTHER PTN001297884 COQ5/UbiE phylogenetic group.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: &gt;-
+      SwissProt keyword-derived (SPKW) annotation present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA
+      retired the keyword2GO pipeline for cellular organisms.
+  - statement: &gt;-
+      For COQ5, the &#34;Methyltransferase&#34; keyword mapped to the bare process term
+      &#34;methylation&#34; (GO:0032259); the specific pathway and substrate context were
+      retained instead by GO:0006744 and GO:0008425, so removal lost no biology.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings:
+  - statement: &gt;-
+      Mitochondrial inner-membrane localization mapped from the UniProt Subcellular
+      Location vocabulary (SL-0168).
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings:
+  - statement: &gt;-
+      Extrinsic (peripheral, matrix-side) component of the mitochondrial inner
+      membrane, transferred by UniRule from related COQ5 proteins.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: &gt;-
+      Ubiquinone biosynthetic process and the specific
+      2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity assigned by
+      combined IEA methods (ARBA/UniRule; RHEA:28286, EC 2.1.1.201; UniPathway
+      UPA00232).
+- id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional
+    annotation of rice COQ5 (Q5JNC0).
+  findings:
+  - statement: &gt;-
+      COQ5 is the SAM-dependent C-methyltransferase (UbiE/COQ5 family) responsible
+      for the single C-methylation of the eukaryotic CoQ ring-modification stage;
+      the other two methylations are O-methylations catalyzed by COQ3. It acts on a
+      prenylated benzoquinone/benzoquinol CoQ-pathway intermediate at the C2
+      position, producing demethoxy-coenzyme Q (DMQ).
+  - statement: &gt;-
+      CoQ biosynthesis occurs at the inner mitochondrial membrane; late-pathway COQ
+      enzymes (COQ3-COQ9) are mitochondrial (matrix-localized and/or inner-membrane
+      associated) and function within a multi-subunit COQ metabolon / CoQ synthome.
+  - statement: &gt;-
+      No primary rice study directly assays COQ5 (Os01g0976600/LOC_Os01g74520)
+      activity, localization or mutant phenotype; annotation rests on evolutionary
+      conservation plus plant evidence that Arabidopsis AtCOQ5 complements the
+      corresponding S. pombe coq mutant.
+core_functions:
+- description: &gt;
+    Rice COQ5 is the mitochondrial SAM-dependent C-methyltransferase of the
+    ubiquinone (coenzyme Q) biosynthetic pathway. It transfers a methyl group from
+    S-adenosyl-L-methionine to the C2 position of a 2-methoxy-6-(all-trans-
+    polyprenyl)benzene-1,4-diol intermediate (EC 2.1.1.201; Rhea:RHEA:28286),
+    performing the single C-methylation step of CoQ ring modification and converting
+    DDMQH2 to DMQH2.
+  molecular_function:
+    id: GO:0008425
+    label: 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  - id: GO:0031314
+    label: extrinsic component of mitochondrial inner membrane
+  supported_by:
+  - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+    supporting_text: &gt;-
+      COQ5 acts on a prenylated benzoquinone/benzoquinol intermediate in the late
+      pathway
+  - reference_id: file:ORYSJ/COQ5/COQ5-deep-research-falcon.md
+    supporting_text: &gt;-
+      among the three methylation reactions in the canonical eukaryotic CoQ
+      ring-modification stage (the other two methylations are O-methylations
+      catalyzed by COQ3)
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does rice COQ5 (Os01g0976600) functionally complement a yeast coq5 (or S. pombe)
+    null mutant, confirming that the rice protein retains the conserved CoQ-pathway
+    C-methyltransferase activity as shown for Arabidopsis AtCOQ5?
+  experts: []
+- question: &gt;-
+    What is the loss-of-function phenotype of a rice coq5 mutant - is it seedling- or
+    pollen-lethal (as expected for a CoQ-biosynthesis gene), and does it reduce total
+    ubiquinone (UQ-9/UQ-10) content?
+  experts: []
+suggested_experiments:
+- description: &gt;-
+    Express rice COQ5 (mature, transit-peptide-removed) in a yeast coq5-null strain
+    and assay rescue of respiratory growth on a non-fermentable carbon source plus
+    restoration of CoQ6 levels by LC-MS, to confirm conserved C-methyltransferase
+    activity.
+  hypothesis: &gt;-
+    Rice COQ5 is a functional CoQ-pathway C2 C-methyltransferase and complements the
+    yeast coq5 deletion, as Arabidopsis AtCOQ5 complements the S. pombe coq mutant.
+  experiment_type: heterologous complementation
+- description: &gt;-
+    Generate CRISPR/Cas9 knockout and knockdown lines of OsCOQ5 and quantify total
+    ubiquinone (UQ-9) content by LC-MS/MS, mitochondrial respiratory capacity, and
+    developmental/viability phenotypes relative to wild type.
+  hypothesis: &gt;-
+    Loss of OsCOQ5 strongly reduces ubiquinone accumulation and impairs mitochondrial
+    respiration, consistent with COQ5 being an essential late-pathway CoQ-biosynthesis
+    enzyme.
+  experiment_type: reverse genetics with metabolite profiling
+- description: &gt;-
+    Express an OsCOQ5-GFP fusion in rice protoplasts or stable transformants and
+    co-localize with a mitochondrial marker by confocal microscopy to verify
+    mitochondrial (inner-membrane / matrix-side) localization directly in rice.
+  hypothesis: &gt;-
+    OsCOQ5 localizes to mitochondria via its N-terminal transit peptide and associates
+    peripherally with the matrix side of the inner membrane.
+  experiment_type: subcellular localization
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

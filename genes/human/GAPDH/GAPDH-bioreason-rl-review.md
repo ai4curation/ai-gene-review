@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: GAPDH (human)
 
-Source: GAPDH-deep-research-bioreason-rl.md
+Source: GAPDH-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

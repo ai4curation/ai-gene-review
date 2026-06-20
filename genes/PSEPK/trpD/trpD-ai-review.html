@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>trpD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>trpD</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QR7" target="_blank" class="term-link">
+                        Q88QR7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "trpD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QR7" data-a="DESCRIPTION: Anthranilate phosphoribosyltransferase (TrpD, EC 2..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Anthranilate phosphoribosyltransferase (TrpD, EC 2.4.2.18), a cytosolic Mg2+-dependent enzyme that catalyzes the second committed step of L-tryptophan biosynthesis. It transfers the phosphoribosyl group of 5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to anthranilate, producing N-(5-phospho-beta-D-ribosyl)-anthranilate (PRA) and diphosphate. In Pseudomonas putida KT2440 the enzyme is a monofunctional anthranilate phosphoribosyltransferase (the glutamine amidotransferase component of anthranilate synthase is encoded by a separate gene, trpG), belongs to the anthranilate phosphoribosyltransferase family (HAMAP MF_00211), and acts as a homodimer binding two magnesium ions per monomer. Loss of trpD function causes tryptophan auxotrophy that is rescued by L-tryptophan or indole, consistent with its position upstream of the indole/tryptophan branch in the chorismate-derived aromatic amino-acid biosynthetic route.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000162" target="_blank" class="term-link">
+                                    GO:0000162
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR7" data-a="GO:0000162" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TrpD catalyzes the second step of tryptophan biosynthesis (anthranilate to PRA). This is the core biological process for this gene, supported by the conserved pathway role and by experimental tryptophan auxotrophy of P. putida KT2440 trpD mutants.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process. Consistent with the UniProt pathway annotation (L-tryptophan from chorismate, step 2/5) and with experimental auxotrophy/rescue evidence in KT2440.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR7" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The enzyme binds two Mg2+ ions per monomer, which assist PRPP binding. UniProt documents specific Mg2+ binding residues (positions 94, 227, 228).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Magnesium is a required cofactor for this PRPP-dependent phosphoribosyltransferase; supported by HAMAP rule and modeled metal-binding sites.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004048" target="_blank" class="term-link">
+                                    GO:0004048
+                                </a>
+                            </span>
+                            <span class="term-label">anthranilate phosphoribosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR7" data-a="GO:0004048" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific, defining molecular function of TrpD (EC 2.4.2.18), transferring the phosphoribosyl group of PRPP to anthranilate to form PRA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function. Maps directly to EC 2.4.2.18 / RHEA:11768 and the anthranilate phosphoribosyltransferase family assignment (HAMAP MF_00211).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR7" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a soluble biosynthetic enzyme in the tryptophan pathway, TrpD acts in the cytosol. No experimental localization in KT2440, but this is the parsimonious and family-consistent compartment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Appropriate cellular component for a cytoplasmic amino-acid biosynthetic enzyme; consistent with TreeGrafter inference across the family.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016757" target="_blank" class="term-link">
+                                    GO:0016757
+                                </a>
+                            </span>
+                            <span class="term-label">glycosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR7" data-a="GO:0016757" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a high-level grouping term derived from the InterPro &#34;Glycosyl transferase family 3&#34; domain. The actual activity is the more specific anthranilate phosphoribosyltransferase (a pentosyltransferase, GO:0016763 branch), already captured by GO:0004048.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Uninformative parent term that does not accurately describe the enzyme&#39;s function; the specific activity (GO:0004048) and its proper parent pentosyltransferase (GO:0016763) are already annotated. Retaining glycosyltransferase activity is redundant and potentially misleading.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016763" target="_blank" class="term-link">
+                                    GO:0016763
+                                </a>
+                            </span>
+                            <span class="term-label">pentosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR7" data-a="GO:0016763" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but general parent of the specific anthranilate phosphoribosyltransferase activity. EC 2.4.2.18 is a pentosyltransferase, so this term is accurate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> True but uninformative relative to the specific GO:0004048 annotation; retain as a correct higher-level grouping rather than the core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the Mg2+-dependent transfer of the phosphoribosyl group of PRPP to anthranilate, producing N-(5-phospho-beta-D-ribosyl)-anthranilate (PRA), the second committed step of L-tryptophan biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88QR7" data-a="FUNCTION: Catalyzes the Mg2+-dependent transfer of the phosp..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004048" target="_blank" class="term-link">
+                            anthranilate phosphoribosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000162" target="_blank" class="term-link">
+                                L-tryptophan biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21261884" target="_blank" class="term-link">
+                                PMID:21261884
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21261884" target="_blank" class="term-link">
+                            PMID:21261884
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional analysis of aromatic biosynthetic pathways in Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PP_0421 is trpD encoding anthranilate phosphoribosyltransferase; a transposon insertion at codon 184 of trpD causes tryptophan auxotrophy, and trpD lies in a trpGDC operon. The trpD mutant is rescued by L-tryptophan and indole.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20158506" target="_blank" class="term-link">
+                            PMID:20158506
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of conditionally essential genes for growth of Pseudomonas putida KT2440 on minimal medium through the screening of a genome-wide mutant library.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A trpD mutant is auxotrophic on M9 minimal medium with growth restored by L-tryptophan, confirming trpD is required for endogenous tryptophan biosynthesis.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(trpD-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QR7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">29 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:28:34.856602</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="trpD-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="trpD-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000009 I have extracted Table 1 and Figure 3, which together provide the requested information about the tryptophan gene organization and </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-trpd-uniprot-q88qr7-locus-pp_0421-in-pseudomonas-putida-kt2440">Comprehensive research report: <strong>trpD (UniProt Q88QR7; locus PP_0421)</strong> in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-executive-summary-identity-verified">0) Executive summary (identity verified)</h3>
+<p>The target protein <strong>TrpD</strong> in <em>Pseudomonas putida</em> KT2440 (UniProt <strong>Q88QR7</strong>, ordered locus <strong>PP_0421</strong>) is <strong>anthranilate phosphoribosyltransferase</strong> (EC <strong>2.4.2.18</strong>), a cytosolic PRPP-dependent phosphoribosyltransferase in the <strong>tryptophan de novo biosynthesis</strong> pathway. In KT2440, <strong>trpD is genetically and transcriptionally linked to trpG and trpC</strong> in a <strong>trpGDC operon</strong>, and loss-of-function causes <strong>tryptophan auxotrophy</strong> that can be rescued by pathway end products/intermediates (L-tryptophan; indole), consistent with the canonical pathway position. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6, molina‐henares2010identificationofconditionally pages 6-7)</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-definition-of-trpd-activity-and-reaction">1.1 Definition of TrpD activity and reaction</h4>
+<p><strong>Anthranilate phosphoribosyltransferase (TrpD; EC 2.4.2.18)</strong> catalyzes transfer of a phosphoribosyl group from <strong>PRPP (5-phospho-α-D-ribose-1-diphosphate)</strong> to <strong>anthranilate</strong>, yielding <strong>N-(5-phospho-β-D-ribosyl)-anthranilate (PRA)</strong> and <strong>pyrophosphate (PPi)</strong>. (hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52, parthasarathy2018athreeringcircus pages 6-8)</p>
+<p>This step is an early committed reaction in the <strong>tryptophan biosynthesis</strong> route from chorismate: anthranilate is produced by TrpE/TrpG (anthranilate synthase components), and TrpD converts anthranilate into the ribosylated intermediate that proceeds through subsequent transformations toward the indole ring and ultimately tryptophan. (hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52, parthasarathy2018athreeringcircus pages 6-8)</p>
+<h4 id="12-enzyme-family-structural-features-and-mechanism-inference-framework">1.2 Enzyme family, structural features, and mechanism (inference framework)</h4>
+<p>A widely cited enzymology review of PRPP-dependent enzymes describes TrpD enzymes as typically <strong>homodimeric</strong> proteins with a <strong>two-domain architecture</strong> (N-terminal helical domain and larger C-terminal α/β domain) that creates an active-site cleft for binding PRPP and anthranilate. <strong>Divalent cations</strong> (Mg2+ or Mn2+) promote PRPP binding, and conserved motifs (including a glycine-rich region involved in phosphate binding) are characteristic. Structural studies in bacteria have supported a model involving <strong>substrate capture</strong> and movement of anthranilate through <strong>multiple binding sites</strong>/a channel toward the catalytic configuration that enables nucleophilic attack on PRPP. (hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52, parthasarathy2018athreeringcircus pages 6-8, hovejensen2017phosphoribosyldiphosphate(prpp) pages 78-78)</p>
+<p>These mechanistic and fold-level features are not specific measurements on <em>P. putida</em> KT2440 TrpD in the retrieved documents, but they represent the authoritative current understanding used to support functional inference from homology for bacterial TrpD-family members (such as Q88QR7). (hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52, parthasarathy2018athreeringcircus pages 6-8)</p>
+<hr />
+<h3 id="2-target-gene-verification-and-p-putida-kt2440-specific-functional-evidence">2) Target-gene verification and <em>P. putida</em> KT2440-specific functional evidence</h3>
+<h4 id="21-correct-geneprotein-mapping-pp_0421-trpd-anthranilate-phosphoribosyltransferase">2.1 Correct gene/protein mapping: PP_0421 = trpD = anthranilate phosphoribosyltransferase</h4>
+<p>A functional genetics study of aromatic amino-acid biosynthesis in <em>P. putida</em> KT2440 identifies <strong>PP_0421 as trpD</strong>, encoding <strong>anthranilate phosphoribosyltransferase</strong>, and reports a tryptophan-auxotrophic transposon mutant (<strong>Aux-3</strong>) with a mini-Tn5 insertion at the <strong>184th codon</strong> of <strong>PP_0421/trpD</strong>, linking disruption of PP_0421 to tryptophan auxotrophy. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 1-2)</p>
+<p>This directly matches the UniProt identity provided by the user (Q88QR7; PP_0421; “Anthranilate phosphoribosyltransferase”). (molinahenares2009functionalanalysisof pages 2-4)</p>
+<h4 id="22-operontranscriptional-organization-in-kt2440">2.2 Operon/transcriptional organization in KT2440</h4>
+<p>In KT2440, <strong>trpD is embedded in a trpG–trpD–trpC transcriptional unit (trpGDC operon)</strong>. RT-PCR evidence supports co-transcription across the <strong>trpG–trpD–trpC</strong> boundaries; the genomic spacing/overlap also supports operon logic (trpG–trpD separated by <strong>9 nt</strong>; trpD and trpC overlapping by <strong>6 nt</strong>). The same study reports that <strong>trpE</strong> is transcribed as a <strong>monocistronic unit</strong> distinct from trpGDC. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 7-8)</p>
+<p>Visual evidence for this gene organization and transcriptional-unit mapping is provided in the extracted Table/Figure crops. (molinahenares2009functionalanalysisof media 8eee5d0d, molinahenares2009functionalanalysisof media f71ebd0e)</p>
+<h4 id="23-phenotype-and-pathway-placement-in-kt2440">2.3 Phenotype and pathway placement in KT2440</h4>
+<p>KT2440 trpD mutants are <strong>unable to grow on minimal medium</strong> and can be rescued by supplementation. In pathway-intermediate feeding experiments, the <strong>trpD mutant grows with tryptophan and indole</strong>, consistent with TrpD operating upstream of indole and tryptophan formation (i.e., loss blocks endogenous synthesis but can be bypassed by supplying downstream metabolites). (molinahenares2009functionalanalysisof pages 4-6)</p>
+<p>In an independent genome-wide mutant library study focused on growth on minimal medium, a <strong>trpD mutant is auxotrophic on M9</strong> and growth is restored by <strong>L-tryptophan</strong> (while D-tryptophan does not rescue), reinforcing that trpD is required for endogenous tryptophan biosynthesis under minimal conditions. (molina‐henares2010identificationofconditionally pages 6-7)</p>
+<h4 id="24-regulation-and-cellular-localization-what-is-known-vs-not-found-here">2.4 Regulation and cellular localization (what is known vs. not found here)</h4>
+<p>The KT2440 gene organization places tryptophan biosynthesis genes in multiple genomic regions. A regulatory gene <strong>trpI</strong> is described as divergently transcribed relative to <strong>trpAB</strong> and annotated as encoding a <strong>repressor</strong>, indicating local transcriptional regulation at the trpAB locus that is physically separated from trpGDC. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6)</p>
+<p>No direct, KT2440-specific experimental evidence for <strong>subcellular localization</strong> of TrpD (e.g., fractionation, microscopy) was identified in the retrieved texts. Given its biosynthetic role and the general bacterial paradigm for amino-acid biosynthesis enzymes, the most parsimonious functional localization is <strong>intracellular (cytosolic)</strong>, but this report flags that as inference rather than a demonstrated localization in the cited KT2440 sources. (molinahenares2009functionalanalysisof pages 2-4, hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52)</p>
+<hr />
+<h3 id="3-pathways-and-biological-processes">3) Pathways and biological processes</h3>
+<h4 id="31-tryptophan-biosynthesis-context">3.1 Tryptophan biosynthesis context</h4>
+<p>In bacteria, tryptophan is biosynthesized from <strong>chorismate</strong> through anthranilate and downstream intermediates; TrpD catalyzes the PRPP-dependent conversion of anthranilate to PRA, positioning it as a key node linking <strong>shikimate/chorismate-derived aromatic metabolism</strong> to the <strong>indole/tryptophan branch</strong>. (hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52, parthasarathy2018athreeringcircus pages 6-8)</p>
+<p>For <em>P. putida</em> KT2440, genetic mapping and rescue phenotypes place trpD squarely in this canonical route, consistent with the conserved trp gene clusters described for pseudomonads. (molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 7-8)</p>
+<h4 id="32-crosstalk-with-prpp-metabolism-expert-level-interpretation">3.2 Crosstalk with PRPP metabolism (expert-level interpretation)</h4>
+<p>Because TrpD consumes <strong>PRPP</strong>, its effective capacity depends on PRPP supply, which is also demanded by many other phosphoribosyltransferases in nucleotide and amino-acid biosynthesis. A comprehensive PRPP review emphasizes PRPP as a widely shared substrate and discusses structural/mechanistic diversity among PRPP-utilizing enzymes, framing TrpD as one member of a broader PRPP-dependent metabolic network. From a systems viewpoint, TrpD can therefore become a flux-control point not only through its own kinetics and regulation but also through competition for PRPP and impacts on PPi handling. (hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52)</p>
+<hr />
+<h3 id="4-recent-developments-prioritizing-20232024-and-expert-analysis">4) Recent developments (prioritizing 2023–2024) and expert analysis</h3>
+<p>Direct 2023–2024 studies specifically characterizing <strong>KT2440 PP_0421/Q88QR7</strong> were not retrieved here; however, 2023–2024 literature demonstrates that <strong>TrpD is a highly actionable control node</strong> in microbial engineering (anthranilate and tryptophan-derived product pipelines). These applied findings provide strong, contemporary support for TrpD’s functional centrality and substrate role.</p>
+<h4 id="41-2023-using-trpd-disruption-to-accumulate-anthranilate-platform-chemical">4.1 2023: using trpD disruption to accumulate anthranilate (platform chemical)</h4>
+<p>Kim et al. engineered <strong>E. coli</strong> for anthranilate overproduction and explicitly <strong>disrupted trpD</strong> (described as transferring the phosphoribosyl group to anthranilate) to prevent anthranilate consumption and promote accumulation. In a 7-L fed-batch fermentation, they report <strong>~4 g/L anthranilate</strong>. This is an application-level validation that blocking the TrpD step increases anthranilate accumulation in vivo. (kim2023engineeredescherichiacoli pages 1-2)</p>
+<p>In their contextualization of the field, the authors also cite prior high performance titers including <strong>up to 14 g/L anthranilate</strong> in an engineered E. coli strain and <strong>1.5 g/L</strong> in a <em>Pseudomonas putida</em> ΔtrpDC strain (the latter supports that trpD-region perturbations are used directly in <em>P. putida</em> backgrounds, though not specifically the KT2440 PP_0421 allele). (kim2023engineeredescherichiacoli pages 2-4)</p>
+<h4 id="42-2024-tuning-trpd-translation-to-optimize-anthranilate-production">4.2 2024: tuning trpD translation to optimize anthranilate production</h4>
+<p>Mutz et al. engineered <strong>Corynebacterium glutamicum</strong> for anthranilate production and report that adjusting translation efficiency of <strong>trpD</strong> (anthranilate phosphoribosyltransferase) along with aroK improved production; their final strain accumulated up to <strong>5.9 g/L (43 mM) anthranilate</strong> in bioreactors. This demonstrates modern pathway-balancing strategies that treat TrpD as a tunable valve controlling anthranilate drainage to downstream tryptophan. (mutz2024metabolicengineeringof pages 1-3)</p>
+<h4 id="43-2024-engineering-trpd-variants-for-improved-tryptophan-availability-and-specialty-products">4.3 2024: engineering TrpD variants for improved tryptophan availability and specialty products</h4>
+<p>Putri et al. report a <strong>TrpD A162D</strong> variant in C. glutamicum described as <strong>feedback-resistant to L-tryptophan</strong> and with <strong>increased substrate affinity</strong> versus wild-type. Incorporating this engineering, they report <strong>3.1 g/L L-tryptophan</strong> in flask culture (with multiple copies/expressions of the variant), enabling downstream biosynthesis of a halogenated natural-product derivative (APRN) with <strong>~28.1–29.5 mg/L</strong> titers. This illustrates recent, protein-level engineering of TrpD beyond knockouts or expression tuning. (putri2024fermentativeaminopyrrolnitrinproduction pages 1-3)</p>
+<h4 id="44-2024-expert-synthesis-trpd-as-a-co-overexpression-target-in-industrial-tryptophan-production">4.4 2024 expert synthesis: TrpD as a co-overexpression target in industrial tryptophan production</h4>
+<p>A 2024 review on fermentation strategies for tryptophan production in E. coli highlights that the trp operon enzymes are common genetic targets and reports an example where co-overexpression of <strong>trpE and trpD</strong> produced tryptophan titers up to <strong>45.6 g/L</strong>, underscoring that TrpD is not only a drain on anthranilate (when knocked out) but also a needed capacity step when the objective is maximal tryptophan. (ramosvaldovinos2024optimizingfermentationstrategies pages 7-8)</p>
+<hr />
+<h3 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h3>
+<h4 id="51-biomanufacturing-anthranilate-as-a-platform-chemical">5.1 Biomanufacturing (anthranilate as a platform chemical)</h4>
+<p>Anthranilate is described as a platform chemical relevant to food ingredients, dyes, perfumes, agrochemicals, pharmaceuticals, and plastics; engineering strategies frequently include <strong>disrupting trpD</strong> to prevent conversion of anthranilate to PRA, thereby increasing anthranilate accumulation, as validated by 7-L fed-batch production at <strong>~4 g/L</strong> in E. coli. (kim2023engineeredescherichiacoli pages 1-2)</p>
+<h4 id="52-biomanufacturing-tryptophan-and-tryptophan-derived-compounds">5.2 Biomanufacturing (tryptophan and tryptophan-derived compounds)</h4>
+<p>Recent work in C. glutamicum demonstrates that <strong>engineering TrpD itself (A162D)</strong> can raise tryptophan availability (3.1 g/L) and serve as a foundation for production of <strong>tryptophan-derived halogenated specialty metabolites</strong> (APRN at ~28–29.5 mg/L). (putri2024fermentativeaminopyrrolnitrinproduction pages 1-3)</p>
+<h4 id="53-drug-discovery-relevance-contextual">5.3 Drug discovery relevance (contextual)</h4>
+<p>Structural and mechanistic work on bacterial TrpD—especially in pathogens such as <em>Mycobacterium tuberculosis</em>—has informed inhibitor design through characterization of substrate capture and active-site conformational changes. While not directly a KT2440 application, this is an expert-level rationale for why TrpD remains a target of interest for antimicrobial strategies. (parthasarathy2018athreeringcircus pages 6-8, hovejensen2017phosphoribosyldiphosphate(prpp) pages 78-78)</p>
+<hr />
+<h3 id="6-statistics-and-data-highlights-from-cited-studies">6) Statistics and data highlights (from cited studies)</h3>
+<ul>
+<li><strong>KT2440 genetic mapping:</strong> Aux-3 mini-Tn5 insertion at <strong>trpD (PP_0421) 184th codon</strong> causing tryptophan auxotrophy. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof media 8eee5d0d)</li>
+<li><strong>KT2440 operon structure:</strong> <strong>trpGDC operon</strong>; <strong>trpG–trpD</strong> separated by <strong>9 nt</strong>; <strong>trpD–trpC</strong> overlap by <strong>6 nt</strong>; RT-PCR supports co-transcription. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6)</li>
+<li><strong>KT2440 phenotype:</strong> trpD mutant growth rescued by <strong>L-tryptophan</strong> and <strong>indole</strong>. (molinahenares2009functionalanalysisof pages 4-6, molina‐henares2010identificationofconditionally pages 6-7)</li>
+<li><strong>Anthranilate titers (2023–2024):</strong> ~<strong>4 g/L</strong> (E. coli, 7-L fed-batch; trpD disrupted). (kim2023engineeredescherichiacoli pages 1-2)</li>
+<li><strong>Anthranilate titers (2024):</strong> up to <strong>5.9 g/L (43 mM)</strong> (C. glutamicum, bioreactor; includes trpD translation tuning). (mutz2024metabolicengineeringof pages 1-3)</li>
+<li><strong>Tryptophan and derivative titers (2024):</strong> <strong>3.1 g/L L-tryptophan</strong> (C. glutamicum; TrpD A162D engineering) and <strong>~28.1–29.5 mg/L APRN</strong>. (putri2024fermentativeaminopyrrolnitrinproduction pages 1-3)</li>
+<li><strong>Industrial-context tryptophan titer (reviewed 2024):</strong> up to <strong>45.6 g/L</strong> with trpE/trpD co-overexpression in an E. coli example compiled in review. (ramosvaldovinos2024optimizingfermentationstrategies pages 7-8)</li>
+</ul>
+<hr />
+<h3 id="7-evidence-summary-table">7) Evidence summary table</h3>
+<p>The table below consolidates organism-specific evidence for <strong>KT2440 PP_0421/Q88QR7</strong> versus general mechanistic knowledge and recent engineering applications.</p>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Key evidence and quantitative data</th>
+<th>Organism context</th>
+<th>Source with year and URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Correct gene identity and function</td>
+<td>PP_0421 in <em>Pseudomonas putida</em> KT2440 is identified as <strong>trpD</strong>, encoding anthranilate phosphoribosyltransferase; Aux-3 carries a mini-Tn5 insertion at the <strong>184th codon</strong> of <strong>trpD/PP0421</strong>, linking disruption to tryptophan auxotrophy. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 1-2)</td>
+<td><strong>P. putida KT2440</strong> (target gene Q88QR7 / PP_0421)</td>
+<td>Molina-Henares et al., 2009, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>Biochemical reaction</td>
+<td>Anthranilate phosphoribosyltransferase <strong>TrpD (EC 2.4.2.18)</strong> transfers the phosphoribosyl group from <strong>PRPP</strong> to <strong>anthranilate</strong> to form <strong>N-(5-phospho-β-D-ribosyl)-anthranilate (PRA)</strong> plus <strong>PPi</strong>; this is an early committed step in tryptophan biosynthesis. (hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52, parthasarathy2018athreeringcircus pages 6-8)</td>
+<td>General bacterial/archaeal TrpD framework used to interpret the <em>P. putida</em> ortholog</td>
+<td>Hove-Jensen et al., 2017, https://doi.org/10.1128/mmbr.00040-16; Parthasarathy et al., 2018, https://doi.org/10.3389/fmolb.2018.00029</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>In <em>P. putida</em>, trpD acts downstream of anthranilate formation and upstream of later indole/tryptophan steps; mutant rescue by <strong>tryptophan and indole</strong> is consistent with this position in the pathway. (molinahenares2009functionalanalysisof pages 4-6)</td>
+<td><strong>P. putida KT2440</strong></td>
+<td>Molina-Henares et al., 2009, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>Operon context</td>
+<td><strong>trpGDC forms an operon</strong> in <em>P. putida</em> KT2440; <strong>trpE</strong> and <strong>trpF</strong> are monocistronic. Physical organization supports co-transcription: <strong>trpG–trpD separated by 9 nt</strong> and <strong>trpD/trpC overlap by 6 nt</strong>; RT-PCR supports a contiguous trpG-trpD-trpC transcript. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 7-8, molinahenares2009functionalanalysisof media 8eee5d0d)</td>
+<td><strong>P. putida KT2440</strong>; conserved organization also noted across <em>Pseudomonas</em> spp.</td>
+<td>Molina-Henares et al., 2009, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>Phenotype / essentiality for minimal growth</td>
+<td>A <strong>trpD mutant fails to grow on M9 minimal medium</strong> and is rescued by <strong>L-tryptophan</strong>; in another assay, <strong>trpD mutants grew with tryptophan and indole</strong>. A genome-wide mutant screen likewise identified trpD as conditionally essential for minimal-medium growth. (molinahenares2009functionalanalysisof pages 4-6, molina‐henares2010identificationofconditionally pages 6-7)</td>
+<td><strong>P. putida KT2440</strong></td>
+<td>Molina-Henares et al., 2009, https://doi.org/10.1111/j.1751-7915.2008.00062.x; Molina-Henares et al., 2010, https://doi.org/10.1111/j.1462-2920.2010.02166.x</td>
+</tr>
+<tr>
+<td>Regulatory / transcriptional context</td>
+<td>The trpAB locus is separate and transcribed divergently from <strong>trpI</strong>, a repressor-like regulator; <strong>trpGDC</strong> is in a distinct transcriptional unit from <strong>trpE</strong>, indicating split pathway organization and local regulatory separation. Direct specific regulation of PP_0421 itself was not detailed beyond operon structure. (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 9-10)</td>
+<td><strong>P. putida KT2440</strong> with comparative pointers to fluorescent pseudomonads</td>
+<td>Molina-Henares et al., 2009, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>Structural/mechanistic features supporting annotation</td>
+<td>TrpD enzymes are typically <strong>homodimeric</strong>, with a <strong>two-domain fold</strong>, <strong>Mg2+/Mn2+</strong>-assisted PRPP binding, and a conserved glycine-rich PRPP-binding motif; structural studies show anthranilate-binding sites/tunnel features relevant to catalysis. (hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52, hovejensen2017phosphoribosyldiphosphate(prpp) pages 78-78)</td>
+<td>General bacterial TrpD knowledge; not demonstrated directly for <em>P. putida</em> PP_0421 in the gathered snippets</td>
+<td>Hove-Jensen et al., 2017, https://doi.org/10.1128/mmbr.00040-16</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>No direct subcellular localization experiment for PP_0421/TrpD in <em>P. putida</em> was reported in the gathered evidence; the evidence supports a typical intracellular biosynthetic enzyme role rather than extracellular function. (molinahenares2009functionalanalysisof pages 2-4)</td>
+<td><strong>P. putida KT2440</strong></td>
+<td>Molina-Henares et al., 2009, https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+</tr>
+<tr>
+<td>Application: anthranilate accumulation by blocking TrpD step</td>
+<td>In engineered <strong>E. coli</strong>, <strong>trpD disruption</strong> was used to accumulate anthranilate, reaching about <strong>4 g/L anthranilate</strong> in <strong>7-L fed-batch fermentation</strong>; the study also cites prior values of <strong>14 g/L</strong> in another engineered <em>E. coli</em> strain and <strong>1.5 g/L</strong> in <em>P. putida</em> ΔtrpDC as context. (kim2023engineeredescherichiacoli pages 1-2, kim2023engineeredescherichiacoli pages 2-4)</td>
+<td>Other bacteria (<em>E. coli</em> primary; <em>P. putida</em> cited as comparison, not PP_0421-specific functional proof)</td>
+<td>Kim et al., 2023, https://doi.org/10.3389/fmicb.2023.1081221</td>
+</tr>
+<tr>
+<td>Application: anthranilate production via trpD translation tuning</td>
+<td>In engineered <strong>Corynebacterium glutamicum</strong>, translation-efficiency modulation of <strong>trpD</strong> together with <strong>aroK</strong> improved anthranilate production; the final strain reached <strong>5.9 g/L (43 mM) anthranilate</strong> in bioreactor cultivation. (mutz2024metabolicengineeringof pages 1-3)</td>
+<td>Other bacteria; demonstrates practical flux-control value of the TrpD step</td>
+<td>Mutz et al., 2024, https://doi.org/10.1111/1751-7915.14388</td>
+</tr>
+<tr>
+<td>Application: engineered TrpD variant</td>
+<td>In <strong>C. glutamicum</strong>, <strong>TrpD A162D</strong> was reported as feedback-resistant to L-tryptophan with increased substrate affinity; strains carrying this variant produced <strong>3.1 g/L L-tryptophan</strong> in flask culture, and downstream pathway engineering yielded <strong>~28.1–29.5 mg/L APRN</strong>. (putri2024fermentativeaminopyrrolnitrinproduction pages 1-3)</td>
+<td>Other bacteria; shows TrpD can be engineered to improve tryptophan-derived product formation</td>
+<td>Putri et al., 2024, https://doi.org/10.1186/s12934-024-02424-y</td>
+</tr>
+<tr>
+<td>Application: high-tryptophan production context</td>
+<td>A 2024 review reports that co-overexpression of <strong>trpE</strong> and <strong>trpD</strong> in an <em>E. coli</em> production background yielded <strong>45.6 g/L tryptophan</strong>, underscoring TrpD as a relevant engineering node in industrial pathway balancing. (ramosvaldovinos2024optimizingfermentationstrategies pages 7-8)</td>
+<td>Other bacteria; review-level production context rather than direct <em>P. putida</em> evidence</td>
+<td>Ramos-Valdovinos and Martínez-Antonio, 2024, https://doi.org/10.3390/pr12112422</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes direct and indirect evidence for the annotation of Pseudomonas putida KT2440 trpD (UniProt Q88QR7 / PP_0421), separating strain-specific genetic evidence from broader mechanistic and application-oriented TrpD literature. It is useful for distinguishing what is experimentally shown in the target organism versus what is inferred from authoritative studies in other bacteria.</em></p>
+<hr />
+<h3 id="8-limitations-of-this-evidence-set-important-for-annotation-confidence">8) Limitations of this evidence set (important for annotation confidence)</h3>
+<ul>
+<li><strong>KT2440-specific enzymology:</strong> No direct enzyme kinetic parameters (Km, kcat, Ki) or structural data for <em>P. putida</em> KT2440 TrpD (Q88QR7) were retrieved in the accessible documents; mechanistic/structural claims are therefore grounded in authoritative general TrpD literature. (hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52, parthasarathy2018athreeringcircus pages 6-8)</li>
+<li><strong>Localization:</strong> No experimental localization data (e.g., cytosolic fractionation, localization tags) were identified for KT2440 TrpD in the retrieved texts. (molinahenares2009functionalanalysisof pages 2-4)</li>
+<li><strong>2023–2024 KT2440-focused studies:</strong> Recent work was found primarily in other organisms (E. coli; C. glutamicum) or as contextual citations about <em>Pseudomonas</em> strains; this supports functional centrality and engineering relevance but does not replace organism-specific biochemical characterization. (kim2023engineeredescherichiacoli pages 1-2, mutz2024metabolicengineeringof pages 1-3, kim2023engineeredescherichiacoli pages 2-4)</li>
+</ul>
+<hr />
+<h3 id="9-key-references-with-publication-dates-and-urls">9) Key references (with publication dates and URLs)</h3>
+<ul>
+<li>Molina-Henares et al. <strong>2009-12</strong>. <em>Functional analysis of aromatic biosynthetic pathways in Pseudomonas putida KT2440</em>. <strong>Microbial Biotechnology</strong>. https://doi.org/10.1111/j.1751-7915.2008.00062.x (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6)</li>
+<li>Molina-Henares et al. <strong>2010-06</strong>. <em>Identification of conditionally essential genes for growth of Pseudomonas putida KT2440 on minimal medium...</em> <strong>Environmental Microbiology</strong>. https://doi.org/10.1111/j.1462-2920.2010.02166.x (molina‐henares2010identificationofconditionally pages 6-7)</li>
+<li>Hove-Jensen et al. <strong>2017-03</strong>. <em>PRPP: Biosynthesis, Enzymology, Utilization, and Metabolic Significance</em>. <strong>Microbiology and Molecular Biology Reviews</strong>. https://doi.org/10.1128/mmbr.00040-16 (hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52)</li>
+<li>Parthasarathy et al. <strong>2018-04</strong>. <em>A Three-Ring Circus...</em> <strong>Frontiers in Molecular Biosciences</strong>. https://doi.org/10.3389/fmolb.2018.00029 (parthasarathy2018athreeringcircus pages 6-8)</li>
+<li>Kim et al. <strong>2023-03</strong>. <em>Engineered Escherichia coli cell factory for anthranilate over-production</em>. <strong>Frontiers in Microbiology</strong>. https://doi.org/10.3389/fmicb.2023.1081221 (kim2023engineeredescherichiacoli pages 1-2)</li>
+<li>Mutz et al. <strong>2024-01</strong>. <em>Metabolic engineering of Corynebacterium glutamicum for the production of anthranilate...</em> <strong>Microbial Biotechnology</strong>. https://doi.org/10.1111/1751-7915.14388 (mutz2024metabolicengineeringof pages 1-3)</li>
+<li>Putri et al. <strong>2024-05</strong>. <em>Fermentative aminopyrrolnitrin production...</em> <strong>Microbial Cell Factories</strong>. https://doi.org/10.1186/s12934-024-02424-y (putri2024fermentativeaminopyrrolnitrinproduction pages 1-3)</li>
+<li>Ramos-Valdovinos &amp; Martínez-Antonio <strong>2024-11</strong>. <em>Optimizing Fermentation Strategies for Enhanced Tryptophan Production...</em> <strong>Processes</strong>. https://doi.org/10.3390/pr12112422 (ramosvaldovinos2024optimizingfermentationstrategies pages 7-8)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 2-4): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 4-6): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molina‐henares2010identificationofconditionally pages 6-7): M. Antonia Molina‐Henares, Jesús De La Torre, Adela García‐Salamanca, A. Jesús Molina‐Henares, M. Carmen Herrera, Juan L. Ramos, and Estrella Duque. Identification of conditionally essential genes for growth of <i>pseudomonas putida</i> kt2440 on minimal medium through the screening of a genome‐wide mutant library. Environmental Microbiology, 12:1468-1485, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2010.02166.x, doi:10.1111/j.1462-2920.2010.02166.x. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hovejensen2017phosphoribosyldiphosphate(prpp) pages 50-52): Bjarne Hove-Jensen, Kasper R. Andersen, Mogens Kilstrup, Jan Martinussen, Robert L. Switzer, and Martin Willemoës. Phosphoribosyl diphosphate (prpp): biosynthesis, enzymology, utilization, and metabolic significance. Microbiology and Molecular Biology Reviews, Mar 2017. URL: https://doi.org/10.1128/mmbr.00040-16, doi:10.1128/mmbr.00040-16. This article has 283 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(parthasarathy2018athreeringcircus pages 6-8): Anutthaman Parthasarathy, Penelope J. Cross, Renwick C. J. Dobson, Lily E. Adams, Michael A. Savka, and André O. Hudson. A three-ring circus: metabolism of the three proteogenic aromatic amino acids and their role in the health of plants and animals. Frontiers in Molecular Biosciences, Apr 2018. URL: https://doi.org/10.3389/fmolb.2018.00029, doi:10.3389/fmolb.2018.00029. This article has 423 citations.</p>
+</li>
+<li>
+<p>(hovejensen2017phosphoribosyldiphosphate(prpp) pages 78-78): Bjarne Hove-Jensen, Kasper R. Andersen, Mogens Kilstrup, Jan Martinussen, Robert L. Switzer, and Martin Willemoës. Phosphoribosyl diphosphate (prpp): biosynthesis, enzymology, utilization, and metabolic significance. Microbiology and Molecular Biology Reviews, Mar 2017. URL: https://doi.org/10.1128/mmbr.00040-16, doi:10.1128/mmbr.00040-16. This article has 283 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 1-2): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 7-8): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof media 8eee5d0d): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof media f71ebd0e): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2023engineeredescherichiacoli pages 1-2): Hye-Jin Kim, Seung-Yeul Seo, Heung-Soon Park, Ji-Young Ko, Si-Sun Choi, Sang Joung Lee, and Eung-Soo Kim. Engineered escherichia coli cell factory for anthranilate over-production. Frontiers in Microbiology, Mar 2023. URL: https://doi.org/10.3389/fmicb.2023.1081221, doi:10.3389/fmicb.2023.1081221. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2023engineeredescherichiacoli pages 2-4): Hye-Jin Kim, Seung-Yeul Seo, Heung-Soon Park, Ji-Young Ko, Si-Sun Choi, Sang Joung Lee, and Eung-Soo Kim. Engineered escherichia coli cell factory for anthranilate over-production. Frontiers in Microbiology, Mar 2023. URL: https://doi.org/10.3389/fmicb.2023.1081221, doi:10.3389/fmicb.2023.1081221. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mutz2024metabolicengineeringof pages 1-3): Mario Mutz, Vincent Brüning, Christian Brüsseler, Moritz‐Fabian Müller, Stephan Noack, and Jan Marienhagen. Metabolic engineering of <i>corynebacterium glutamicum</i> for the production of anthranilate from glucose and xylose. Microbial Biotechnology, Jan 2024. URL: https://doi.org/10.1111/1751-7915.14388, doi:10.1111/1751-7915.14388. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(putri2024fermentativeaminopyrrolnitrinproduction pages 1-3): Virginia Ryandini Melati Putri, Min-Hee Jung, Ji-Young Lee, Mi-Hyang Kwak, Theavita Chatarina Mariyes, Anastasia Kerbs, Volker F. Wendisch, Hee Jeong Kong, Young-Ok Kim, and Jin-Ho Lee. Fermentative aminopyrrolnitrin production by metabolically engineered corynebacterium glutamicum. Microbial Cell Factories, May 2024. URL: https://doi.org/10.1186/s12934-024-02424-y, doi:10.1186/s12934-024-02424-y. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ramosvaldovinos2024optimizingfermentationstrategies pages 7-8): Miguel Angel Ramos-Valdovinos and Agustino Martínez-Antonio. Optimizing fermentation strategies for enhanced tryptophan production in escherichia coli: integrating genetic and environmental controls for industrial applications. Processes, Nov 2024. URL: https://doi.org/10.3390/pr12112422, doi:10.3390/pr12112422. This article has 10 citations.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 9-10): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="trpD-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000009 I have extracted Table 1 and Figure 3, which together provide the requested information about the tryptophan gene organization and " src="trpD-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>molinahenares2009functionalanalysisof pages 2-4</li>
+<li>molinahenares2009functionalanalysisof pages 4-6</li>
+<li>kim2023engineeredescherichiacoli pages 1-2</li>
+<li>kim2023engineeredescherichiacoli pages 2-4</li>
+<li>mutz2024metabolicengineeringof pages 1-3</li>
+<li>putri2024fermentativeaminopyrrolnitrinproduction pages 1-3</li>
+<li>ramosvaldovinos2024optimizingfermentationstrategies pages 7-8</li>
+<li>parthasarathy2018athreeringcircus pages 6-8</li>
+<li>molinahenares2009functionalanalysisof pages 1-2</li>
+<li>molinahenares2009functionalanalysisof pages 7-8</li>
+<li>molinahenares2009functionalanalysisof pages 9-10</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x</li>
+<li>https://doi.org/10.1128/mmbr.00040-16;</li>
+<li>https://doi.org/10.3389/fmolb.2018.00029</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x;</li>
+<li>https://doi.org/10.1111/j.1462-2920.2010.02166.x</li>
+<li>https://doi.org/10.1128/mmbr.00040-16</li>
+<li>https://doi.org/10.3389/fmicb.2023.1081221</li>
+<li>https://doi.org/10.1111/1751-7915.14388</li>
+<li>https://doi.org/10.1186/s12934-024-02424-y</li>
+<li>https://doi.org/10.3390/pr12112422</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x,</li>
+<li>https://doi.org/10.1111/j.1462-2920.2010.02166.x,</li>
+<li>https://doi.org/10.1128/mmbr.00040-16,</li>
+<li>https://doi.org/10.3389/fmolb.2018.00029,</li>
+<li>https://doi.org/10.3389/fmicb.2023.1081221,</li>
+<li>https://doi.org/10.1111/1751-7915.14388,</li>
+<li>https://doi.org/10.1186/s12934-024-02424-y,</li>
+<li>https://doi.org/10.3390/pr12112422,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QR7
+gene_symbol: trpD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: Anthranilate phosphoribosyltransferase (TrpD, EC 2.4.2.18), a cytosolic Mg2+-dependent enzyme that catalyzes the second committed step of L-tryptophan biosynthesis. It transfers the phosphoribosyl group of 5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to anthranilate, producing N-(5-phospho-beta-D-ribosyl)-anthranilate (PRA) and diphosphate. In Pseudomonas putida KT2440 the enzyme is a monofunctional anthranilate phosphoribosyltransferase (the glutamine amidotransferase component of anthranilate synthase is encoded by a separate gene, trpG), belongs to the anthranilate phosphoribosyltransferase family (HAMAP MF_00211), and acts as a homodimer binding two magnesium ions per monomer. Loss of trpD function causes tryptophan auxotrophy that is rescued by L-tryptophan or indole, consistent with its position upstream of the indole/tryptophan branch in the chorismate-derived aromatic amino-acid biosynthetic route.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:21261884
+  title: Functional analysis of aromatic biosynthetic pathways in Pseudomonas putida KT2440.
+  findings:
+  - statement: PP_0421 is trpD encoding anthranilate phosphoribosyltransferase; a transposon insertion at codon 184 of trpD causes tryptophan auxotrophy, and trpD lies in a trpGDC operon. The trpD mutant is rescued by L-tryptophan and indole.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#39;Corrected identifier. The previous PMID:19825068 could not be resolved on PubMed. PMID:21261884 recovered from DOI 10.1111/j.1751-7915.2008.00062.x (Molina-Henares et al., Microbial Biotechnology 2:91-100, 2009) and PubMed-verified; cached title matches. Establishes PP_0421 = trpD, its role in tryptophan auxotrophy, and the trpGDC operon structure in KT2440.&#39;
+- id: PMID:20158506
+  title: Identification of conditionally essential genes for growth of Pseudomonas putida KT2440 on minimal medium through the screening of a genome-wide mutant library.
+  findings:
+  - statement: A trpD mutant is auxotrophic on M9 minimal medium with growth restored by L-tryptophan, confirming trpD is required for endogenous tryptophan biosynthesis.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &#39;Corrected identifier. The previous PMID:20236172 was a WRONG identifier (resolved to &#34;Pregabalin in the treatment of post-traumatic peripheral neuropathic pain&#34;, an unrelated Eur J Neurol clinical trial). PMID:20158506 recovered from DOI 10.1111/j.1462-2920.2010.02166.x (Molina-Henares et al., Environmental Microbiology 2010) and PubMed-verified; cached title matches.&#39;
+existing_annotations:
+- term:
+    id: GO:0000162
+    label: L-tryptophan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: TrpD catalyzes the second step of tryptophan biosynthesis (anthranilate to PRA). This is the core biological process for this gene, supported by the conserved pathway role and by experimental tryptophan auxotrophy of P. putida KT2440 trpD mutants.
+    action: ACCEPT
+    reason: Correct core biological process. Consistent with the UniProt pathway annotation (L-tryptophan from chorismate, step 2/5) and with experimental auxotrophy/rescue evidence in KT2440.
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: The enzyme binds two Mg2+ ions per monomer, which assist PRPP binding. UniProt documents specific Mg2+ binding residues (positions 94, 227, 228).
+    action: ACCEPT
+    reason: Magnesium is a required cofactor for this PRPP-dependent phosphoribosyltransferase; supported by HAMAP rule and modeled metal-binding sites.
+- term:
+    id: GO:0004048
+    label: anthranilate phosphoribosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the specific, defining molecular function of TrpD (EC 2.4.2.18), transferring the phosphoribosyl group of PRPP to anthranilate to form PRA.
+    action: ACCEPT
+    reason: Core molecular function. Maps directly to EC 2.4.2.18 / RHEA:11768 and the anthranilate phosphoribosyltransferase family assignment (HAMAP MF_00211).
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: As a soluble biosynthetic enzyme in the tryptophan pathway, TrpD acts in the cytosol. No experimental localization in KT2440, but this is the parsimonious and family-consistent compartment.
+    action: ACCEPT
+    reason: Appropriate cellular component for a cytoplasmic amino-acid biosynthetic enzyme; consistent with TreeGrafter inference across the family.
+- term:
+    id: GO:0016757
+    label: glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This is a high-level grouping term derived from the InterPro &#34;Glycosyl transferase family 3&#34; domain. The actual activity is the more specific anthranilate phosphoribosyltransferase (a pentosyltransferase, GO:0016763 branch), already captured by GO:0004048.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative parent term that does not accurately describe the enzyme&#39;s function; the specific activity (GO:0004048) and its proper parent pentosyltransferase (GO:0016763) are already annotated. Retaining glycosyltransferase activity is redundant and potentially misleading.
+- term:
+    id: GO:0016763
+    label: pentosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: Correct but general parent of the specific anthranilate phosphoribosyltransferase activity. EC 2.4.2.18 is a pentosyltransferase, so this term is accurate.
+    action: KEEP_AS_NON_CORE
+    reason: True but uninformative relative to the specific GO:0004048 annotation; retain as a correct higher-level grouping rather than the core function.
+core_functions:
+- description: Catalyzes the Mg2+-dependent transfer of the phosphoribosyl group of PRPP to anthranilate, producing N-(5-phospho-beta-D-ribosyl)-anthranilate (PRA), the second committed step of L-tryptophan biosynthesis.
+  supported_by:
+  - reference_id: PMID:21261884
+  molecular_function:
+    id: GO:0004048
+    label: anthranilate phosphoribosyltransferase activity
+  directly_involved_in:
+  - id: GO:0000162
+    label: L-tryptophan biosynthetic process
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: lgg-1 (C. elegans)
 
-Source: lgg-1-deep-research-bioreason-rl.md
+Source: lgg-1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

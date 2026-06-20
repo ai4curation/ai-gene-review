@@ -1,0 +1,2117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fpvA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fpvA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F81" target="_blank" class="term-link">
+                        Q88F81
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fpvA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F81" data-a="DESCRIPTION: FpvA (PP_4217) is a TonB-dependent outer membrane ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FpvA (PP_4217) is a TonB-dependent outer membrane receptor of the ferripyoverdine receptor class. It is a large (812 aa) integral outer membrane protein built from a 22-stranded beta-barrel occluded by an N-terminal plug (cork) domain, together with a periplasmic TonB box and an N-terminal Secretin/TonB short (STN) signaling domain. FpvA functions in siderophore-mediated iron acquisition. It binds the ferric pyoverdine (iron-pyoverdine) complex at the cell surface and mediates its energy-dependent translocation across the outer membrane into the periplasm. Transport is energized by the inner-membrane TonB-ExbB-ExbD complex, which couples proton motive force to conformational changes in the plug/barrel via the receptor&#39;s TonB box. Members of this receptor class also act as cell-surface signaling transducers, where ligand recognition at the outer membrane can be transduced through an anti-sigma factor and ECF sigma factor cascade to regulate expression of pyoverdine biosynthesis and uptake genes. In P. putida KT2440, fpvA is part of an extensive iron-scavenging repertoire and is controlled by iron-responsive (Fur/ECF sigma) regulation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009279" target="_blank" class="term-link">
+                                    GO:0009279
+                                </a>
+                            </span>
+                            <span class="term-label">cell outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F81" data-a="GO:0009279" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct subcellular location. FpvA is a TonB-dependent outer membrane receptor; the UniProt entry annotates Cell outer membrane and the protein has the canonical beta-barrel/plug architecture of an OM receptor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the TonB-dependent receptor family, the multi-pass OM beta-barrel architecture, and UniProt subcellular location. This is the more specific and preferred CC term over GO:0019867.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015343" target="_blank" class="term-link">
+                                    GO:0015343
+                                </a>
+                            </span>
+                            <span class="term-label">siderophore-iron transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F81" data-a="GO:0015343" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Captures the core molecular function. FpvA mediates transport of the ferric-siderophore (ferripyoverdine) complex across the outer membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term accurately describes the activity of a TonB-dependent ferri-siderophore receptor that imports the iron-loaded siderophore complex. Well supported by family/domain evidence (TonB-dependent siderophore receptor, IPR010105) and by the gene&#39;s identity as the ferripyoverdine receptor.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015344" target="_blank" class="term-link">
+                                    GO:0015344
+                                </a>
+                            </span>
+                            <span class="term-label">siderophore uptake transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F81" data-a="GO:0015344" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Also accurate; describes siderophore uptake transporter activity, consistent with the ferripyoverdine receptor function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TreeGrafter/PANTHER assignment consistent with the receptor&#39;s role in importing the ferripyoverdine complex. Closely related to GO:0015343; both are acceptable family-level MF terms for this receptor.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015891" target="_blank" class="term-link">
+                                    GO:0015891
+                                </a>
+                            </span>
+                            <span class="term-label">siderophore transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F81" data-a="GO:0015891" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct biological process. FpvA participates in transport of the pyoverdine siderophore (as the ferric complex) across the outer membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by gene identity as ferripyoverdine receptor and TonB-dependent siderophore receptor domain evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019867" target="_blank" class="term-link">
+                                    GO:0019867
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F81" data-a="GO:0019867" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but less specific than GO:0009279 (cell outer membrane), which is also annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Not wrong, but GO:0009279 (cell outer membrane) is the preferred, more specific term for a Gram-negative bacterial outer membrane protein and is already present. Retained as a redundant parent rather than removed.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033214" target="_blank" class="term-link">
+                                    GO:0033214
+                                </a>
+                            </span>
+                            <span class="term-label">siderophore-iron import into cell</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F81" data-a="GO:0033214" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate and specific biological process. FpvA imports the iron-siderophore (ferripyoverdine) complex into the cell (periplasm) as the first dedicated step of pyoverdine-mediated iron acquisition.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well supported; this is a more informative BP term than the parent GO:0015891 and matches the receptor&#39;s established role in ferric-pyoverdine import.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0038023" target="_blank" class="term-link">
+                                    GO:0038023
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F81" data-a="GO:0038023" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FpvA-class receptors carry an N-terminal signaling (STN) domain and can act as cell-surface signaling transducers, coupling ferripyoverdine recognition to ECF sigma/anti-sigma regulation of iron-uptake genes. The protein has the Secretin/TonB short N-terminal (STN) signaling domain (IPR011662).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cell-surface signaling is a plausible and domain-supported secondary function, but it is an IEA inference based on the STN domain and is not the receptor&#39;s core function (transport). There is no direct KT2440-specific experimental evidence that FpvA transduces a signal. Retained as a non-core, domain-inferred activity rather than removed.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TonB-dependent outer membrane ferripyoverdine receptor that recognizes the ferric pyoverdine (iron-siderophore) complex at the cell surface and mediates its energy-dependent import across the outer membrane into the periplasm, initiating pyoverdine-mediated iron acquisition.</h3>
+                <span class="vote-buttons" data-g="Q88F81" data-a="FUNCTION: TonB-dependent outer membrane ferripyoverdine rece..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015343" target="_blank" class="term-link">
+                            siderophore-iron transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033214" target="_blank" class="term-link">
+                                siderophore-iron import into cell
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009279" target="_blank" class="term-link">
+                                cell outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                        <div class="finding-text">TonB-dependent siderophore receptor domain (IPR010105) annotated to siderophore-iron transmembrane transporter activity and siderophore transport.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fpvA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F81" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: **fpvA** (UniProt **Q88F81**; locus **PP_4217**) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">36 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T17:09:26.186121</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="fpvA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="fpvA-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000024 The paragraph mentioning the *fpvA* gene (PP4217) and its role in iron-acquisition inhibition during aromatic-induced stress is fou</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-fpva-uniprot-q88f81-locus-pp_4217-in-pseudomonas-putida-kt2440">Research report: <strong>fpvA</strong> (UniProt <strong>Q88F81</strong>; locus <strong>PP_4217</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-target-verification-critical-identity-check">1) Target verification (critical identity check)</h2>
+<p>The gene symbol <strong>fpvA</strong> in <em>Pseudomonas putida</em> KT2440 is explicitly mapped in primary literature to <strong>locus PP4217</strong> and annotated as the <strong>“iron-pyoverdine complex receptor”</strong> (i.e., the ferri‑pyoverdine outer-membrane receptor). This directly matches the UniProt Q88F81 description “Outer membrane ferripyoverdine receptor FpvA, TonB-dependent”. (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, dominguezcuevas2006transcriptionaltradeoffbetween pages 6-7, dominguezcuevas2006transcriptionaltradeoffbetween media a60d2c30)</p>
+<p>Because <strong>fpvA</strong> is also widely studied in <em>P. aeruginosa</em>, mechanistic/structural literature from <em>P. aeruginosa</em> is used below only as <strong>conserved TonB-dependent receptor background</strong> and not as direct KT2440-specific evidence. (folschweiller2000thepyoverdinreceptor pages 1-2, adams2006interactionoftonb pages 4-5)</p>
+<h2 id="2-key-concepts-and-current-understanding-definitions-and-mechanism">2) Key concepts and current understanding (definitions and mechanism)</h2>
+<h3 id="21-what-fpva-is-definition">2.1 What FpvA is (definition)</h3>
+<p><strong>FpvA</strong> is a <strong>TonB-dependent outer membrane transporter/receptor (TBDT)</strong> used by Gram-negative bacteria to import scarce, high-affinity nutrient complexes—classically <strong>ferric siderophores</strong>—across the <strong>outer membrane (OM)</strong> into the <strong>periplasm</strong>. In fluorescent pseudomonads, pyoverdines (also written pyoverdins) are secreted <strong>siderophores</strong> that chelate Fe(III) with high affinity; the Fe(III)–pyoverdine complex is then recognized by a cognate OM receptor, historically termed <strong>FpvA</strong> for pyoverdine uptake. (folschweiller2000thepyoverdinreceptor pages 2-3, folschweiller2000thepyoverdinreceptor pages 1-2)</p>
+<h3 id="22-domain-architecture-and-localization">2.2 Domain architecture and localization</h3>
+<p>Authoritative reviews describe TBDTs (including FpvA-class receptors) as <strong>22-stranded β-barrels</strong> in the OM with a luminal <strong>plug domain</strong> that occludes the pore, plus an N-terminal <strong>TonB box</strong> (short conserved motif) in the periplasm that interacts with <strong>TonB</strong>. Some FpvA-like receptors are additionally described as possessing an N-terminal signaling/transducer domain involved in <strong>cell-surface signaling (CSS)</strong> regulation of iron uptake genes. (folschweiller2000thepyoverdinreceptor pages 3-5, braun2024substrateuptakeby pages 6-7, folschweiller2000thepyoverdinreceptor pages 2-3)</p>
+<p>Thus, for KT2440 FpvA (Q88F81/PP_4217), the best-supported localization is:<br />
+- <strong>Outer membrane</strong> β-barrel receptor exposed to the extracellular milieu for ferri-pyoverdine capture.<br />
+- <strong>Periplasmic TonB box</strong> contacting TonB for energy coupling.</p>
+<h3 id="23-energy-coupling-the-tonbexbbexbd-motor">2.3 Energy coupling: the TonB–ExbB–ExbD “motor”</h3>
+<p>TBDT transport across the OM is <strong>energy dependent</strong>: the <strong>TonB–ExbB–ExbD</strong> complex in the inner membrane transduces <strong>proton motive force</strong> energy to TonB, which interacts with the receptor TonB box and drives conformational changes enabling translocation through the plug/barrel. Mechanistically, substrate binding is typically rapid and energy independent; the subsequent translocation step is slower and requires TonB-dependent conformational rearrangements of the TonB box and plug. (folschweiller2000thepyoverdinreceptor pages 1-2, braun2024substrateuptakeby pages 6-7)</p>
+<h3 id="24-what-fpva-does-biochemically">2.4 What FpvA does biochemically</h3>
+<p>FpvA is a <strong>transporter/receptor</strong>, not an enzyme: its primary biochemical role is <strong>selective recognition and OM translocation of ferri‑pyoverdine (iron–pyoverdine complex)</strong> into the periplasm, initiating iron assimilation. (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, folschweiller2000thepyoverdinreceptor pages 2-3, adams2006interactionoftonb pages 4-5)</p>
+<h2 id="3-kt2440-specific-functional-annotation-role-in-ironpyoverdine-biology">3) KT2440-specific functional annotation: role in iron/pyoverdine biology</h2>
+<h3 id="31-direct-kt2440-evidence-for-function">3.1 Direct KT2440 evidence for function</h3>
+<p>In <em>P. putida</em> KT2440, <strong>fpvA (PP4217)</strong> is explicitly described as encoding the <strong>iron–pyoverdine complex receptor</strong>, and its expression is discussed in the context of <strong>iron-acquisition functions</strong>. (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, dominguezcuevas2006transcriptionaltradeoffbetween media a60d2c30)</p>
+<h3 id="32-genomic-and-pathway-context-in-kt2440-pyoverdine-system">3.2 Genomic and pathway context in KT2440 (pyoverdine system)</h3>
+<p>A KT2440 genome analysis describes that KT2440 produces <strong>pyoverdine</strong> and that pyoverdine genes are organized in <strong>three clusters</strong>: <strong>PP4243–4246</strong>, <strong>PP4319–4327</strong>, and <strong>PP4219–4223</strong>. The main pyoverdine transcriptional activator is described as <strong>prfI (PP4244)</strong>, an <strong>ECF σ factor</strong> with high identity to regulators in other <em>Pseudomonas</em>, including <strong>PvdS</strong> from <em>P. aeruginosa</em> (a canonical pyoverdine regulator). (santos2004insightsintothe pages 8-10)</p>
+<p>The same KT2440 genome analysis also reports that KT2440 has <strong>29 predicted TonB-dependent outer-membrane siderophore receptors</strong>, consistent with an ecological strategy of broad iron scavenging in soil/rhizosphere environments and supporting the plausibility of PP_4217 as one element of an extensive iron-uptake receptor repertoire. (santos2004insightsintothe pages 10-11)</p>
+<h3 id="33-regulation-in-kt2440-iron-control-and-stress-cross-talk">3.3 Regulation in KT2440: iron control and stress cross-talk</h3>
+<p><strong>Iron regulation framework:</strong> In pseudomonads, pyoverdine production is described as being chiefly controlled by <strong>Fur</strong>, which modulates expression of ECF σ factors under iron limitation. This regulatory architecture is described in the KT2440 genomic context as well. (santos2004insightsintothe pages 8-10)</p>
+<p><strong>Aromatic stress cross-talk:</strong> In a KT2440 transcriptome study of acute aromatic exposure, the authors report inhibition of iron-acquisition functions and state that <strong>“The fpvA gene (PP4217), which codes for the iron-pyoverdine complex receptor, was tuned down in the presence of 3MB”</strong> (3-methylbenzoate), alongside other TonB-dependent receptors. (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, dominguezcuevas2006transcriptionaltradeoffbetween media a60d2c30)</p>
+<p>This downregulation is discussed in a broader oxidative-stress context: the same study reports increased hydrogen peroxide (H2O2) accumulation after exposure to aromatics; for example at 30 min: none 0.51, toluene 2.98, o-xylene 4.31, 3MB 4.06 (units as reported). (dominguezcuevas2006transcriptionaltradeoffbetween pages 6-7)</p>
+<p><strong>Interpretation (expert analysis):</strong> The authors suggest decreased iron acquisition may help compensate for aromatic-induced oxidative stress, consistent with the well-established principle that iron uptake can exacerbate oxidative damage (e.g., via iron-catalyzed reactive oxygen chemistry). (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</p>
+<h3 id="34-what-remains-kt2440-uncertain-limitations">3.4 What remains KT2440-uncertain (limitations)</h3>
+<p>Within the retrieved corpus, there is <strong>no direct KT2440 fpvA knockout/uptake assay</strong> (e.g., 55Fe-pyoverdine uptake) demonstrating transport activity specifically for PP_4217. Therefore, the highest-confidence KT2440 claims are (i) gene identity/annotation, (ii) genomic context of the pyoverdine system, and (iii) condition-dependent expression changes, while detailed transport kinetics and CSS behavior for KT2440 FpvA remain primarily <strong>inferred from conserved TBDT/FpvA literature</strong>. (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, santos2004insightsintothe pages 8-10, braun2024substrateuptakeby pages 6-7)</p>
+<h2 id="4-recent-developments-20232024-priority">4) Recent developments (2023–2024 priority)</h2>
+<h3 id="41-quantitative-regulation-of-tbdts-as-a-design-constraint-2023">4.1 Quantitative regulation of TBDTs as a design constraint (2023)</h3>
+<p>A 2023 study developed fluorescent promoter reporters to quantify how TonB-dependent transporter genes respond to siderophore concentrations, showing distinct “dose–response” programs. Quantitatively, <strong>maximum transcription for pfeA</strong> was reached at <strong>~3 µM enterobactin</strong>, whereas <strong>foxA</strong> did <strong>not</strong> reach maximum even at <strong>100 µM nocardamine</strong>. This reinforces that TBDT expression can be strongly ligand- and pathway-dependent, relevant when predicting when receptors like FpvA will be expressed and exploitable. (Published 2023-11; URL: https://doi.org/10.1038/s41598-023-46585-z) (hubert2023experimentalandcomputational pages 1-2)</p>
+<h3 id="42-updated-cell-surface-signaling-css-model-for-tonb-dependent-transducers-2024">4.2 Updated cell-surface signaling (CSS) model for TonB-dependent transducers (2024)</h3>
+<p>A 2024 PLOS Biology paper revises the prevailing CSS activation model by showing that, in the <em>P. aeruginosa</em> Fox system, the TBDT signaling domain can <strong>already interact with the anti-σ factor in the absence of the inducing signal</strong>, protecting it from proteolysis and preventing σECF-dependent transcription. This is relevant to FpvA-like receptors because classic FpvA literature places pyoverdine receptors among TBDTs capable of transducing signals that upregulate uptake/biosynthesis genes; the new model suggests that “pre-formed” receptor–anti-σ interactions and receptor proteolysis can be important control points. (Published 2024-12; URL: https://doi.org/10.1371/journal.pbio.3002920) (wettstadt2024bacterialtonbdependenttransducers pages 1-2)</p>
+<h3 id="43-large-scale-receptorpyoverdine-diversity-mapping-in-pseudomonas-2024">4.3 Large-scale receptor/pyoverdine diversity mapping in <em>Pseudomonas</em> (2024)</h3>
+<p>A 2024 eLife genome-mining study analyzed <strong>1,928 <em>Pseudomonas</em> genomes</strong> and predicted <strong>188 chemically distinct pyoverdines</strong> and <strong>94 distinct receptor groups</strong> required for uptake; it reports <strong>151 new</strong> predicted pyoverdine structures and <strong>91 new receptor groups</strong>. This frames FpvA homologs like KT2440 PP_4217 as one member of a vast and recently clarified diversity landscape, implying that receptor specificity and “siderophore matchmaking” are key to ecological fitness and to engineering Trojan-horse strategies. (Published 2024-10; URL: https://doi.org/10.7554/eLife.96719) (graff2024siderophoresastools pages 1-2)</p>
+<h3 id="44-updated-mechanistic-synthesis-of-tonb-dependent-transport-2024">4.4 Updated mechanistic synthesis of TonB-dependent transport (2024)</h3>
+<p>A 2024 review consolidates the current mechanistic view: TonB binding to the TonB box elicits plug movement/reorganization enabling periplasmic passage; “intact receptor context” is critical for high-affinity substrate binding relative to isolated plug fragments; and TonB scarcity relative to receptor abundance implies rapid exchange/cycling. These mechanistic constraints are directly relevant to annotating how FpvA mediates ferri-pyoverdine uptake and why inhibitors/antibiotic conjugates targeting these systems must account for conformational gating and energy-coupled steps. (Published 2024-12; URL: https://doi.org/10.1111/mmi.15332) (braun2024substrateuptakeby pages 6-7)</p>
+<h2 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h2>
+<h3 id="51-trojan-horse-antibiotics-and-design-rules-2024">5.1 Trojan-horse antibiotics and design rules (2024)</h3>
+<p>A 2024 review focusing on ferric siderophore transport systems highlights “location-aware” design principles for <strong>siderophore–antibiotic conjugates</strong>: match where the siderophore delivers cargo (periplasm vs cytoplasm) to the antibiotic’s target location, avoid disrupting transporter recognition with linker placement, and decide whether a cleavable linker is required depending on the warhead. It also summarizes that susceptibility/potency can fall in ranges such as <strong>MICs ~0.063–1 mg/mL</strong> for certain conjugates across select Gram-negative pathogens in reported examples, and notes that changes in siderophore motifs can markedly reduce activity—consistent with uptake-dependent mechanisms. (Published 2024-08; URL: https://doi.org/10.3390/molecules29163889) (luo2024locationlocationlocation pages 30-31)</p>
+<h3 id="52-siderophores-in-translational-chemical-biology-2024">5.2 Siderophores in translational chemical biology (2024)</h3>
+<p>A 2024 Biochemistry review connects foundational siderophore uptake biology with translational applications (antibiotic delivery, imaging, novel therapeutic concepts). It highlights rapid uptake of siderophore-based imaging agents (reported uptake “within minutes” in an Aspergillus PET context) and emphasizes that gaps remain in resolving the precise structural relationship between TonB and the plug domain—limiting fully rational inhibitor design. (Published 2024-07; URL: https://doi.org/10.1021/acs.biochem.4c00276) (leblanc2024siderophoresacase pages 11-12)</p>
+<h3 id="53-siderophores-as-tools-and-treatments-2024">5.3 Siderophores as tools and treatments (2024)</h3>
+<p>A 2024 npj review synthesizes the use of siderophores as diagnostics and therapeutics and provides quantitative framing important for iron-uptake biology: siderophore iron-binding strengths spanning <strong>logKf ~25.3–49.0</strong> and <strong>pFeIII ~20.0–35.6</strong> (standardized conditions given), and extremely low host bioavailable iron (e.g., ~10^-18 M). These values underscore why high-affinity siderophore systems (and their OM receptors such as FpvA) are such strong evolutionary and translational leverage points. (Published 2024-12; URL: https://doi.org/10.1038/s44259-024-00053-4) (graff2024siderophoresastools pages 1-2)</p>
+<h2 id="6-expert-opinions-and-analysis-authoritative-perspectives">6) Expert opinions and analysis (authoritative perspectives)</h2>
+<h3 id="61-why-receptor-annotation-must-be-system-level">6.1 Why receptor annotation must be “system-level”</h3>
+<p>Genome-scale analyses and reviews emphasize that fluorescent pseudomonads often possess <strong>many</strong> TonB-dependent receptors and that receptors can be co-clustered with transmembrane sensors, ECF σ factors, and transcriptional regulators—suggesting tight coupling between environmental detection and receptor expression. This supports annotating KT2440 FpvA not as an isolated transporter, but as part of a regulated iron-scavenging module integrated with Fur/σECF pathways. (santos2004insightsintothe pages 10-11)</p>
+<h3 id="62-why-expression-can-be-context-dependent-stress-vs-iron-demand">6.2 Why expression can be context-dependent (stress vs iron demand)</h3>
+<p>The KT2440 transcriptomics study offers a concrete example of context-dependent suppression: under acute aromatic stress, iron-acquisition functions (including <strong>fpvA</strong>) are downregulated, plausibly as an oxidative stress mitigation strategy. This supports the view that iron uptake systems are subject to multi-objective regulation beyond iron limitation alone. (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</p>
+<h2 id="7-statistics-and-data-relevant-to-fpva-annotation">7) Statistics and data relevant to fpvA annotation</h2>
+<h3 id="71-kt2440-specific-statistics">7.1 KT2440-specific statistics</h3>
+<ul>
+<li><strong>29 predicted TonB-dependent outer-membrane siderophore receptors</strong> in KT2440 (genome-based prediction). (Published 2004-12; URL: https://doi.org/10.1111/j.1462-2920.2004.00734.x) (santos2004insightsintothe pages 10-11)</li>
+<li>Aromatic exposure linked to oxidative stress: H2O2 accumulation at 30 min reported as 0.51 (none), 2.98 (toluene), 4.31 (o-xylene), 4.06 (3MB). (Published 2006-04-28; URL: https://doi.org/10.1074/jbc.m509848200) (dominguezcuevas2006transcriptionaltradeoffbetween pages 6-7)</li>
+</ul>
+<h3 id="72-recent-20232024-statistics-shaping-current-understanding">7.2 Recent (2023–2024) statistics shaping “current understanding”</h3>
+<ul>
+<li>Concentration-dependent regulation: <strong>maximal pfeA transcription at ~3 µM enterobactin</strong>, while <strong>foxA not maximal at 100 µM nocardamine</strong> in <em>P. aeruginosa</em> reporter assays, illustrating non-uniform regulatory programs across TBDTs. (Published 2023-11; URL: https://doi.org/10.1038/s41598-023-46585-z) (hubert2023experimentalandcomputational pages 1-2)</li>
+<li>Diversity landscape: <strong>1,928 genomes</strong>, <strong>188 pyoverdines</strong>, <strong>94 receptor groups</strong>, including <strong>151</strong> new structures and <strong>91</strong> new receptor groups predicted. (Published 2024-10; URL: https://doi.org/10.7554/eLife.96719) (graff2024siderophoresastools pages 1-2)</li>
+<li>Siderophore binding strength ranges: <strong>logKf ~25.3–49.0</strong> and <strong>pFeIII ~20.0–35.6</strong> (reviewed values; standardized conditions stated). (Published 2024-12; URL: https://doi.org/10.1038/s44259-024-00053-4) (graff2024siderophoresastools pages 1-2)</li>
+</ul>
+<h2 id="8-consolidated-functional-annotation-narrative">8) Consolidated functional annotation (narrative)</h2>
+<p><strong>fpvA (PP_4217; UniProt Q88F81)</strong> in <em>P. putida</em> KT2440 encodes a <strong>TonB-dependent outer membrane receptor</strong> whose primary function is the <strong>uptake of the iron–pyoverdine (ferri‑pyoverdine) complex</strong> into the periplasm as the first dedicated step of pyoverdine-mediated iron acquisition. (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, folschweiller2000thepyoverdinreceptor pages 2-3, folschweiller2000thepyoverdinreceptor pages 1-2)</p>
+<p>Its cellular localization is best annotated as <strong>outer membrane</strong>, with energy coupling via periplasmic interaction between the receptor’s <strong>TonB box</strong> and TonB, energized by the inner-membrane <strong>ExbB/ExbD</strong> complex; transport proceeds through TonB-dependent conformational changes in the plug/barrel system. (braun2024substrateuptakeby pages 6-7, folschweiller2000thepyoverdinreceptor pages 1-2)</p>
+<p>In KT2440, fpvA sits in a broader pyoverdine/iron network whose genes are clustered and regulated by <strong>Fur</strong> and σECF regulators (e.g., prfI/PP4244 described as a key pyoverdine transcriptional activator), consistent with classical pseudomonad iron starvation control. (santos2004insightsintothe pages 8-10)</p>
+<p>Transcriptionally, KT2440 fpvA is shown to be downregulated under acute aromatic (3-methylbenzoate) stress conditions associated with oxidative stress and suppression of iron acquisition functions, supporting a regulatory tradeoff between iron scavenging and oxidative stress management. (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, dominguezcuevas2006transcriptionaltradeoffbetween pages 6-7, dominguezcuevas2006transcriptionaltradeoffbetween media a60d2c30)</p>
+<h2 id="summary-table-evidence-graded">Summary table (evidence-graded)</h2>
+<table>
+<thead>
+<tr>
+<th>Annotation aspect</th>
+<th>Summary for <strong>Pseudomonas putida</strong> KT2440 <strong>fpvA</strong> / <strong>PP_4217</strong> / UniProt <strong>Q88F81</strong></th>
+<th>Evidence / strength</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity mapping</td>
+<td>KT2440 literature explicitly identifies <strong>fpvA = PP4217</strong> and annotates it as the <strong>iron-pyoverdine complex receptor</strong>; this matches the UniProt entry for Q88F81 and distinguishes it from homologous <strong>fpvA</strong> genes studied in other <em>Pseudomonas</em> species (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</td>
+<td><strong>Direct KT2440-specific annotation</strong> from primary literature; high confidence for locus-to-gene mapping (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</td>
+</tr>
+<tr>
+<td>Protein type / family / domains</td>
+<td>FpvA belongs to the <strong>TonB-dependent outer-membrane receptor</strong> family. Canonical architecture includes a <strong>22-stranded β-barrel</strong>, an internal <strong>plug domain</strong>, and an N-terminal <strong>TonB box</strong> required for interaction with TonB; FpvA-class receptors can also include an <strong>additional N-terminal signaling domain</strong> implicated in cell-surface signaling/transduction (folschweiller2000thepyoverdinreceptor pages 3-5, braun2024substrateuptakeby pages 6-7, wettstadt2024bacterialtonbdependenttransducers pages 1-2)</td>
+<td><strong>Indirect for KT2440, strong by homology/family conservation</strong>; domain architecture is well established for FpvA/TBDTs, though mostly from non-KT2440 systems (folschweiller2000thepyoverdinreceptor pages 3-5, braun2024substrateuptakeby pages 6-7, wettstadt2024bacterialtonbdependenttransducers pages 1-2)</td>
+</tr>
+<tr>
+<td>Primary substrate</td>
+<td>Primary inferred substrate is <strong>ferric pyoverdine</strong> (the <strong>iron-pyoverdine / ferri-pyoverdine complex</strong>), consistent with the explicit KT2440 annotation “iron-pyoverdine complex receptor” and with FpvA function across fluorescent pseudomonads (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, folschweiller2000thepyoverdinreceptor pages 2-3, adams2006interactionoftonb pages 4-5)</td>
+<td><strong>Direct KT2440 annotation + strong comparative support</strong>; no substrate-switch evidence found for PP_4217 (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, folschweiller2000thepyoverdinreceptor pages 2-3)</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>FpvA is expected to reside in the <strong>outer membrane</strong> as a siderophore receptor. Its <strong>TonB box</strong> engages <strong>TonB</strong> in the periplasmic space, and transport is energized by the <strong>TonB–ExbB–ExbD</strong> complex using inner-membrane proton motive force; substrate first binds extracellular loops/plug, then is translocated to the periplasm (folschweiller2000thepyoverdinreceptor pages 3-5, braun2024substrateuptakeby pages 6-7, folschweiller2000thepyoverdinreceptor pages 1-2, adams2006interactionoftonb pages 4-5)</td>
+<td><strong>Indirect for KT2440 but mechanistically very strong</strong> from TonB-dependent receptor literature and FpvA studies (braun2024substrateuptakeby pages 6-7, folschweiller2000thepyoverdinreceptor pages 1-2, adams2006interactionoftonb pages 4-5)</td>
+</tr>
+<tr>
+<td>Immediate biochemical role</td>
+<td>FpvA mediates the <strong>outer-membrane uptake step</strong> of iron acquisition by recognizing ferri-pyoverdine outside the cell and enabling its transfer into the periplasm; it is therefore a <strong>transporter/receptor</strong>, not an enzyme catalyzing a chemical transformation (folschweiller2000thepyoverdinreceptor pages 2-3, folschweiller2000thepyoverdinreceptor pages 1-2, adams2006interactionoftonb pages 4-5)</td>
+<td><strong>Strong family-level functional evidence</strong>; exact transport cycle in KT2440 inferred from homologous FpvA/TBDT systems (folschweiller2000thepyoverdinreceptor pages 2-3, adams2006interactionoftonb pages 4-5)</td>
+</tr>
+<tr>
+<td>Pathway context</td>
+<td>KT2440 produces <strong>pyoverdine</strong> and carries pyoverdine genes in <strong>three clusters</strong>: <strong>PP4243–4246, PP4319–4327, and PP4219–4223</strong>. The main pyoverdine transcriptional activator <strong>prfI (PP4244)</strong> is an ECF σ factor homologous to <strong>PvdS</strong>; KT2440 also encodes many TonB-dependent siderophore receptors, placing FpvA within a larger iron-scavenging network (santos2004insightsintothe pages 8-10, santos2004insightsintothe pages 10-11, santos2004insightsintothe pages 7-8)</td>
+<td><strong>Direct KT2440 genomic context</strong> for the pyoverdine system, though PP_4217 itself is not deeply characterized genetically in these studies (santos2004insightsintothe pages 8-10, santos2004insightsintothe pages 10-11)</td>
+</tr>
+<tr>
+<td>Regulation / iron control</td>
+<td>In pseudomonads, pyoverdine production and uptake genes are primarily controlled by the global iron regulator <strong>Fur</strong>, which modulates ECF σ-factor pathways under iron limitation; KT2440 pyoverdine circuitry includes <strong>PfrI/PrfI (PvdS homolog)</strong> and <strong>PP_4208 (FpvI)</strong> as regulators in the broader system (santos2004insightsintothe pages 8-10, stein2023navigatingpyoverdineand pages 22-25)</td>
+<td><strong>Direct/near-direct KT2440 systems-level evidence</strong> for regulatory framework; specific promoter-level data for PP_4217 remain limited (santos2004insightsintothe pages 8-10, stein2023navigatingpyoverdineand pages 22-25)</td>
+</tr>
+<tr>
+<td>Cell-surface signaling concept</td>
+<td>FpvA-like receptors can function not only as transporters but also as <strong>cell-surface signaling (CSS) transducers</strong>, where ligand detection at the outer membrane influences transcription of uptake genes through anti-σ / ECF σ pathways. Recent work in <em>P. aeruginosa</em> revises CSS models by showing pre-existing receptor–anti-σ interactions and receptor proteolysis effects (folschweiller2000thepyoverdinreceptor pages 2-3, wettstadt2024bacterialtonbdependenttransducers pages 1-2)</td>
+<td><strong>Conceptually relevant but mostly non-KT2440 evidence</strong>; useful for functional inference, not direct proof for PP_4217 behavior in KT2440 (folschweiller2000thepyoverdinreceptor pages 2-3, wettstadt2024bacterialtonbdependenttransducers pages 1-2)</td>
+</tr>
+<tr>
+<td>Downregulation under aromatic stress</td>
+<td>A KT2440 transcriptomics study reports that <strong>fpvA (PP4217)</strong>, annotated as the <strong>iron-pyoverdine complex receptor</strong>, was <strong>“tuned down in the presence of 3MB”</strong> (3-methylbenzoate), alongside other TonB-dependent receptors, during conditions associated with oxidative stress and reduced iron-acquisition functions (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</td>
+<td><strong>Direct KT2440 expression evidence</strong>, but condition-specific and not a dedicated iron-uptake study (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8)</td>
+</tr>
+<tr>
+<td>Broader KT2440-specific support</td>
+<td>KT2440 devotes major genomic capacity to iron scavenging: reports cite <strong>29 predicted TonB-dependent outer-membrane siderophore receptors</strong> (and another passage notes <strong>18 outer-membrane ferric/ferric-related siderophore receptors</strong>), consistent with ecological adaptation to iron limitation and receptor diversification in rhizosphere/dilute environments (santos2004insightsintothe pages 10-11, santos2004insightsintothe pages 7-8)</td>
+<td><strong>Direct KT2440 genome-based evidence</strong> supporting biological plausibility of fpvA as an iron receptor (santos2004insightsintothe pages 10-11, santos2004insightsintothe pages 7-8)</td>
+</tr>
+<tr>
+<td>Recent 2023–2024 relevance</td>
+<td>Recent work emphasizes that TonB-dependent receptors are dynamically regulated, structurally complex uptake gates and attractive translational targets. Quantitative examples include <strong>sigmoidal vs logarithmic TBDT transcriptional responses</strong>, <strong>maximal pfeA induction at ~3 µM enterobactin</strong>, and receptor diversity across <strong>94 pyoverdine receptor groups</strong> predicted from <strong>1,928 Pseudomonas genomes</strong> with <strong>151 new pyoverdine structures</strong> and <strong>91 new receptor groups</strong> (hubert2023experimentalandcomputational pages 1-2, graff2024siderophoresastools pages 1-2)</td>
+<td><strong>Recent authoritative context</strong>, not KT2440-specific for fpvA function, but highly relevant for current understanding of receptor specificity/evolution/application (hubert2023experimentalandcomputational pages 1-2, graff2024siderophoresastools pages 1-2)</td>
+</tr>
+<tr>
+<td>Overall functional annotation</td>
+<td><strong>Best-supported annotation:</strong> FpvA (Q88F81/PP_4217) is a <strong>TonB-dependent outer-membrane ferri-pyoverdine receptor</strong> in <strong>P. putida KT2440</strong>, functioning in <strong>iron acquisition</strong> under iron limitation and likely integrated with <strong>Fur/ECF σ-factor regulation</strong> and possibly <strong>cell-surface signaling</strong>. The strongest KT2440-specific evidence is <strong>gene identity/annotation</strong> and <strong>condition-dependent transcriptional downregulation</strong>, whereas detailed transport mechanism is inferred from homologous FpvA/TBDT studies (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, santos2004insightsintothe pages 8-10, folschweiller2000thepyoverdinreceptor pages 3-5, braun2024substrateuptakeby pages 6-7, adams2006interactionoftonb pages 4-5)</td>
+<td><strong>High confidence for core function/localization; moderate confidence for detailed regulatory/mechanistic specifics in KT2440 due to limited direct experiments</strong> (dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, santos2004insightsintothe pages 8-10, folschweiller2000thepyoverdinreceptor pages 3-5, adams2006interactionoftonb pages 4-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported functional annotation for Pseudomonas putida KT2440 fpvA (Q88F81/PP_4217), integrating direct KT2440 evidence with mechanistic inference from authoritative TonB-dependent receptor and FpvA literature. It is useful for quickly separating high-confidence organism-specific facts from broader homolog-based functional interpretation.</em></p>
+<h2 id="visual-evidence">Visual evidence</h2>
+<p>A cropped excerpt from Domínguez-Cuevas et al. (2006) shows the explicit statement that <strong>fpvA (PP4217) codes for the iron–pyoverdine complex receptor</strong> and notes downregulation under 3MB; this supports the KT2440 locus-to-function mapping and stress-linked regulation. (dominguezcuevas2006transcriptionaltradeoffbetween media a60d2c30)</p>
+<h2 id="references-urls-in-text">References (URLs in-text)</h2>
+<p>Key cited works include: Dos Santos et al. 2004 (Environmental Microbiology; 2004-12; https://doi.org/10.1111/j.1462-2920.2004.00734.x), Domínguez-Cuevas et al. 2006 (JBC; 2006-04-28; https://doi.org/10.1074/jbc.m509848200), Braun 2024 (Molecular Microbiology; 2024-12; https://doi.org/10.1111/mmi.15332), Hubert et al. 2023 (Scientific Reports; 2023-11; https://doi.org/10.1038/s41598-023-46585-z), Wettstadt et al. 2024 (PLOS Biology; 2024-12; https://doi.org/10.1371/journal.pbio.3002920), Luo &amp; Peczuh 2024 (Molecules; 2024-08; https://doi.org/10.3390/molecules29163889), LeBlanc &amp; Wuest 2024 (Biochemistry; 2024-07; https://doi.org/10.1021/acs.biochem.4c00276), and Gu et al. 2024 (eLife; 2024-10; https://doi.org/10.7554/eLife.96719). (santos2004insightsintothe pages 10-11, dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8, braun2024substrateuptakeby pages 6-7, hubert2023experimentalandcomputational pages 1-2, wettstadt2024bacterialtonbdependenttransducers pages 1-2, luo2024locationlocationlocation pages 30-31, leblanc2024siderophoresacase pages 11-12, graff2024siderophoresastools pages 1-2)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8): Patricia Domínguez-Cuevas, José-Eduardo González-Pastor, Silvia Marqués, Juan-Luis Ramos, and Víctor de Lorenzo. Transcriptional tradeoff between metabolic and stress-response programs in pseudomonas putida kt2440 cells exposed to toluene*. Journal of Biological Chemistry, 281:11981-11991, Apr 2006. URL: https://doi.org/10.1074/jbc.m509848200, doi:10.1074/jbc.m509848200. This article has 269 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dominguezcuevas2006transcriptionaltradeoffbetween pages 6-7): Patricia Domínguez-Cuevas, José-Eduardo González-Pastor, Silvia Marqués, Juan-Luis Ramos, and Víctor de Lorenzo. Transcriptional tradeoff between metabolic and stress-response programs in pseudomonas putida kt2440 cells exposed to toluene*. Journal of Biological Chemistry, 281:11981-11991, Apr 2006. URL: https://doi.org/10.1074/jbc.m509848200, doi:10.1074/jbc.m509848200. This article has 269 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dominguezcuevas2006transcriptionaltradeoffbetween media a60d2c30): Patricia Domínguez-Cuevas, José-Eduardo González-Pastor, Silvia Marqués, Juan-Luis Ramos, and Víctor de Lorenzo. Transcriptional tradeoff between metabolic and stress-response programs in pseudomonas putida kt2440 cells exposed to toluene*. Journal of Biological Chemistry, 281:11981-11991, Apr 2006. URL: https://doi.org/10.1074/jbc.m509848200, doi:10.1074/jbc.m509848200. This article has 269 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(folschweiller2000thepyoverdinreceptor pages 1-2): Nicolas Folschweiller, I. Schalk, H. Celia, B. Kieffer, Mohamed A. Abdallah, and F. Pattus. The pyoverdin receptor fpva, a tonb-dependent receptor involved in iron uptake by pseudomonas aeruginosa (review). Molecular membrane biology, 17 3:123-33, Jul 2000. URL: https://doi.org/10.1080/09687680050197356, doi:10.1080/09687680050197356. This article has 57 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(adams2006interactionoftonb pages 4-5): Hendrik Adams, Gabrielle Zeder-Lutz, Isabelle Schalk, Franc Pattus, and Hervé Celia. Interaction of tonb with the outer membrane receptor fpva of pseudomonas aeruginosa. Journal of Bacteriology, 188:5752-5761, Aug 2006. URL: https://doi.org/10.1128/jb.00435-06, doi:10.1128/jb.00435-06. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(folschweiller2000thepyoverdinreceptor pages 2-3): Nicolas Folschweiller, I. Schalk, H. Celia, B. Kieffer, Mohamed A. Abdallah, and F. Pattus. The pyoverdin receptor fpva, a tonb-dependent receptor involved in iron uptake by pseudomonas aeruginosa (review). Molecular membrane biology, 17 3:123-33, Jul 2000. URL: https://doi.org/10.1080/09687680050197356, doi:10.1080/09687680050197356. This article has 57 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(folschweiller2000thepyoverdinreceptor pages 3-5): Nicolas Folschweiller, I. Schalk, H. Celia, B. Kieffer, Mohamed A. Abdallah, and F. Pattus. The pyoverdin receptor fpva, a tonb-dependent receptor involved in iron uptake by pseudomonas aeruginosa (review). Molecular membrane biology, 17 3:123-33, Jul 2000. URL: https://doi.org/10.1080/09687680050197356, doi:10.1080/09687680050197356. This article has 57 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(braun2024substrateuptakeby pages 6-7): Volkmar Braun. Substrate uptake by tonb‐dependent outer membrane transporters. Molecular Microbiology, 122:929-947, Dec 2024. URL: https://doi.org/10.1111/mmi.15332, doi:10.1111/mmi.15332. This article has 20 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santos2004insightsintothe pages 8-10): V. A. P. Martins Dos Santos, S. Heim, E. R. B. Moore, M. Strätz, and K. N. Timmis. Insights into the genomic basis of niche specificity of pseudomonas putida kt2440. Environmental microbiology, 6 12:1264-86, Dec 2004. URL: https://doi.org/10.1111/j.1462-2920.2004.00734.x, doi:10.1111/j.1462-2920.2004.00734.x. This article has 339 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santos2004insightsintothe pages 10-11): V. A. P. Martins Dos Santos, S. Heim, E. R. B. Moore, M. Strätz, and K. N. Timmis. Insights into the genomic basis of niche specificity of pseudomonas putida kt2440. Environmental microbiology, 6 12:1264-86, Dec 2004. URL: https://doi.org/10.1111/j.1462-2920.2004.00734.x, doi:10.1111/j.1462-2920.2004.00734.x. This article has 339 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hubert2023experimentalandcomputational pages 1-2): Thibaut Hubert, Morgan Madec, and Isabelle J. Schalk. Experimental and computational methods to highlight behavioural variations in tonb-dependent transporter expression in pseudomonas aeruginosa versus siderophore concentration. Scientific Reports, Nov 2023. URL: https://doi.org/10.1038/s41598-023-46585-z, doi:10.1038/s41598-023-46585-z. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wettstadt2024bacterialtonbdependenttransducers pages 1-2): Sarah Wettstadt, Francisco J. Marcos-Torres, Joaquín R. Otero-Asman, Alicia García-Puente, Álvaro Ortega, and María A. Llamas. Bacterial tonb-dependent transducers interact with the anti-σ factor in absence of the inducing signal protecting it from proteolysis. Dec 2024. URL: https://doi.org/10.1371/journal.pbio.3002920, doi:10.1371/journal.pbio.3002920. This article has 1 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(graff2024siderophoresastools pages 1-2): Á. Tamás Gräff and Sarah M. Barry. Siderophores as tools and treatments. npj Antimicrobials and Resistance, Dec 2024. URL: https://doi.org/10.1038/s44259-024-00053-4, doi:10.1038/s44259-024-00053-4. This article has 29 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(luo2024locationlocationlocation pages 30-31): Vivien Canran Luo and Mark W. Peczuh. Location, location, location: establishing design principles for new antibacterials from ferric siderophore transport systems. Molecules, 29:3889, Aug 2024. URL: https://doi.org/10.3390/molecules29163889, doi:10.3390/molecules29163889. This article has 11 citations.</p>
+</li>
+<li>
+<p>(leblanc2024siderophoresacase pages 11-12): Andrew R. LeBlanc and William M. Wuest. Siderophores: a case study in translational chemical biology. Biochemistry, 63:1877-1891, Jul 2024. URL: https://doi.org/10.1021/acs.biochem.4c00276, doi:10.1021/acs.biochem.4c00276. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santos2004insightsintothe pages 7-8): V. A. P. Martins Dos Santos, S. Heim, E. R. B. Moore, M. Strätz, and K. N. Timmis. Insights into the genomic basis of niche specificity of pseudomonas putida kt2440. Environmental microbiology, 6 12:1264-86, Dec 2004. URL: https://doi.org/10.1111/j.1462-2920.2004.00734.x, doi:10.1111/j.1462-2920.2004.00734.x. This article has 339 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stein2023navigatingpyoverdineand pages 22-25): Nicola Victoria Maria Stein. Navigating pyoverdine and beyond: the role of tripartite efflux pumps in pseudomonas putida kt2440. Dissertation, Jan 2023. URL: https://doi.org/10.5282/edoc.32605, doi:10.5282/edoc.32605. This article has 1 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="fpvA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000024 The paragraph mentioning the *fpvA* gene (PP4217) and its role in iron-acquisition inhibition during aromatic-induced stress is fou" src="fpvA-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>santos2004insightsintothe pages 8-10</li>
+<li>santos2004insightsintothe pages 10-11</li>
+<li>dominguezcuevas2006transcriptionaltradeoffbetween pages 6-7</li>
+<li>dominguezcuevas2006transcriptionaltradeoffbetween pages 7-8</li>
+<li>hubert2023experimentalandcomputational pages 1-2</li>
+<li>wettstadt2024bacterialtonbdependenttransducers pages 1-2</li>
+<li>graff2024siderophoresastools pages 1-2</li>
+<li>braun2024substrateuptakeby pages 6-7</li>
+<li>luo2024locationlocationlocation pages 30-31</li>
+<li>leblanc2024siderophoresacase pages 11-12</li>
+<li>folschweiller2000thepyoverdinreceptor pages 1-2</li>
+<li>adams2006interactionoftonb pages 4-5</li>
+<li>folschweiller2000thepyoverdinreceptor pages 2-3</li>
+<li>folschweiller2000thepyoverdinreceptor pages 3-5</li>
+<li>santos2004insightsintothe pages 7-8</li>
+<li>stein2023navigatingpyoverdineand pages 22-25</li>
+<li>https://doi.org/10.1038/s41598-023-46585-z</li>
+<li>https://doi.org/10.1371/journal.pbio.3002920</li>
+<li>https://doi.org/10.7554/eLife.96719</li>
+<li>https://doi.org/10.1111/mmi.15332</li>
+<li>https://doi.org/10.3390/molecules29163889</li>
+<li>https://doi.org/10.1021/acs.biochem.4c00276</li>
+<li>https://doi.org/10.1038/s44259-024-00053-4</li>
+<li>https://doi.org/10.1111/j.1462-2920.2004.00734.x</li>
+<li>https://doi.org/10.1074/jbc.m509848200</li>
+<li>https://doi.org/10.1074/jbc.m509848200,</li>
+<li>https://doi.org/10.1080/09687680050197356,</li>
+<li>https://doi.org/10.1128/jb.00435-06,</li>
+<li>https://doi.org/10.1111/mmi.15332,</li>
+<li>https://doi.org/10.1111/j.1462-2920.2004.00734.x,</li>
+<li>https://doi.org/10.1038/s41598-023-46585-z,</li>
+<li>https://doi.org/10.1371/journal.pbio.3002920,</li>
+<li>https://doi.org/10.1038/s44259-024-00053-4,</li>
+<li>https://doi.org/10.3390/molecules29163889,</li>
+<li>https://doi.org/10.1021/acs.biochem.4c00276,</li>
+<li>https://doi.org/10.5282/edoc.32605,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F81
+gene_symbol: fpvA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  FpvA (PP_4217) is a TonB-dependent outer membrane receptor of the ferripyoverdine
+  receptor class. It is a large (812 aa) integral outer membrane protein built from
+  a 22-stranded beta-barrel occluded by an N-terminal plug (cork) domain, together
+  with a periplasmic TonB box and an N-terminal Secretin/TonB short (STN) signaling
+  domain. FpvA functions in siderophore-mediated iron acquisition. It binds the
+  ferric pyoverdine (iron-pyoverdine) complex at the cell surface and mediates its
+  energy-dependent translocation across the outer membrane into the periplasm.
+  Transport is energized by the inner-membrane TonB-ExbB-ExbD complex, which couples
+  proton motive force to conformational changes in the plug/barrel via the receptor&#39;s
+  TonB box. Members of this receptor class also act as cell-surface signaling
+  transducers, where ligand recognition at the outer membrane can be transduced
+  through an anti-sigma factor and ECF sigma factor cascade to regulate expression
+  of pyoverdine biosynthesis and uptake genes. In P. putida KT2440, fpvA is part of
+  an extensive iron-scavenging repertoire and is controlled by iron-responsive
+  (Fur/ECF sigma) regulation.
+existing_annotations:
+- term:
+    id: GO:0009279
+    label: cell outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct subcellular location. FpvA is a TonB-dependent outer membrane receptor; the UniProt entry annotates Cell outer membrane and the protein has the canonical beta-barrel/plug architecture of an OM receptor.
+    action: ACCEPT
+    reason: Consistent with the TonB-dependent receptor family, the multi-pass OM beta-barrel architecture, and UniProt subcellular location. This is the more specific and preferred CC term over GO:0019867.
+- term:
+    id: GO:0015343
+    label: siderophore-iron transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Captures the core molecular function. FpvA mediates transport of the ferric-siderophore (ferripyoverdine) complex across the outer membrane.
+    action: ACCEPT
+    reason: This term accurately describes the activity of a TonB-dependent ferri-siderophore receptor that imports the iron-loaded siderophore complex. Well supported by family/domain evidence (TonB-dependent siderophore receptor, IPR010105) and by the gene&#39;s identity as the ferripyoverdine receptor.
+- term:
+    id: GO:0015344
+    label: siderophore uptake transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Also accurate; describes siderophore uptake transporter activity, consistent with the ferripyoverdine receptor function.
+    action: ACCEPT
+    reason: TreeGrafter/PANTHER assignment consistent with the receptor&#39;s role in importing the ferripyoverdine complex. Closely related to GO:0015343; both are acceptable family-level MF terms for this receptor.
+- term:
+    id: GO:0015891
+    label: siderophore transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Correct biological process. FpvA participates in transport of the pyoverdine siderophore (as the ferric complex) across the outer membrane.
+    action: ACCEPT
+    reason: Directly supported by gene identity as ferripyoverdine receptor and TonB-dependent siderophore receptor domain evidence.
+- term:
+    id: GO:0019867
+    label: outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Correct but less specific than GO:0009279 (cell outer membrane), which is also annotated.
+    action: KEEP_AS_NON_CORE
+    reason: Not wrong, but GO:0009279 (cell outer membrane) is the preferred, more specific term for a Gram-negative bacterial outer membrane protein and is already present. Retained as a redundant parent rather than removed.
+- term:
+    id: GO:0033214
+    label: siderophore-iron import into cell
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Accurate and specific biological process. FpvA imports the iron-siderophore (ferripyoverdine) complex into the cell (periplasm) as the first dedicated step of pyoverdine-mediated iron acquisition.
+    action: ACCEPT
+    reason: Well supported; this is a more informative BP term than the parent GO:0015891 and matches the receptor&#39;s established role in ferric-pyoverdine import.
+- term:
+    id: GO:0038023
+    label: signaling receptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: FpvA-class receptors carry an N-terminal signaling (STN) domain and can act as cell-surface signaling transducers, coupling ferripyoverdine recognition to ECF sigma/anti-sigma regulation of iron-uptake genes. The protein has the Secretin/TonB short N-terminal (STN) signaling domain (IPR011662).
+    action: KEEP_AS_NON_CORE
+    reason: Cell-surface signaling is a plausible and domain-supported secondary function, but it is an IEA inference based on the STN domain and is not the receptor&#39;s core function (transport). There is no direct KT2440-specific experimental evidence that FpvA transduces a signal. Retained as a non-core, domain-inferred activity rather than removed.
+core_functions:
+- description: TonB-dependent outer membrane ferripyoverdine receptor that recognizes the ferric pyoverdine (iron-siderophore) complex at the cell surface and mediates its energy-dependent import across the outer membrane into the periplasm, initiating pyoverdine-mediated iron acquisition.
+  supported_by:
+  - reference_id: GO_REF:0000002
+    supporting_text: TonB-dependent siderophore receptor domain (IPR010105) annotated to siderophore-iron transmembrane transporter activity and siderophore transport.
+  molecular_function:
+    id: GO:0015343
+    label: siderophore-iron transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0033214
+    label: siderophore-iron import into cell
+  locations:
+  - id: GO:0009279
+    label: cell outer membrane
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PubMed-verified (Nelson et al. 2002, Environ Microbiol). Genome reference establishing the PP_4217/fpvA locus and ferripyoverdine receptor assignment in KT2440.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

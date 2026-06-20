@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hexR - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hexR</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88P32" target="_blank" class="term-link">
+                        Q88P32
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hexR";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88P32" data-a="DESCRIPTION: HexR is the HTH-type transcriptional repressor tha..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HexR is the HTH-type transcriptional repressor that controls central glucose catabolism in Pseudomonas putida. It is a two-domain protein with an N-terminal winged helix-turn-helix DNA-binding domain of the RpiR family and a C-terminal sugar isomerase (SIS) sensor domain. HexR binds inverted pseudopalindromic operator sequences (consensus 5&#39;-TTGTN(7-8)ACAA-3&#39;) in the promoter regions of the gap-1 gene and of the edd-glk-gltR-2 and zwf-pgl-eda operons, thereby repressing the phosphorylative branch of glucose metabolism and the Entner-Doudoroff pathway. Although monomeric in solution, HexR binds DNA as a dimer. Its repressor activity is relieved by the Entner-Doudoroff intermediate 2-keto-3-deoxy-6-phosphogluconate (KDPG), which binds the SIS domain and releases HexR from its operators, providing metabolite-responsive induction of glucose catabolic genes.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P32" data-a="GO:0003677" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HexR binds DNA, so this term is correct, but it is a generic parent of the more specific and experimentally supported sequence-specific binding terms already annotated (GO:0000976 and GO:0001217).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> True but uninformative; more specific child terms (transcription cis-regulatory region binding and DNA-binding transcription repressor activity) are present and better describe the function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acts by binding directly to an inverted pseudopalindromic sequence</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P32" data-a="GO:0003700" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HexR is a DNA-binding transcription factor, but it acts specifically as a repressor; the more accurate child term GO:0001217 (DNA-binding transcription repressor activity) is already present and experimentally supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The generic transcription factor activity term should be refined to the repressor-specific term that matches the documented mechanism.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001217" target="_blank" class="term-link">
+                                    DNA-binding transcription repressor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transcriptional repressor of the gap-1 gene and of the edd-glk-gltR-2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P32" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HexR regulates transcription, but this is the broad parent of the specific negative-regulation term (GO:0045892) that is also annotated and better reflects its repressor role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Less informative parent term; the specific negative regulation term is present and captures HexR&#39;s documented repressor activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Involved in regulation of glucose metabolism</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                    GO:0045892
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P32" data-a="GO:0045892" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HexR is a transcriptional repressor of glucose catabolic operons, directly and specifically representing its core biological role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well supported by experimental evidence that HexR represses gap-1 and the edd-glk-gltR-2 and zwf-pgl-eda operons.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transcriptional repressor of the gap-1 gene and of the edd-glk-gltR-2</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18245293" target="_blank" class="term-link">
+                                        PMID:18245293
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">HexR controls the genes that encode glucokinase/glucose 6-phosphate dehydrogenase that yield 6-phosphogluconate</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097367" target="_blank" class="term-link">
+                                    GO:0097367
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate derivative binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P32" data-a="GO:0097367" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The SIS domain of HexR binds the phosphorylated carbohydrate-derivative effector KDPG, so this term is supported, although it is a broad description of the allosteric effector-sensing function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and biologically meaningful as it reflects effector (KDPG) binding by the SIS domain, but broad and not the core repressor function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binding of 2-keto-3-deoxy-6-phosphogluconate (KDPG) to HexR releases the repressor from its target sequences.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link">
+                                        PMID:19506074
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The phosphorylated effector is likely to be recognized by a sugar isomerase domain located at the C-terminal end of HexR</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901135" target="_blank" class="term-link">
+                                    GO:1901135
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate derivative metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P32" data-a="GO:1901135" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HexR regulates genes of glucose/carbohydrate metabolism but is itself a regulatory protein, not a metabolic enzyme; this InterPro-derived process term over-states a direct metabolic role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HexR does not itself carry out carbohydrate-derivative metabolism; it is a transcriptional regulator. The term is an InterPro SIS-domain over-call. PANTHER places HexR in the HexR-repressor subfamily (PTHR30514:SF1), a transcriptional regulator, not a carbohydrate-metabolizing enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">HTH-type transcriptional regulator HexR</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTHR30514:SF1; HTH-TYPE TRANSCRIPTIONAL REGULATOR HEXR-RELATED</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19506074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glucose metabolism in Pseudomonas: the phospho...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P32" data-a="GO:0000976" data-r="PMID:19506074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HexR binds directly to operator sequences in the promoter (cis-regulatory) regions of its target operons, demonstrated by EMSA, ITC, and DNA footprinting.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported experimentally; HexR recognizes the P(edd), P(zwf), and P(gap-1) promoter regions with nanomolar affinity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link">
+                                        PMID:19506074
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">HexR recognizes the P(edd), P(zwf), and P(gap-1) promoters with</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acts by binding directly to an inverted pseudopalindromic sequence</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001217" target="_blank" class="term-link">
+                                    GO:0001217
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription repressor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19506074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glucose metabolism in Pseudomonas: the phospho...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P32" data-a="GO:0001217" data-r="PMID:19506074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HexR is a sequence-specific DNA-binding repressor; this is its core molecular function, supported by binding and derepression experiments.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function, experimentally demonstrated repression of target operons relieved by the effector KDPG.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transcriptional repressor of the gap-1 gene and of the edd-glk-gltR-2</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTHR30514:SF1; HTH-TYPE TRANSCRIPTIONAL REGULATOR HEXR-RELATED</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link">
+                                        PMID:19506074
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binding of the Entner-Doudoroff pathway intermediate 2-keto-3-deoxy-6-phosphogluconate to HexR released the repressor from its target operators</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032993" target="_blank" class="term-link">
+                                    GO:0032993
+                                </a>
+                            </span>
+                            <span class="term-label">protein-DNA complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19506074
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glucose metabolism in Pseudomonas: the phospho...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P32" data-a="GO:0032993" data-r="PMID:19506074" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HexR forms a complex with its operator DNA, binding as a dimer to the pseudopalindromic target sequence; this reflects the experimentally observed protein-DNA complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct cellular component capturing the repressor-operator complex, but it is a consequence of DNA binding rather than the core function itself.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/hexR/hexR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Monomer in solution. Binds DNA as a dimer.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link">
+                                        PMID:19506074
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">two monomers of HexR bind to a pseudopalindrome with a consensus sequence of 5&#39;-TTGTN(7-8)ACAA-3&#39;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Sequence-specific DNA-binding transcriptional repressor that binds operator sequences in the promoters of central glucose catabolic operons to repress their transcription, with repression relieved by the effector KDPG.</h3>
+                <span class="vote-buttons" data-g="Q88P32" data-a="FUNCTION: Sequence-specific DNA-binding transcriptional repr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001217" target="_blank" class="term-link">
+                            DNA-binding transcription repressor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                negative regulation of DNA-templated transcription
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/hexR/hexR-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Transcriptional repressor of the gap-1 gene and of the edd-glk-gltR-2</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link">
+                                PMID:19506074
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Binding of the Entner-Doudoroff pathway intermediate 2-keto-3-deoxy-6-phosphogluconate to HexR released the repressor from its target operators</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds cis-regulatory operator regions of target operon promoters via its N-terminal RpiR-family helix-turn-helix domain.</h3>
+                <span class="vote-buttons" data-g="Q88P32" data-a="FUNCTION: Binds cis-regulatory operator regions of target op..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                            transcription cis-regulatory region binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link">
+                                PMID:19506074
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">HexR recognizes the P(edd), P(zwf), and P(gap-1) promoters with</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:interpro/panther/PTHR30514/PTHR30514-metadata.yaml
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PANTHER family PTHR30514 (GLUCOKINASE) and subfamily PTHR30514:SF1 (HTH-type transcriptional regulator HexR-related)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HexR is classified in PANTHER family PTHR30514 &#34;GLUCOKINASE&#34; and subfamily PTHR30514:SF1 &#34;HTH-TYPE TRANSCRIPTIONAL REGULATOR HEXR-RELATED&#34;.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The SF1 subfamily correctly identifies HexR as an HTH-type transcriptional repressor, whereas the family root name &#34;GLUCOKINASE&#34; is an artifact of the shared SIS sensor domain (common to sugar kinases/isomerases); this supports treating HexR as a DNA-binding regulator rather than a carbohydrate-metabolizing enzyme.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18245293" target="_blank" class="term-link">
+                            PMID:18245293
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A set of activators and repressors control peripheral glucose pathways in Pseudomonas putida to yield a common central intermediate.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HexR controls glucokinase/glucose-6-phosphate dehydrogenase genes, the Entner-Doudoroff enzyme genes, and gap-1 in P. putida KT2440.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Glucose is channeled to the central intermediate 6-phosphogluconate via convergent pathways regulated by the repressors HexR, GnuR, and PtxS and the activator GltR-2.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link">
+                            PMID:19506074
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Regulation of glucose metabolism in Pseudomonas: the phosphorylative branch and entner-doudoroff enzymes are regulated by a repressor containing a sugar isomerase domain.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HexR is a monomer in solution but binds DNA as a dimer at a pseudopalindromic operator with consensus 5&#39;-TTGTN(7-8)ACAA-3&#39;, recognizing P(edd), P(zwf), and P(gap-1) with nanomolar affinity.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Entner-Doudoroff intermediate KDPG binds HexR and releases it from its operators, whereas glucose, glucose-6-phosphate, and 6-phosphogluconate do not; the effector is sensed by the C-terminal SIS domain.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Beyond the gap-1, edd-glk-gltR-2, and zwf-pgl-eda operons, does the HexR regulon in P. putida extend to additional genes, and are any directly activated rather than repressed?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P32" data-a="Q: Beyond the gap-1, edd-glk-gltR-2, and zwf-pgl-eda ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the structural determinants in the SIS domain that confer specificity for KDPG over closely related phosphorylated sugars such as 6-phosphogluconate?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P32" data-a="Q: What are the structural determinants in the SIS do..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine a co-crystal or cryo-EM structure of HexR bound to operator DNA and to KDPG to define the allosteric mechanism linking effector binding to DNA release.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P32" data-a="EXPERIMENT: Determine a co-crystal or cryo-EM structure of Hex..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform genome-wide ChIP-seq combined with RNA-seq in wild-type and hexR mutant strains under glucose and non-glucose conditions to define the complete HexR regulon.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P32" data-a="EXPERIMENT: Perform genome-wide ChIP-seq combined with RNA-seq..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hexR-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P32" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hexr-q88p32-pseudomonas-putida-kt2440-psepk-research-notes">hexR (Q88P32) — Pseudomonas putida KT2440 (PSEPK) — Research Notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt: Q88P32 (HEXR_PSEPK), 287 aa, reviewed (Swiss-Prot).</li>
+<li>Gene: hexR; locus PP_1021.</li>
+<li>Name: HTH-type transcriptional regulator HexR [UniProt "RecName: Full=HTH-type transcriptional regulator HexR"].</li>
+<li>Family/domains: RpiR-family regulator with an N-terminal winged-helix HTH DNA-binding domain and a C-terminal sugar isomerase (SIS) domain.</li>
+<li>[UniProt "DOMAIN          2..78 /note=\"HTH rpiR-type\""]</li>
+<li>[UniProt "DOMAIN          122..261 /note=\"SIS\""]</li>
+<li>[UniProt "DNA_BIND        38..57 /note=\"H-T-H motif\""]</li>
+</ul>
+<h2 id="molecular-function-mechanism">Molecular function &amp; mechanism</h2>
+<ul>
+<li>HexR is a DNA-binding transcriptional repressor of glucose metabolism genes.</li>
+<li>[UniProt "FUNCTION: Involved in regulation of glucose metabolism. Transcriptional repressor of the gap-1 gene and of the edd-glk-gltR-2 and zwf-pgl-eda operons. Acts by binding directly to an inverted pseudopalindromic sequence in the promoter region."]</li>
+<li>Binds the P(edd), P(zwf), and P(gap-1) promoters with nanomolar affinity; two monomers bind a pseudopalindrome consensus 5'-TTGTN(7-8)ACAA-3'.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19506074" title="HexR recognizes the P(edd), P(zwf), and P(gap-1) promoters with affinity in the nanomolar range">PMID:19506074</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19506074" title="two monomers of HexR bind to a pseudopalindrome with a consensus sequence of 5'-TTGTN(7-8)ACAA-3'">PMID:19506074</a></li>
+<li>DNA-binding HTH domain belongs to the RpiR family.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19506074" title="the helix-turn-helix DNA binding domain of HexR exhibits high similarity to proteins of the RpiR family of regulators">PMID:19506074</a></li>
+</ul>
+<h2 id="effector-activity-regulation">Effector / activity regulation</h2>
+<ul>
+<li>The Entner-Doudoroff intermediate 2-keto-3-deoxy-6-phosphogluconate (KDPG) binds HexR and releases it from operator DNA (induction). Glucose, glucose-6-phosphate, and 6-phosphogluconate do NOT cause dissociation.</li>
+<li>[UniProt "ACTIVITY REGULATION: Binding of 2-keto-3-deoxy-6-phosphogluconate (KDPG) to HexR releases the repressor from its target sequences."]</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19506074" title="Binding of the Entner-Doudoroff pathway intermediate 2-keto-3-deoxy-6-phosphogluconate to HexR released the repressor from its target operators, whereas other chemicals such as glucose, glucose 6-phosphate, and 6-phosphogluconate did not induce complex dissociation">PMID:19506074</a></li>
+<li>The phosphorylated effector is recognized by the C-terminal SIS (sugar isomerase) domain.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19506074" title="The phosphorylated effector is likely to be recognized by a sugar isomerase domain located at the C-terminal end of HexR">PMID:19506074</a></li>
+</ul>
+<h2 id="subunit-quaternary-structure">Subunit / quaternary structure</h2>
+<ul>
+<li>Monomer in solution, binds DNA as a dimer.</li>
+<li>[UniProt "SUBUNIT: Monomer in solution. Binds DNA as a dimer."]</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19506074" title="we purified HexR and showed that it is a monomer in solution">PMID:19506074</a></li>
+</ul>
+<h2 id="biological-role-regulon">Biological role / regulon</h2>
+<ul>
+<li>In P. putida KT2440, glucose is channeled to the central Entner-Doudoroff intermediate 6-phosphogluconate via convergent peripheral pathways, regulated by HexR, GnuR, PtxS (repressors) and GltR-2 (activator).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18245293" title="Expression of the three pathways is mediated by three transcriptional repressors, HexR, GnuR, and PtxS, and by a positive transcriptional regulator, GltR-2.">PMID:18245293</a></li>
+<li>HexR controls glucokinase/glucose-6-phosphate dehydrogenase genes, Entner-Doudoroff enzyme genes, and gap-1 (glyceraldehyde-3-phosphate dehydrogenase).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18245293" title="HexR controls the genes that encode glucokinase/glucose 6-phosphate dehydrogenase that yield 6-phosphogluconate; the genes for the Entner-Doudoroff enzymes that yield glyceraldehyde-3-phosphate and pyruvate; and gap-1, which encodes glyceraldehyde-3-phosphate dehydrogenase.">PMID:18245293</a></li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>As a transcriptional repressor acting at promoter operators, HexR functions in the cytoplasm bound to chromosomal DNA (forms a protein-DNA complex). GOA includes GO:0032993 protein-DNA complex (IPI, CollecTF).</li>
+</ul>
+<h2 id="annotation-assessment-summary">Annotation assessment summary</h2>
+<ul>
+<li>Core MF: GO:0001217 DNA-binding transcription repressor activity (IPI, PMID:19506074) — ACCEPT, core.</li>
+<li>Core MF: GO:0000976 transcription cis-regulatory region binding (IPI, PMID:19506074) — ACCEPT, core.</li>
+<li>Core BP: GO:0045892 negative regulation of DNA-templated transcription — ACCEPT, core.</li>
+<li>GO:0006355 regulation of DNA-templated transcription — broad parent of the negative-regulation term; KEEP_AS_NON_CORE (less informative).</li>
+<li>GO:0003700 DNA-binding transcription factor activity — repressor activity (GO:0001217) is the more specific/accurate child; MODIFY/over-annotated relative to repressor term. Keep as non-core (parent).</li>
+<li>GO:0003677 DNA binding — generic; more specific GO:0000976 present; MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0097367 carbohydrate derivative binding — captures the SIS-domain effector (KDPG) binding; broad but supported by the effector-sensing mechanism. KEEP_AS_NON_CORE.</li>
+<li>GO:1901135 carbohydrate derivative metabolic process — HexR regulates metabolism but is not itself a metabolic enzyme; this BP is an InterPro over-call. MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0032993 protein-DNA complex — supported (binds DNA as dimer at operators). ACCEPT/KEEP_AS_NON_CORE.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88P32
+gene_symbol: hexR
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: HexR is the HTH-type transcriptional repressor that controls central
+  glucose catabolism in Pseudomonas putida. It is a two-domain protein with an N-terminal
+  winged helix-turn-helix DNA-binding domain of the RpiR family and a C-terminal sugar
+  isomerase (SIS) sensor domain. HexR binds inverted pseudopalindromic operator sequences
+  (consensus 5&#39;-TTGTN(7-8)ACAA-3&#39;) in the promoter regions of the gap-1 gene and of
+  the edd-glk-gltR-2 and zwf-pgl-eda operons, thereby repressing the phosphorylative
+  branch of glucose metabolism and the Entner-Doudoroff pathway. Although monomeric
+  in solution, HexR binds DNA as a dimer. Its repressor activity is relieved by the
+  Entner-Doudoroff intermediate 2-keto-3-deoxy-6-phosphogluconate (KDPG), which binds
+  the SIS domain and releases HexR from its operators, providing metabolite-responsive
+  induction of glucose catabolic genes.
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: HexR binds DNA, so this term is correct, but it is a generic parent of
+      the more specific and experimentally supported sequence-specific binding terms
+      already annotated (GO:0000976 and GO:0001217).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: True but uninformative; more specific child terms (transcription cis-regulatory
+      region binding and DNA-binding transcription repressor activity) are present
+      and better describe the function.
+    supported_by:
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: Acts by binding directly to an inverted pseudopalindromic sequence
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: HexR is a DNA-binding transcription factor, but it acts specifically as
+      a repressor; the more accurate child term GO:0001217 (DNA-binding transcription
+      repressor activity) is already present and experimentally supported.
+    action: MODIFY
+    reason: The generic transcription factor activity term should be refined to the
+      repressor-specific term that matches the documented mechanism.
+    proposed_replacement_terms:
+    - id: GO:0001217
+      label: DNA-binding transcription repressor activity
+    supported_by:
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: Transcriptional repressor of the gap-1 gene and of the edd-glk-gltR-2
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: HexR regulates transcription, but this is the broad parent of the specific
+      negative-regulation term (GO:0045892) that is also annotated and better reflects
+      its repressor role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Less informative parent term; the specific negative regulation term is
+      present and captures HexR&#39;s documented repressor activity.
+    supported_by:
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: Involved in regulation of glucose metabolism
+- term:
+    id: GO:0045892
+    label: negative regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: HexR is a transcriptional repressor of glucose catabolic operons, directly
+      and specifically representing its core biological role.
+    action: ACCEPT
+    reason: Well supported by experimental evidence that HexR represses gap-1 and the
+      edd-glk-gltR-2 and zwf-pgl-eda operons.
+    supported_by:
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: Transcriptional repressor of the gap-1 gene and of the edd-glk-gltR-2
+    - reference_id: PMID:18245293
+      supporting_text: HexR controls the genes that encode glucokinase/glucose 6-phosphate
+        dehydrogenase that yield 6-phosphogluconate
+- term:
+    id: GO:0097367
+    label: carbohydrate derivative binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The SIS domain of HexR binds the phosphorylated carbohydrate-derivative
+      effector KDPG, so this term is supported, although it is a broad description
+      of the allosteric effector-sensing function.
+    action: KEEP_AS_NON_CORE
+    reason: Correct and biologically meaningful as it reflects effector (KDPG) binding
+      by the SIS domain, but broad and not the core repressor function.
+    supported_by:
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: Binding of 2-keto-3-deoxy-6-phosphogluconate (KDPG) to HexR
+        releases the repressor from its target sequences.
+    - reference_id: PMID:19506074
+      supporting_text: The phosphorylated effector is likely to be recognized by a
+        sugar isomerase domain located at the C-terminal end of HexR
+- term:
+    id: GO:1901135
+    label: carbohydrate derivative metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: HexR regulates genes of glucose/carbohydrate metabolism but is itself
+      a regulatory protein, not a metabolic enzyme; this InterPro-derived process
+      term over-states a direct metabolic role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: HexR does not itself carry out carbohydrate-derivative metabolism; it is
+      a transcriptional regulator. The term is an InterPro SIS-domain over-call. PANTHER
+      places HexR in the HexR-repressor subfamily (PTHR30514:SF1), a transcriptional
+      regulator, not a carbohydrate-metabolizing enzyme.
+    supported_by:
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: HTH-type transcriptional regulator HexR
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: PTHR30514:SF1; HTH-TYPE TRANSCRIPTIONAL REGULATOR HEXR-RELATED
+- term:
+    id: GO:0000976
+    label: transcription cis-regulatory region binding
+  evidence_type: IPI
+  original_reference_id: PMID:19506074
+  qualifier: enables
+  review:
+    summary: HexR binds directly to operator sequences in the promoter (cis-regulatory)
+      regions of its target operons, demonstrated by EMSA, ITC, and DNA footprinting.
+    action: ACCEPT
+    reason: Directly supported experimentally; HexR recognizes the P(edd), P(zwf),
+      and P(gap-1) promoter regions with nanomolar affinity.
+    supported_by:
+    - reference_id: PMID:19506074
+      supporting_text: HexR recognizes the P(edd), P(zwf), and P(gap-1) promoters with
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: Acts by binding directly to an inverted pseudopalindromic sequence
+- term:
+    id: GO:0001217
+    label: DNA-binding transcription repressor activity
+  evidence_type: IPI
+  original_reference_id: PMID:19506074
+  qualifier: enables
+  review:
+    summary: HexR is a sequence-specific DNA-binding repressor; this is its core molecular
+      function, supported by binding and derepression experiments.
+    action: ACCEPT
+    reason: Core molecular function, experimentally demonstrated repression of target
+      operons relieved by the effector KDPG.
+    supported_by:
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: Transcriptional repressor of the gap-1 gene and of the edd-glk-gltR-2
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: PTHR30514:SF1; HTH-TYPE TRANSCRIPTIONAL REGULATOR HEXR-RELATED
+    - reference_id: PMID:19506074
+      supporting_text: Binding of the Entner-Doudoroff pathway intermediate 2-keto-3-deoxy-6-phosphogluconate
+        to HexR released the repressor from its target operators
+- term:
+    id: GO:0032993
+    label: protein-DNA complex
+  evidence_type: IPI
+  original_reference_id: PMID:19506074
+  qualifier: part_of
+  review:
+    summary: HexR forms a complex with its operator DNA, binding as a dimer to the
+      pseudopalindromic target sequence; this reflects the experimentally observed
+      protein-DNA complex.
+    action: KEEP_AS_NON_CORE
+    reason: Correct cellular component capturing the repressor-operator complex, but
+      it is a consequence of DNA binding rather than the core function itself.
+    supported_by:
+    - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+      supporting_text: Monomer in solution. Binds DNA as a dimer.
+    - reference_id: PMID:19506074
+      supporting_text: two monomers of HexR bind to a pseudopalindrome with a consensus
+        sequence of 5&#39;-TTGTN(7-8)ACAA-3&#39;
+core_functions:
+- description: Sequence-specific DNA-binding transcriptional repressor that binds operator
+    sequences in the promoters of central glucose catabolic operons to repress their
+    transcription, with repression relieved by the effector KDPG.
+  molecular_function:
+    id: GO:0001217
+    label: DNA-binding transcription repressor activity
+  directly_involved_in:
+  - id: GO:0045892
+    label: negative regulation of DNA-templated transcription
+  supported_by:
+  - reference_id: file:PSEPK/hexR/hexR-uniprot.txt
+    supporting_text: Transcriptional repressor of the gap-1 gene and of the edd-glk-gltR-2
+  - reference_id: PMID:19506074
+    supporting_text: Binding of the Entner-Doudoroff pathway intermediate 2-keto-3-deoxy-6-phosphogluconate
+      to HexR released the repressor from its target operators
+- description: Binds cis-regulatory operator regions of target operon promoters via
+    its N-terminal RpiR-family helix-turn-helix domain.
+  molecular_function:
+    id: GO:0000976
+    label: transcription cis-regulatory region binding
+  supported_by:
+  - reference_id: PMID:19506074
+    supporting_text: HexR recognizes the P(edd), P(zwf), and P(gap-1) promoters with
+references:
+- id: file:interpro/panther/PTHR30514/PTHR30514-metadata.yaml
+  title: PANTHER family PTHR30514 (GLUCOKINASE) and subfamily PTHR30514:SF1 (HTH-type
+    transcriptional regulator HexR-related)
+  findings:
+  - statement: HexR is classified in PANTHER family PTHR30514 &#34;GLUCOKINASE&#34; and subfamily
+      PTHR30514:SF1 &#34;HTH-TYPE TRANSCRIPTIONAL REGULATOR HEXR-RELATED&#34;.
+  - statement: The SF1 subfamily correctly identifies HexR as an HTH-type transcriptional
+      repressor, whereas the family root name &#34;GLUCOKINASE&#34; is an artifact of the shared
+      SIS sensor domain (common to sugar kinases/isomerases); this supports treating
+      HexR as a DNA-binding regulator rather than a carbohydrate-metabolizing enzyme.
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:18245293
+  title: A set of activators and repressors control peripheral glucose pathways in
+    Pseudomonas putida to yield a common central intermediate.
+  findings:
+  - statement: HexR controls glucokinase/glucose-6-phosphate dehydrogenase genes, the
+      Entner-Doudoroff enzyme genes, and gap-1 in P. putida KT2440.
+  - statement: Glucose is channeled to the central intermediate 6-phosphogluconate
+      via convergent pathways regulated by the repressors HexR, GnuR, and PtxS and
+      the activator GltR-2.
+- id: PMID:19506074
+  title: &#39;Regulation of glucose metabolism in Pseudomonas: the phosphorylative branch
+    and entner-doudoroff enzymes are regulated by a repressor containing a sugar isomerase
+    domain.&#39;
+  findings:
+  - statement: HexR is a monomer in solution but binds DNA as a dimer at a pseudopalindromic
+      operator with consensus 5&#39;-TTGTN(7-8)ACAA-3&#39;, recognizing P(edd), P(zwf), and
+      P(gap-1) with nanomolar affinity.
+  - statement: The Entner-Doudoroff intermediate KDPG binds HexR and releases it from
+      its operators, whereas glucose, glucose-6-phosphate, and 6-phosphogluconate do
+      not; the effector is sensed by the C-terminal SIS domain.
+proposed_new_terms: []
+suggested_questions:
+- question: Beyond the gap-1, edd-glk-gltR-2, and zwf-pgl-eda operons, does the HexR
+    regulon in P. putida extend to additional genes, and are any directly activated
+    rather than repressed?
+- question: What are the structural determinants in the SIS domain that confer specificity
+    for KDPG over closely related phosphorylated sugars such as 6-phosphogluconate?
+suggested_experiments:
+- description: Determine a co-crystal or cryo-EM structure of HexR bound to operator
+    DNA and to KDPG to define the allosteric mechanism linking effector binding to
+    DNA release.
+- description: Perform genome-wide ChIP-seq combined with RNA-seq in wild-type and
+    hexR mutant strains under glucose and non-glucose conditions to define the complete
+    HexR regulon.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

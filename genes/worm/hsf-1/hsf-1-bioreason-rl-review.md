@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: hsf-1 (C. elegans)
 
-Source: hsf-1-deep-research-bioreason-rl.md
+Source: hsf-1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: HTT (human)
 
-Source: HTT-deep-research-bioreason-rl.md
+Source: HTT-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

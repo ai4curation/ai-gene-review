@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: atfs-1 (C. elegans)
 
-Source: atfs-1-deep-research-bioreason-rl.md
+Source: atfs-1-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

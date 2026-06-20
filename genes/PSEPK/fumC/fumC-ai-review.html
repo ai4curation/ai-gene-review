@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fumC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fumC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88M20" target="_blank" class="term-link">
+                        Q88M20
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fumC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88M20" data-a="DESCRIPTION: Fumarate hydratase class II (fumarase C, FumC; EC ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Fumarate hydratase class II (fumarase C, FumC; EC 4.2.1.2), encoded by fumC (fumC-2 / PP_1755), one of three fumarase isoenzymes in Pseudomonas putida KT2440 (alongside fumA/PP_0897 and fumC1/PP_0944). It is a cytoplasmic, iron-independent homotetrameric enzyme that catalyzes the reversible, stereospecific hydration/dehydration of fumarate and (S)-malate ((S)-malate = fumarate + H2O), the step of the tricarboxylic acid (TCA) cycle that interconverts fumarate and L-malate. Unlike class I fumarases, which contain an oxygen-sensitive [4Fe-4S] cluster, class II fumarases lack a metal cofactor and are oxidant-resistant, allowing them to maintain TCA-cycle flux under oxidative/nitrosative stress. The enzyme belongs to the class-II fumarase/aspartase (fumarate lyase) family, with a conserved multi-domain fold; active sites are formed at subunit interfaces and include a catalytic A site and a non-catalytic B site.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M20" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level catalytic activity term; correct but uninformative given the specific fumarate hydratase activity is also annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0003824 is a high-level grouping term. The more specific GO:0004333 (fumarate hydratase activity) is annotated and fully captures the molecular function, making this generic term redundant and uninformative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004333" target="_blank" class="term-link">
+                                    GO:0004333
+                                </a>
+                            </span>
+                            <span class="term-label">fumarate hydratase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M20" data-a="GO:0004333" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. FumC is a class II fumarate hydratase (EC 4.2.1.2) catalyzing (S)-malate = fumarate + H2O.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by HAMAP-Rule MF_00743, the class-II fumarase/aspartase family assignment, conserved active-site residues, and KT2440 evidence that FumC-type isoenzymes provide compensatory fumarase activity. This is the central function of the gene.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M20" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FumC is a soluble cytoplasmic enzyme, consistent with its role in the cytosolic bacterial TCA cycle.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt subcellular location (HAMAP-Rule MF_00743) and the soluble nature of class II fumarases support cytoplasmic localization. No signal peptide or membrane-targeting features are present.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M20" data-a="GO:0006099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. The fumarate-to-malate step is a canonical reaction of the TCA cycle.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the UniProt pathway annotation (tricarboxylic acid cycle; (S)-malate from fumarate, step 1/1) and the enzyme&#39;s well-established role in central carbon metabolism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006106" target="_blank" class="term-link">
+                                    GO:0006106
+                                </a>
+                            </span>
+                            <span class="term-label">fumarate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M20" data-a="GO:0006106" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but more general than the TCA cycle annotation; fumarate is the substrate of the catalyzed reaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate (the enzyme acts on fumarate) but a broad parent process. The TCA cycle annotation is the more informative core process; this is retained as a supporting, non-core term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006108" target="_blank" class="term-link">
+                                    GO:0006108
+                                </a>
+                            </span>
+                            <span class="term-label">malate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M20" data-a="GO:0006108" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but general; (S)-malate is the product/substrate of the reversible reaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate given malate is directly produced/consumed, but a broad parent process relative to the TCA cycle. Retained as supporting, non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016829" target="_blank" class="term-link">
+                                    GO:0016829
+                                </a>
+                            </span>
+                            <span class="term-label">lyase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88M20" data-a="GO:0016829" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-level parent of the specific fumarate hydratase (a hydro-lyase) activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016829 is a grouping term subsuming the specific GO:0004333 fumarate hydratase activity already annotated. It is not wrong (FumC is a hydro-lyase) but is redundant and uninformative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Class II (iron-independent) fumarate hydratase catalyzing the reversible stereospecific interconversion of fumarate and (S)-malate in the TCA cycle.</h3>
+                <span class="vote-buttons" data-g="Q88M20" data-a="FUNCTION: Class II (iron-independent) fumarate hydratase cat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004333" target="_blank" class="term-link">
+                            fumarate hydratase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/fumC/fumC-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">FumC catalyzes the reversible conversion fumarate to S-malate in the TCA cycle; class II fumarases are homotetrameric and iron-independent.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/fumC/fumC-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on fumC (Q88M20) in Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fumC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88M20" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: **fumC (fumC2; PP_1755; UniProt Q88M20)** in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">34 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T17:21:16.547054</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="fumC-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="fumC-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000014 The requested structural diagrams and figures are found in Figures 4, 5, and 7 of the document. - **Overall Tetrameric Structure:**</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-fumc-fumc2-pp_1755-uniprot-q88m20-in-pseudomonas-putida-kt2440">Research report: <strong>fumC (fumC2; PP_1755; UniProt Q88M20)</strong> in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-scope-identity-verification-and-disambiguation">0) Scope, identity verification, and disambiguation</h2>
+<p>The target protein <strong>UniProt Q88M20</strong> is annotated as <strong>class II fumarate hydratase (fumarase C), EC 4.2.1.2</strong>, encoded by <strong>fumC</strong> and mapped to the ordered locus <strong>PP_1755</strong> in <em>Pseudomonas putida</em> KT2440.</p>
+<p>A KT2440-focused study explicitly enumerates <strong>three fumarase loci</strong> in this organism—<strong>fumA (PP_0897)</strong>, <strong>fumC1 (PP_0944)</strong>, and <strong>fumC2 (PP_1755)</strong>—thereby anchoring <strong>PP_1755 as fumC2</strong>, consistent with the UniProt accession provided and disambiguating it from fumC genes in other bacteria. (carvajal2014nuevosaspectosdel pages 144-147)</p>
+<h2 id="1-key-concepts-and-current-understanding-definitions-reaction-pathway-role">1) Key concepts and current understanding (definitions, reaction, pathway role)</h2>
+<h3 id="11-enzyme-class-and-reaction">1.1 Enzyme class and reaction</h3>
+<p><strong>Fumarate hydratase (fumarase; EC 4.2.1.2)</strong> catalyzes the <strong>reversible interconversion</strong> of <strong>fumarate and L-malate (S-malate)</strong>—a canonical step of the <strong>tricarboxylic acid (TCA; Krebs; citrate) cycle</strong>. (stuttgen2020closedfumarasec pages 1-2, vugtlussenburg2013biochemicalsimilaritiesand pages 1-2)</p>
+<p>For <strong>class II fumarase (FumC-type)</strong> specifically, structural/biochemical work defines the reaction as <strong>fumarate ↔ S-malate</strong> and places it explicitly in the <strong>Krebs cycle</strong>, with the enzyme functioning as a <strong>homotetramer</strong> in bacteria. (stuttgen2020closedfumarasec pages 1-2, stuttgen2020closedfumarasec pages 7-9)</p>
+<h3 id="12-class-i-vs-class-ii-fumarases-important-for-functional-annotation">1.2 Class I vs class II fumarases (important for functional annotation)</h3>
+<p>Bacteria can encode multiple fumarase isoenzymes spanning two biochemical families:</p>
+<ul>
+<li><strong>Class I fumarases (e.g., FumA/FumB in <em>E. coli</em>)</strong> are <strong>[4Fe–4S] cluster-containing</strong> enzymes; they are <strong>oxygen/oxidant sensitive</strong> because their Fe–S cluster can be oxidized/inactivated. (vugtlussenburg2013biochemicalsimilaritiesand pages 1-2, vugtlussenburg2013biochemicalsimilaritiesand pages 2-3)</li>
+<li><strong>Class II fumarases (FumC-type)</strong> are <strong>iron-independent (no Fe–S cluster)</strong> and are generally <strong>oxygen-stable/oxidant-resistant</strong>, offering robustness when ROS damages Fe–S enzymes. (lu2019aconservedmotif pages 1-2, lu2019aconservedmotif pages 6-7)</li>
+</ul>
+<p>This distinction matters biologically because it motivates <strong>isoenzyme switching</strong> under oxidative stress and provides a mechanism for maintaining TCA flux when Fe–S enzymes are compromised. (lu2019aconservedmotif pages 6-7)</p>
+<h3 id="13-mechanism-and-structural-determinants-substrate-specificity-catalysis">1.3 Mechanism and structural determinants (substrate specificity / catalysis)</h3>
+<p>High-resolution structures and kinetics of bacterial <strong>FumC</strong> (used here as mechanistic inference for the KT2440 homolog) show:</p>
+<ul>
+<li>FumC monomers have multiple domains and assemble into a <strong>homotetramer</strong> with <strong>active sites formed by residues from multiple subunits</strong>. (stuttgen2020closedfumarasec pages 1-2)</li>
+<li>The active site contains a dynamic segment termed the <strong>“SS Loop”</strong> with a conserved sequence motif; distinct <strong>open/closed conformations</strong> are observed crystallographically, supporting a conformationally gated catalytic mechanism. (stuttgen2020closedfumarasec pages 1-2, stuttgen2020closedfumarasec pages 5-7)</li>
+<li>The proposed class II mechanism proceeds via an <strong>anti-1,2 addition–elimination</strong> logic for malate/fumarate interconversion; residues in the SS Loop (e.g., <strong>Ser318, Lys324, Asn326</strong> in the studied homolog) contribute primarily to <strong>turnover (kcat)</strong> rather than substrate binding (<strong>Km</strong> relatively unchanged in alanine variants). (stuttgen2020closedfumarasec pages 1-2, stuttgen2020closedfumarasec pages 7-9)</li>
+<li>Substrate preference can be directionally asymmetric; one study reports <strong>higher affinity for fumarate than S-malate</strong> (3.8-fold). (stuttgen2020closedfumarasec pages 7-9)</li>
+</ul>
+<p>These mechanistic points support a confident functional annotation of Q88M20 as a <strong>cytosolic TCA-cycle enzyme catalyzing fumarate↔L-malate</strong>, and they contextualize why multiple fumarase isoenzymes may coexist. (stuttgen2020closedfumarasec pages 1-2, stuttgen2020closedfumarasec pages 7-9)</p>
+<p><strong>Structural figure evidence (FumC):</strong> Open/closed SS Loop conformations, tetramer/active-site organization, and residue-level interactions are shown in retrieved figures from Stuttgen et al. (stuttgen2020closedfumarasec media 2ed2f20e, stuttgen2020closedfumarasec media 427f7b9b, stuttgen2020closedfumarasec media b221f39b)</p>
+<h2 id="2-kt2440-specific-functional-evidence-for-fumc2pp_1755-q88m20">2) KT2440-specific functional evidence for fumC2/PP_1755 (Q88M20)</h2>
+<h3 id="21-isoenzyme-repertoire-and-functional-redundancy">2.1 Isoenzyme repertoire and functional redundancy</h3>
+<p>In a 2024 genome-scale-model (GSMM) guided engineering study in <strong>KT2440</strong>, the fumarase (FUM) reaction is linked to three genes: <strong>PP_0897</strong>, <strong>fumC1/PP_0944</strong>, and <strong>fumC2/PP_1755</strong>, with <strong>PP_1755 (fumC2)</strong> described as <strong>non-essential</strong> under the tested conditions. Specifically, <strong>deletion of PP_1755 and/or PP_0944 had no impact on viability</strong> in rich media or M9 minimal media with <strong>p-coumarate</strong> as carbon source, indicating redundancy at the level of supporting the FUM reaction under these contexts. (banerjee2024bottlenecksinthe pages 3-5)</p>
+<h3 id="22-stressperturbation-contexts-that-alter-fumarase-isoenzyme-usage">2.2 Stress/perturbation contexts that alter fumarase isoenzyme usage</h3>
+<p>A KT2440 mutant perturbation study (ΔapaH background) provides direct evidence that <strong>fumC2/PP_1755 is upregulated</strong> and can contribute to compensatory fumarase activity:</p>
+<ul>
+<li>Proteomics: <strong>FumC2 induced ~4-fold</strong>; <strong>FumA mildly repressed (~1.3-fold)</strong>. (carvajal2014nuevosaspectosdel pages 144-147)</li>
+<li>Enzymology: <strong>Total fumarase activity</strong> was similar between wild type and mutant, but <strong>FumC-specific activity</strong> was significantly higher in the mutant, consistent with isoenzyme compensation by a fumC-type enzyme. (carvajal2014nuevosaspectosdel pages 144-147)</li>
+</ul>
+<p>Collectively, these observations support the functional role of PP_1755/Q88M20 as an active fumarase isoenzyme in KT2440 and show that its contribution can increase under specific perturbations. (carvajal2014nuevosaspectosdel pages 144-147)</p>
+<h3 id="23-chemical-stress-proteomics-herbicide-metabolites">2.3 Chemical stress proteomics (herbicide metabolites)</h3>
+<p>In a quantitative proteomics study of KT2440 responses to chlorophenoxy herbicides and metabolites, a specific metabolite (DCC) caused a distinct proteome response and <strong>fumarase C abundance was notably reduced</strong>. The study used a DCC concentration that produced <strong>~50% growth-rate reduction</strong>, reported as <strong>0.07 mM DCC</strong> for KT2440, and observed fewer proteome changes under DCC than other compounds (35 proteins changed under DCC). (benndorf2006pseudomonasputidakt2440 pages 3-5)</p>
+<p>This indicates that fumarase C levels are responsive to chemical stressors in KT2440, though the directionality (decrease here) likely reflects broader physiological constraints (e.g., ATP limitation due to uncoupling) rather than a simple “oxidative stress induction” rule. (benndorf2006pseudomonasputidakt2440 pages 3-5)</p>
+<h3 id="24-oxidative-stress-regulation-context-in-p-putida">2.4 Oxidative stress regulation context in <em>P. putida</em></h3>
+<p>A review focused on oxidative stress in <em>P. putida</em> reports that <strong>fumC-1</strong> is induced in KT2440 under <strong>superoxide and nitric oxide</strong> stress, and that this induction appears <strong>independent of SoxR</strong> in KT2440 (contrasting enteric SoxRS paradigms). (kim2014oxidativestressresponse pages 5-6)</p>
+<p>This supports a broader interpretation that fumarase C-type isoenzymes are integrated into oxidative/nitrosative stress physiology in <em>P. putida</em>; however, the cited review statement refers to <strong>fumC-1 (PP_0944)</strong> rather than fumC2 (PP_1755), and it does not supply fold-changes in the excerpted text. (kim2014oxidativestressresponse pages 5-6)</p>
+<h3 id="25-regulatory-linkage-via-fur-under-phenol-stress-indirect">2.5 Regulatory linkage via Fur under phenol stress (indirect)</h3>
+<p>Under phenol exposure, the Fur regulator is reported as upregulated in KT2440, and the authors note (citing prior work) that Fur <strong>represses</strong> targets including <strong>fumC</strong>. This provides a plausible regulatory link between phenol-induced iron/oxidative stress responses and fumarase isoenzyme expression, but the excerpt does <strong>not</strong> provide direct fumC expression quantitation for phenol exposure. (santos2004insightsintopseudomonas pages 9-10)</p>
+<h2 id="3-cellular-localization-what-can-be-concluded">3) Cellular localization: what can be concluded</h2>
+<p>Direct KT2440-specific subcellular localization experiments for <strong>FumC2/PP_1755</strong> were not found in the retrieved texts. Nevertheless, the relevant functional context is strongly consistent with a <strong>cytosolic enzyme</strong>:</p>
+<ul>
+<li>FumC is a <strong>central carbon metabolism enzyme</strong> (TCA cycle), which in bacteria is carried out in the <strong>cytosol</strong> (enzymes soluble; metabolites diffuse in cytoplasm). (stuttgen2020closedfumarasec pages 1-2, vugtlussenburg2013biochemicalsimilaritiesand pages 1-2)</li>
+<li>KT2440 proteomics studies detecting fumarase C changes were performed using 2D-gel/MS approaches that predominantly analyze <strong>cellular protein fractions enriched for soluble/cytoplasmic proteins</strong>, consistent with fumarase C being a soluble enzyme; however, explicit fractionation/localization assignments for FumC were not provided in the extracted text. (benndorf2006pseudomonasputidakt2440 pages 3-5)</li>
+</ul>
+<p>Thus, the best evidence-supported statement is that <strong>FumC2 functions intracellularly as part of central metabolism</strong>, with localization most consistent with the <strong>cytosol</strong>, but <strong>direct localization evidence is not available in the current corpus</strong>. (stuttgen2020closedfumarasec pages 1-2, benndorf2006pseudomonasputidakt2440 pages 3-5)</p>
+<h2 id="4-pathways-and-biological-processes">4) Pathways and biological processes</h2>
+<h3 id="41-core-pathway-role-the-citratetca-cycle">4.1 Core pathway role: the citrate/TCA cycle</h3>
+<p>FumC catalyzes the fumarate↔malate step of the <strong>TCA cycle</strong>, supporting energy generation, redox balance, and provision of biosynthetic precursors. (stuttgen2020closedfumarasec pages 1-2, vugtlussenburg2013biochemicalsimilaritiesand pages 1-2)</p>
+<h3 id="42-oxidative-stress-resilience-and-isoenzyme-switching-conceptual-framework">4.2 Oxidative-stress resilience and isoenzyme switching (conceptual framework)</h3>
+<p>Mechanistic work on fumarase families emphasizes that class II fumarases (FumC-type) are <strong>oxidant-resistant</strong> because they lack an Fe–S cluster, whereas class I fumarases are <strong>oxidant-sensitive</strong>; class II fumarases can be <strong>induced by oxidative stress</strong> and thereby serve as a <strong>contingency enzyme</strong> to preserve TCA flux when Fe–S enzymes are damaged by peroxide-related chemistry. (lu2019aconservedmotif pages 1-2, lu2019aconservedmotif pages 6-7)</p>
+<p>In KT2440, this conceptual framework is consistent with observed induction of a fumarase C isoenzyme under certain perturbations (ΔapaH) and oxidative/nitrosative stress (fumC-1 induction under superoxide/NO). (carvajal2014nuevosaspectosdel pages 144-147, kim2014oxidativestressresponse pages 5-6)</p>
+<h2 id="5-recent-developments-prioritizing-20232024-and-real-world-implementations">5) Recent developments (prioritizing 2023–2024) and real-world implementations</h2>
+<h3 id="51-2024-gsmm-guided-strain-design-for-aromatic-bioconversion-fumarase-as-a-bottleneck">5.1 2024 GSMM-guided strain design for aromatic bioconversion: fumarase as a bottleneck</h3>
+<p>A 2024 bioRxiv preprint on implementing GSMM-based designs in <strong>P. putida KT2440</strong> (p-coumarate utilization coupled to glutamine/indigoidine production) identifies the <strong>fumarate hydratase (FUM) reaction</strong> as a key <strong>rate-limiting / tightly constrained node</strong> in aromatic catabolism.</p>
+<p>Key results (2024):</p>
+<ul>
+<li><strong>Gene mapping:</strong> The design associates FUM with <strong>PP_0897</strong>, <strong>fumC1/PP_0944</strong>, <strong>fumC2/PP_1755</strong>, with <strong>PP_1755 and PP_0944</strong> described as <strong>non-essential</strong> individually/together under tested conditions. (banerjee2024bottlenecksinthe pages 3-5)</li>
+<li><strong>Model-derived quantitative flux window:</strong> Proteomics-constrained, context-specific models predict a narrow permissive range for FUM flux: maximal glutamine production at <strong>FUM = 19.88 mmol/gDCW/h</strong> with biomass <strong>0.43 h⁻¹</strong>, maximal biomass at <strong>FUM = 26.44 mmol/gDCW/h</strong> with negligible glutamine; constraining to ~<strong>20 mmol/gDCW/h</strong> yields <strong>~0.45 h⁻¹</strong> biomass and <strong>~8.61 mmol/gDCW/h</strong> glutamine (<strong>0.86 mol/mol</strong>). (banerjee2024bottlenecksinthe pages 7-10)</li>
+<li><strong>Experimental phenotype:</strong> In the engineered background, <strong>∆PP_0897</strong> strains show severe defects on p-coumarate minimal media (including failure to grow in some conditions), and complementation restores growth, indicating that even with multiple fumarase genes present, specific isoenzymes (and/or their regulation) can dominate in certain metabolic states. (banerjee2024bottlenecksinthe pages 7-10)</li>
+<li><strong>Proteomics scale:</strong> Perturbing PP_0897 during p-coumarate growth yielded substantial proteome shifts: <strong>47 proteins significantly increased (log2FC &gt; 2.5)</strong> and <strong>142 significantly decreased (log2FC &lt; −2.5)</strong>. (banerjee2024bottlenecksinthe pages 12-14)</li>
+<li><strong>Engineering outcome:</strong> Promoter replacement to reduce PP_0897 expression could restore growth and improve product performance; one excerpt reports <strong>up to 5-fold higher specific indigoidine productivity per cell</strong> in promoter variants compared with parent. (banerjee2024bottlenecksinthe pages 3-5)</li>
+</ul>
+<p><strong>Implication for fumC2 annotation:</strong> While <strong>fumC2/PP_1755 is non-essential</strong> in these experiments, it is part of a <strong>redundant fumarase repertoire</strong> that determines whether the FUM reaction can be tuned/retained under strong selection pressures in bioproduction settings. (banerjee2024bottlenecksinthe pages 3-5, banerjee2024bottlenecksinthe pages 7-10)</p>
+<h2 id="6-expert-synthesis-and-analysis-authoritative-interpretation">6) Expert synthesis and analysis (authoritative interpretation)</h2>
+<h3 id="61-what-function-should-be-assigned-to-q88m20">6.1 What function should be assigned to Q88M20?</h3>
+<p>Given (i) explicit KT2440 locus mapping of PP_1755 as <strong>fumC2</strong>, (ii) observed compensation and increased FumC-specific activity in a KT2440 mutant, and (iii) consistent biochemical mechanism of class II fumarases, the most evidence-supported functional annotation is:</p>
+<ul>
+<li><strong>Enzymatic function:</strong> fumarate hydratase (class II fumarase), catalyzing <strong>fumarate + H2O ⇌ L-malate</strong> in the <strong>TCA cycle</strong>. (stuttgen2020closedfumarasec pages 1-2, carvajal2014nuevosaspectosdel pages 144-147)</li>
+</ul>
+<h3 id="62-how-should-substrate-specificity-be-described">6.2 How should substrate specificity be described?</h3>
+<p>Within the evidence retrieved here, the most defensible substrate description is specificity for <strong>fumarate and S-malate</strong> in the TCA cycle, with one detailed FumC kinetic/structural study indicating greater affinity for fumarate than malate (3.8-fold), and mutational analyses showing SS Loop residues primarily affect turnover. (stuttgen2020closedfumarasec pages 7-9)</p>
+<h3 id="63-what-is-the-likely-physiological-reason-for-multiple-fumarases">6.3 What is the likely physiological “reason” for multiple fumarases?</h3>
+<p>The strongest mechanistic rationale, supported by authoritative mechanistic work, is that <strong>iron-dependent class I enzymes</strong> are susceptible to <strong>oxidative inactivation</strong>, whereas class II fumarases are <strong>oxidant-resistant</strong> and can sustain metabolic flux during oxidative stress; this is a plausible driver for maintaining fumC-type isoenzymes. KT2440 data are consistent with inducible fumarase C-type behavior under perturbations. (lu2019aconservedmotif pages 6-7, carvajal2014nuevosaspectosdel pages 144-147, kim2014oxidativestressresponse pages 5-6)</p>
+<h3 id="64-localization-and-pathway-integration">6.4 Localization and pathway integration</h3>
+<p>Although direct localization experiments were not retrieved, the combined evidence supports that Q88M20 operates as a <strong>soluble intracellular enzyme</strong> in central metabolism. The presence of the enzyme in 2D-gel proteomic datasets and its role in the cytosolic TCA cycle are consistent with a <strong>cytosolic localization</strong>, but this remains an inference within the current evidence set. (stuttgen2020closedfumarasec pages 1-2, benndorf2006pseudomonasputidakt2440 pages 3-5)</p>
+<h2 id="7-evidence-summary-table">7) Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Evidence type</th>
+<th>Key finding</th>
+<th>Quantitative details</th>
+<th>Experimental context</th>
+<th>Source (authors, year, journal, DOI URL)</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Annotation</td>
+<td>In <em>Pseudomonas putida</em> KT2440, the genome encodes three fumarase isoenzymes: fumA (PP_0897), fumC1 (PP_0944), and fumC2 (PP_1755). This supports identification of UniProt Q88M20 as fumC2/PP_1755.</td>
+<td>Three fumarase loci identified</td>
+<td>KT2440 gene inventory and isoenzyme assignment in analysis of the ΔapaH mutant</td>
+<td>Agulló Carvajal, 2014, thesis/dissertation, DOI URL: not available in retrieved context</td>
+<td>(carvajal2014nuevosaspectosdel pages 144-147)</td>
+</tr>
+<tr>
+<td>Biochemistry</td>
+<td>FumC2 (PP_1755) appears able to compensate for altered fumarase function in KT2440, consistent with assignment as a fumarase C-type isoenzyme.</td>
+<td>FumC2 induced ~4-fold; FumA repressed ~1.3-fold; total fumarase activity similar between WT and ΔapaH; FumC-specific activity significantly higher in ΔapaH</td>
+<td>Proteomic and enzymatic analysis of <em>P. putida</em> KT2440 ΔapaH</td>
+<td>Agulló Carvajal, 2014, thesis/dissertation, DOI URL: not available in retrieved context</td>
+<td>(carvajal2014nuevosaspectosdel pages 144-147)</td>
+</tr>
+<tr>
+<td>Stress response</td>
+<td>A fumC homolog in KT2440 (fumC-1) is induced by superoxide and nitric oxide stress, supporting the broader role of fumarase C isoenzymes in oxidative stress adaptation in <em>P. putida</em>.</td>
+<td>Qualitative induction reported; no fold-change given in extracted text</td>
+<td>Oxidative stress response review summarizing KT2440 gene induction data</td>
+<td>Kim and Park, 2014, <em>Applied Microbiology and Biotechnology</em>, https://doi.org/10.1007/s00253-014-5883-4</td>
+<td>(kim2014oxidativestressresponse pages 5-6)</td>
+</tr>
+<tr>
+<td>Stress response</td>
+<td>Fumarase C abundance decreases under DCC herbicide-metabolite stress in KT2440, indicating fumarase isoenzymes respond dynamically to chemical stress.</td>
+<td>DCC at 0.07 mM caused ~50% growth-rate reduction; 35 proteins changed under DCC; fumarase C among the most conspicuously decreased proteins</td>
+<td>Quantitative proteomics of KT2440 exposed to chlorophenoxy herbicides/metabolites</td>
+<td>Benndorf et al., 2006, <em>PROTEOMICS</em>, https://doi.org/10.1002/pmic.200500781</td>
+<td>(benndorf2006pseudomonasputidakt2440 pages 3-5)</td>
+</tr>
+<tr>
+<td>Stress response / concept</td>
+<td>Class II fumarases such as FumC are iron-independent and oxidant-resistant, providing a mechanistic rationale for fumarase C deployment when Fe–S fumarases are vulnerable.</td>
+<td>Class II described as iron-free/oxidant-resistant; no KT2440-specific numeric values</td>
+<td>Review/mechanistic framework for bacterial oxidative stress and fumarase class switching</td>
+<td>Lu and Imlay, 2019, <em>Redox Biology</em>, https://doi.org/10.1016/j.redox.2019.101296</td>
+<td>(lu2019aconservedmotif pages 1-2, lu2019aconservedmotif pages 6-7)</td>
+</tr>
+<tr>
+<td>Biochemistry / mechanism</td>
+<td>FumC catalyzes the reversible conversion fumarate ↔ S-malate in the TCA cycle; class II fumarases are homotetrameric and iron-independent.</td>
+<td>Fumarate affinity reported as 3.8-fold greater than for S-malate in the extracted structural/kinetic study</td>
+<td>Structural/kinetic analysis of bacterial class II FumC (non-KT2440 homolog used for mechanistic inference)</td>
+<td>Stuttgen et al., 2020, <em>FEBS Letters</em>, https://doi.org/10.1002/1873-3468.13603</td>
+<td>(stuttgen2020closedfumarasec pages 1-2, stuttgen2020closedfumarasec pages 7-9)</td>
+</tr>
+<tr>
+<td>Metabolic engineering</td>
+<td>In a 2024 KT2440 GSMM-guided engineering study, PP_1755/fumC2 and PP_0944/fumC1 were non-essential individually or together under tested conditions, indicating redundancy among fumarase isoenzymes.</td>
+<td>Deletion of PP_1755 and/or PP_0944 had no impact on viability in rich or M9 p-coumarate media</td>
+<td>Growth-coupled design for p-coumarate utilization and glutamine/indigoidine production</td>
+<td>Banerjee et al., 2024, <em>bioRxiv</em>, https://doi.org/10.1101/2024.03.15.585139</td>
+<td>(banerjee2024bottlenecksinthe pages 3-5)</td>
+</tr>
+<tr>
+<td>Metabolic engineering</td>
+<td>The fumarase node is nevertheless critical in KT2440 aromatic carbon bioconversion; severe phenotypes emerge when the remaining dominant fumarase PP_0897 is perturbed, highlighting functional interplay with fumC isoenzymes.</td>
+<td>Complete cutset strain failed on M9 p-coumarate agar and showed no detectable indigoidine; promoter tuning of PP_0897 gave up to 5-fold higher specific indigoidine productivity per cell and up to 2.4-fold higher glutamate pools</td>
+<td>Genome-scale model implementation and strain engineering for p-coumarate-to-product conversion</td>
+<td>Banerjee et al., 2024, <em>bioRxiv</em>, https://doi.org/10.1101/2024.03.15.585139</td>
+<td>(banerjee2024bottlenecksinthe pages 3-5, banerjee2024bottlenecksinthe pages 5-7)</td>
+</tr>
+<tr>
+<td>Metabolic engineering / systems biology</td>
+<td>FUM flux is tightly constrained for growth-coupled production from p-coumarate, showing why fumarase activity is a systems-level bottleneck even when PP_1755 itself is non-essential.</td>
+<td>Max glutamine state: FUM 19.88 mmol/gDCW/h with 0.43 h^-1 growth; max biomass state: FUM 26.44 mmol/gDCW/h; at ~20 mmol/gDCW/h, ~0.45 h^-1 growth and 8.61 mmol/gDCW/h glutamine (0.86 mol/mol)</td>
+<td>Proteomics-constrained modeling and experiments in engineered KT2440</td>
+<td>Banerjee et al., 2024, <em>bioRxiv</em>; Banerjee et al., 2025, <em>NPJ Systems Biology and Applications</em>, https://doi.org/10.1101/2024.03.15.585139; https://doi.org/10.1038/s41540-024-00480-z</td>
+<td>(banerjee2024bottlenecksinthe pages 7-10, banerjee2025addressinggenomescale pages 5-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest available evidence for fumarase isoenzymes in </em>Pseudomonas putida<em> KT2440, emphasizing fumC2/PP_1755 (UniProt Q88M20). It highlights identity verification, biochemical role, stress-response behavior, and recent metabolic engineering findings relevant to functional annotation.</em></p>
+<h2 id="8-key-citations-with-urls-and-publication-dates-where-available">8) Key citations with URLs and publication dates (where available)</h2>
+<ul>
+<li>Banerjee et al. <strong>2024-03</strong>. “Bottlenecks in the Implementation of Genome Scale Metabolic Model Based Designs for Bioproduction from Aromatic Carbon Sources.” <strong>bioRxiv</strong>. https://doi.org/10.1101/2024.03.15.585139 (banerjee2024bottlenecksinthe pages 1-3, banerjee2024bottlenecksinthe pages 7-10)</li>
+<li>Stuttgen et al. <strong>2020-01</strong>. “Closed fumarase C active-site structures reveal SS Loop residue contribution in catalysis.” <strong>FEBS Letters</strong>. https://doi.org/10.1002/1873-3468.13603 (stuttgen2020closedfumarasec pages 1-2, stuttgen2020closedfumarasec media 2ed2f20e)</li>
+<li>Lu &amp; Imlay <strong>2019-09</strong>. “A conserved motif liganding the [4Fe–4S] cluster in [4Fe–4S] fumarases…” <strong>Redox Biology</strong>. https://doi.org/10.1016/j.redox.2019.101296 (lu2019aconservedmotif pages 1-2, lu2019aconservedmotif pages 6-7)</li>
+<li>Kim &amp; Park <strong>2014-06</strong>. “Oxidative stress response in <em>Pseudomonas putida</em>.” <strong>Applied Microbiology and Biotechnology</strong>. https://doi.org/10.1007/s00253-014-5883-4 (kim2014oxidativestressresponse pages 5-6)</li>
+<li>Benndorf et al. <strong>2006-06</strong>. “<em>Pseudomonas putida</em> KT2440 responds specifically to chlorophenoxy herbicides…” <strong>PROTEOMICS</strong>. https://doi.org/10.1002/pmic.200500781 (benndorf2006pseudomonasputidakt2440 pages 3-5)</li>
+</ul>
+<h2 id="9-gaps-and-limitations-what-remains-uncertain">9) Gaps and limitations (what remains uncertain)</h2>
+<ul>
+<li><strong>Direct experimental localization</strong> (e.g., cytosolic vs membrane association) for <strong>FumC2/PP_1755</strong> in KT2440 was not found in the retrieved texts.</li>
+<li><strong>Direct KT2440 biochemical characterization</strong> (purified PP_1755 kinetics, Km/kcat, substrate range) was not retrieved; mechanistic and kinetic details above rely on well-supported <strong>homolog inference</strong> from bacterial class II fumarases. (stuttgen2020closedfumarasec pages 7-9)</li>
+<li>The KT2440 oxidative stress induction evidence in the retrieved review excerpt refers to <strong>fumC-1 (PP_0944)</strong> rather than <strong>fumC2 (PP_1755)</strong>; fumC2 induction is supported under ΔapaH perturbation, not directly under ROS in the extracted KT2440 datasets. (kim2014oxidativestressresponse pages 5-6, carvajal2014nuevosaspectosdel pages 144-147)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(carvajal2014nuevosaspectosdel pages 144-147): L Agulló Carvajal. Nuevos aspectos del control del metabolismo en" pseudomonas putida" kt2440: metabolismo del ácido fenilacético y papel del gen apah. Unknown journal, 2014.</p>
+</li>
+<li>
+<p>(stuttgen2020closedfumarasec pages 1-2): Gage M. Stuttgen, Julian D. Grosskopf, Colton R. Berger, John F. May, Basudeb Bhattacharyya, and Todd M. Weaver. Closed fumarase c active‐site structures reveal ss loop residue contribution in catalysis. FEBS Letters, 594:337-357, Jan 2020. URL: https://doi.org/10.1002/1873-3468.13603, doi:10.1002/1873-3468.13603. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vugtlussenburg2013biochemicalsimilaritiesand pages 1-2): Barbara M. A. van Vugt-Lussenburg, Laura van der Weel, Wilfred R. Hagen, and Peter-Leon Hagedoorn. Biochemical similarities and differences between the catalytic [4fe-4s] cluster containing fumarases fuma and fumb from escherichia coli. PLoS ONE, 8:e55549, Feb 2013. URL: https://doi.org/10.1371/journal.pone.0055549, doi:10.1371/journal.pone.0055549. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stuttgen2020closedfumarasec pages 7-9): Gage M. Stuttgen, Julian D. Grosskopf, Colton R. Berger, John F. May, Basudeb Bhattacharyya, and Todd M. Weaver. Closed fumarase c active‐site structures reveal ss loop residue contribution in catalysis. FEBS Letters, 594:337-357, Jan 2020. URL: https://doi.org/10.1002/1873-3468.13603, doi:10.1002/1873-3468.13603. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vugtlussenburg2013biochemicalsimilaritiesand pages 2-3): Barbara M. A. van Vugt-Lussenburg, Laura van der Weel, Wilfred R. Hagen, and Peter-Leon Hagedoorn. Biochemical similarities and differences between the catalytic [4fe-4s] cluster containing fumarases fuma and fumb from escherichia coli. PLoS ONE, 8:e55549, Feb 2013. URL: https://doi.org/10.1371/journal.pone.0055549, doi:10.1371/journal.pone.0055549. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2019aconservedmotif pages 1-2): Zheng Lu and James A. Imlay. A conserved motif liganding the [4fe–4s] cluster in [4fe–4s] fumarases prevents irreversible inactivation of the enzyme during hydrogen peroxide stress. Sep 2019. URL: https://doi.org/10.1016/j.redox.2019.101296, doi:10.1016/j.redox.2019.101296. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2019aconservedmotif pages 6-7): Zheng Lu and James A. Imlay. A conserved motif liganding the [4fe–4s] cluster in [4fe–4s] fumarases prevents irreversible inactivation of the enzyme during hydrogen peroxide stress. Sep 2019. URL: https://doi.org/10.1016/j.redox.2019.101296, doi:10.1016/j.redox.2019.101296. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stuttgen2020closedfumarasec pages 5-7): Gage M. Stuttgen, Julian D. Grosskopf, Colton R. Berger, John F. May, Basudeb Bhattacharyya, and Todd M. Weaver. Closed fumarase c active‐site structures reveal ss loop residue contribution in catalysis. FEBS Letters, 594:337-357, Jan 2020. URL: https://doi.org/10.1002/1873-3468.13603, doi:10.1002/1873-3468.13603. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stuttgen2020closedfumarasec media 2ed2f20e): Gage M. Stuttgen, Julian D. Grosskopf, Colton R. Berger, John F. May, Basudeb Bhattacharyya, and Todd M. Weaver. Closed fumarase c active‐site structures reveal ss loop residue contribution in catalysis. FEBS Letters, 594:337-357, Jan 2020. URL: https://doi.org/10.1002/1873-3468.13603, doi:10.1002/1873-3468.13603. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stuttgen2020closedfumarasec media 427f7b9b): Gage M. Stuttgen, Julian D. Grosskopf, Colton R. Berger, John F. May, Basudeb Bhattacharyya, and Todd M. Weaver. Closed fumarase c active‐site structures reveal ss loop residue contribution in catalysis. FEBS Letters, 594:337-357, Jan 2020. URL: https://doi.org/10.1002/1873-3468.13603, doi:10.1002/1873-3468.13603. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stuttgen2020closedfumarasec media b221f39b): Gage M. Stuttgen, Julian D. Grosskopf, Colton R. Berger, John F. May, Basudeb Bhattacharyya, and Todd M. Weaver. Closed fumarase c active‐site structures reveal ss loop residue contribution in catalysis. FEBS Letters, 594:337-357, Jan 2020. URL: https://doi.org/10.1002/1873-3468.13603, doi:10.1002/1873-3468.13603. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(banerjee2024bottlenecksinthe pages 3-5): Deepanwita Banerjee, Javier Menasalvas, Yan Chen, Jennifer W. Gin, Edward E. K. Baidoo, Christopher J. Petzold, Thomas Eng, and Aindrila Mukhopadhyay. Bottlenecks in the implementation of genome scale metabolic model based designs for bioproduction from aromatic carbon sources. bioRxiv, Mar 2024. URL: https://doi.org/10.1101/2024.03.15.585139, doi:10.1101/2024.03.15.585139. This article has 0 citations.</p>
+</li>
+<li>
+<p>(benndorf2006pseudomonasputidakt2440 pages 3-5): Dirk Benndorf, Markus Thiersch, Norbert Loffhagen, Christfried Kunath, and Hauke Harms. Pseudomonas putida kt2440 responds specifically to chlorophenoxy herbicides and their initial metabolites. PROTEOMICS, 6:3319-3329, Jun 2006. URL: https://doi.org/10.1002/pmic.200500781, doi:10.1002/pmic.200500781. This article has 77 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2014oxidativestressresponse pages 5-6): Jisun Kim and Woojun Park. Oxidative stress response in pseudomonas putida. Applied Microbiology and Biotechnology, 98:6933-6946, Jun 2014. URL: https://doi.org/10.1007/s00253-014-5883-4, doi:10.1007/s00253-014-5883-4. This article has 143 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santos2004insightsintopseudomonas pages 9-10): Pedro M. Santos, Dirk Benndorf, and Isabel Sá‐Correia. Insights into pseudomonas putida kt2440 response to phenol‐induced stress by quantitative proteomics. PROTEOMICS, 4:2640-2652, Sep 2004. URL: https://doi.org/10.1002/pmic.200300793, doi:10.1002/pmic.200300793. This article has 282 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(banerjee2024bottlenecksinthe pages 7-10): Deepanwita Banerjee, Javier Menasalvas, Yan Chen, Jennifer W. Gin, Edward E. K. Baidoo, Christopher J. Petzold, Thomas Eng, and Aindrila Mukhopadhyay. Bottlenecks in the implementation of genome scale metabolic model based designs for bioproduction from aromatic carbon sources. bioRxiv, Mar 2024. URL: https://doi.org/10.1101/2024.03.15.585139, doi:10.1101/2024.03.15.585139. This article has 0 citations.</p>
+</li>
+<li>
+<p>(banerjee2024bottlenecksinthe pages 12-14): Deepanwita Banerjee, Javier Menasalvas, Yan Chen, Jennifer W. Gin, Edward E. K. Baidoo, Christopher J. Petzold, Thomas Eng, and Aindrila Mukhopadhyay. Bottlenecks in the implementation of genome scale metabolic model based designs for bioproduction from aromatic carbon sources. bioRxiv, Mar 2024. URL: https://doi.org/10.1101/2024.03.15.585139, doi:10.1101/2024.03.15.585139. This article has 0 citations.</p>
+</li>
+<li>
+<p>(banerjee2024bottlenecksinthe pages 5-7): Deepanwita Banerjee, Javier Menasalvas, Yan Chen, Jennifer W. Gin, Edward E. K. Baidoo, Christopher J. Petzold, Thomas Eng, and Aindrila Mukhopadhyay. Bottlenecks in the implementation of genome scale metabolic model based designs for bioproduction from aromatic carbon sources. bioRxiv, Mar 2024. URL: https://doi.org/10.1101/2024.03.15.585139, doi:10.1101/2024.03.15.585139. This article has 0 citations.</p>
+</li>
+<li>
+<p>(banerjee2025addressinggenomescale pages 5-5): Deepanwita Banerjee, Javier Menasalvas, Yan Chen, Jennifer W. Gin, Edward E. K. Baidoo, Christopher J. Petzold, Thomas Eng, and Aindrila Mukhopadhyay. Addressing genome scale design tradeoffs in pseudomonas putida for bioconversion of an aromatic carbon source. NPJ Systems Biology and Applications, Jan 2025. URL: https://doi.org/10.1038/s41540-024-00480-z, doi:10.1038/s41540-024-00480-z. This article has 13 citations.</p>
+</li>
+<li>
+<p>(banerjee2024bottlenecksinthe pages 1-3): Deepanwita Banerjee, Javier Menasalvas, Yan Chen, Jennifer W. Gin, Edward E. K. Baidoo, Christopher J. Petzold, Thomas Eng, and Aindrila Mukhopadhyay. Bottlenecks in the implementation of genome scale metabolic model based designs for bioproduction from aromatic carbon sources. bioRxiv, Mar 2024. URL: https://doi.org/10.1101/2024.03.15.585139, doi:10.1101/2024.03.15.585139. This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="fumC-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000014 The requested structural diagrams and figures are found in Figures 4, 5, and 7 of the document. - **Overall Tetrameric Structure:**" src="fumC-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>carvajal2014nuevosaspectosdel pages 144-147</li>
+<li>lu2019aconservedmotif pages 6-7</li>
+<li>stuttgen2020closedfumarasec pages 1-2</li>
+<li>stuttgen2020closedfumarasec pages 7-9</li>
+<li>banerjee2024bottlenecksinthe pages 3-5</li>
+<li>kim2014oxidativestressresponse pages 5-6</li>
+<li>santos2004insightsintopseudomonas pages 9-10</li>
+<li>banerjee2024bottlenecksinthe pages 7-10</li>
+<li>banerjee2024bottlenecksinthe pages 12-14</li>
+<li>vugtlussenburg2013biochemicalsimilaritiesand pages 1-2</li>
+<li>vugtlussenburg2013biochemicalsimilaritiesand pages 2-3</li>
+<li>lu2019aconservedmotif pages 1-2</li>
+<li>stuttgen2020closedfumarasec pages 5-7</li>
+<li>banerjee2024bottlenecksinthe pages 5-7</li>
+<li>banerjee2025addressinggenomescale pages 5-5</li>
+<li>banerjee2024bottlenecksinthe pages 1-3</li>
+<li>4Fe–4S</li>
+<li>4fe-4s</li>
+<li>4fe–4s</li>
+<li>https://doi.org/10.1007/s00253-014-5883-4</li>
+<li>https://doi.org/10.1002/pmic.200500781</li>
+<li>https://doi.org/10.1016/j.redox.2019.101296</li>
+<li>https://doi.org/10.1002/1873-3468.13603</li>
+<li>https://doi.org/10.1101/2024.03.15.585139</li>
+<li>https://doi.org/10.1101/2024.03.15.585139;</li>
+<li>https://doi.org/10.1038/s41540-024-00480-z</li>
+<li>https://doi.org/10.1002/1873-3468.13603,</li>
+<li>https://doi.org/10.1371/journal.pone.0055549,</li>
+<li>https://doi.org/10.1016/j.redox.2019.101296,</li>
+<li>https://doi.org/10.1101/2024.03.15.585139,</li>
+<li>https://doi.org/10.1002/pmic.200500781,</li>
+<li>https://doi.org/10.1007/s00253-014-5883-4,</li>
+<li>https://doi.org/10.1002/pmic.200300793,</li>
+<li>https://doi.org/10.1038/s41540-024-00480-z,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88M20
+gene_symbol: fumC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: Fumarate hydratase class II (fumarase C, FumC; EC 4.2.1.2), encoded by fumC (fumC-2 / PP_1755), one of three fumarase isoenzymes in Pseudomonas putida KT2440 (alongside fumA/PP_0897 and fumC1/PP_0944). It is a cytoplasmic, iron-independent homotetrameric enzyme that catalyzes the reversible, stereospecific hydration/dehydration of fumarate and (S)-malate ((S)-malate = fumarate + H2O), the step of the tricarboxylic acid (TCA) cycle that interconverts fumarate and L-malate. Unlike class I fumarases, which contain an oxygen-sensitive [4Fe-4S] cluster, class II fumarases lack a metal cofactor and are oxidant-resistant, allowing them to maintain TCA-cycle flux under oxidative/nitrosative stress. The enzyme belongs to the class-II fumarase/aspartase (fumarate lyase) family, with a conserved multi-domain fold; active sites are formed at subunit interfaces and include a catalytic A site and a non-catalytic B site.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Root-level catalytic activity term; correct but uninformative given the specific fumarate hydratase activity is also annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0003824 is a high-level grouping term. The more specific GO:0004333 (fumarate hydratase activity) is annotated and fully captures the molecular function, making this generic term redundant and uninformative.
+- term:
+    id: GO:0004333
+    label: fumarate hydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function. FumC is a class II fumarate hydratase (EC 4.2.1.2) catalyzing (S)-malate = fumarate + H2O.
+    action: ACCEPT
+    reason: Strongly supported by HAMAP-Rule MF_00743, the class-II fumarase/aspartase family assignment, conserved active-site residues, and KT2440 evidence that FumC-type isoenzymes provide compensatory fumarase activity. This is the central function of the gene.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: FumC is a soluble cytoplasmic enzyme, consistent with its role in the cytosolic bacterial TCA cycle.
+    action: ACCEPT
+    reason: UniProt subcellular location (HAMAP-Rule MF_00743) and the soluble nature of class II fumarases support cytoplasmic localization. No signal peptide or membrane-targeting features are present.
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Core biological process. The fumarate-to-malate step is a canonical reaction of the TCA cycle.
+    action: ACCEPT
+    reason: Directly supported by the UniProt pathway annotation (tricarboxylic acid cycle; (S)-malate from fumarate, step 1/1) and the enzyme&#39;s well-established role in central carbon metabolism.
+- term:
+    id: GO:0006106
+    label: fumarate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct but more general than the TCA cycle annotation; fumarate is the substrate of the catalyzed reaction.
+    action: KEEP_AS_NON_CORE
+    reason: Accurate (the enzyme acts on fumarate) but a broad parent process. The TCA cycle annotation is the more informative core process; this is retained as a supporting, non-core term.
+- term:
+    id: GO:0006108
+    label: malate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Correct but general; (S)-malate is the product/substrate of the reversible reaction.
+    action: KEEP_AS_NON_CORE
+    reason: Accurate given malate is directly produced/consumed, but a broad parent process relative to the TCA cycle. Retained as supporting, non-core.
+- term:
+    id: GO:0016829
+    label: lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: High-level parent of the specific fumarate hydratase (a hydro-lyase) activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0016829 is a grouping term subsuming the specific GO:0004333 fumarate hydratase activity already annotated. It is not wrong (FumC is a hydro-lyase) but is redundant and uninformative.
+core_functions:
+- description: Class II (iron-independent) fumarate hydratase catalyzing the reversible stereospecific interconversion of fumarate and (S)-malate in the TCA cycle.
+  supported_by:
+  - reference_id: file:PSEPK/fumC/fumC-deep-research-falcon.md
+    supporting_text: FumC catalyzes the reversible conversion fumarate to S-malate in the TCA cycle; class II fumarases are homotetrameric and iron-independent.
+  molecular_function:
+    id: GO:0004333
+    label: fumarate hydratase activity
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PubMed-verified genome paper for P. putida KT2440; establishes the gene/locus PP_1755 but does not biochemically characterize FumC2.
+- id: file:PSEPK/fumC/fumC-deep-research-falcon.md
+  title: Deep research report on fumC (Q88M20) in Pseudomonas putida KT2440
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

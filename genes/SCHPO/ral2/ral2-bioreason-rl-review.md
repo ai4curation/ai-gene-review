@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: ral2 (S. pombe)
 
-Source: ral2-deep-research-bioreason-rl.md
+Source: ral2-bioreason-rl-predictions.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

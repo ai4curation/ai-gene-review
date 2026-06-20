@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: hlh-30 (C. elegans)
 
-Source: hlh-30-deep-research-bioreason-rl.md
+Source: hlh-30-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

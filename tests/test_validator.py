@@ -12,11 +12,13 @@ import pytest
 import yaml
 
 from ai_gene_review.validation import (
+    ValidationReport,
     validate_gene_review,
     validate_multiple_files,
     ValidationSeverity,
 )
 from ai_gene_review.validation.validator import get_schema_path
+from ai_gene_review.cli import _run_validation_command
 
 
 # ---------------------------------------------------------------------------
@@ -81,6 +83,202 @@ def test_schema_invalid_taxon_id():
         assert "not of type 'string'" in result.stdout + result.stderr
     finally:
         temp_file.unlink()
+
+
+def test_cli_validate_rejects_schema_structural_errors():
+    """The ai-gene-review validate command should run strict schema validation."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump({
+            "id": "Q456",
+            "gene_symbol": "GENE2",
+            "description": "Test gene",
+            "taxon": {"id": 9606, "label": "Homo sapiens"},
+        }, f)
+        temp_file = Path(f.name)
+
+    try:
+        result = subprocess.run(
+            [
+                "uv",
+                "run",
+                "ai-gene-review",
+                "validate",
+                "--no-references",
+                str(temp_file),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        output = result.stdout + result.stderr
+        assert result.returncode != 0
+        assert "not of type 'string'" in output
+    finally:
+        temp_file.unlink()
+
+
+def test_cli_validate_rejects_cached_pmid_title_mismatch():
+    """Reference.id should enable title identity checks for the references list."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump({
+            "id": "Q789",
+            "gene_symbol": "GENE3",
+            "description": "Test gene",
+            "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+            "references": [
+                {
+                    "id": "PMID:10021351",
+                    "title": "This is not the cached publication title",
+                }
+            ],
+        }, f)
+        temp_file = Path(f.name)
+
+    try:
+        result = subprocess.run(
+            [
+                "uv",
+                "run",
+                "ai-gene-review",
+                "validate",
+                str(temp_file),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        output = result.stdout + result.stderr
+        assert result.returncode != 0
+        assert "Title mismatch for PMID:10021351" in output
+    finally:
+        temp_file.unlink()
+
+
+def test_cli_subprocess_warning_only_result_is_non_blocking():
+    """Warning-only external validator output should not make the report invalid."""
+    report = ValidationReport(file_path=Path("test.yaml"), is_valid=True)
+
+    _run_validation_command(
+        report,
+        "Reference validation",
+        ["bash", "-c", "printf '  [WARN] Could not fetch reference\\n'; exit 1"],
+        "ReferenceValidator",
+        "linkml_reference_validator",
+        Path.cwd(),
+    )
+
+    assert report.is_valid
+    assert report.warning_count == 1
+    assert report.error_count == 0
+
+
+def test_cli_subprocess_error_result_is_blocking():
+    """Error external validator output should make the report invalid."""
+    report = ValidationReport(file_path=Path("test.yaml"), is_valid=True)
+
+    _run_validation_command(
+        report,
+        "Reference validation",
+        ["bash", "-c", "printf '  [ERROR] Title mismatch\\n'; exit 1"],
+        "ReferenceValidator",
+        "linkml_reference_validator",
+        Path.cwd(),
+    )
+
+    assert not report.is_valid
+    assert report.error_count == 1
+
+
+def test_cli_subprocess_error_output_with_zero_exit_is_reported():
+    """Error-like output should be surfaced even if the subprocess exits successfully."""
+    report = ValidationReport(file_path=Path("test.yaml"), is_valid=True)
+
+    _run_validation_command(
+        report,
+        "Reference validation",
+        ["bash", "-c", "printf '  [ERROR] Title mismatch\\n'; exit 0"],
+        "ReferenceValidator",
+        "linkml_reference_validator",
+        Path.cwd(),
+    )
+
+    assert report.is_valid
+    assert report.warning_count == 1
+    assert "error-like output" in report.issues[0].message
+
+
+def test_cli_term_validator_label_warning_is_non_blocking():
+    """linkml-term-validator label-mismatch warnings (emoji format) must stay advisory.
+
+    The term validator exits non-zero even for warning-only results and emits
+    ``⚠️  WARN:`` lines. These are ontology label drift (e.g. GOA/release lag) and
+    must not invalidate the report.
+    """
+    report = ValidationReport(file_path=Path("test.yaml"), is_valid=True)
+
+    _run_validation_command(
+        report,
+        "Term validation",
+        [
+            "bash",
+            "-c",
+            "printf '%s\\n%s\\n' "
+            "'❌ Validation failed with 1 issue(s):' "
+            "'  ⚠️  WARN: Label mismatch for GO:0140597'; exit 1",
+        ],
+        "TermValidator",
+        "linkml_term_validator",
+        Path.cwd(),
+    )
+
+    assert report.is_valid
+    assert report.warning_count == 1
+    assert report.error_count == 0
+
+
+def test_cli_term_validator_enum_error_is_blocking():
+    """linkml-term-validator ``❌ ERROR:`` lines (emoji format) must block."""
+    report = ValidationReport(file_path=Path("test.yaml"), is_valid=True)
+
+    _run_validation_command(
+        report,
+        "Term validation",
+        [
+            "bash",
+            "-c",
+            "printf '%s\\n%s\\n' "
+            "'❌ file - 1 issue(s):' "
+            "'  ❌ ERROR: Value GO:0033178 not in dynamic enum "
+            "GOCellularLocationEnum'; exit 1",
+        ],
+        "TermValidator",
+        "linkml_term_validator",
+        Path.cwd(),
+    )
+
+    assert not report.is_valid
+    assert report.error_count == 1
+
+
+def test_cli_term_validator_error_with_warning_still_blocks():
+    """A real ``❌ ERROR:`` must block even when a ``⚠️  WARN:`` line is also present."""
+    report = ValidationReport(file_path=Path("test.yaml"), is_valid=True)
+
+    _run_validation_command(
+        report,
+        "Term validation",
+        [
+            "bash",
+            "-c",
+            "printf '%s\\n%s\\n' "
+            "'  ❌ ERROR: Term GO:9999999 not found in ontology' "
+            "'  ⚠️  WARN: Label mismatch for GO:1'; exit 1",
+        ],
+        "TermValidator",
+        "linkml_term_validator",
+        Path.cwd(),
+    )
+
+    assert not report.is_valid
+    assert report.error_count == 1
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,8 @@
 ---
+title: "ISOFORMS: Genes with Clear Functional Differences Between Isoforms"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
+genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, FAS, CASP9, FN1, TPM1, FGFR2, PKM]
 species: [human, mouse, rat, DROME]
 sidecars:
   genes: ISOFORMS/genes.csv

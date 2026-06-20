@@ -1,3 +1,9 @@
+---
+title: "ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)"
+maturity: IN_PROGRESS
+tags: [OBSOLETION, FLAGSHIP]
+---
+
 # ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)
 
 ## Overview

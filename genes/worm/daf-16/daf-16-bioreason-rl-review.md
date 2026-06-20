@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: daf-16 (C. elegans)
 
-Source: daf-16-deep-research-bioreason-rl.md
+Source: daf-16-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

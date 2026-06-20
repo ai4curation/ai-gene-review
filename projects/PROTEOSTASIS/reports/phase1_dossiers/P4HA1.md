@@ -1,0 +1,22 @@
+# PN dossier: P4HA1
+
+- review_batch: proteostasis-batch-2026-06-11
+- review_yaml: genes/human/P4HA1/P4HA1-ai-review.yaml
+- PN workbook rows: 1
+
+## PN row 1: ER proteostasis | Maturation and folding of specific substrates | ER collagen processing and folding
+- UniProt: P13674
+- In branches: ER
+- PN-node mapping records (path + ancestors):
+    - [group] ER proteostasis|Maturation and folding of specific substrates|ER collagen processing and folding
+        status=mapped scope=ok_for_propagation_to_go GO=[GO:0032964 collagen biosynthetic process]
+        rationale: This PN group contains ER factors dedicated to collagen maturation, processing, and folding. Collagen biosynthetic process captures the shared substrate-specific pathway context.
+    - [class] ER proteostasis|Maturation and folding of specific substrates
+        status=no_mapping scope= GO=[]
+        rationale: Reviewed as a broad PN category rather than a single GO class. The member genes span multiple activities, complexes, or contexts, so direct propagation from this node would overstate the shared biology.
+    - [branch] ER proteostasis
+        status=no_mapping scope= GO=[]
+        rationale: Reviewed as a top-level PN branch. This is a systems/taxonomy umbrella, not a direct GO assertion; narrower child curations carry any propagating GO mappings.
+
+## Projected GO annotations (1)
+- GO:0032964 collagen biosynthetic process | scope=ok_for_propagation_to_go | goa_status=new_to_goa | from=ER proteostasis|Maturation and folding of specific substrates|ER collagen processing and folding

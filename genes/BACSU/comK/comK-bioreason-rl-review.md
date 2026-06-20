@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: comK (B. subtilis)
 
-Source: comK-deep-research-bioreason-rl.md
+Source: comK-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

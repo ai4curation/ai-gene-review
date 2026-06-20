@@ -1,4 +1,7 @@
 ---
+title: "Top-Nots: Candidate NOT Annotations from Existing Reviews"
+maturity: MATURE
+tags: [PIPELINE]
 species: [human, mouse, yeast, SCHPO, DROME, ANOGA, ACET2, BACSU, DESVH, ECOLI, METEA, METTP, PSEAE, PSEPK, SALTY, CANGA, CLOCL, ARATH, worm]
 ---
 # Top-Nots: Candidate NOT Annotations from Existing Reviews
@@ -61,6 +64,20 @@ These are the strongest cases where a domain predicts an activity that is demons
 | human | SURF1 | Q15526 | `GO:1902600` proton transmembrane transport | IEA | 6 | Assembly factor, not itself a proton transporter |
 | human | SURF1 | Q15526 | `GO:0004129` cytochrome-c oxidase activity | IEA | 6 | Assembly factor for CIV, does not have CcO activity itself |
 | yeast | ATP10 | P18496 | `GO:0051082` unfolded protein binding | IPI | 6 | Assembly factor for ATP synthase, not a chaperone |
+
+### BGC project: catalytic/cofactor terms on non-catalytic subunits & pseudoenzymes
+
+NOT candidates from the biosynthetic-gene-cluster reviews (`BGC.md`). EryCII is a heme-less
+cytochrome-P450 homologue; PqsB and the act chain-length factor are condensing-enzyme folds
+with no active site (the catalytic residues are in their partner subunit).
+
+| Species | Gene | UniProt | Incorrect Term | Evidence | Score | Pattern |
+|---------|------|---------|----------------|----------|-------|---------|
+| SACEN | eryCII | A4F7P2 | `GO:0020037` heme binding | IEA | 9 | P450 homologue lacks the conserved heme-ligating Cys; apo structure (PDB 2YJN); UniProt "lacks the heme-binding sites" |
+| SACEN | eryCII | A4F7P2 | `GO:0004497` monooxygenase activity | IEA | 9 | No heme → no P450 monooxygenase chemistry; functions as a GT activator |
+| SACEN | eryCII | A4F7P2 | `GO:0005506` iron ion binding | IEA | 8 | No heme iron; depends on the absent heme cofactor |
+| PSEAE | pqsB | Q9I4X2 | `GO:0016746` acyltransferase activity | IEA | 7 | FabH/KAS-III fold but no active site (Cys-129/His-269 are in PqsC); contributes_to only |
+| STRCO | actI-ORF2 | Q02062 | `GO:0016746` acyltransferase activity | IEA | 7 | Type II PKS chain-length factor; "does not have an active site" |
 
 ## Tier 2: Strong NOT Candidates (score 4-5)
 

@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: skn-1 (C. elegans)
 
-Source: skn-1-deep-research-bioreason-rl.md
+Source: skn-1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 2/5

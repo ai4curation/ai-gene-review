@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ruvB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ruvB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88NJ0" target="_blank" class="term-link">
+                        Q88NJ0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ruvB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88NJ0" data-a="DESCRIPTION: RuvB is the ATP-dependent motor subunit of the bac..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RuvB is the ATP-dependent motor subunit of the bacterial RuvAB Holliday junction branch migration complex, which processes four-way (Holliday) junction DNA intermediates that arise during homologous recombination and DNA repair, and which also drives replication fork reversal to rescue blocked replication forks. RuvB is a ring-forming AAA+ ATPase that assembles into homohexamers binding on opposite duplex arms of a Holliday junction held open by RuvA tetramers. ATP binding and hydrolysis in the tandem large and small ATPase domains power a lever motion that pulls double-stranded DNA through the RuvAB complex (about two nucleotides of DNA per ATP hydrolyzed), translocating the junction crossover point and thereby driving branch migration. The C-terminal head domain contacts DNA. Continuous branch migration allows the RuvC resolvase to scan to its cleavage consensus and resolve the junction, completing recombination. RuvB acts in the cytoplasm on chromosomal DNA. The protein is broadly conserved across bacteria, and the function of the Pseudomonas putida ortholog is inferred from this strong family and domain conservation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000400" target="_blank" class="term-link">
+                                    GO:0000400
+                                </a>
+                            </span>
+                            <span class="term-label">four-way junction DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NJ0" data-a="GO:0000400" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RuvB binds Holliday junction (four-way junction) DNA as part of the RuvAB branch migration motor; the head domain contacts duplex DNA arms of the junction. This is a core molecular function and is well supported by RuvB family conservation and structural studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Recognition of four-way junction DNA is intrinsic to RuvB function within RuvAB and is supported by the conserved RuvB family architecture (DNA-binding head domain) and UniRule annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NJ0" data-a="GO:0003677" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic DNA binding is correct but uninformative for RuvB, whose biologically relevant DNA-binding activity is the specific recognition of four-way (Holliday) junction DNA already captured by GO:0000400.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0003677 is a general parent term; the specific child GO:0000400 (four-way junction DNA binding) more accurately describes RuvB&#39;s function and is already annotated, making the generic term redundant and over-general.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NJ0" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RuvB is a AAA+ ATPase with a P-loop/Walker A and B motifs; ATP binding is required for the motor activity that drives branch migration. UniProt annotates multiple ATP-binding residues. This is a well-supported molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is a defining feature of the AAA+ ATPase RuvB-L/RuvB-S domains and is supported by conserved Walker A/B motifs and annotated ATP-binding residues.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NJ0" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RuvB acts on chromosomal DNA in the cytoplasm/nucleoid. Cytoplasmic localization is consistent with the function of a soluble DNA-processing enzyme and with UniProt subcellular location.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is appropriate for a bacterial DNA recombination/repair enzyme acting on the nucleoid and is supported by UniProtKB subcellular location.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NJ0" data-a="GO:0006281" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RuvAB processes Holliday junctions during recombinational DNA repair and drives replication fork reversal to rescue blocked forks, so involvement in DNA repair is correct and a core biological process for this gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RuvB&#39;s role in Holliday junction branch migration is central to recombinational DNA repair and replication fork rescue; this is a well-established function of the RuvB family.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006310" target="_blank" class="term-link">
+                                    GO:0006310
+                                </a>
+                            </span>
+                            <span class="term-label">DNA recombination</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NJ0" data-a="GO:0006310" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RuvB drives ATP-dependent branch migration of Holliday junctions, the central intermediate of homologous recombination, so involvement in DNA recombination is a core biological process for this gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Holliday junction branch migration by the RuvAB complex is intrinsic to homologous recombination; this is a defining, well-established function of the RuvB family.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009378" target="_blank" class="term-link">
+                                    GO:0009378
+                                </a>
+                            </span>
+                            <span class="term-label">four-way junction helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NJ0" data-a="GO:0009378" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RuvB is the ATP-dependent motor that translocates duplex DNA through the RuvAB complex to migrate the crossover point of a four-way (Holliday) junction. This four-way junction helicase/branch-migration activity is the defining molecular function of RuvB and is strongly supported by family conservation and structural studies of RuvB orthologs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP-dependent Holliday junction branch migration (four-way junction helicase activity) is the core molecular function of RuvB within RuvAB, supported by the conserved AAA+ motor architecture and structural/biochemical studies of RuvB.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000116
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NJ0" data-a="GO:0016887" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RuvB hydrolyzes ATP (ATP + H2O = ADP + Pi) in its AAA+ ATPase domains; this hydrolysis powers the lever motion that pulls dsDNA through the complex, coupling chemical energy to branch migration. Supported by Rhea reaction mapping and conserved Walker A/B motifs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP hydrolysis is the energy-supplying activity underlying RuvB&#39;s motor function and is well supported by the AAA+ ATPase architecture and Rhea mapping.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048476" target="_blank" class="term-link">
+                                    GO:0048476
+                                </a>
+                            </span>
+                            <span class="term-label">Holliday junction resolvase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NJ0" data-a="GO:0048476" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RuvB is a subunit of the RuvAB branch migration complex and of the larger RuvABC resolvosome (a DNA-RuvA4-RuvB12-RuvC2 assembly) that processes and resolves Holliday junctions. GO:0048476 captures this resolvase-associated complex membership, consistent with the UniProt SUBUNIT description.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RuvB is an integral, well-established component of the RuvAB(C) Holliday junction processing/resolvosome complex; complex membership is supported by structural data and UniRule annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent Holliday junction branch migration motor; as a hexameric AAA+ ATPase within the RuvAB complex, RuvB hydrolyzes ATP to translocate duplex DNA and move the crossover point of four-way junctions.</h3>
+                <span class="vote-buttons" data-g="Q88NJ0" data-a="FUNCTION: ATP-dependent Holliday junction branch migration m..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009378" target="_blank" class="term-link">
+                            four-way junction helicase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006310" target="_blank" class="term-link">
+                                DNA recombination
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16991" target="_blank" class="term-link">
+                                deoxyribonucleic acid
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Processing of Holliday junctions during recombinational DNA repair and rescue of stalled/blocked replication forks via replication fork reversal, acting with RuvA and the RuvC resolvase in the cytoplasm.</h3>
+                <span class="vote-buttons" data-g="Q88NJ0" data-a="FUNCTION: Processing of Holliday junctions during recombinat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009378" target="_blank" class="term-link">
+                            four-way junction helicase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                DNA repair
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ruvB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88NJ0" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">35 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:36:49.638076</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="ruvB-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-ruvb-uniprot-q88nj0-locus-pp_1217-in-pseudomonas-putida-kt2440">Research report: <strong>ruvB (UniProt Q88NJ0; locus PP_1217)</strong> in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="1-target-verification-critical-identity-checks">1) Target verification (critical identity checks)</h3>
+<p><strong>Intended target</strong>: UniProt Q88NJ0 is annotated as <strong>Holliday junction branch migration complex subunit RuvB</strong> (EC 3.6.4.-), an <strong>AAA+ ATPase</strong> of the bacterial <strong>RuvB family</strong>.</p>
+<p><strong>Ambiguity control</strong>: “RuvB” can be confused with eukaryotic RuvBL proteins; however, the literature retrieved here consistently describes <strong>bacterial RuvB</strong> as the <strong>hexameric AAA+ ATPase motor</strong> of the <strong>RuvAB</strong> Holliday junction branch migration machinery acting with <strong>RuvA</strong> and <strong>RuvC</strong>, matching the UniProt description for Q88NJ0 (putnam2001structureandmechanism pages 1-2, iwasaki2000mutationalanalysisof pages 11-11). Structural and mechanistic studies of bacterial RuvB in multiple bacteria and <strong>Pseudomonas</strong> support this identity (zhang2023cryoemstructureof pages 1-2, rish2023molecularmechanismsof pages 7-10).</p>
+<p><strong>Important limitation</strong>: In the retrieved corpus, there is <strong>no paper explicitly mentioning UniProt Q88NJ0 or locus PP_1217</strong>; therefore, <strong>KT2440-specific claims</strong> below are made as <strong>high-confidence functional inference from family/domain conservation</strong> plus <strong>Pseudomonas genus-level experimental evidence</strong>, not as direct experiments on Q88NJ0 itself (putnam2001structureandmechanism pages 1-2, zhang2023cryoemstructureof pages 1-2, tark2005adnapolymerase pages 4-5).</p>
+<h3 id="2-key-concepts-and-current-understanding-definitions-and-core-function">2) Key concepts and current understanding (definitions and core function)</h3>
+<h4 id="21-holliday-junctions-and-branch-migration">2.1 Holliday junctions and branch migration</h4>
+<p>A <strong>Holliday junction (HJ)</strong> is a four-way DNA junction formed as a central intermediate during homologous recombination and during processing of stalled/reversed replication forks. In bacteria, HJs are processed by coordinated systems that <strong>move the crossover point</strong> (branch migration) and then <strong>resolve</strong> the junction by endonucleolytic cleavage.</p>
+<h4 id="22-ruvab-as-the-canonical-bacterial-hj-branch-migration-machine">2.2 RuvAB as the canonical bacterial HJ branch-migration machine</h4>
+<p><strong>RuvB</strong> is widely established as the <strong>chemomechanical motor</strong> of the bacterial <strong>RuvAB</strong> complex, functioning as an <strong>AAA+ ATPase</strong> that converts ATP hydrolysis into mechanical work to drive branch migration of HJs (putnam2001structureandmechanism pages 1-2, iwasaki2000mutationalanalysisof pages 11-11). In canonical bacterial pathways:</p>
+<ul>
+<li><strong>RuvA</strong> is the <strong>HJ-specific binding/recognition factor</strong> that loads and organizes the motor on the junction.</li>
+<li><strong>RuvB</strong> provides the <strong>ATP-driven motor activity</strong>.</li>
+<li><strong>RuvC</strong> is a <strong>HJ resolvase</strong> that cleaves the junction after migration produces an appropriate cleavage context; the pathway is often referred to as <strong>RuvABC</strong> processing (putnam2001structureandmechanism pages 1-2, zhang2023cryoemstructureof pages 1-2).</li>
+</ul>
+<h4 id="23-molecular-activity-and-substrate-specificity-of-ruvb">2.3 Molecular activity and substrate specificity of RuvB</h4>
+<p>The direct substrate for RuvB function is <strong>branched duplex DNA at Holliday junctions</strong>, with RuvB acting after recruitment by RuvA on the duplex arms (putnam2001structureandmechanism pages 1-2, zhang2023cryoemstructureof pages 1-2). Mechanistically, RuvB operates as a <strong>ring-shaped hexameric motor</strong> that engages duplex DNA in its central channel (rish2023molecularmechanismsof pages 5-7).</p>
+<h3 id="3-mechanism-structure-and-quantitative-functional-parameters">3) Mechanism, structure, and quantitative functional parameters</h3>
+<h4 id="31-canonical-structural-picture-foundational-primary-evidence">3.1 Canonical structural picture (foundational primary evidence)</h4>
+<p>A key structural paper defines RuvB as the <strong>hexameric AAA-class ATPase motor</strong> within RuvAB that drives HJ branch migration; it also explains how RuvA binds the HJ and recruits RuvB and how RuvC acts as resolvase in the pathway (Putnam et al., 2001; publication date Aug 2001; https://doi.org/10.1006/jmbi.2001.4852) (putnam2001structureandmechanism pages 1-2).</p>
+<h4 id="32-modern-cryo-em-mechanism-asymmetric-hexamer-and-sequential-atpase-cycle">3.2 Modern cryo-EM mechanism: asymmetric hexamer and sequential ATPase cycle</h4>
+<p>Cryo-EM studies (Thermus thermophilus RuvB) provide a current mechanochemical model in which RuvB forms an <strong>asymmetric “spiral staircase” hexamer</strong> with <strong>four DNA-engaged protomers</strong> and <strong>two DNA-disengaged protomers</strong> (rish2023molecularmechanismsof pages 5-7). Conserved arginine residues contact the DNA backbone in a repeating pattern <strong>spaced by ~2 nucleotides (~7 Å)</strong>, indicating a basic translocation periodicity of two bases (rish2023molecularmechanismsof pages 7-10).</p>
+<p><strong>Step size</strong>: These studies explicitly propose that RuvB-driven branch migration advances by <strong>~2 nucleotides per ATP hydrolyzed</strong> (fu2022molecularmechanismsof pages 13-16, rish2023molecularmechanismsof pages 7-10).</p>
+<p><strong>Pore size and architecture</strong>: The DNA-translocating channel is reported as <strong>~3–3.4 nm wide</strong>, accommodating duplex DNA (rish2023molecularmechanismsof pages 5-7).</p>
+<p><strong>Stoichiometry with RuvA</strong>: Asymmetry helps explain a <strong>6:4 RuvB:RuvA stoichiometry</strong> in the assembled HJ complex (fu2022molecularmechanismsof pages 13-16, rish2023molecularmechanismsof pages 7-10).</p>
+<p><strong>Cryo-EM data scale (statistics)</strong>: One RuvB cryo-EM dataset reported <strong>6,874,881</strong> initial particles and final maps at <strong>2.97 Å</strong> (hexamer) and <strong>3.16 Å</strong> (dodecamer), with detailed acquisition parameters (300 kV; total dose 50 e−/Å²; pixel size 1.08 Å) (fu2022molecularmechanismsof pages 36-37, fu2022molecularmechanismsof pages 13-16).</p>
+<h3 id="4-pseudomonas-specific-evidence-closest-experimental-evidence-for-kt2440-inference">4) Pseudomonas-specific evidence (closest experimental evidence for KT2440 inference)</h3>
+<h4 id="41-pseudomonas-aeruginosa-ruvab-2023-cryo-em-functional-reconstitution">4.1 <em>Pseudomonas aeruginosa</em> RuvAB: 2023 cryo-EM + functional reconstitution</h4>
+<p>A 2023 study reports the <strong>cryo-EM structure of the RuvAB–HJ intermediate complex from <em>Pseudomonas aeruginosa</em></strong> (publication date Mar 2023; https://doi.org/10.3389/fpls.2023.1139106). The structure shows:</p>
+<ul>
+<li><strong>Two RuvA tetramers</strong> sandwich the junction.</li>
+<li><strong>Eight RuvB subunits</strong> recruited as <strong>two open rings</strong> around two opposite HJ arms (zhang2023cryoemstructureof pages 1-2).</li>
+</ul>
+<p>Crucially, biochemical assays demonstrate <strong>ATP-dependent HJ unwinding/processing</strong> only when <strong>both PaRuvA and PaRuvB</strong> are present (zhang2023cryoemstructureof pages 1-2). A quantitative FRET-based assay fixed PaRuvA at <strong>400 nM</strong> and showed signal increasing with PaRuvB concentration, <strong>plateauing at 1000 nM PaRuvB</strong> (zhang2023cryoemstructureof pages 2-3). Cryo-EM processing selected ~<strong>551,160 particles</strong>, giving an overall map resolution of ~<strong>6.0 Å</strong> (local resolution ~<strong>3.0 Å</strong> at the core) (zhang2023cryoemstructureof pages 2-3).</p>
+<p>These results provide direct genus-level evidence that Pseudomonas RuvB operates in the canonical <strong>RuvAB HJ-processing machine</strong>.</p>
+<h4 id="42-pseudomonas-putida-evidence-chromosomal-ruvab-role-stated-plasmid-homologs-impact-stress-mutagenesis">4.2 <em>Pseudomonas putida</em> evidence: chromosomal ruvAB role stated; plasmid homologs impact stress mutagenesis</h4>
+<p>A 2005 <em>Journal of Bacteriology</em> paper on the TOL plasmid pWW0 (publication date Aug 2005; https://doi.org/10.1128/jb.187.15.5203-5213.2005) explicitly states that <strong>chromosomal ruvAB encode the Holliday junction helicase complex necessary for branch migration along DNA</strong>, while the plasmid carries ruvAB-like genes renamed <strong>rulAB</strong> to avoid confusion (tark2005adnapolymerase pages 4-5).</p>
+<p>Quantitative phenotype data in that <em>P. putida</em> context include:</p>
+<ul>
+<li>UV-C (254 nm) doses of <strong>50 J/m²</strong> and <strong>100 J/m²</strong>.</li>
+<li>At <strong>50 J/m²</strong>, pWW0-harboring <em>P. putida</em> showed <strong>~10-fold higher survival</strong> than plasmid-free cells.</li>
+<li>At <strong>100 J/m²</strong>, pWW0-carrying bacteria had a <strong>10-fold increase</strong> in Rif^R mutants above spontaneous levels (also described as ~5× higher than plasmid-free cells).</li>
+<li>Mitomycin C at <strong>2 µg/mL</strong> increased mutation frequency by <strong>2–3 orders of magnitude</strong> (tark2005adnapolymerase pages 4-5).</li>
+</ul>
+<p>While these data are not direct assays of KT2440 chromosomal RuvB, they support the broader <em>P. putida</em> genetic/physiological context where <strong>RuvAB-type functions intersect DNA damage, recombination, and stress-induced genetic change</strong>.</p>
+<h3 id="5-pathways-biological-processes-and-localization">5) Pathways, biological processes, and localization</h3>
+<h4 id="51-biological-process-placement">5.1 Biological process placement</h4>
+<p>Across bacteria, RuvB is a core component of the homologous recombination machinery responsible for processing Holliday junction intermediates that arise during:</p>
+<ul>
+<li><strong>Double-strand break repair</strong></li>
+<li><strong>Replication fork reversal/restoration</strong></li>
+<li><strong>Resolution of recombination intermediates prior to chromosome segregation</strong></li>
+</ul>
+<p>A 2024 <em>FEMS Microbiology Reviews</em> article discussing stalled replication fork processing places <strong>RuvAB</strong> among the enzymes acting on branched intermediates and describes RuvAB as an <strong>HJ branch-migration helicase</strong> that participates in a <strong>resolvasome</strong> (with a resolvase in that system) to process reversed forks/HJs and promote fork restoration (publication date Dec 2024; https://doi.org/10.1093/femsre/fuad065) (carrasco2024processingofstalled pages 6-7).</p>
+<p>A 2024 review focused on HJ formation and resolution further emphasizes RuvAB/RuvC interplay with RecG/RecA in alternative pathways for processing recombination intermediates and replication-restart contexts (publication date Feb 2024; https://doi.org/10.1021/acsomega.3c09866) (nautiyal2024prokaryoticdnacrossroads pages 8-9).</p>
+<h4 id="52-subcellular-localization">5.2 Subcellular localization</h4>
+<p>RuvB is a <strong>cytosolic/nucleoid-associated</strong> protein that acts on <strong>chromosomal DNA intermediates</strong> (HJ structures). In vitro reconstitutions consistently place the active complex on duplex DNA arms of Holliday junction substrates (zhang2023cryoemstructureof pages 1-2, rish2023molecularmechanismsof pages 5-7). No direct microscopy/localization data for Q88NJ0 in KT2440 were identified in the retrieved sources.</p>
+<h3 id="6-recent-developments-20232024-focus">6) Recent developments (2023–2024 focus)</h3>
+<h4 id="61-structural-advances">6.1 Structural advances</h4>
+<p>The 2024 HJ review summarizes that time-resolved cryo-EM has captured multiple conformational states of ATP-hydrolyzing RuvAB complexes and reports high-resolution structure ranges for RuvA and RuvB assemblies (e.g., RuvB hexamers in the ~2.9–4.1 Å range; time-resolved reconstructions down to ~8 Å), linking these structural insights to mechanistic understanding of branch migration (nautiyal2024prokaryoticdnacrossroads pages 15-16). Independent Pseudomonas cryo-EM (2023) provides an assembly intermediate specifically for <em>P. aeruginosa</em> (zhang2023cryoemstructureof pages 1-2).</p>
+<h4 id="62-replication-stress-fork-reversal-roles">6.2 Replication stress / fork reversal roles</h4>
+<p>The 2024 review literature connects RuvAB activity to replication stress, including models where RuvAB can catalyze processing of reversed forks/HJ-like structures as part of replication restart pathways (carrasco2024processingofstalled pages 6-7).</p>
+<h4 id="63-antimicrobial-targeting-and-real-world-implementation-potential">6.3 Antimicrobial targeting and “real-world” implementation potential</h4>
+<p>A 2024 review reports identification of small-molecule inhibitors targeting <strong><em>P. aeruginosa</em> RuvAB</strong> (corilagin, bardoxolone methyl, SKQ1) and proposes mechanisms: corilagin binds the <strong>PaRuvB ATPase site</strong> to inhibit ATP hydrolysis, whereas bardoxolone methyl and SKQ1 disrupt <strong>PaRuvA–HJ interaction</strong> (nautiyal2024prokaryoticdnacrossroads pages 15-16). This represents a translational direction: <strong>drugging bacterial DNA repair/recombination motors</strong> to potentiate DNA damage or limit resistance evolution.</p>
+<h3 id="7-expert-synthesis-and-annotation-for-p-putida-kt2440-q88nj0-pp_1217">7) Expert synthesis and annotation for <strong>P. putida KT2440 Q88NJ0 (PP_1217)</strong></h3>
+<h4 id="71-best-supported-primary-function">7.1 Best-supported primary function</h4>
+<p>Given the UniProt-provided identity and the strong conservation of bacterial RuvB family members, the most defensible functional annotation for <strong>Q88NJ0 (ruvB)</strong> in <em>P. putida</em> KT2440 is:</p>
+<ul>
+<li><strong>ATP-dependent DNA branch migration motor</strong> acting on <strong>Holliday junction DNA</strong> as part of the <strong>RuvAB complex</strong>, collaborating with <strong>RuvC</strong> for junction resolution (putnam2001structureandmechanism pages 1-2, zhang2023cryoemstructureof pages 1-2).</li>
+</ul>
+<p>This includes the mechanistic interpretation that RuvB’s ATPase cycle is coupled to dsDNA translocation/rotation and HJ migration with an effective step of <strong>~2 nt per ATP hydrolyzed</strong> (fu2022molecularmechanismsof pages 13-16, rish2023molecularmechanismsof pages 7-10).</p>
+<h4 id="72-confidence-grading-for-kt2440-specific-statements">7.2 Confidence grading for KT2440-specific statements</h4>
+<ul>
+<li><strong>High confidence (family-level + strong mechanistic evidence)</strong>: ATPase-driven branch migration motor role in RuvAB and HJ substrate specificity (putnam2001structureandmechanism pages 1-2, rish2023molecularmechanismsof pages 7-10).</li>
+<li><strong>Moderate confidence (genus-level experimental support)</strong>: RuvAB complex architecture and ATP-dependent HJ processing in Pseudomonas (demonstrated in <em>P. aeruginosa</em>) (zhang2023cryoemstructureof pages 1-2).</li>
+<li><strong>Lower confidence / not demonstrated for Q88NJ0 in retrieved corpus</strong>: exact KT2440 regulation under SOS/LexA, precise operon structure, quantitative ATPase rates and kinetic parameters in <em>P. putida</em> KT2440.</li>
+</ul>
+<h3 id="8-evidence-map-summary-table">8) Evidence map (summary table)</h3>
+<table>
+<thead>
+<tr>
+<th>Claim/annotation item</th>
+<th>Evidence summary (1 sentence)</th>
+<th>Organism/context</th>
+<th>Key quantitative data</th>
+<th>Top citation IDs</th>
+<th>Publication (year, journal) + URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Molecular function / EC</td>
+<td>RuvB is a bacterial AAA+ ATPase motor/helicase that powers Holliday junction branch migration in the RuvAB complex, matching the UniProt description of a Holliday junction branch migration complex subunit RuvB (EC 3.6.4.-).</td>
+<td>Canonical bacterial RuvB; strong mechanistic evidence from <em>Thermotoga maritima</em>, <em>Thermus thermophilus</em>, and <em>E. coli</em> models</td>
+<td>Hexameric motor; ATP hydrolysis coupled to branch migration</td>
+<td>(putnam2001structureandmechanism pages 1-2, iwasaki2000mutationalanalysisof pages 11-11)</td>
+<td>Putnam et al. 2001, <em>J. Mol. Biol.</em> https://doi.org/10.1006/jmbi.2001.4852; Iwasaki et al. 2000, <em>Mol. Microbiol.</em> https://doi.org/10.1046/j.1365-2958.2000.01842.x</td>
+</tr>
+<tr>
+<td>Complex partners</td>
+<td>RuvB acts with Holliday-junction-binding RuvA, and the branch-migrated junction is then processed in concert with the resolvase RuvC.</td>
+<td>Bacterial homologous recombination / stalled-fork repair pathway</td>
+<td>RuvA recruits RuvB to opposite HJ arms; RuvC is dimeric resolvase</td>
+<td>(putnam2001structureandmechanism pages 1-2, zhang2023cryoemstructureof pages 1-2)</td>
+<td>Putnam et al. 2001, <em>J. Mol. Biol.</em> https://doi.org/10.1006/jmbi.2001.4852; Zhang et al. 2023, <em>Front. Plant Sci.</em> https://doi.org/10.3389/fpls.2023.1139106</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>The relevant substrate is branched Holliday junction DNA, with RuvB acting on duplex arms after loading by RuvA rather than as a general ssDNA helicase.</td>
+<td>Reconstituted HJ substrates in structural/biochemical studies</td>
+<td><em>P. aeruginosa</em> assay used a synthetic HJ assembled from four 55-bp strands</td>
+<td>(zhang2023cryoemstructureof pages 1-2, putnam2001structureandmechanism pages 1-2)</td>
+<td>Zhang et al. 2023, <em>Front. Plant Sci.</em> https://doi.org/10.3389/fpls.2023.1139106; Putnam et al. 2001, <em>J. Mol. Biol.</em> https://doi.org/10.1006/jmbi.2001.4852</td>
+</tr>
+<tr>
+<td>Mechanism / step size</td>
+<td>Recent cryo-EM supports an asymmetric, sequential ATPase cycle in which DNA-engaged RuvB protomers pull/revolve dsDNA and advance branch migration by about 2 nt per ATP hydrolyzed.</td>
+<td>Modern mechanistic model for bacterial RuvB motors</td>
+<td>~2 nt per ATP; ~12 nt per six-ATP revolution; DNA-binding contacts repeat every ~2 nt (~7 Å)</td>
+<td>(fu2022molecularmechanismsof pages 9-13, rish2023molecularmechanismsof pages 7-10, fu2022molecularmechanismsof pages 6-9)</td>
+<td>Fu et al. 2022, preprint https://doi.org/10.21203/rs.3.rs-2091230/v1; Rish et al. 2023, <em>bioRxiv</em> https://doi.org/10.1101/2022.09.22.509074</td>
+</tr>
+<tr>
+<td>Structural organization (hexamer / open rings)</td>
+<td>RuvB forms homohexameric AAA+ rings in canonical models, while the <em>Pseudomonas aeruginosa</em> RuvAB-HJ intermediate captured by cryo-EM shows two RuvA tetramers and eight RuvB subunits arranged as two open rings on opposite HJ arms.</td>
+<td>Canonical bacterial RuvB and <em>P. aeruginosa</em> intermediate complex</td>
+<td>Central pore ~3–3.4 nm in RuvB hexamer; <em>P. aeruginosa</em> intermediate contains 8 RuvB subunits; FRET plateau at 1000 nM PaRuvB with 400 nM PaRuvA</td>
+<td>(rish2023molecularmechanismsof pages 5-7, zhang2023cryoemstructureof pages 1-2)</td>
+<td>Rish et al. 2023, <em>bioRxiv</em> https://doi.org/10.1101/2022.09.22.509074; Zhang et al. 2023, <em>Front. Plant Sci.</em> https://doi.org/10.3389/fpls.2023.1139106</td>
+</tr>
+<tr>
+<td>Regulation (SOS inducible where supported)</td>
+<td>In <em>Pseudomonas aeruginosa</em>, RuvA and RuvB are reported as SOS-inducible proteins, while <em>P. putida</em> KT2440 has a comparatively weak SOS response overall, so direct strong induction of chromosomal ruvB in KT2440 should be inferred cautiously unless shown explicitly.</td>
+<td><em>Pseudomonas</em> DNA-damage response</td>
+<td><em>P. putida</em> SOS promoters show only moderate induction by norfloxacin in the cited study</td>
+<td>(zhang2023cryoemstructureof pages 1-2, tark2005adnapolymerase pages 4-5)</td>
+<td>Zhang et al. 2023, <em>Front. Plant Sci.</em> https://doi.org/10.3389/fpls.2023.1139106; Akkaya et al. 2021, <em>Environ. Microbiol.</em> https://doi.org/10.1111/1462-2920.15384</td>
+</tr>
+<tr>
+<td>Pseudomonas-specific note: <em>P. aeruginosa</em> cryo-EM</td>
+<td>The 2023 <em>P. aeruginosa</em> study directly reconstituted PaRuvA/PaRuvB on HJ DNA, showed ATP-dependent HJ unwinding only when both proteins were present, and visualized an assembly intermediate for motor loading.</td>
+<td><em>Pseudomonas aeruginosa</em> structural/biochemical evidence</td>
+<td>Synthetic HJ of 4 × 55-bp strands; activity increased with PaRuvB concentration and plateaued at 1000 nM PaRuvB with 400 nM PaRuvA</td>
+<td>(zhang2023cryoemstructureof pages 1-2)</td>
+<td>Zhang et al. 2023, <em>Front. Plant Sci.</em> https://doi.org/10.3389/fpls.2023.1139106</td>
+</tr>
+<tr>
+<td>Pseudomonas-specific note: <em>P. putida</em> plasmid rulAB vs chromosomal ruvAB</td>
+<td>In <em>P. putida</em> work on TOL plasmid pWW0, plasmid-borne ruvAB-like genes were renamed rulAB to avoid confusion with chromosomal ruvAB; the paper explicitly states that chromosomal ruvAB encode the Holliday junction helicase complex required for branch migration along DNA.</td>
+<td><em>P. putida</em> PaW85 / pWW0 context, informative but not direct KT2440 gene-specific biochemistry</td>
+<td>UV-C at 100 J/m² gave ~10-fold increase in Rif^r mutants for pWW0-carrying cells; mitomycin C at 2 µg/mL increased mutation frequency by 2–3 orders of magnitude</td>
+<td>(tark2005adnapolymerase pages 4-5)</td>
+<td>Tark et al. 2005, <em>J. Bacteriol.</em> https://doi.org/10.1128/jb.187.15.5203-5213.2005</td>
+</tr>
+<tr>
+<td>Organism-specific annotation confidence for UniProt Q88NJ0 / PP_1217</td>
+<td>Direct experimental literature on Q88NJ0/PP_1217 in <em>P. putida</em> KT2440 appears limited, but the assignment to bacterial RuvB is strongly supported by the conserved AAA+ RuvB family/domain architecture and by concordant function of chromosomal ruvAB described in <em>Pseudomonas</em> and other bacteria.</td>
+<td><em>P. putida</em> KT2440 functional annotation by homology plus genus-level support</td>
+<td>Domain-level agreement: AAA+ ATPase / P-loop NTPase / RuvB-like N-terminal features (per target description)</td>
+<td>(putnam2001structureandmechanism pages 1-2, iwasaki2000mutationalanalysisof pages 11-11, tark2005adnapolymerase pages 4-5)</td>
+<td>Putnam et al. 2001, <em>J. Mol. Biol.</em> https://doi.org/10.1006/jmbi.2001.4852; Iwasaki et al. 2000, <em>Mol. Microbiol.</em> https://doi.org/10.1046/j.1365-2958.2000.01842.x; Tark et al. 2005, <em>J. Bacteriol.</em> https://doi.org/10.1128/jb.187.15.5203-5213.2005</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table maps core functional-annotation claims for bacterial RuvB to the strongest available evidence, emphasizing Pseudomonas findings and clearly separating direct organism-specific evidence from broader high-confidence homology-based inference.</em></p>
+<h3 id="9-selected-references-with-publication-dates-and-urls">9) Selected references (with publication dates and URLs)</h3>
+<ul>
+<li>Putnam CD et al. <strong>“Structure and mechanism of the RuvB Holliday junction branch migration motor.”</strong> <em>Journal of Molecular Biology</em> (Aug 2001). https://doi.org/10.1006/jmbi.2001.4852 (putnam2001structureandmechanism pages 1-2)</li>
+<li>Iwasaki H et al. <strong>“Mutational analysis of the functional motifs of RuvB…”</strong> <em>Molecular Microbiology</em> (May 2000). https://doi.org/10.1046/j.1365-2958.2000.01842.x (iwasaki2000mutationalanalysisof pages 11-11)</li>
+<li>Zhang X et al. <strong>“Cryo-EM structure of the RuvAB-Holliday junction intermediate complex from Pseudomonas aeruginosa.”</strong> <em>Frontiers in Plant Science</em> (Mar 2023). https://doi.org/10.3389/fpls.2023.1139106 (zhang2023cryoemstructureof pages 1-2, zhang2023cryoemstructureof pages 2-3)</li>
+<li>Nautiyal A, Thakur M. <strong>“Prokaryotic DNA Crossroads: Holliday Junction Formation and Resolution.”</strong> <em>ACS Omega</em> (Feb 2024). https://doi.org/10.1021/acsomega.3c09866 (nautiyal2024prokaryoticdnacrossroads pages 15-16, nautiyal2024prokaryoticdnacrossroads pages 8-9)</li>
+<li>Carrasco B et al. <strong>“Processing of stalled replication forks in Bacillus subtilis.”</strong> <em>FEMS Microbiology Reviews</em> (Dec 2024). https://doi.org/10.1093/femsre/fuad065 (carrasco2024processingofstalled pages 6-7)</li>
+<li>Tark M et al. <strong>“A DNA Polymerase V Homologue Encoded by TOL Plasmid pWW0…”</strong> <em>Journal of Bacteriology</em> (Aug 2005). https://doi.org/10.1128/jb.187.15.5203-5213.2005 (tark2005adnapolymerase pages 4-5)</li>
+</ul>
+<h3 id="10-notable-gaps-future-work-for-q88nj0-specific-functional-annotation">10) Notable gaps / future work for Q88NJ0-specific functional annotation</h3>
+<p>Despite strong domain/family and genus-level evidence, the retrieved literature set does <strong>not</strong> provide direct biochemical characterization (ATPase kinetics, DNA-binding constants) or genetic phenotyping (DNA damage sensitivity) specifically for <strong>P. putida KT2440 ruvB (Q88NJ0/PP_1217)</strong>. Filling this gap would require targeted studies (e.g., KT2440 ruvB deletion/conditional mutants; purified Q88NJ0 ATPase/branch migration assays; DNA damage survival curves; transcriptional regulation assays) and/or dedicated database mining beyond the present retrieval.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(putnam2001structureandmechanism pages 1-2): Christopher D Putnam, Sheila B Clancy, Hiro Tsuruta, Susana Gonzalez, James G Wetmur, and John A Tainer. Structure and mechanism of the ruvb holliday junction branch migration motor. Journal of molecular biology, 311 2:297-310, Aug 2001. URL: https://doi.org/10.1006/jmbi.2001.4852, doi:10.1006/jmbi.2001.4852. This article has 212 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(iwasaki2000mutationalanalysisof pages 11-11): Hiroshi Iwasaki, Yong‐Woon Han, Takashi Okamoto, Takayuki Ohnishi, Manabu Yoshikawa, Kazuhiro Yamada, Hiroyuki Toh, Hiromi Daiyasu, Teru Ogura, and Hideo Shinagawa. Mutational analysis of the functional motifs of ruvb, an aaa+ class helicase and motor protein for holliday junction branch migration. Molecular Microbiology, 36:528-538, May 2000. URL: https://doi.org/10.1046/j.1365-2958.2000.01842.x, doi:10.1046/j.1365-2958.2000.01842.x. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2023cryoemstructureof pages 1-2): Xu Zhang, Zixuan Zhou, Lin Dai, Yulin Chao, Zheng Liu, Mingdong Huang, Qianhui Qu, and Zhonghui Lin. Cryo-em structure of the ruvab-holliday junction intermediate complex from pseudomonas aeruginosa. Frontiers in Plant Science, Mar 2023. URL: https://doi.org/10.3389/fpls.2023.1139106, doi:10.3389/fpls.2023.1139106. This article has 6 citations.</p>
+</li>
+<li>
+<p>(rish2023molecularmechanismsof pages 7-10): Anthony D. Rish, Zhangfei Shen, Zhenhang Chen, and Tian-Min Fu. Molecular mechanisms of holliday junction branch migration catalyzed by an asymmetric ruvb hexamer. BioRxiv, Sep 2023. URL: https://doi.org/10.1101/2022.09.22.509074, doi:10.1101/2022.09.22.509074. This article has 9 citations.</p>
+</li>
+<li>
+<p>(tark2005adnapolymerase pages 4-5): Mariliis Tark, Andres Tover, Kairi Tarassova, Radi Tegova, Gaily Kivi, Rita Hõrak, and Maia Kivisaar. A dna polymerase v homologue encoded by tol plasmid pww0 confers evolutionary fitness on pseudomonas putida under conditions of environmental stress. Journal of Bacteriology, 187:5203-5213, Aug 2005. URL: https://doi.org/10.1128/jb.187.15.5203-5213.2005, doi:10.1128/jb.187.15.5203-5213.2005. This article has 53 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rish2023molecularmechanismsof pages 5-7): Anthony D. Rish, Zhangfei Shen, Zhenhang Chen, and Tian-Min Fu. Molecular mechanisms of holliday junction branch migration catalyzed by an asymmetric ruvb hexamer. BioRxiv, Sep 2023. URL: https://doi.org/10.1101/2022.09.22.509074, doi:10.1101/2022.09.22.509074. This article has 9 citations.</p>
+</li>
+<li>
+<p>(fu2022molecularmechanismsof pages 13-16): Tian-Min Fu, Anthony Rish, Zhangfei Shen, and Zhenhang Chen. Molecular mechanisms of holliday junction branch migration catalyzed by an asymmetric ruvb hexamer. Oct 2022. URL: https://doi.org/10.21203/rs.3.rs-2091230/v1, doi:10.21203/rs.3.rs-2091230/v1.</p>
+</li>
+<li>
+<p>(fu2022molecularmechanismsof pages 36-37): Tian-Min Fu, Anthony Rish, Zhangfei Shen, and Zhenhang Chen. Molecular mechanisms of holliday junction branch migration catalyzed by an asymmetric ruvb hexamer. Oct 2022. URL: https://doi.org/10.21203/rs.3.rs-2091230/v1, doi:10.21203/rs.3.rs-2091230/v1.</p>
+</li>
+<li>
+<p>(zhang2023cryoemstructureof pages 2-3): Xu Zhang, Zixuan Zhou, Lin Dai, Yulin Chao, Zheng Liu, Mingdong Huang, Qianhui Qu, and Zhonghui Lin. Cryo-em structure of the ruvab-holliday junction intermediate complex from pseudomonas aeruginosa. Frontiers in Plant Science, Mar 2023. URL: https://doi.org/10.3389/fpls.2023.1139106, doi:10.3389/fpls.2023.1139106. This article has 6 citations.</p>
+</li>
+<li>
+<p>(carrasco2024processingofstalled pages 6-7): Begoña Carrasco, Rubén Torres, María Moreno-del Álamo, Cristina Ramos, Silvia Ayora, and Juan C Alonso. Processing of stalled replication forks in bacillus subtilis. FEMS Microbiology Reviews, Dec 2024. URL: https://doi.org/10.1093/femsre/fuad065, doi:10.1093/femsre/fuad065. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nautiyal2024prokaryoticdnacrossroads pages 8-9): Astha Nautiyal and Manoj Thakur. Prokaryotic dna crossroads: holliday junction formation and resolution. ACS Omega, 9:12515-12538, Feb 2024. URL: https://doi.org/10.1021/acsomega.3c09866, doi:10.1021/acsomega.3c09866. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nautiyal2024prokaryoticdnacrossroads pages 15-16): Astha Nautiyal and Manoj Thakur. Prokaryotic dna crossroads: holliday junction formation and resolution. ACS Omega, 9:12515-12538, Feb 2024. URL: https://doi.org/10.1021/acsomega.3c09866, doi:10.1021/acsomega.3c09866. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fu2022molecularmechanismsof pages 9-13): Tian-Min Fu, Anthony Rish, Zhangfei Shen, and Zhenhang Chen. Molecular mechanisms of holliday junction branch migration catalyzed by an asymmetric ruvb hexamer. Oct 2022. URL: https://doi.org/10.21203/rs.3.rs-2091230/v1, doi:10.21203/rs.3.rs-2091230/v1.</p>
+</li>
+<li>
+<p>(fu2022molecularmechanismsof pages 6-9): Tian-Min Fu, Anthony Rish, Zhangfei Shen, and Zhenhang Chen. Molecular mechanisms of holliday junction branch migration catalyzed by an asymmetric ruvb hexamer. Oct 2022. URL: https://doi.org/10.21203/rs.3.rs-2091230/v1, doi:10.21203/rs.3.rs-2091230/v1.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ruvB-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>rish2023molecularmechanismsof pages 5-7</li>
+<li>putnam2001structureandmechanism pages 1-2</li>
+<li>rish2023molecularmechanismsof pages 7-10</li>
+<li>zhang2023cryoemstructureof pages 1-2</li>
+<li>zhang2023cryoemstructureof pages 2-3</li>
+<li>tark2005adnapolymerase pages 4-5</li>
+<li>carrasco2024processingofstalled pages 6-7</li>
+<li>nautiyal2024prokaryoticdnacrossroads pages 8-9</li>
+<li>nautiyal2024prokaryoticdnacrossroads pages 15-16</li>
+<li>iwasaki2000mutationalanalysisof pages 11-11</li>
+<li>fu2022molecularmechanismsof pages 13-16</li>
+<li>fu2022molecularmechanismsof pages 36-37</li>
+<li>fu2022molecularmechanismsof pages 9-13</li>
+<li>fu2022molecularmechanismsof pages 6-9</li>
+<li>https://doi.org/10.1006/jmbi.2001.4852</li>
+<li>https://doi.org/10.3389/fpls.2023.1139106</li>
+<li>https://doi.org/10.1128/jb.187.15.5203-5213.2005</li>
+<li>https://doi.org/10.1093/femsre/fuad065</li>
+<li>https://doi.org/10.1021/acsomega.3c09866</li>
+<li>https://doi.org/10.1006/jmbi.2001.4852;</li>
+<li>https://doi.org/10.1046/j.1365-2958.2000.01842.x</li>
+<li>https://doi.org/10.3389/fpls.2023.1139106;</li>
+<li>https://doi.org/10.21203/rs.3.rs-2091230/v1;</li>
+<li>https://doi.org/10.1101/2022.09.22.509074</li>
+<li>https://doi.org/10.1101/2022.09.22.509074;</li>
+<li>https://doi.org/10.1111/1462-2920.15384</li>
+<li>https://doi.org/10.1046/j.1365-2958.2000.01842.x;</li>
+<li>https://doi.org/10.1006/jmbi.2001.4852,</li>
+<li>https://doi.org/10.1046/j.1365-2958.2000.01842.x,</li>
+<li>https://doi.org/10.3389/fpls.2023.1139106,</li>
+<li>https://doi.org/10.1101/2022.09.22.509074,</li>
+<li>https://doi.org/10.1128/jb.187.15.5203-5213.2005,</li>
+<li>https://doi.org/10.21203/rs.3.rs-2091230/v1,</li>
+<li>https://doi.org/10.1093/femsre/fuad065,</li>
+<li>https://doi.org/10.1021/acsomega.3c09866,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88NJ0
+gene_symbol: ruvB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  RuvB is the ATP-dependent motor subunit of the bacterial RuvAB Holliday junction
+  branch migration complex, which processes four-way (Holliday) junction DNA
+  intermediates that arise during homologous recombination and DNA repair, and which
+  also drives replication fork reversal to rescue blocked replication forks. RuvB is
+  a ring-forming AAA+ ATPase that assembles into homohexamers binding on opposite
+  duplex arms of a Holliday junction held open by RuvA tetramers. ATP binding and
+  hydrolysis in the tandem large and small ATPase domains power a lever motion that
+  pulls double-stranded DNA through the RuvAB complex (about two nucleotides of DNA
+  per ATP hydrolyzed), translocating the junction crossover point and thereby driving
+  branch migration. The C-terminal head domain contacts DNA. Continuous branch
+  migration allows the RuvC resolvase to scan to its cleavage consensus and resolve
+  the junction, completing recombination. RuvB acts in the cytoplasm on chromosomal
+  DNA. The protein is broadly conserved across bacteria, and the function of the
+  Pseudomonas putida ortholog is inferred from this strong family and domain
+  conservation.
+existing_annotations:
+- term:
+    id: GO:0000400
+    label: four-way junction DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: RuvB binds Holliday junction (four-way junction) DNA as part of the RuvAB branch migration motor; the head domain contacts duplex DNA arms of the junction. This is a core molecular function and is well supported by RuvB family conservation and structural studies.
+    action: ACCEPT
+    reason: Recognition of four-way junction DNA is intrinsic to RuvB function within RuvAB and is supported by the conserved RuvB family architecture (DNA-binding head domain) and UniRule annotation.
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic DNA binding is correct but uninformative for RuvB, whose biologically relevant DNA-binding activity is the specific recognition of four-way (Holliday) junction DNA already captured by GO:0000400.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0003677 is a general parent term; the specific child GO:0000400 (four-way junction DNA binding) more accurately describes RuvB&#39;s function and is already annotated, making the generic term redundant and over-general.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RuvB is a AAA+ ATPase with a P-loop/Walker A and B motifs; ATP binding is required for the motor activity that drives branch migration. UniProt annotates multiple ATP-binding residues. This is a well-supported molecular function.
+    action: ACCEPT
+    reason: ATP binding is a defining feature of the AAA+ ATPase RuvB-L/RuvB-S domains and is supported by conserved Walker A/B motifs and annotated ATP-binding residues.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: RuvB acts on chromosomal DNA in the cytoplasm/nucleoid. Cytoplasmic localization is consistent with the function of a soluble DNA-processing enzyme and with UniProt subcellular location.
+    action: ACCEPT
+    reason: Cytoplasmic localization is appropriate for a bacterial DNA recombination/repair enzyme acting on the nucleoid and is supported by UniProtKB subcellular location.
+- term:
+    id: GO:0006281
+    label: DNA repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: RuvAB processes Holliday junctions during recombinational DNA repair and drives replication fork reversal to rescue blocked forks, so involvement in DNA repair is correct and a core biological process for this gene.
+    action: ACCEPT
+    reason: RuvB&#39;s role in Holliday junction branch migration is central to recombinational DNA repair and replication fork rescue; this is a well-established function of the RuvB family.
+- term:
+    id: GO:0006310
+    label: DNA recombination
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: RuvB drives ATP-dependent branch migration of Holliday junctions, the central intermediate of homologous recombination, so involvement in DNA recombination is a core biological process for this gene.
+    action: ACCEPT
+    reason: Holliday junction branch migration by the RuvAB complex is intrinsic to homologous recombination; this is a defining, well-established function of the RuvB family.
+- term:
+    id: GO:0009378
+    label: four-way junction helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: RuvB is the ATP-dependent motor that translocates duplex DNA through the RuvAB complex to migrate the crossover point of a four-way (Holliday) junction. This four-way junction helicase/branch-migration activity is the defining molecular function of RuvB and is strongly supported by family conservation and structural studies of RuvB orthologs.
+    action: ACCEPT
+    reason: ATP-dependent Holliday junction branch migration (four-way junction helicase activity) is the core molecular function of RuvB within RuvAB, supported by the conserved AAA+ motor architecture and structural/biochemical studies of RuvB.
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: RuvB hydrolyzes ATP (ATP + H2O = ADP + Pi) in its AAA+ ATPase domains; this hydrolysis powers the lever motion that pulls dsDNA through the complex, coupling chemical energy to branch migration. Supported by Rhea reaction mapping and conserved Walker A/B motifs.
+    action: ACCEPT
+    reason: ATP hydrolysis is the energy-supplying activity underlying RuvB&#39;s motor function and is well supported by the AAA+ ATPase architecture and Rhea mapping.
+- term:
+    id: GO:0048476
+    label: Holliday junction resolvase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: part_of
+  review:
+    summary: RuvB is a subunit of the RuvAB branch migration complex and of the larger RuvABC resolvosome (a DNA-RuvA4-RuvB12-RuvC2 assembly) that processes and resolves Holliday junctions. GO:0048476 captures this resolvase-associated complex membership, consistent with the UniProt SUBUNIT description.
+    action: ACCEPT
+    reason: RuvB is an integral, well-established component of the RuvAB(C) Holliday junction processing/resolvosome complex; complex membership is supported by structural data and UniRule annotation.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: KT2440 genome reference (Nelson et al. 2002, Environ Microbiol) establishing the locus/gene assignment.
+core_functions:
+- description: ATP-dependent Holliday junction branch migration motor; as a hexameric AAA+ ATPase within the RuvAB complex, RuvB hydrolyzes ATP to translocate duplex DNA and move the crossover point of four-way junctions.
+  molecular_function:
+    id: GO:0009378
+    label: four-way junction helicase activity
+  directly_involved_in:
+  - id: GO:0006310
+    label: DNA recombination
+  substrates:
+  - id: CHEBI:16991
+    label: deoxyribonucleic acid
+- description: Processing of Holliday junctions during recombinational DNA repair and rescue of stalled/blocked replication forks via replication fork reversal, acting with RuvA and the RuvC resolvase in the cytoplasm.
+  molecular_function:
+    id: GO:0009378
+    label: four-way junction helicase activity
+  directly_involved_in:
+  - id: GO:0006281
+    label: DNA repair
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

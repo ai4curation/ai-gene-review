@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: BRCA2 (human)
 
-Source: BRCA2-deep-research-bioreason-rl.md
+Source: BRCA2-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

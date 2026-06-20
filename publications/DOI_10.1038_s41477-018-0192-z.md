@@ -14,6 +14,7 @@ journal: Nature Plants
 year: '2018'
 doi: 10.1038/s41477-018-0192-z
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Role of the BUB3 protein in phragmoplast microtubule reorganization during cytokinesis

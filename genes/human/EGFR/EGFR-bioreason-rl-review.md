@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: EGFR (human)
 
-Source: EGFR-deep-research-bioreason-rl.md
+Source: EGFR-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

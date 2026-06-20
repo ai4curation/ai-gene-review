@@ -394,6 +394,43 @@ def check_best_practices_rules(
                         ):
                             continue
 
+                    # Special case: REMOVE rows anchored to a citation that
+                    # none of the kept rows cite. A REMOVE action means "this
+                    # specific GOA row should not exist"; when it is anchored
+                    # to a reference distinct from every kept row, the
+                    # divergence reflects a citation-specific rejection (e.g. a
+                    # wrong-gene paper wrongly attributed to this gene, or a
+                    # review that does not substantiate the term) rather than a
+                    # term-level judgment. As long as every non-REMOVE row
+                    # shares a single action, the term-level decision is itself
+                    # consistent, so the REMOVE divergence is not curator error.
+                    if "REMOVE" in unique_actions:
+                        non_remove_actions = set(
+                            action
+                            for _, action, _ in actions_list
+                            if action != "REMOVE"
+                        )
+                        if len(non_remove_actions) == 1:
+                            remove_refs = set()
+                            kept_refs = set()
+                            refs_complete = True
+                            for idx, action, _ in actions_list:
+                                annotation = data["existing_annotations"][idx]
+                                ref_id = annotation.get("original_reference_id")
+                                if not ref_id:
+                                    refs_complete = False
+                                    break
+                                if action == "REMOVE":
+                                    remove_refs.add(ref_id)
+                                else:
+                                    kept_refs.add(ref_id)
+                            if (
+                                refs_complete
+                                and remove_refs
+                                and not (remove_refs & kept_refs)
+                            ):
+                                continue
+
                     # Get the term label for better error messages
                     term_label = None
                     for annotation in data["existing_annotations"]:
