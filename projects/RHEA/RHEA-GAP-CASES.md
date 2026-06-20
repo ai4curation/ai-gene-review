@@ -201,6 +201,14 @@ quality gates how specific the proposed GO term should be.
    `rhea2go` (where a GO term exists) and by adding the three missing GO MF terms
    (where one does not) — exactly the two levers this project recommends.
 
+## Curated mappings
+
+Each case is recorded as a row in the curated SSSOM mapping set
+[`rhea2go.sssom.yaml`](rhea2go.sssom.yaml): SAMD8 as a `skos:exactMatch`
+(`RHEA:36079`→`GO:0002950`, ready to add to `rhea2go`); PHYKPL, B3GALNT2 and
+SULT6B1 as `skos:broadMatch` rows whose comments name the narrower GO term to
+request. Validate with `just validate-rhea-mappings`.
+
 ## Reproduce
 
 ```bash

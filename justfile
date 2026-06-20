@@ -70,6 +70,13 @@ validate-mappings:
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels -c conf/oak_config.yaml
 
+# Validate the curated RHEA->GO gap-fill mapping set (projects/RHEA/rhea2go.sssom.yaml):
+# (1) SSSOM structural validation, then (2) GO term/label validation on the regenerated nested file.
+validate-rhea-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/RHEA/*.sssom.yaml
+	uv run python projects/RHEA/sssom_to_terms.py projects/RHEA/rhea2go.sssom.yaml -o projects/RHEA/rhea2go.terms.yaml
+	uv run linkml-term-validator validate-data projects/RHEA/rhea2go.terms.yaml -s src/ai_gene_review/schema/rhea_go_mapping.yaml -t RHEAGOMappingSet --labels -c conf/oak_config.yaml
+
 # Apply the ARO->GO mapping: chain UniProt -> ARO (via DR CARD lines) -> GO across all genes.
 aro2go-pipeline: validate-mappings
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml 'genes/**/*-uniprot.txt'
