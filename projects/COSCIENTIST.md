@@ -69,6 +69,29 @@ paralog, not just the gene under review.
 | STAT3 | `GO:0030335` pos. reg. cell migration = core | Non-core | bidirectional migration effect = downstream, not core |
 | CFAP300 | scaffold/adaptor/chaperone in dynein preassembly? | Unresolvable; add BP | "protein binding" confirmed uninformative; structural compute |
 
+### Non-structural batch (topology / regulatory / motif)
+
+A second batch deliberately targeted questions decidable by *non-structural* data
+to test whether the agent exercises those data types as well as it does structure.
+
+| Gene | Data type | Verdict (compute/reasoning-driven) | Review action |
+|------|-----------|------------------------------------|---------------|
+| worm/skn-1 | regulatory / domain | **Over-annotated.** Bzip/CNC transcription factor with no RNA-binding or translation-factor domain; the IEA `GO:0006417` (regulation of translation) comes from UniProt keyword KW-0810, conflating SKN-1 being activated *by* translation inhibition with directly regulating it. | `GO:0006417` **UNDECIDED → REMOVE** |
+| CLCN7 | localization / sorting-signal | **Over-annotated — second systematic catch.** ClC-7 is an endolysosomal antiporter (N-terminal dileucine + acidic-cluster sorting motifs, absent from plasma-membrane paralogs CLCNKA/KB); `GO:0030321` traces to a ComplexPortal family-level intro sentence propagated by PANTHER IBA to **~1,198 ortholog annotations**. | `GO:0030321` **→ REMOVE** |
+| ASCL1 | TF / ChIP / motif | **Over-annotated.** ASCL1 binds DNA as a functionally obligate class II bHLH heterodimer with class I E-proteins (TCF3/E2A, TCF4/E2-2, TCF12/HEB); the IEA `GO:0042802` (identical protein binding, implying homodimer) is an Ensembl-Compara transfer; homodimers form only in vitro. | `GO:0042802` **→ MODIFY** → `GO:0046982` heterodimerization |
+
+**Execution behaviour differs by question type.** The structural runs *executed code*
+(fetched AlphaFold models, ran Foldseek, computed distances/composition) and emitted
+provenance artifacts. The non-structural runs reached equally strong, correct
+verdicts but mostly **reasoned over** the relevant data — domain architecture,
+sorting motifs, ChIP/regulon/E-box signatures, InterPro/PANTHER families — rather
+than executing topology tools or querying ChIP-Atlas; skn-1 and CLCN7 produced no
+provenance artifacts and ASCL1 emitted only an evidence-*summary* figure. So
+OpenScientist's code-execution mode appears triggered chiefly by structural
+questions; for topology/regulatory questions it behaves as an expert reasoner over
+sequence features and curated databases. The verdicts are still high-value — CLCN7
+delivered a *second* systematic-mis-annotation catch (after MJ1511/MJ0742).
+
 **Evidence integrity.** Across all runs, cited PMIDs were real, on-target, and
 verbatim-quotable; no hallucinated citations were found. Every `supporting_text`
 wired into a review is checked as a verbatim substring of its source.
@@ -107,9 +130,9 @@ analysis would be the deciding evidence:
 | worm/skn-1 | are isoform modules (ASI chemosensory / intestinal detox / ER stress) distinct or context-induced | tissue-specific + developmental-stage expression; condition-induction profiles | HIGH |
 | STAT3 | already-resolved migration call could be generalized: which processes are direct vs co-expression-driven | regulon/co-expression to separate direct targets from convergent phenotypes | LOW |
 
-> These are leads, not yet run. The next OpenScientist batch should pick from the
-> HIGH rows so the deciding evidence is a database/compute analysis the agent can
-> actually perform, rather than a wet-lab experiment.
+> The three HIGH leads (skn-1, ASCL1, CLCN7) have now been run — see the
+> non-structural batch above; all three returned actionable over-annotation
+> verdicts. The remaining MED rows (WFS1, SORL1, CTBP1) are still open leads.
 
 ## Operational lessons
 
@@ -133,7 +156,10 @@ analysis would be the deciding evidence:
 - [x] Compute-requiring structural batch (MJ1511, yrhB, Rv0898c) run, reviewed, and
       wired into `-ai-review.yaml`.
 - [x] Timeout/failure-mode handling hardened in the skill + justfile.
-- [ ] Run the HIGH non-structural leads (skn-1, ASCL1, CLCN7) to exercise
-      topology / regulatory / expression informatics.
-- [ ] Write up the systematic-mis-annotation cases (MJ1511/MJ0742; pmp20 family) as
-      examples of family-level error propagation caught by compute.
+- [x] HIGH non-structural leads (skn-1, ASCL1, CLCN7) run, reviewed, and wired in —
+      all three actionable over-annotation verdicts; established that code execution
+      is triggered mainly by structural questions.
+- [ ] Run the MED non-structural leads (WFS1, SORL1, CTBP1).
+- [ ] Write up the systematic-mis-annotation cases (MJ1511/MJ0742; CLCN7's ~1,198
+      propagated annotations; pmp20 family) as examples of family-level error
+      propagation caught by compute.
