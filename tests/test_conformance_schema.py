@@ -69,7 +69,7 @@ def test_module_node_conforms_to_defaults_none():
 
 def test_schema_defines_conformance_on_module_node():
     """conforms_to is a multivalued slot of ModuleNode ranged on Conformance."""
-    from linkml_runtime.utils.schemaview import SchemaView
+    from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-untyped]
 
     sv = SchemaView(str(SCHEMA))
     slots = {s.name: s for s in sv.class_induced_slots("ModuleNode")}
