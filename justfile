@@ -77,6 +77,18 @@ validate-rhea-mappings:
 	uv run python projects/RHEA/sssom_to_terms.py projects/RHEA/rhea2go.sssom.yaml -o projects/RHEA/rhea2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/RHEA/rhea2go.terms.yaml -s src/ai_gene_review/schema/rhea_go_mapping.yaml -t RHEAGOMappingSet --labels -c conf/oak_config.yaml
 
+# Validate the hand-curated Pfam entry reviews (interpro/pfam/<PFAM>/<PFAM>-review.yaml):
+# (1) structural + premise checks (Pfam membership, member list, GO non-obsolete/aspect, parent
+# entry carries no equivalent term, gene_review paths exist, REJECTED backed by a same-family
+# counter-example) and index refresh via validate_pfam_reviews.py, then (2) LinkML structural
+# validation and (3) GO term/label validation of each review.
+validate-pfam-reviews:
+	uv run python projects/PFAM/validate_pfam_reviews.py
+	for f in interpro/pfam/*/*-review.yaml; do \
+	  uv run linkml-validate -s src/ai_gene_review/schema/pfam_entry_review.yaml -C PfamEntryReview "$f"; \
+	  uv run linkml-term-validator validate-data "$f" -s src/ai_gene_review/schema/pfam_entry_review.yaml -t PfamEntryReview --labels -c conf/oak_config.yaml; \
+	done
+
 # Validate the curated NCBIFAM->GO seed mapping set (projects/NCBIFam/ncbifam2go.sssom.yaml):
 # (1) SSSOM structural validation, then (2) GO term/label validation on the regenerated nested file.
 validate-ncbifam-mappings:
