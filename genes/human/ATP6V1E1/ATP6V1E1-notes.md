@@ -64,3 +64,25 @@ Ubiquitous expression (housekeeping); highest expression in skin; also present i
 - The PMID:21784977 "protein binding" annotation is suspicious for ATP6V1E1 — that paper concerns tristetraprolin (ZFP36) and CCL3 mRNA regulation, not V-ATPase; likely a curation error.
 - The apical plasma membrane annotation (EXP from PMID:29993276) is well-supported for kidney epithelium where V-ATPase functions in acid excretion.
 - Regulation of macroautophagy (NAS from PMID:22982048) is an indirect V-ATPase class effect; no specific evidence for subunit E in macroautophagy regulation beyond lysosomal acidification.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1E1/ATP6V1E1-deep-research-falcon.md`,
+29 citations). It corroborates the E1 peripheral-stalk core and the ARCL2C
+association documented above, and sharpens the disease mechanism; no change to calls.
+
+- **Core confirmed.** E1 forms the **EG peripheral stalks (3 per V1)** with subunit
+  G, acting as a **stator** that holds the catalytic A3B3 head fixed against rotor
+  torque — structural/regulatory, not catalytic. No change to calls.
+- **ARCL2C mechanism sharpened (Pottie 2021; Vogt 2021).** Biallelic ATP6V1E1
+  variants cause autosomal-recessive **cutis laxa type 2C** through a
+  **Golgi-pH/glycosylation** route: Golgi fragmentation, impaired N-glycosylation
+  (abnormal serum transferrin / CDG-like), defective retrograde trafficking, and
+  endolysosomal/autophagy dysfunction → connective-tissue (elastin/collagen),
+  craniofacial, cardiac and neurological features. This links E1 loss to the same
+  secretory-pathway-acidification → glycosylation theme seen for ATP6AP1/ATP6V1A,
+  reinforcing the Golgi-acidification contribution of V-ATPase. Disease context;
+  the normal-function calls are unchanged.
+
+Net: no change to calls — E1 is the peripheral-stalk (EG) stator subunit supporting
+V-ATPase assembly/coupling and organellar (incl. Golgi) acidification.
