@@ -1356,6 +1356,7 @@ class GeneReview(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -1440,6 +1441,7 @@ class AlternativeProduct(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -1484,6 +1486,7 @@ class FunctionalIsoform(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -1551,6 +1554,7 @@ class Term(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -1584,7 +1588,7 @@ class Reference(ConfiguredBaseModel):
                        'PredictionReview'],
          'implements': ['dcterms:references']} })
     title: str = Field(default=..., description="""Title of the entity""", json_schema_extra = { "linkml_meta": {'alias': 'title',
-         'domain_of': ['Reference', 'EvidenceItem', 'ModuleReview'],
+         'domain_of': ['Reference', 'EvidenceItem', 'ModuleReview', 'GoCamAssociation'],
          'slot_uri': 'dcterms:title'} })
     findings: Optional[list[Finding]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'findings', 'domain_of': ['Reference'], 'recommended': True} })
     is_invalid: Optional[bool] = Field(default=None, description="""Whether the reference is invalid (e.g., retracted or replaced)""", json_schema_extra = { "linkml_meta": {'alias': 'is_invalid', 'domain_of': ['Reference']} })
@@ -1666,7 +1670,8 @@ class EvidenceItem(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
     source_id: str = Field(default=..., description="""Identifier for the evidence source, e.g. PMID:123456, DOI:..., Reactome:R-HSA-..., MetaCyc:..., file:...""", json_schema_extra = { "linkml_meta": {'alias': 'source_id', 'domain_of': ['EvidenceItem']} })
-    title: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'title', 'domain_of': ['Reference', 'EvidenceItem', 'ModuleReview']} })
+    title: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'title',
+         'domain_of': ['Reference', 'EvidenceItem', 'ModuleReview', 'GoCamAssociation']} })
     statement: Optional[str] = Field(default=None, description="""The assertion this evidence supports in this module.""", json_schema_extra = { "linkml_meta": {'alias': 'statement', 'domain_of': ['Finding', 'EvidenceItem']} })
     supporting_text: Optional[str] = Field(default=None, description="""Optional quote or excerpt from the evidence source.""", json_schema_extra = { "linkml_meta": {'alias': 'supporting_text',
          'domain_of': ['Finding', 'SupportingTextInReference', 'EvidenceItem']} })
@@ -1680,6 +1685,7 @@ class EvidenceItem(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -1706,6 +1712,7 @@ class Descriptor(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -1722,6 +1729,7 @@ class Descriptor(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -1734,6 +1742,7 @@ class Descriptor(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -1760,6 +1769,7 @@ class ChemicalEntityDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -1776,6 +1786,7 @@ class ChemicalEntityDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -1788,6 +1799,7 @@ class ChemicalEntityDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -1814,6 +1826,7 @@ class GeneDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -1830,6 +1843,7 @@ class GeneDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -1842,6 +1856,7 @@ class GeneDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -1868,6 +1883,7 @@ class GeneProductDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -1884,6 +1900,7 @@ class GeneProductDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -1896,6 +1913,7 @@ class GeneProductDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -1924,6 +1942,7 @@ class FamilyDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -1940,6 +1959,7 @@ class FamilyDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -1952,6 +1972,7 @@ class FamilyDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -1978,6 +1999,7 @@ class AncestralNodeDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -1994,6 +2016,7 @@ class AncestralNodeDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2006,6 +2029,7 @@ class AncestralNodeDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2032,6 +2056,7 @@ class DomainDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2048,6 +2073,7 @@ class DomainDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2060,6 +2086,7 @@ class DomainDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2086,6 +2113,7 @@ class CellularComponentDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2102,6 +2130,7 @@ class CellularComponentDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2114,6 +2143,7 @@ class CellularComponentDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2141,6 +2171,7 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2157,6 +2188,7 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2169,6 +2201,7 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2220,6 +2253,7 @@ class ComplexUnit(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2232,6 +2266,7 @@ class ComplexUnit(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2258,6 +2293,7 @@ class CellTypeDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2274,6 +2310,7 @@ class CellTypeDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2286,6 +2323,7 @@ class CellTypeDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2312,6 +2350,7 @@ class AnatomicalEntityDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2328,6 +2367,7 @@ class AnatomicalEntityDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2340,6 +2380,7 @@ class AnatomicalEntityDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2366,6 +2407,7 @@ class DevelopmentalStageDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2382,6 +2424,7 @@ class DevelopmentalStageDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2394,6 +2437,7 @@ class DevelopmentalStageDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2420,6 +2464,7 @@ class TaxonDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2436,6 +2481,7 @@ class TaxonDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2448,6 +2494,7 @@ class TaxonDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2482,6 +2529,7 @@ class MolecularFunctionDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2498,6 +2546,7 @@ class MolecularFunctionDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2510,6 +2559,7 @@ class MolecularFunctionDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2541,6 +2591,7 @@ class BiologicalProcessDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2557,6 +2608,7 @@ class BiologicalProcessDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2569,6 +2621,7 @@ class BiologicalProcessDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2595,6 +2648,7 @@ class RelationDescriptor(Descriptor):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2611,6 +2665,7 @@ class RelationDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2623,6 +2678,7 @@ class RelationDescriptor(Descriptor):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2655,7 +2711,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'RuleReviewEntry',
                        'PredictionReview']} })
     title: str = Field(default=..., description="""Title of the entity""", json_schema_extra = { "linkml_meta": {'alias': 'title',
-         'domain_of': ['Reference', 'EvidenceItem', 'ModuleReview'],
+         'domain_of': ['Reference', 'EvidenceItem', 'ModuleReview', 'GoCamAssociation'],
          'slot_uri': 'dcterms:title'} })
     description: Optional[str] = Field(default=None, description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'alias': 'description',
          'domain_of': ['GeneReview',
@@ -2665,6 +2721,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2695,6 +2752,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2707,6 +2765,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2761,6 +2820,7 @@ class ModuleNode(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -2773,6 +2833,7 @@ class ModuleNode(ConfiguredBaseModel):
     parts: Optional[list[ModulePart]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'parts', 'domain_of': ['ModuleNode']} })
     variant_sets: Optional[list[ModuleVariantSet]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'variant_sets', 'domain_of': ['ModuleNode']} })
     connections: Optional[list[ModuleConnection]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'connections', 'domain_of': ['ModuleNode']} })
+    gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM models (or specific activities) that realize this module node as a whole.""", json_schema_extra = { "linkml_meta": {'alias': 'gocam_associations', 'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'evidence',
          'domain_of': ['Descriptor',
                        'ComplexUnit',
@@ -2781,6 +2842,7 @@ class ModuleNode(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2793,6 +2855,7 @@ class ModuleNode(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2822,6 +2885,7 @@ class ModulePart(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2834,6 +2898,7 @@ class ModulePart(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2884,6 +2949,7 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2896,6 +2962,7 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2940,6 +3007,7 @@ class ModuleAnnoton(ConfiguredBaseModel):
     processes: Optional[list[BiologicalProcessDescriptor]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'processes', 'domain_of': ['ModuleAnnoton']} })
     locations: Optional[list[CellularComponentDescriptor]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'locations', 'domain_of': ['ModuleAnnoton', 'CoreFunction']} })
     role_description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'role_description', 'domain_of': ['ModuleAnnoton']} })
+    gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM model activities (annotons) that realize this module annoton. Used to ground an abstract/non-grounded module role in concrete curated causal activity models.""", json_schema_extra = { "linkml_meta": {'alias': 'gocam_associations', 'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'evidence',
          'domain_of': ['Descriptor',
                        'ComplexUnit',
@@ -2948,6 +3016,7 @@ class ModuleAnnoton(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -2960,6 +3029,65 @@ class ModuleAnnoton(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection',
+                       'RuleConditionSet',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment']} })
+
+
+class GoCamAssociation(ConfiguredBaseModel):
+    """
+    A reference from a module element to a production GO-CAM (Gene Ontology Causal Activity Model), optionally pinned to a specific activity (annoton) within that model. The referenced model is expected to be cached under gocams/<model_id>/<model_id>-src.yaml.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    model: str = Field(default=..., description="""GO-CAM model id, e.g. gomodel:568b0f9600000284 (or the bare local id 568b0f9600000284). Matches the cached gocams/<model_id>/ folder.""", json_schema_extra = { "linkml_meta": {'alias': 'model', 'domain_of': ['GoCamAssociation']} })
+    activity: Optional[str] = Field(default=None, description="""Optional activity/annoton id within the model that this element corresponds to, e.g. gomodel:568b0f9600000284/57ec3a7e00000079.""", json_schema_extra = { "linkml_meta": {'alias': 'activity', 'domain_of': ['GoCamAssociation']} })
+    title: Optional[str] = Field(default=None, description="""Cached model title, recorded for human readability.""", json_schema_extra = { "linkml_meta": {'alias': 'title',
+         'domain_of': ['Reference', 'EvidenceItem', 'ModuleReview', 'GoCamAssociation']} })
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'description',
+         'domain_of': ['GeneReview',
+                       'AlternativeProduct',
+                       'FunctionalIsoform',
+                       'Term',
+                       'Descriptor',
+                       'ModuleReview',
+                       'ModuleNode',
+                       'GoCamAssociation',
+                       'ParticipantSelector',
+                       'ModuleConnection',
+                       'CoreFunction',
+                       'Experiment',
+                       'RuleReview',
+                       'PredictionReview']} })
+    evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'evidence',
+         'domain_of': ['Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ModuleNode',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'GoCamAssociation',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection']} })
+    notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'notes',
+         'domain_of': ['EvidenceItem',
+                       'Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ModuleNode',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -2997,6 +3125,7 @@ class ParticipantSelector(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -3011,6 +3140,7 @@ class ParticipantSelector(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -3023,6 +3153,7 @@ class ParticipantSelector(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -3055,6 +3186,7 @@ class ModuleContext(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -3067,6 +3199,7 @@ class ModuleContext(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -3097,6 +3230,7 @@ class ModuleConnection(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -3112,6 +3246,7 @@ class ModuleConnection(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
@@ -3124,6 +3259,7 @@ class ModuleConnection(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -3217,6 +3353,7 @@ class CoreFunction(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -3355,6 +3492,7 @@ class Experiment(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -3405,6 +3543,7 @@ class RuleReview(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -3479,6 +3618,7 @@ class RuleConditionSet(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -3654,6 +3794,7 @@ class ParsimonyAssessment(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -3698,6 +3839,7 @@ class LiteratureSupportAssessment(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -3742,6 +3884,7 @@ class ConditionOverlapAssessment(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -3786,6 +3929,7 @@ class GOSpecificityAssessment(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -3830,6 +3974,7 @@ class TaxonomicScopeAssessment(ConfiguredBaseModel):
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
@@ -3889,6 +4034,7 @@ class PredictionReview(ConfiguredBaseModel):
                        'Descriptor',
                        'ModuleReview',
                        'ModuleNode',
+                       'GoCamAssociation',
                        'ParticipantSelector',
                        'ModuleConnection',
                        'CoreFunction',
@@ -3990,6 +4136,7 @@ ModuleNode.model_rebuild()
 ModulePart.model_rebuild()
 ModuleVariantSet.model_rebuild()
 ModuleAnnoton.model_rebuild()
+GoCamAssociation.model_rebuild()
 ParticipantSelector.model_rebuild()
 ModuleContext.model_rebuild()
 ModuleConnection.model_rebuild()

@@ -3417,6 +3417,112 @@ def fetch_panther_paint(
     typer.echo(f"  {tsv_path}")
 
 
+@app.command()
+def fetch_gocam(
+    model_id: Annotated[
+        str,
+        typer.Argument(
+            help="GO-CAM model id (bare, gomodel: CURIE, or model URL)"
+        ),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Re-fetch even if already cached"),
+    ] = False,
+):
+    """Fetch and cache a single GO-CAM model as gocams/<id>/<id>-src.yaml.
+
+    The model is downloaded as low-level Minerva JSON and translated into the
+    activity-centric gocam-py YAML representation.
+
+    Examples:
+        ai-gene-review fetch-gocam gomodel:568b0f9600000284
+        ai-gene-review fetch-gocam 568b0f9600000284 --force
+    """
+    from ai_gene_review.etl.gocam import cache_gocam_model, normalize_gocam_id
+
+    mid = normalize_gocam_id(model_id)
+    out = cache_gocam_model(mid, cache_dir=cache_dir, force=force)
+    typer.echo(f"✓ Cached GO-CAM {mid}: {out}")
+
+
+@app.command()
+def cache_gocams(
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Re-fetch models already cached"),
+    ] = False,
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", help="Only fetch the first N models (for testing)"),
+    ] = None,
+    no_index: Annotated[
+        bool,
+        typer.Option("--no-index", help="Skip rebuilding gocams/index.tsv afterwards"),
+    ] = False,
+):
+    """Cache all ~2k production GO-CAM models, then rebuild the gene index.
+
+    Each model is written to gocams/<id>/<id>-src.yaml. After caching, a
+    gocams/index.tsv mapping gene products to GO-CAM activities is rebuilt
+    (unless --no-index is given).
+
+    Examples:
+        ai-gene-review cache-gocams
+        ai-gene-review cache-gocams --limit 50
+    """
+    from ai_gene_review.etl.gocam import (
+        build_gene_index,
+        cache_all_production_models,
+    )
+
+    def progress(done: int, total: int, ok: int, failed: int) -> None:
+        if done % 50 == 0 or done == total:
+            typer.echo(f"  {done}/{total} (ok={ok}, failed={failed})")
+
+    summary = cache_all_production_models(
+        cache_dir=cache_dir, force=force, limit=limit, progress=progress
+    )
+    typer.echo(
+        f"✓ Cached {summary['ok']}/{summary['total']} GO-CAM models"
+        f" ({summary['failed']} failed)"
+    )
+    for mid, err in summary["failures"][:20]:
+        typer.echo(f"  ✗ {mid}: {err}")
+
+    if not no_index:
+        index = build_gene_index(cache_dir=cache_dir)
+        n_rows = len(index.read_text().strip().splitlines()) - 1
+        typer.echo(f"✓ Wrote {index} ({n_rows} activity rows)")
+
+
+@app.command()
+def gocam_index(
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+):
+    """Rebuild gocams/index.tsv from the cached GO-CAM models.
+
+    Produces one row per activity (annoton): gene product, model, taxon,
+    molecular function, biological process, and cellular component.
+    """
+    from ai_gene_review.etl.gocam import build_gene_index
+
+    index = build_gene_index(cache_dir=cache_dir)
+    n_rows = len(index.read_text().strip().splitlines()) - 1
+    typer.echo(f"✓ Wrote {index} ({n_rows} activity rows)")
+
+
 def main():
     """Main entry point for the CLI."""
     app()
