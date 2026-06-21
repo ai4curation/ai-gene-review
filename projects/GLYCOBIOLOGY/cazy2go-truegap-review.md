@@ -87,8 +87,8 @@ So **34 / 53 true-gaps are genuine, specific contributions** `interpro2go` lacks
 subfamily/EC resolution**; **6 were artifacts** the review removed. The 6 rejects validate the value
 of hand-review over the raw automated set, and the CAUTION set motivates the subfamily step next.
 
-**Effect on the safe set:** after adding the CBM-skip, peptidase-branch drop, and `GO:0016837`-generic
-filters to `select_cazy2go_safe.py`, `cazy2go.safe.sssom.yaml` shrank from 89 → **66 rows** (41
-true-gap + 25 altitude-gain); the ENDORSE families are retained, the CAUTION families remain (flagged
-here), and the artifact rows are gone. The 34 ENDORSE rows still require a **human GO/InterPro2GO
+**Effect on the safe set:** after adding the CBM-skip, peptidase-branch drop, `GO:0016837`-generic,
+and **CAUTION-family** exclusion filters to `select_cazy2go_safe.py`, `cazy2go.safe.sssom.yaml` shrank
+89 → 66 (artifact filters) → **60 rows** (35 true-gap + 25 altitude-gain); the ENDORSE families are
+retained, the CAUTION families (AA5 etc.) and artifact rows are now excluded from the safe set. The 34 ENDORSE rows still require a **human GO/InterPro2GO
 curator sign-off** before any submission — they are AI-proposed candidates, not curated GO records.

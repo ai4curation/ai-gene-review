@@ -2,7 +2,8 @@
 title: "Glycobiology Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
-species: [human, mouse, rat, worm]
+species: [human]
+genes: [B3GALNT2, LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1]
 ---
 
 # Glycobiology Project

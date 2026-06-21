@@ -152,12 +152,13 @@ silent on entirely**.
 ## Status
 
 - **Seed**: `cazy2go.sssom.yaml` — 5 exemplar GT-family rows, review-backed, GO ids QuickGO-verified.
-- **Safe propagation set**: `cazy2go.safe.sssom.yaml` — **66 rows** (`select_cazy2go_safe.py`):
+- **Safe propagation set**: `cazy2go.safe.sssom.yaml` — **60 rows** (`select_cazy2go_safe.py`):
   mono-specific families with a specific GO MF that is a closure-confirmed gain over `interpro2go`
-  (41 true-gap + 25 altitude-gain), `skos:exactMatch`, safe to propagate at family level. Tightened
+  (35 true-gap + 25 altitude-gain), `skos:exactMatch`, safe to propagate at family level. Tightened
   after hand-review ([`cazy2go-truegap-review.md`](cazy2go-truegap-review.md)) to drop systematic
   artifacts: **CBM** families (non-catalytic binding modules), **peptidase** MF terms (multidomain
-  bleed-through, e.g. GT44 toxin autoprotease), and the generic `GO:0016837`.
+  bleed-through, e.g. GT44 toxin autoprotease), the generic `GO:0016837`, and the **CAUTION** families
+  (subfamily-split / heterogeneous, e.g. AA5).
 - **TRUE_GAP hand-review**: the 53 mono-specific true-gaps adjudicated →
   **34 ENDORSE** (actionable `interpro2go`/GO gaps, e.g. GT27 polypeptide-GalNAc-T, GH109/GH110/GH89
   glycosidases, GT117/GT105 PMT) · **13 CAUTION** (need specific EC / subfamily) · **6 REJECT**

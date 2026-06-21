@@ -54,6 +54,11 @@ REVIEW_BACKED = {
 PEPTIDASE_ROOT = "GO:0008233"
 SAFE_EXTRA_GENERIC = {"GO:0016837"}
 
+# Families flagged CAUTION in cazy2go-truegap-review.md (e.g. AA5 = two subfamilies, galactose
+# oxidase + glyoxal oxidase; partial-EC or heterogeneous families) are not safe for family-level
+# propagation and are excluded from the safe set even when they pass the mono-specific test.
+CAUTION_EXCLUDE = {"AA5", "GT89", "GH112", "GH100", "GH50", "GT56"}
+
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
@@ -80,6 +85,9 @@ def main():
         if fam.startswith("CBM"):
             stats["dropped_cbm_noncatalytic"] += 1
             continue  # non-catalytic binding module (hand-review artifact class)
+        if fam in CAUTION_EXCLUDE:
+            stats["dropped_caution"] += 1
+            continue  # flagged CAUTION in hand-review (subfamily split / heterogeneous)
         cazy_go = cazy_go_for_family(fam_ec[fam], ec2go)
         if len(cazy_go) != 1:
             continue  # not mono-specific
