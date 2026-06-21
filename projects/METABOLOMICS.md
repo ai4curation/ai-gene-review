@@ -291,6 +291,17 @@ tooling rather than duplicating it:
 - **[Reactome Gap Filling](REACTOME_GAP_FILLING.md)** — Reactome is another
   curated, ChEBI-grounded reaction source convertible to/from GO-CAM.
 
+## Toward an interactive demo
+
+The working [`probe/`](METABOLOMICS/probe/README.md) pipeline is the engine for an
+interactive demo where a user interprets their own metabolomics data with GO
+(paste a metabolite list or a MetaboLights accession → coverage + three-way
+enrichment). Real-time arbitrary input is too heavy for the static Pages site, so
+the plan is a **precomputed static showcase here** plus a **small FastAPI app in a
+new repo** (`metabolomics-go-demo`) reusing this engine. Full design, repo
+strategy, phasing, and the KEGG-licensing caveat are in
+[DEMO-PLAN.md](METABOLOMICS/DEMO-PLAN.md).
+
 ## Open questions
 
 - How many MetaboLights/Workbench study metabolites actually resolve to ChEBI
@@ -312,6 +323,7 @@ tooling rather than duplicating it:
 | Closure-aware GO enrichment (ORA) + KEGG baseline | **DONE** (MF level) | [GO MF enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-ENRICHMENT.md) vs [KEGG baseline](METABOLOMICS/probe/studies/MTBLS1-KEGG-BASELINE.md) on MTBLS1, same test |
 | Lift the enrichment from GO MF to GO **BP** | **DONE** | [GO BP enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-BP-ENRICHMENT.md) via Rhea→UniProt human enzymes→GOA BP; amino-acid metabolism/transport (FDR 9e-44) |
 | Run the pipeline over more MetaboLights/Workbench studies | TODO | `fetch_metabolights.py` + the three enrichment scripts generalise to any accession |
+| Interactive demo (precomputed showcase → FastAPI app) | PLANNED | See [DEMO-PLAN.md](METABOLOMICS/DEMO-PLAN.md): static gallery here + app in a new repo reusing the probe engine |
 | Inventory GO-CAM metabolic models + their ChEBI input/output compounds | TODO | Feasibility of Approach B (the "full network" path) |
 | Glucose-metabolism GO-CAM perturbation worked example | TODO | Direct analogue of the Genetics 2023 precedent |
 
