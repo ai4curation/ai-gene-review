@@ -110,16 +110,67 @@ curator happened to enter charged (`2-oxoglutarate(2-)`) — i.e. exactly the
 metabolites with no protonation ambiguity. Everything with an ionisable group
 needed normalization.
 
-The biological kicker is in the 15 residual misses: they are dominated by the
+The biological kicker is in the residual misses: they were dominated by the
 **branched-chain amino acids isoleucine, leucine, valine** — *the* canonical
 type-2-diabetes biomarkers — plus glutamate, glutamine, histidine,
 phenylalanine and citrulline. These are lost not to protonation but because the
 curators used the **generic (non-stereospecific) ChEBI ids** (e.g. `isoleucine
 CHEBI:24898`) while Rhea uses the **L-stereospecific zwitterion**
-(`L-isoleucine zwitterion`). So the metabolites most diagnostically important
-for this study fall squarely into the stereochemistry/generic-vs-specific
-residual class — a concrete, high-value motivation for the InChIKey-skeleton
-normalization follow-up.
+(`L-isoleucine zwitterion`).
+
+### Second tier — structure (skeleton) normalization recovers the amino acids
+
+That residual class is fixed by a second normalization tier: expand each
+metabolite over ChEBI's broader structural relations (tautomer/enantiomer and
+the generic→specific `children` hop) bounded to the seed's **InChIKey skeleton**
+(the connectivity block, ignoring charge and stereochemistry). This recovers the
+generic↔stereospecific mismatches:
+
+| Tier | MTBLS1 metabolites in a Rhea reaction |
+|---|---|
+| Exact ChEBI id | 8 / 64 |
+| + protonation family | 49 / 64 |
+| **+ structure (skeleton)** | **58 / 64** |
+
+The skeleton tier recovers all the BCAAs (`isoleucine → L-isoleucine
+zwitterion`), glutamate, glutamine, histidine, phenylalanine and citrulline. It
+is deliberately **stereo/charge-blind** (a generic, stereo-unspecified ChEBI —
+common for NMR — legitimately denotes either enantiomer), so it is reported as a
+separate, more permissive tier. The 6 final residuals are acyl/conjugate
+derivatives Rhea only represents in bound form (e.g. N-hexanoylglycine,
+methyl N-acetylvalinate, the N-methylpyridone-carboxamides).
+
+### GO function enrichment vs a KEGG-pathway baseline
+
+With 58/64 metabolites connected, the bridge supports an actual **closure-aware
+enrichment** ([`go_enrichment.py`](METABOLOMICS/probe/go_enrichment.py), result:
+[MTBLS1-GO-ENRICHMENT](METABOLOMICS/probe/studies/MTBLS1-GO-ENRICHMENT.md)).
+Each metabolite is mapped into Rhea-participant space, lifted to GO via `rhea2go`
+and propagated over `is_a`/`part_of` closure, then a one-sided hypergeometric ORA
+(BH-FDR) is run against the whole Rhea/GO metabolic universe (7,174 background
+metabolites). For comparison, the **incumbent KEGG-pathway ORA**
+([`kegg_baseline.py`](METABOLOMICS/probe/kegg_baseline.py), result:
+[MTBLS1-KEGG-BASELINE](METABOLOMICS/probe/studies/MTBLS1-KEGG-BASELINE.md)) is
+run on the *same* metabolites with the *same* test:
+
+| KEGG baseline (pathway membership) | GO function enrichment (activity + closure) |
+|---|---|
+| Alanine, aspartate & glutamate metabolism | amino-acid transaminase activity |
+| Citrate cycle (TCA) | L-/D-amino-acid oxidase activity |
+| Pyruvate metabolism | amino-acid racemase activity |
+| Nicotinate & nicotinamide metabolism | primary methylamine oxidase activity |
+| Glyoxylate & dicarboxylate metabolism | dicarboxylic-acid transmembrane transporter activity |
+
+Both recover the amino-acid / central-carbon biology expected for a T2D urine
+study, validating the approach. The **value GO adds** is visible in the right
+column: instead of broad pathway buckets it reports the specific **molecular
+activities** the perturbed metabolites implicate (transamination, amino-acid
+oxidation/racemisation, methylamine oxidation — note the methylamine hit tracks
+the urinary dimethylamine/trimethylamine/sarcosine in the panel), and the
+ontology's closure aggregates many specific enzyme activities into
+significantly-enriched higher-level functions. The current enrichment is at GO
+**molecular-function** level (because `rhea2go` is an MF mapping); lifting to GO
+**biological process** via the enzyme/gene layer (GOA / GO-CAM) is the next step.
 
 ## Why GO is not used for metabolomics today (the gap)
 
@@ -250,8 +301,9 @@ tooling rather than duplicating it:
 |--------|--------|-----------|
 | ChEBI→Rhea→`rhea2go` coverage probe + protonation normalization | **DONE** ([probe](METABOLOMICS/probe/RESULTS.md)) | Bridge connects 22/26 only after protonation normalization (0/26 exact) |
 | Run the probe over a real MetaboLights study | **DONE** ([MTBLS1](METABOLOMICS/probe/studies/MTBLS1-RESULTS.md)) | 64 curated metabolites: 8/64 exact → 49/64 normalized (6× uplift); `fetch_metabolights.py` pulls any accession |
-| Add stereochemistry/anomer + generic-vs-specific resolution | TODO (high value) | The residual-miss class — and on MTBLS1 it captures the diabetes BCAAs (Ile/Leu/Val) — needs InChIKey-skeleton / tautomer / stereo traversal |
-| Lift matched reactions to GO BP + closure-aware ORA | TODO | Turn coverage into a statistical enrichment (Approach A vs SMPDB/KEGG baseline) |
+| Add stereochemistry/anomer + generic-vs-specific resolution | **DONE** (skeleton tier) | InChIKey-skeleton normalization; recovers the MTBLS1 diabetes BCAAs (Ile/Leu/Val), 49→58/64 |
+| Closure-aware GO enrichment (ORA) + KEGG baseline | **DONE** (MF level) | [GO enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-ENRICHMENT.md) vs [KEGG baseline](METABOLOMICS/probe/studies/MTBLS1-KEGG-BASELINE.md) on MTBLS1, same test |
+| Lift the enrichment from GO MF to GO **BP** | TODO | `rhea2go` is MF-only; BP needs the enzyme/gene layer (GOA / GO-CAM) |
 | Inventory GO-CAM metabolic models + their ChEBI input/output compounds | TODO | Feasibility of Approach B (the "full network" path) |
 | Glucose-metabolism GO-CAM perturbation worked example | TODO | Direct analogue of the Genetics 2023 precedent |
 
@@ -285,17 +337,21 @@ tooling rather than duplicating it:
 ## Project Status
 
 - **Started**: 2026-06-21
-- **Maturity**: SCOPING — problem framed, tool landscape surveyed, three
-  candidate approaches defined around the ChEBI→Rhea→GO→GO-CAM bridge, and a
-  **working coverage probe** ([`probe/`](METABOLOMICS/probe/README.md)) that
-  confirms the bridge connects (22/26) but only after **protonation
-  normalization** (0/26 exact). Enrichment (GO-BP ORA) is the next step.
-- **Computed live**: coverage probe over a 26-metabolite demo set **and the 64
-  curated metabolites of MetaboLights MTBLS1** via OLS4 (ChEBI), Rhea REST
-  (18,558 reactions, 14,251 participant ChEBIs) and GO `rhea2go` (7,746
-  mappings); protonation families via ChEBI
-  `is_protonated_form_of`/`is_deprotonated_form_of`. MTBLS1: exact 8/64 →
-  normalized 49/64.
+- **Maturity**: SCOPING → early IN_PROGRESS — problem framed, tool landscape
+  surveyed, and a **working end-to-end pipeline**
+  ([`probe/`](METABOLOMICS/probe/README.md)): two-tier ChEBI normalization
+  (protonation + InChIKey-skeleton), the `metabolite→Rhea→rhea2go→GO` bridge, a
+  closure-aware GO ORA, and a like-for-like KEGG-pathway baseline — demonstrated
+  on a real study.
+- **Computed live** (OLS4 ChEBI, Rhea REST = 18,558 reactions / 14,251
+  participant ChEBIs, GO `rhea2go` = 7,746 mappings, `go-basic.obo` closure,
+  KEGG REST):
+  - Coverage, MetaboLights **MTBLS1** (64 curated metabolites): exact **8/64** →
+    +protonation **49/64** → +skeleton **58/64**; demo set 0/26 → 22/26 → 25/26.
+  - GO function enrichment vs KEGG-pathway baseline on MTBLS1 (same hypergeometric
+    test): both recover amino-acid / central-carbon biology; GO additionally
+    resolves the specific enzyme activities (transaminase, amino-acid
+    oxidase/racemase, methylamine oxidase).
 - **Key idea**: ChEBI is the bridge from metabolite repositories (MetaboLights,
   Workbench/RefMet) into Rhea reactions, `rhea2go` GO molecular functions, GOA
   genes, and GO-CAM causal networks — giving a GO-native, closure-aware,

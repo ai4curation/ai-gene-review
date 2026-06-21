@@ -57,10 +57,13 @@ class Row:
     seed_charge: float | None
     family_size: int
     exact_rhea: bool
-    norm_rhea: bool
-    exact_go: int      # GO MF terms via exact seed
-    norm_go: int       # GO MF terms via whole family
-    matched_forms: list[str]   # which family members are Rhea participants
+    norm_rhea: bool      # protonation-normalized
+    struct_rhea: bool    # structure (skeleton) normalized
+    exact_go: int        # GO MF terms via exact seed
+    norm_go: int         # GO MF terms via protonation family
+    struct_go: int       # GO MF terms via skeleton family
+    matched_forms: list[str]    # protonation-family members that are Rhea participants
+    struct_forms: list[str]     # extra skeleton-family members that are Rhea participants
     example_go: list[str]
 
 
@@ -75,7 +78,8 @@ def resolve_seed(token: str) -> tuple[str | None, chebi.ChebiTerm | None]:
 def probe_metabolite(token: str, idx: rhea.RheaIndex) -> Row:
     seed_curie, seed_term = resolve_seed(token)
     if seed_curie is None or seed_term is None:
-        return Row(token, None, "(unresolved)", None, 0, False, False, 0, 0, [], [])
+        return Row(token, None, "(unresolved)", None, 0, False, False, False,
+                   0, 0, 0, [], [], [])
 
     family = chebi.protonation_family(seed_curie)
     exact_rxns = idx.reactions_for(seed_curie)
@@ -91,7 +95,26 @@ def probe_metabolite(token: str, idx: rhea.RheaIndex) -> Row:
         norm_rxns |= rxns
         norm_go |= idx.go_terms_for(cid)
 
-    example_go = [f"{go} {lab}" for go, lab in sorted(norm_go)][:3]
+    # Structure (skeleton) tier: only computed when protonation did not already
+    # connect, since it is the more permissive (stereo/charge-blind) fallback.
+    struct_rxns: set[str] = set(norm_rxns)
+    struct_go: set[tuple[str, str]] = set(norm_go)
+    struct_forms: list[str] = []
+    if not norm_rxns:
+        sfam = chebi.structural_family(seed_curie)
+        for cid, term in sfam.items():
+            if cid in family:
+                continue
+            rxns = idx.reactions_for(cid)
+            if rxns:
+                struct_forms.append((term.label, f"{term.label} ({cid}, q={_fmt_charge(term.charge)})"))
+            struct_rxns |= rxns
+            struct_go |= idx.go_terms_for(cid)
+        # Skeleton matching is stereo-blind; for the representative form prefer a
+        # non-D-prefixed (typically L / biological) label over its enantiomer.
+        struct_forms = [s for _, s in sorted(struct_forms, key=lambda x: (x[0].startswith("D-"), x[0]))]
+
+    example_go = [f"{go} {lab}" for go, lab in sorted(struct_go)][:3]
     return Row(
         name=token,
         seed=seed_curie,
@@ -100,9 +123,12 @@ def probe_metabolite(token: str, idx: rhea.RheaIndex) -> Row:
         family_size=len(family),
         exact_rhea=bool(exact_rxns),
         norm_rhea=bool(norm_rxns),
+        struct_rhea=bool(struct_rxns),
         exact_go=len(exact_go),
         norm_go=len(norm_go),
+        struct_go=len(struct_go),
         matched_forms=matched_forms,
+        struct_forms=struct_forms,
         example_go=example_go,
     )
 
@@ -125,10 +151,12 @@ def run(tokens: list[str]) -> list[Row]:
         rows.append(row)
         flag = ""
         if row.seed and not row.exact_rhea and row.norm_rhea:
-            flag = "  <- recovered ONLY by protonation normalization"
-        print(f"  {tok:28s} seed={row.seed or '-':14s} q={_fmt_charge(row.seed_charge):>3s} "
-              f"fam={row.family_size:2d} exact_rhea={row.exact_rhea!s:5s} "
-              f"norm_rhea={row.norm_rhea!s:5s} GO {row.exact_go}->{row.norm_go}{flag}",
+            flag = "  <- recovered by PROTONATION normalization"
+        elif row.seed and not row.norm_rhea and row.struct_rhea:
+            flag = "  <- recovered by STRUCTURE (skeleton) normalization"
+        print(f"  {tok:26s} seed={row.seed or '-':14s} q={_fmt_charge(row.seed_charge):>3s} "
+              f"exact={row.exact_rhea!s:5s} proton={row.norm_rhea!s:5s} "
+              f"struct={row.struct_rhea!s:5s} GO {row.exact_go}->{row.norm_go}->{row.struct_go}{flag}",
               file=sys.stderr)
     return rows
 
@@ -140,9 +168,12 @@ def summarize(rows: list[Row]) -> dict[str, int]:
         "resolved": len(resolved),
         "exact_rhea": sum(r.exact_rhea for r in resolved),
         "norm_rhea": sum(r.norm_rhea for r in resolved),
+        "struct_rhea": sum(r.struct_rhea for r in resolved),
         "exact_go": sum(r.exact_go > 0 for r in resolved),
         "norm_go": sum(r.norm_go > 0 for r in resolved),
-        "recovered": sum(r.norm_rhea and not r.exact_rhea for r in resolved),
+        "struct_go": sum(r.struct_go > 0 for r in resolved),
+        "recovered_proton": sum(r.norm_rhea and not r.exact_rhea for r in resolved),
+        "recovered_struct": sum(r.struct_rhea and not r.norm_rhea for r in resolved),
     }
 
 
@@ -161,21 +192,28 @@ def write_results(rows: list[Row], s: dict[str, int], out: Path | None = None,
     lines.append(f"Generated by [`coverage_probe.py`]({rel_prefix}coverage_probe.py) — all numbers")
     lines.append("computed live from OLS4 (ChEBI), the Rhea REST API, and the GO `rhea2go` mapping.\n")
     lines.append("## Why this probe exists\n")
-    lines.append("Metabolomics repositories report metabolites as their **neutral** species;")
-    lines.append("Rhea writes reaction participants in their **major protonation state at**")
-    lines.append("**pH 7.3**. Matching the reported ChEBI id directly against Rhea therefore")
-    lines.append("misses the bridge. We expand each metabolite over ChEBI's")
-    lines.append("`is_protonated_form_of` / `is_deprotonated_form_of` relations (its")
-    lines.append("*protonation family*) and re-check. The EXACT vs NORMALIZED gap is the")
-    lines.append("value added by protonation normalization.\n")
+    lines.append("Reported metabolite ChEBI ids rarely match Rhea participants directly,")
+    lines.append("for two reasons we test as successive normalization tiers:\n")
+    lines.append("1. **Protonation** — Rhea writes participants in their major protonation")
+    lines.append("   state at pH 7.3 (`citrate(3-)`, `ATP(4-)`); repositories report neutral")
+    lines.append("   forms. We expand over ChEBI `is_protonated_form_of` /")
+    lines.append("   `is_deprotonated_form_of` (the *protonation family*).")
+    lines.append("2. **Structure / skeleton** — a study reports a generic, non-stereospecific")
+    lines.append("   compound (`isoleucine`) while Rhea uses the stereospecific zwitterion")
+    lines.append("   (`L-isoleucine zwitterion`). We expand over the broader structural")
+    lines.append("   relations (+ tautomer/enantiomer + generic→specific `children`), bounded")
+    lines.append("   to the seed's **InChIKey skeleton**. This tier is stereo/charge-blind, so")
+    lines.append("   it is reported separately as the more permissive fallback.\n")
     lines.append("## Headline\n")
     lines.append(f"- Metabolites probed: **{s['n']}** (resolved to ChEBI: {s['resolved']})")
-    lines.append(f"- In a Rhea reaction — **exact: {s['exact_rhea']}/{s['resolved']}**, "
-                 f"**normalized: {s['norm_rhea']}/{s['resolved']}**")
-    lines.append(f"- Reaching a GO MF term (rhea2go) — **exact: {s['exact_go']}/{s['resolved']}**, "
-                 f"**normalized: {s['norm_go']}/{s['resolved']}**")
-    lines.append(f"- **Recovered only by protonation normalization: {s['recovered']} "
-                 f"metabolite(s)**\n")
+    lines.append(f"- In a Rhea reaction — **exact: {s['exact_rhea']}/{s['resolved']}** → "
+                 f"**+protonation: {s['norm_rhea']}/{s['resolved']}** → "
+                 f"**+structure: {s['struct_rhea']}/{s['resolved']}**")
+    lines.append(f"- Reaching a GO MF term (rhea2go) — **exact: {s['exact_go']}** → "
+                 f"**+protonation: {s['norm_go']}** → **+structure: {s['struct_go']}** "
+                 f"(of {s['resolved']})")
+    lines.append(f"- Recovered by **protonation**: {s['recovered_proton']}; additionally by "
+                 f"**structure/skeleton**: {s['recovered_struct']}\n")
     def dname(r: Row) -> str:
         # Prefer the verified ChEBI label when the input was a bare id.
         if r.name.upper().startswith("CHEBI:") and r.seed_label and r.seed_label != "(unresolved)":
@@ -183,29 +221,43 @@ def write_results(rows: list[Row], s: dict[str, int], out: Path | None = None,
         return r.name
 
     lines.append("## Per-metabolite\n")
-    lines.append("| Metabolite | Seed ChEBI | q | Family | Exact→Rhea | Norm→Rhea | GO MF (exact→norm) | Rhea-matched form |")
-    lines.append("|---|---|---:|---:|:--:|:--:|:--:|---|")
+    lines.append("Tier reached: `exact` < `proton` (protonation) < `struct` (skeleton) < `—` (miss).\n")
+    lines.append("| Metabolite | Seed ChEBI | q | Tier | GO MF (exact→proton→struct) | Rhea-matched form |")
+    lines.append("|---|---|---:|:--:|:--:|---|")
     for r in rows:
-        matched = r.matched_forms[0] if r.matched_forms else "—"
+        if r.exact_rhea:
+            tier = "exact"
+        elif r.norm_rhea:
+            tier = "proton"
+        elif r.struct_rhea:
+            tier = "struct"
+        else:
+            tier = "—"
+        matched = (r.matched_forms or r.struct_forms or ["—"])[0]
         lines.append(
-            f"| {dname(r)} | {r.seed or '—'} | {_fmt_charge(r.seed_charge)} | {r.family_size} | "
-            f"{'✓' if r.exact_rhea else '·'} | {'✓' if r.norm_rhea else '·'} | "
-            f"{r.exact_go}→{r.norm_go} | {matched} |"
+            f"| {dname(r)} | {r.seed or '—'} | {_fmt_charge(r.seed_charge)} | {tier} | "
+            f"{r.exact_go}→{r.norm_go}→{r.struct_go} | {matched} |"
         )
+    lines.append("\n## Recovered by structure (skeleton) normalization\n")
+    struct_only = [r for r in rows if r.seed and r.struct_rhea and not r.norm_rhea]
+    if struct_only:
+        lines.append("Generic / stereochemistry mismatches the protonation tier could not fix,")
+        lines.append("recovered by InChIKey-skeleton expansion:\n")
+        for r in struct_only:
+            form = r.struct_forms[0] if r.struct_forms else "—"
+            lines.append(f"- **{dname(r)}** ({r.seed}) → {form}")
+    else:
+        lines.append("_(none in this set)_")
     lines.append("\n## Example GO molecular functions reached\n")
     for r in rows:
-        if r.example_go and not r.exact_rhea and r.norm_rhea:
+        if r.example_go and not r.exact_rhea and (r.norm_rhea or r.struct_rhea):
             lines.append(f"- **{dname(r)}** ({r.seed}) → " + "; ".join(r.example_go))
-    residual = [r for r in rows if r.seed and not r.norm_rhea]
+    residual = [r for r in rows if r.seed and not r.struct_rhea]
     if residual:
-        lines.append("\n## Residual misses (a *different* mismatch class)\n")
-        lines.append("These resolved to ChEBI but matched no Rhea reaction even after")
-        lines.append("protonation normalization. They expose a second ID-mismatch class that")
-        lines.append("protonation expansion does **not** fix — **stereochemistry / anomer** and")
-        lines.append("**generic-vs-structurally-specific** ChEBI mismatch (e.g. Rhea uses a")
-        lines.append("stereospecific or anomer-specific form, or a structurally-defined child of")
-        lines.append("a generic 2D parent). Fixing these needs tautomer/enantiomer/`has parent")
-        lines.append("hydride` traversal or structure-skeleton (InChIKey) matching — a follow-up.\n")
+        lines.append("\n## Residual misses (after both normalization tiers)\n")
+        lines.append("Resolved to ChEBI but matched no Rhea reaction even after protonation and")
+        lines.append("skeleton normalization — typically derivatives Rhea represents only in a")
+        lines.append("conjugated/acylated form, or compounds genuinely absent from Rhea.\n")
         for r in residual:
             lines.append(f"- **{dname(r)}** ({r.seed}, family size {r.family_size})")
     lines.append("\n## Method / reproducibility\n")
@@ -251,9 +303,12 @@ def main() -> int:
     s = summarize(rows)
     print("\n== SUMMARY ==", file=sys.stderr)
     print(f"  metabolites probed : {s['n']} (resolved {s['resolved']})", file=sys.stderr)
-    print(f"  in Rhea  exact={s['exact_rhea']}  normalized={s['norm_rhea']}", file=sys.stderr)
-    print(f"  GO MF    exact={s['exact_go']}  normalized={s['norm_go']}", file=sys.stderr)
-    print(f"  recovered ONLY by protonation normalization: {s['recovered']}", file=sys.stderr)
+    print(f"  in Rhea  exact={s['exact_rhea']}  proton={s['norm_rhea']}  struct={s['struct_rhea']}",
+          file=sys.stderr)
+    print(f"  GO MF    exact={s['exact_go']}  proton={s['norm_go']}  struct={s['struct_go']}",
+          file=sys.stderr)
+    print(f"  recovered by protonation: {s['recovered_proton']}  "
+          f"+ by structure(skeleton): {s['recovered_struct']}", file=sys.stderr)
 
     if args.write_results or args.out:
         rel_prefix = "../" if args.out and args.out.parent.name == "studies" else ""
