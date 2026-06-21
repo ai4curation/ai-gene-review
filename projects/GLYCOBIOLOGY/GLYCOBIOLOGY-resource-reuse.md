@@ -49,18 +49,47 @@ EC-masking computation [RHEA](../RHEA.md) already runs (`ec2go` is fetchable fro
 **non-redundant remainder**: families with no EC, no `ec2go` row, or no InterPro coverage. Redundancy
 status is noted per row in the seed; computing it live across all families is the scale-up step.
 
-### Scaling beyond the seed
+### Beyond the seed — the generated full mapping
 
-The seed covers 5 families. The full ~190 GT/GH/PL/CE families can be seeded from the **dbCAN-sub
-subfamily → EC → glycan-substrate** table ([dbCAN3](https://pubmed.ncbi.nlm.nih.gov/37125649/)),
-which is specific enough to avoid the family-level coarseness (it is precisely the subfamily
-resolution the `narrowMatch` rows ask for), then EC → `ec2go` for the GO target and the redundancy
-filter for the marginal set.
+The 5-family hand-curated seed is now extended to **all CAZy enzyme families derivable from public
+data**, reproducibly, by [`build_cazy2go.py`](build_cazy2go.py) →
+[`cazy2go.generated.sssom.yaml`](cazy2go.generated.sssom.yaml). No row is hand-typed: each is the
+live join
+
+```
+CAZy family --(reviewed Swiss-Prot CAZy↔EC xref, UniProt REST)--> EC --(ec2go)--> GO MF
+```
+
+Current build (2026-06): **3,183 reviewed UniProtKB CAZy+EC entries → 302 families → 702 mapping
+rows over 283 families** (19 families carry an EC with no `ec2go` term — gap candidates). The same
+exact/narrow logic as the seed is applied automatically:
+
+| | families | meaning |
+|--|---------:|---------|
+| `exactMatch` | **162** | family's ECs resolve to a single GO MF → mono-specific, ready to propagate |
+| `narrowMatch` | **121** | poly-specific family; GO term applies to a subfamily → resolve subfamily/EC first |
+
+The **trivial redundancy filter** is built in: 80 generic-parent rows (`glycosyltransferase
+activity`, `hexosyltransferase activity`, `hydrolase acting on glycosyl bonds`, …) were dropped where
+the family also resolved to a specific child — so the output already prefers the specific term. The
+generated rows are cross-consistent with the hand-curated seed (e.g. GT13→GO:0003827,
+GT65→GO:0046922 both resolve to the same `exactMatch` the seed asserts).
+
+**Caveat** (the redundancy property): because every row is derived *through* an EC that already
+reaches GO via `ec2go`, the rows are EC-reachable by construction. Their value is the same as
+`interpro2go`'s — annotating a protein from CAZy family membership when it lacks an EC/`ec2go`
+annotation — but the marginal-vs-`ec2go` contribution still needs closure-filtering across organisms
+(the [RHEA](../RHEA.md) EC-masking method). Finer subfamily resolution (for the `narrowMatch`
+families) is the next refinement, seedable from the **dbCAN-sub subfamily → EC** table
+([dbCAN3](https://pubmed.ncbi.nlm.nih.gov/37125649/)).
 
 ## Status
 
-- **Seeded**: `cazy2go.sssom.yaml` (5 exemplar GT-family rows; GO ids QuickGO-verified, activities
-  review-backed).
-- **Next**: (1) build the `cazy2go` LinkML schema + `validate-cazy-mappings` recipe mirroring
-  `validate-rhea-mappings`; (2) compute live `ec2go`/`interpro2go` redundancy; (3) seed GlycoCoO→GO
-  alignment SSSOM; (4) write the GlyGen-join confirmatory probe over the exemplars.
+- **Seed**: `cazy2go.sssom.yaml` — 5 exemplar GT-family rows, review-backed, GO ids QuickGO-verified.
+- **Generated**: `cazy2go.generated.sssom.yaml` — 702 rows / 283 families, reproducible via
+  `build_cazy2go.py` (UniProt CAZy↔EC × ec2go), SSSOM-structurally valid.
+- **Next**: (1) `cazy2go` LinkML schema + `validate-cazy-mappings` recipe mirroring
+  `validate-rhea-mappings` (incl. GO-label term validation of a generated terms file); (2) live
+  cross-organism `ec2go`/`interpro2go` closure to quantify the marginal (non-redundant) contribution;
+  (3) subfamily resolution for the 121 `narrowMatch` families from dbCAN-sub; (4) GlycoCoO→GO
+  alignment SSSOM; (5) GlyGen-join confirmatory probe over the exemplars.
