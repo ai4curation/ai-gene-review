@@ -27,12 +27,33 @@ The 4 residual misses expose a *second*, distinct ID-mismatch class
 (stereochemistry/anomer and generic-vs-structurally-specific ChEBI) that
 protonation expansion does not fix — documented in RESULTS.md as a follow-up.
 
+## Real study: MetaboLights MTBLS1 (see [studies/MTBLS1-RESULTS.md](studies/MTBLS1-RESULTS.md))
+
+Run on the 64 curator-assigned ChEBI metabolites of MTBLS1 (Salek et al.,
+type-2-diabetes urine NMR), pulled live from the study's MAF:
+
+- **Exact ChEBI match to Rhea: 8/64** → **protonation-normalized: 49/64** (6× uplift).
+- The 8 exact matches are the uncharged metabolites (acetone, ethanol,
+  adenosine, uridine…) plus one curator-entered anion — i.e. the ones with no
+  protonation ambiguity.
+- The residual misses are dominated by the **branched-chain amino acids
+  (Ile/Leu/Val)** — the canonical diabetes biomarkers — lost because the
+  curators used generic (non-stereospecific) ChEBI ids while Rhea uses the
+  L-zwitterion. This is the stereochemistry/generic-vs-specific class, the
+  motivation for the next follow-up.
+
 ## Run it
 
 ```bash
 uv run python coverage_probe.py                 # built-in demo metabolite set
 uv run python coverage_probe.py --write-results # also regenerate RESULTS.md
-uv run python coverage_probe.py --chebi-file my_study.txt   # real study (one CHEBI:xxxx/line)
+
+# Real MetaboLights study, end to end:
+uv run python fetch_metabolights.py MTBLS1      # -> studies/MTBLS1.chebi.txt
+uv run python coverage_probe.py --chebi-file studies/MTBLS1.chebi.txt \
+    --out studies/MTBLS1-RESULTS.md --title "MTBLS1 → GO bridge coverage" \
+    --source "MetaboLights MTBLS1"
+
 uv run python coverage_probe.py --names-file my_names.txt   # one metabolite name/line
 ```
 
@@ -43,6 +64,9 @@ uv run python coverage_probe.py --names-file my_names.txt   # one metabolite nam
 - [`rhea.py`](rhea.py) — Rhea reaction→participant index + `rhea2go` GO mapping,
   both fetched live (Rhea REST, GO external2go).
 - [`coverage_probe.py`](coverage_probe.py) — orchestration + RESULTS.md writer.
+- [`fetch_metabolights.py`](fetch_metabolights.py) — pull any MetaboLights
+  accession's curated ChEBI metabolites from its MAF into `studies/<ACC>.chebi.txt`.
+- `studies/` — per-study inputs + generated results (committed).
 - `.cache/` — on-disk cache of all API responses (gitignored; delete to refresh).
 
 Everything is computed live; nothing is hardcoded. With no network the scripts

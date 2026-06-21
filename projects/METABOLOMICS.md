@@ -90,6 +90,37 @@ specific** ChEBI mismatch — that protonation expansion does not fix, and which
 follow-up must address with tautomer/enantiomer traversal or InChIKey-skeleton
 matching.
 
+### Confirmed on a real study (MetaboLights MTBLS1)
+
+The same probe was run on the **curator-assigned ChEBI metabolites of a real
+deposited study** — [MTBLS1](METABOLOMICS/probe/studies/MTBLS1-RESULTS.md)
+(Salek et al., type-2-diabetes urine NMR), 64 distinct metabolites pulled live
+from the study's MAF. Real curated data is heterogeneous (a mix of neutral,
+charged and generic forms), so it is a sterner test than the idealized demo set:
+
+| Match strategy | Metabolites reaching a Rhea reaction |
+|---|---|
+| **Exact ChEBI id** (as the curators recorded) | **8 / 64** |
+| **Protonation-normalized** | **49 / 64** |
+
+A **6× uplift** (41 metabolites recovered only by normalization) on real data.
+The 8 exact matches are almost all the *uncharged* metabolites (acetone,
+ethanol, adenosine, uridine, creatinine, allantoin) plus the one anion the
+curator happened to enter charged (`2-oxoglutarate(2-)`) — i.e. exactly the
+metabolites with no protonation ambiguity. Everything with an ionisable group
+needed normalization.
+
+The biological kicker is in the 15 residual misses: they are dominated by the
+**branched-chain amino acids isoleucine, leucine, valine** — *the* canonical
+type-2-diabetes biomarkers — plus glutamate, glutamine, histidine,
+phenylalanine and citrulline. These are lost not to protonation but because the
+curators used the **generic (non-stereospecific) ChEBI ids** (e.g. `isoleucine
+CHEBI:24898`) while Rhea uses the **L-stereospecific zwitterion**
+(`L-isoleucine zwitterion`). So the metabolites most diagnostically important
+for this study fall squarely into the stereochemistry/generic-vs-specific
+residual class — a concrete, high-value motivation for the InChIKey-skeleton
+normalization follow-up.
+
 ## Why GO is not used for metabolomics today (the gap)
 
 GO annotates **gene products**, not metabolites — so out of the box GO says
@@ -218,8 +249,8 @@ tooling rather than duplicating it:
 | Target | Status | Rationale |
 |--------|--------|-----------|
 | ChEBI→Rhea→`rhea2go` coverage probe + protonation normalization | **DONE** ([probe](METABOLOMICS/probe/RESULTS.md)) | Bridge connects 22/26 only after protonation normalization (0/26 exact) |
-| Run the probe over a real MetaboLights/Workbench study (`--chebi-file`) | TODO | Replace the demo set with deposited study metabolites; the runner already accepts it |
-| Add stereochemistry/anomer + generic-vs-specific resolution | TODO | The residual-miss class the protonation fix does not cover (InChIKey-skeleton / tautomer traversal) |
+| Run the probe over a real MetaboLights study | **DONE** ([MTBLS1](METABOLOMICS/probe/studies/MTBLS1-RESULTS.md)) | 64 curated metabolites: 8/64 exact → 49/64 normalized (6× uplift); `fetch_metabolights.py` pulls any accession |
+| Add stereochemistry/anomer + generic-vs-specific resolution | TODO (high value) | The residual-miss class — and on MTBLS1 it captures the diabetes BCAAs (Ile/Leu/Val) — needs InChIKey-skeleton / tautomer / stereo traversal |
 | Lift matched reactions to GO BP + closure-aware ORA | TODO | Turn coverage into a statistical enrichment (Approach A vs SMPDB/KEGG baseline) |
 | Inventory GO-CAM metabolic models + their ChEBI input/output compounds | TODO | Feasibility of Approach B (the "full network" path) |
 | Glucose-metabolism GO-CAM perturbation worked example | TODO | Direct analogue of the Genetics 2023 precedent |
@@ -259,10 +290,12 @@ tooling rather than duplicating it:
   **working coverage probe** ([`probe/`](METABOLOMICS/probe/README.md)) that
   confirms the bridge connects (22/26) but only after **protonation
   normalization** (0/26 exact). Enrichment (GO-BP ORA) is the next step.
-- **Computed live**: coverage probe over 26 metabolites via OLS4 (ChEBI),
-  Rhea REST (18,558 reactions, 14,251 participant ChEBIs) and GO `rhea2go`
-  (7,746 mappings); protonation families via ChEBI
-  `is_protonated_form_of`/`is_deprotonated_form_of`.
+- **Computed live**: coverage probe over a 26-metabolite demo set **and the 64
+  curated metabolites of MetaboLights MTBLS1** via OLS4 (ChEBI), Rhea REST
+  (18,558 reactions, 14,251 participant ChEBIs) and GO `rhea2go` (7,746
+  mappings); protonation families via ChEBI
+  `is_protonated_form_of`/`is_deprotonated_form_of`. MTBLS1: exact 8/64 →
+  normalized 49/64.
 - **Key idea**: ChEBI is the bridge from metabolite repositories (MetaboLights,
   Workbench/RefMet) into Rhea reactions, `rhea2go` GO molecular functions, GOA
   genes, and GO-CAM causal networks — giving a GO-native, closure-aware,
