@@ -289,10 +289,15 @@ inter-organ) is in play.
 ## Reproduce
 
 ```bash
+# Engine (from the repo root) — promoted to src/ai_gene_review/module_logic.py
+uv run pytest --doctest-modules src/ai_gene_review/module_logic.py   # logic doctests
+uv run pytest tests/test_module_logic.py -q                          # engine unit tests
+#   route enumeration + gate for a module, ad hoc:
+uv run python -c "from ai_gene_review.module_logic import compile_module_file, enumerate_routes, core_atoms; c=compile_module_file('modules/gluconeogenesis_human.yaml'); print(len(enumerate_routes(c)), 'routes; gate', [a.gene_symbol for a in core_atoms(c)])"
+
+# Oracles + per-context resolvers (from this directory)
 cd modules/experimental/gluconeogenesis-context
-uv run python -m doctest module_logic.py -v          # logic doctests
 uv run python gtex_oracle.py                          # refresh cache from GTEx v8
-uv run python module_logic.py ../../gluconeogenesis_human.yaml   # routes + gate
 uv run python resolve_context.py                      # per-tissue resolution + validation
 uv run python resolve_context.py --threshold 5        # graded gate
 
@@ -305,7 +310,6 @@ uv run python kegg_oracle.py                           # cache KEGG ortholog pre
 uv run python resolve_genomes.py                       # GapMind-style methionine reconstruction
 uv run python resolve_abduction.py                     # microbial gaps vs phenotype -> leads / auxotrophy
 uv run python resolve_eukaryotic_abduction.py          # tissue gaps vs function (ketolysis, gluconeogenesis)
-uv run pytest tests/test_module_logic.py -q            # engine unit tests (from repo root)
 ```
 
 ## Next steps
