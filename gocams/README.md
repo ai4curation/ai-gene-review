@@ -70,8 +70,9 @@ just validate-gocam-review gocams/568b0f9600000284/568b0f9600000284-review.yaml
 ```
 
 The stub pre-fills each activity's gene product / MF / BP / CC with `PENDING`
-assessments. See `BEST_PRACTICE.md` for the rubric (verdicts, QC flags, and
-consistency-with-gene-review categories) behind the schema's enums.
+assessments. The rubric behind the schema's enums (verdicts, QC flags, and
+consistency-with-gene-review categories) is the **`gocam-curation` skill**
+(`.claude/skills/gocam-curation/`); `BEST_PRACTICE.md` is a short pointer to it.
 
 ## Referencing GO-CAMs from modules
 
