@@ -56,3 +56,26 @@ The ATPase binding annotation (PMID:17360703) reflects the G1/a (V0 subunit a) i
 ## Summary of core function
 
 ATP6V1G1 is a structural peripheral stalk subunit of the V1 complex of the V-ATPase. Its core function is as part of the proton-transporting ATPase complex. Annotations to V1 domain membership, proton transmembrane transport, and lysosomal/endosomal membrane localization are all well-supported. The iron homeostasis and HIF pathway effects are downstream consequences of V-ATPase proton pump activity rather than direct molecular functions of the G1 subunit per se.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1G1/ATP6V1G1-deep-research-falcon.md`,
+26 citations). It corroborates the G1 peripheral-stalk core above and adds isoform
+and disease-context detail; no change to annotation calls.
+
+- **Core confirmed.** G1 pairs with subunit E to form the **EG peripheral stalks**
+  (stator) of V1, holding the A3B3 head against rotor torque; structural/regulatory,
+  not catalytic. G1 is the ubiquitous G isoform (vs neuronal G2 / kidney G3).
+- **G-isoform interchangeability / post-translational compensation (Kawamura
+  2015).** Loss of neuron-specific **G2** upregulates **G1 protein** (without mRNA
+  increase) in brain, showing G1 can substitute for tissue-specific G isoforms —
+  relevant when interpreting isoform-restricted annotations.
+- **Cancer / druggability (non-core).** G1 supports glioma stem-cell maintenance,
+  proliferation and invasion (knockdown is lethal to neurospheres but not
+  differentiated cells); the V1G subunit is targetable pharmacologically
+  (verucopeptin inhibits V-ATPase + mTORC1 in multidrug-resistant tumors). HCC
+  phosphoproteomics and cardiovascular/neurotoxicity links are further
+  disease-context, non-core.
+
+Net: no change to calls — G1 is the ubiquitous EG peripheral-stalk (stator) V1
+subunit supporting V-ATPase assembly and organellar acidification.
