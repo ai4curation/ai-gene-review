@@ -120,21 +120,46 @@ a term `ec2go` lacks. But the join surfaced genuinely new, actionable signal:
   `hexosyltransferase activity` and are weaker.)
 - **The other 117 marginal families are poly-specific** (`narrowMatch`) — real specificity gain but
   **unsafe at family level**; route via subfamily/EC (dbCAN-sub).
-- **Caveat:** exact-match upper bound — many marginal specific terms are *descendants* of a generic
-  term InterPro already supplies, so a protein isn't unannotated; the gain is **altitude/specificity**.
-  Ontology-closure filtering (the RHEA method) would shrink the 544 headline.
+**Closure-filtered result** ([`closure_cazy_interpro.py`](closure_cazy_interpro.py), GO `is_a`
+closure via oaklib / cached `sqlite:obo:go`). I expected closure to *shrink* the 544 headline; **it
+barely does (544 → 529)** — instead it shows what kind of contribution it is. Partitioning the 544
+marginal pairs:
 
-**Bottom line:** `cazy2go` is **not** mostly redundant with `interpro2go` — it adds reaction-level MF
-specificity for ~110 families safely (family-level) and ~117 more via subfamilies. That is a real,
-quantified contribution over the existing InterPro route.
+| class | pairs | meaning |
+|-------|------:|---------|
+| **DESCENDANT_MASKED** (drop) | **15 (3%)** | InterPro already gives G or a *more specific* child → no gain |
+| **ALTITUDE_GAIN** | **405 (74%)** | InterPro gives only a generic *ancestor*; `cazy2go` adds the specific reaction-level MF |
+| **TRUE_GAP** | **124 (23%)** | InterPro is *silent* on G's branch for this family → genuinely new coverage |
+
+So only **3%** of the marginal is closure-masked; **97% is real** (529 pairs = altitude + gap). The
+TRUE_GAP set spans **98 families** and includes biologically central activities InterPro2GO does not
+supply for the family at all: **GT27/CBM13 → polypeptide-GalNAc-T** (mucin O-glyco initiators),
+**GH19 → lysozyme**, **GH14 → α-amylase**, **GH33 → sialidase**, **PL1 → pectin lyase**,
+**GT43 → β-1,4-xylan synthase**, **GH32 → fructan fructosyltransferase**. (A few are still generic,
+e.g. GH72 → `hexosyltransferase activity`, or noisy multi-activity families like GH23 → peptidase.)
+
+**Caveat:** `is_a`-only closure; an ALTITUDE_GAIN whose only InterPro ancestor is near the
+`molecular_function` root is a weak gain. And the partition is per (family, term): a TRUE_GAP in a
+**poly-specific** family (e.g. GH1 90 members → one plant glucosyltransferase) is real coverage but
+still **unsafe to propagate at family level** — route via subfamily.
+
+**Bottom line:** `cazy2go` is **not** mostly redundant with `interpro2go` and closure does **not**
+explain it away — 97% of the exact-match marginal survives closure as genuine altitude (74%) or
+coverage (23%) gain. It adds reaction-level MF specificity for ~110 mono-specific families safely
+(family-level) and more via subfamilies; **124 pairs across 98 families are activities InterPro2GO is
+silent on entirely**.
 
 ## Status
 
 - **Seed**: `cazy2go.sssom.yaml` — 5 exemplar GT-family rows, review-backed, GO ids QuickGO-verified.
 - **Generated**: `cazy2go.generated.sssom.yaml` — 702 rows / 283 families, reproducible via
   `build_cazy2go.py` (UniProt CAZy↔EC × ec2go), SSSOM-structurally valid.
+- **Marginal-vs-interpro2go**: computed (`compare_cazy_interpro.py`) — only 20% masked; and
+  **closure-filtered** (`closure_cazy_interpro.py`) — 97% of the marginal survives closure (74%
+  altitude, 23% true-gap; only 3% descendant-masked).
 - **Next**: (1) `cazy2go` LinkML schema + `validate-cazy-mappings` recipe mirroring
-  `validate-rhea-mappings` (incl. GO-label term validation of a generated terms file); (2) live
-  cross-organism `ec2go`/`interpro2go` closure to quantify the marginal (non-redundant) contribution;
-  (3) subfamily resolution for the 121 `narrowMatch` families from dbCAN-sub; (4) GlycoCoO→GO
-  alignment SSSOM; (5) GlyGen-join confirmatory probe over the exemplars.
+  `validate-rhea-mappings` (incl. GO-label term validation of a generated terms file); (2) subfamily
+  resolution for the poly-specific families from dbCAN-sub (so TRUE_GAP/altitude terms can be
+  attributed safely); (3) curate the ~110 mono-specific safe wins + the 98 TRUE_GAP families into
+  the `cazy2go.sssom.yaml` proper; (4) GlycoCoO→GO alignment SSSOM; (5) GlyGen-join confirmatory
+  probe over the exemplars.

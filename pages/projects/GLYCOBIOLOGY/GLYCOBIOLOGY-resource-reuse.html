@@ -518,24 +518,67 @@ a term <code>ec2go</code> lacks. But the join surfaced genuinely new, actionable
   glucosyltransferase), <strong>GH109</strong> (α-N-acetylgalactosaminidase). (A handful only reach a generic<br />
 <code>hexosyltransferase activity</code> and are weaker.)</li>
 <li><strong>The other 117 marginal families are poly-specific</strong> (<code>narrowMatch</code>) — real specificity gain but<br />
-<strong>unsafe at family level</strong>; route via subfamily/EC (dbCAN-sub).</li>
-<li><strong>Caveat:</strong> exact-match upper bound — many marginal specific terms are <em>descendants</em> of a generic<br />
-  term InterPro already supplies, so a protein isn't unannotated; the gain is <strong>altitude/specificity</strong>.<br />
-  Ontology-closure filtering (the RHEA method) would shrink the 544 headline.</li>
+<strong>unsafe at family level</strong>; route via subfamily/EC (dbCAN-sub).<br />
+<strong>Closure-filtered result</strong> (<a href="closure_cazy_interpro.py"><code>closure_cazy_interpro.py</code></a>, GO <code>is_a</code><br />
+closure via oaklib / cached <code>sqlite:obo:go</code>). I expected closure to <em>shrink</em> the 544 headline; <strong>it<br />
+barely does (544 → 529)</strong> — instead it shows what kind of contribution it is. Partitioning the 544<br />
+marginal pairs:</li>
 </ul>
-<p><strong>Bottom line:</strong> <code>cazy2go</code> is <strong>not</strong> mostly redundant with <code>interpro2go</code> — it adds reaction-level MF<br />
-specificity for ~110 families safely (family-level) and ~117 more via subfamilies. That is a real,<br />
-quantified contribution over the existing InterPro route.</p>
+<table>
+<thead>
+<tr>
+<th>class</th>
+<th style="text-align: right;">pairs</th>
+<th>meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DESCENDANT_MASKED</strong> (drop)</td>
+<td style="text-align: right;"><strong>15 (3%)</strong></td>
+<td>InterPro already gives G or a <em>more specific</em> child → no gain</td>
+</tr>
+<tr>
+<td><strong>ALTITUDE_GAIN</strong></td>
+<td style="text-align: right;"><strong>405 (74%)</strong></td>
+<td>InterPro gives only a generic <em>ancestor</em>; <code>cazy2go</code> adds the specific reaction-level MF</td>
+</tr>
+<tr>
+<td><strong>TRUE_GAP</strong></td>
+<td style="text-align: right;"><strong>124 (23%)</strong></td>
+<td>InterPro is <em>silent</em> on G's branch for this family → genuinely new coverage</td>
+</tr>
+</tbody>
+</table>
+<p>So only <strong>3%</strong> of the marginal is closure-masked; <strong>97% is real</strong> (529 pairs = altitude + gap). The<br />
+TRUE_GAP set spans <strong>98 families</strong> and includes biologically central activities InterPro2GO does not<br />
+supply for the family at all: <strong>GT27/CBM13 → polypeptide-GalNAc-T</strong> (mucin O-glyco initiators),<br />
+<strong>GH19 → lysozyme</strong>, <strong>GH14 → α-amylase</strong>, <strong>GH33 → sialidase</strong>, <strong>PL1 → pectin lyase</strong>,<br />
+<strong>GT43 → β-1,4-xylan synthase</strong>, <strong>GH32 → fructan fructosyltransferase</strong>. (A few are still generic,<br />
+e.g. GH72 → <code>hexosyltransferase activity</code>, or noisy multi-activity families like GH23 → peptidase.)</p>
+<p><strong>Caveat:</strong> <code>is_a</code>-only closure; an ALTITUDE_GAIN whose only InterPro ancestor is near the<br />
+<code>molecular_function</code> root is a weak gain. And the partition is per (family, term): a TRUE_GAP in a<br />
+<strong>poly-specific</strong> family (e.g. GH1 90 members → one plant glucosyltransferase) is real coverage but<br />
+still <strong>unsafe to propagate at family level</strong> — route via subfamily.</p>
+<p><strong>Bottom line:</strong> <code>cazy2go</code> is <strong>not</strong> mostly redundant with <code>interpro2go</code> and closure does <strong>not</strong><br />
+explain it away — 97% of the exact-match marginal survives closure as genuine altitude (74%) or<br />
+coverage (23%) gain. It adds reaction-level MF specificity for ~110 mono-specific families safely<br />
+(family-level) and more via subfamilies; <strong>124 pairs across 98 families are activities InterPro2GO is<br />
+silent on entirely</strong>.</p>
 <h2 id="status">Status</h2>
 <ul>
 <li><strong>Seed</strong>: <code>cazy2go.sssom.yaml</code> — 5 exemplar GT-family rows, review-backed, GO ids QuickGO-verified.</li>
 <li><strong>Generated</strong>: <code>cazy2go.generated.sssom.yaml</code> — 702 rows / 283 families, reproducible via<br />
 <code>build_cazy2go.py</code> (UniProt CAZy↔EC × ec2go), SSSOM-structurally valid.</li>
+<li><strong>Marginal-vs-interpro2go</strong>: computed (<code>compare_cazy_interpro.py</code>) — only 20% masked; and<br />
+<strong>closure-filtered</strong> (<code>closure_cazy_interpro.py</code>) — 97% of the marginal survives closure (74%<br />
+  altitude, 23% true-gap; only 3% descendant-masked).</li>
 <li><strong>Next</strong>: (1) <code>cazy2go</code> LinkML schema + <code>validate-cazy-mappings</code> recipe mirroring<br />
-<code>validate-rhea-mappings</code> (incl. GO-label term validation of a generated terms file); (2) live<br />
-  cross-organism <code>ec2go</code>/<code>interpro2go</code> closure to quantify the marginal (non-redundant) contribution;<br />
-  (3) subfamily resolution for the 121 <code>narrowMatch</code> families from dbCAN-sub; (4) GlycoCoO→GO<br />
-  alignment SSSOM; (5) GlyGen-join confirmatory probe over the exemplars.</li>
+<code>validate-rhea-mappings</code> (incl. GO-label term validation of a generated terms file); (2) subfamily<br />
+  resolution for the poly-specific families from dbCAN-sub (so TRUE_GAP/altitude terms can be<br />
+  attributed safely); (3) curate the ~110 mono-specific safe wins + the 98 TRUE_GAP families into<br />
+  the <code>cazy2go.sssom.yaml</code> proper; (4) GlycoCoO→GO alignment SSSOM; (5) GlyGen-join confirmatory<br />
+  probe over the exemplars.</li>
 </ul>
     </div>
 
