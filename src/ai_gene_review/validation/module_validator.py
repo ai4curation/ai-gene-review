@@ -21,8 +21,15 @@ Prefixes mapped to ``null`` (e.g. ``PMID``, ``UniProtKB``, ``file``) are skipped
 silently; prefixes absent from the config are skipped with a warning, matching
 the documented ``oak_config.yaml`` semantics.
 
+It also enforces **bundle-scoped conformance**: any node declaring
+``conforms_to`` a template motif is checked (via ``module_qc``) so that an
+``error``-severity mismatch -- a wrong/missing tier, a broken relay topology,
+or an unresolvable template -- blocks validation, while declared
+``WITH_DEVIATIONS`` deviations surface as advisory warnings.
+
 Structural (schema) validation is handled separately by ``linkml-validate``
-(see ``just validate-modules``); this module only adds term-label checking.
+(see ``just validate-modules``); this module adds term-label and conformance
+checking.
 """
 
 from __future__ import annotations
@@ -239,7 +246,43 @@ def validate_module_file(
     if resolver is None:
         resolver = _build_oak_resolver(adapter_map)
     errors, warnings = validate_terms(terms, adapter_map, resolver)
+
+    # Conformance: verify every `conforms_to` bundle against its template motif.
+    # Templates are sibling module files, so they are resolved from the file's
+    # own directory. Errors block; warnings/info are advisory.
+    conformance_errors, conformance_warnings = validate_conformance(doc, path.parent)
+    errors.extend(conformance_errors)
+    warnings.extend(conformance_warnings)
+
     return ModuleValidationResult(path=path, errors=errors, warnings=warnings)
+
+
+def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], List[str]]:
+    """Check every ``conforms_to`` bundle against its template motif.
+
+    Returns ``(errors, warnings)`` where ``error``-severity conformance
+    violations block validation and ``warning``/``info`` ones are advisory.
+    Templates are resolved relative to ``modules_dir`` (the document's own
+    directory, since template motifs are sibling module files).
+    """
+    # Imported here to avoid a heavy import at module load and any import cycle.
+    from ai_gene_review.module_qc import conformance_violations
+
+    if not isinstance(doc, dict):
+        return [], []
+
+    errors: List[str] = []
+    warnings: List[str] = []
+    for violation in conformance_violations(doc, modules_dir=modules_dir):
+        message = (
+            f"Conformance [{violation['node_id']} -> {violation['template']}]: "
+            f"{violation['message']}"
+        )
+        if violation["severity"] == "error":
+            errors.append(message)
+        else:
+            warnings.append(message)
+    return errors, warnings
 
 
 def main(argv: Optional[List[str]] = None) -> int:
