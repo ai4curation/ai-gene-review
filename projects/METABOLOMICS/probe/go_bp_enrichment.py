@@ -42,11 +42,15 @@ from go_enrichment import ancestors_of, bh_fdr, hypergeom_sf, load_go_obo
 UNIPROT = "https://rest.uniprot.org/uniprotkb/search"
 # Currency/cofactor metabolites are identified *data-drivenly* by their degree in
 # the Rhea network (number of reactions they participate in) rather than a
-# hand-curated id list: the highest-degree participants are exactly hydron,
-# water, O2, CoA, ATP, NAD(P)(H), CO2, phosphate, SAM, … while the first genuine
-# signal metabolite (2-oxoglutarate) sits well below. Default threshold 500 drops
-# the unambiguous currency and keeps central metabolites like 2-oxoglutarate and
-# acetyl-CoA.
+# hand-curated id list. The observed top of the degree distribution (computed
+# from the cached Rhea participant table) is exactly the currency set, while the
+# first genuine signal metabolite sits below the default threshold:
+#   hydron 10342 · water 6724 · dioxygen 2946 · CoA 1649 · ATP 1384 ·
+#   NADP 1382 · NADPH 1375 · NAD 1282 · diphosphate 1221 · NADH 1209 ·
+#   CO2 1087 · phosphate 1061 · SAM 954 · ADP 898 · FMN 892 · ... · ammonium 545
+#   | --- default cutoff 500 --- | 2-oxoglutarate(2-) 456 · acetyl-CoA 417 (kept)
+# So threshold 500 drops the unambiguous currency and keeps central metabolites
+# like 2-oxoglutarate and acetyl-CoA.
 DEFAULT_COFACTOR_DEGREE = 500
 
 
@@ -163,8 +167,7 @@ def main() -> int:
     used_metabolites = 0
     excluded_cofactors: set[str] = set()
     for tok in tokens:
-        seed = tok if tok.upper().startswith("CHEBI:") else (
-            (lambda t: t.curie if t else None)(chebi.search_neutral(tok)))
+        seed = chebi.resolve_curie(tok)
         if not seed:
             continue
         forms = {f for f in chebi.rhea_forms(seed, all_parts) if not is_cofactor(f)}

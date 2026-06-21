@@ -77,8 +77,7 @@ def resolve_foreground(tokens: list[str]) -> tuple[set[str], list[str]]:
     fg: set[str] = set()
     unmapped: list[str] = []
     for tok in tokens:
-        seed = tok if tok.upper().startswith("CHEBI:") else (
-            (lambda t: t.curie if t else None)(chebi.search_neutral(tok)))
+        seed = chebi.resolve_curie(tok)
         if not seed:
             unmapped.append(tok)
             continue

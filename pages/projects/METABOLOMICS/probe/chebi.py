@@ -235,6 +235,18 @@ def structural_family(seed: str, max_terms: int = 80) -> dict[str, ChebiTerm]:
     return family
 
 
+def resolve_curie(token: str) -> str | None:
+    """A reported metabolite token (a ``CHEBI:xxxx`` id or a name) -> ChEBI curie.
+
+    Returns the id unchanged if the token already is one, otherwise resolves the
+    name via :func:`search_neutral`. ``None`` if the name cannot be resolved.
+    """
+    if token.upper().startswith("CHEBI:"):
+        return token
+    term = search_neutral(token)
+    return term.curie if term else None
+
+
 def rhea_forms(seed: str, participants: set[str]) -> set[str]:
     """Map a reported metabolite ChEBI to the Rhea-participant id(s) it denotes.
 

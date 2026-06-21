@@ -141,4 +141,3 @@ GO-native metabolomics interpretation feasible without inventing new mappings.
 - GO-CAM — https://pmc.ncbi.nlm.nih.gov/articles/PMC7012280/ (PMID:31548717)
 - GO-CAM metabolic phenotypes (Genetics 2023) —
   https://academic.oup.com/genetics/article/225/2/iyad152/7242464
-</content>

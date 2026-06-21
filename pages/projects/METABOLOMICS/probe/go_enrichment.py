@@ -233,10 +233,7 @@ def main() -> int:
 
     foreground: set[str] = set()
     for tok in tokens:
-        seed = tok if tok.upper().startswith("CHEBI:") else None
-        if seed is None:
-            t = chebi.search_neutral(tok)
-            seed = t.curie if t else None
+        seed = chebi.resolve_curie(tok)
         if seed:
             foreground |= chebi.rhea_forms(seed, all_parts)
     print(f"  foreground participants: {len(foreground)}; universe: {len(ann)}", file=sys.stderr)
