@@ -94,6 +94,24 @@ Headline resources:
 The GlySpace Alliance (GlyGen + Glyco@Expasy + GlyCosmos) is the coordinating
 umbrella; GlyTouCan is the shared structure-ID backbone they all link to.
 
+## Exemplar reviews (calibration set)
+
+Three human genes were chosen to calibrate the over-/under-annotation hypotheses
+across the main functional axes of animal glycobiology — one **glycosyltransferase**,
+one **lectin**, and one **CDG** gene:
+
+| Gene | UniProt | Axis | Why chosen | GOA annotations |
+|------|---------|------|------------|----------------:|
+| **B3GALNT2** | Q8NCR0 | Glycosyltransferase (CAZy GT31) | β-1,3-GalNAc-T in α-dystroglycan O-mannosyl glycan (matriglycan) elongation; dystroglycanopathy (secondary CDG); already flagged in [RHEA](RHEA.md) as lacking a specific acetylgalactosaminyltransferase GO term | 16 |
+| **LGALS3** | P17931 | Lectin (galectin) | chimera-type β-galactoside-binding galectin; large, pleiotropic annotation set — ideal stress-test for the "generic protein binding → carbohydrate binding" and pleiotropy/non-core hypotheses | 105 |
+| **PMM2** | O15305 | CDG (precursor supply) | phosphomannomutase 2; PMM2-CDG (CDG-Ia) is the most common CDG; tests "substrate guilt-by-association" on a metabolic enzyme that only supplies a GDP-mannose precursor | 23 |
+
+Each gene was fetched (`fetch-gene`) and is being reviewed against the full repo
+workflow (literature research, per-annotation action, `core_functions`,
+`proposed_new_terms`). Findings feed the audit hypotheses above. *(reviews in
+progress — verdict distributions and findings to be summarised here on
+completion.)*
+
 ## Candidate animal genes already in the repo
 
 The corpus already contains glyco-relevant gene reviews that can seed the audit
