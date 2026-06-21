@@ -18,6 +18,12 @@ While IBA is a powerful curation tool, it can produce problematic annotations wh
 3. **Context-specific function** - Function differs between organisms/tissues
 4. **Over-generalization** - Broad terms transferred when specific functions differ
 
+This project covers **both directions** of IBA quality: most of the page catalogs
+where IBA is *wrong* (over-annotation, patterns 1–15), while
+[IBA Incompleteness](#iba-incompleteness-core-function-that-iba-fails-to-propagate)
+quantifies where IBA *under-calls* established biology — 511 curated human core
+molecular functions that IBA alone would miss.
+
 ## IBA Quality Issues
 
 ### 1. Pseudo-Enzyme Propagation
@@ -401,6 +407,90 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 | CASP12 | human | Pseudo-enzyme (UniProt "Inactive caspase-12") | MEDIUM | COMPLETE |
 | Serpinh1/HSP47 | mouse | Pseudo-inhibitor (non-inhibitory serpin; collagen chaperone) | MEDIUM | COMPLETE |
 | sigF/sigG/sigK | BACSU | Subunit assigned holoenzyme catalytic activity (sigma ≠ RNA pol) | LOW | COMPLETE |
+
+## IBA Incompleteness: core function that IBA fails to propagate
+
+All the patterns above concern IBA being *wrong* (over-annotation). The opposite
+failure mode is just as real: IBA is frequently **incomplete** — it under-calls
+well-established biology. Phylogenetic propagation is conservative by
+construction (it only transfers what a curated ancestor already carries, at the
+granularity the ancestor was annotated), so a great deal of experimentally
+defined molecular function never reaches the leaf.
+
+We quantified this with a generic **evidence-subtraction** tool
+(`ai-gene-review subtraction-report`; see
+[docs](https://ai4curation.io/ai-gene-review/subtraction_report/)). Running it in
+"keep only IBA" mode over the 1015 reviewed human genes — i.e. asking *if IBA
+were the sole evidence, what curated biology would we lose?* — and applying
+ontology closure so that an IBA call to a **more general parent still counts** as
+covering its ancestors:
+
+- **62%** of annotation-grounded `core_functions` terms (4516 / 7278) would be
+  lost if IBA were the only evidence.
+- Restricting to **molecular function** and excluding low-information `binding`
+  terms (GO:0005488, incl. `protein binding`): **511 curated core molecular
+  functions across 423 genes** have **no IBA support at all**, **401** of them
+  grounded by experimental/traceable evidence (IDA/IMP/IPI/EXP/TAS).
+
+Because a term is only counted when it sits in a gene's `core_functions` — the
+curator's distilled, highest-confidence judgement of what the protein *does* —
+these are not annotation noise; they are the central activities a leaf-level
+review would lose by trusting IBA alone. Two mechanisms recur:
+
+### A. Activity absent from IBA entirely
+
+The experimentally characterised activity is simply not propagated to the leaf —
+no IBA annotation touches that branch — even though it is the protein's defining
+biochemistry. These are clean, single-line losses (each verified: strong
+non-IBA evidence, **zero** IBA at the term or any descendant):
+
+| Gene | Core molecular function IBA misses | Evidence |
+|------|-------------------------------------|----------|
+| **USP21** | cysteine-type deubiquitinase activity (GO:0004843); deNEDDylase (GO:0019784) | IDA (PMID:10799498, PMID:32011234), IMP (PMID:26100909) |
+| **P4HB** (PDI) | protein disulfide isomerase (GO:0003756); protein-disulfide reductase (GO:0015035) | EXP, IDA |
+| **INPP5D** (SHIP1) | inositol-polyphosphate / PI(3,4,5)P3 5-phosphatase (GO:0004445, GO:0034485) | EXP, IDA |
+| **FTH1** | ferroxidase activity (GO:0004322) | IMP |
+| **PLD3** | single-stranded DNA 5′→3′ exonuclease (GO:0045145) | IDA |
+| **NPM1** | histone chaperone activity (GO:0140713) | IDA |
+| **PARK7** (DJ-1) | superoxide dismutase copper chaperone activity (GO:0016532) | IDA |
+| **LRRK2** | GTPase activity (GO:0003924) | IDA |
+| **SIRT2** | NAD-dependent demyristoylase (GO:0140773); tubulin deacetylase (GO:0042903) | IDA (PMID:25704306, PMID:32103017) |
+
+### B. IBA stops at a general parent (true "too conservative")
+
+Here IBA *does* annotate the gene with a broad term, but the experimentally
+established **specific** activity — the exact substrate, regioselectivity, or
+sub-activity — is never propagated. Closure confirms the IBA term is a strict
+ancestor of the missed term, so this is genuine loss of resolution, not absence:
+
+| Gene | IBA gives (general) | Experiment establishes (specific, IBA misses) |
+|------|---------------------|------------------------------------------------|
+| **HDAC6** | protein deacetylase (family) | tubulin deacetylase (GO:0042903); protein-lysine deacetylase (GO:0033558) — EXP/IDA/IMP |
+| **SIRT2** | NAD-dependent deacetylase | histone **H4K16** deacetylase (GO:0046970) — IDA |
+| **DPEP1** | (peptidase) | metallodipeptidase activity (GO:0070573) — IDA |
+| **PARK7** (DJ-1) | (broader) | glyoxalase, glycolic-acid-forming (GO:1990422) — IDA |
+
+**Caveat — IBA is not always the laggard.** Many of these genes are exceptionally
+well studied; IBA legitimately covers their *canonical* function and only misses
+secondary or recently characterised activities. **PTEN** is the clearest example:
+its textbook PIP3 3-phosphatase activity (GO:0016314) *is* carried by IBA; what
+IBA misses is the secondary protein-serine/threonine phosphatase (GO:0004722,
+IDA PMID:9256433) and PI(3,4)P2 3-phosphatase (GO:0051800) activities. So
+"incompleteness" should be read as *resolution and coverage gaps*, not as IBA
+being useless — the same tool's forward direction shows IBA is the **sole**
+support for 66 human core molecular functions (e.g. AKIRIN2 transcription
+coregulator, GET1 protein-membrane adaptor, ATG14 PI3K regulator), so the two
+analyses bound IBA's value from both sides.
+
+**Reproduce:** `just subtraction-report-iba-conservative-core-mf` (writes
+`reports/iba-too-conservative-core-mf.md`, the full ranked, evidence-enriched
+table for all 423 genes); the raw keep-only TSVs come from
+`just subtraction-report-iba-only-tsv`.
+
+**Lesson for curators:** a leaf with only IBA annotations is very likely
+*under*-annotated, not fully annotated. When IBA supplies only a broad
+molecular-function term, treat it as a prompt to look for the specific
+experimentally defined activity rather than as a finished call.
 
 ## Recommendations for IBA Curation
 
