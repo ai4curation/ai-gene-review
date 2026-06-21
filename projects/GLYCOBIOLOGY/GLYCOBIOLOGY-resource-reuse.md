@@ -152,14 +152,18 @@ silent on entirely**.
 ## Status
 
 - **Seed**: `cazy2go.sssom.yaml` — 5 exemplar GT-family rows, review-backed, GO ids QuickGO-verified.
-- **Generated**: `cazy2go.generated.sssom.yaml` — 702 rows / 283 families, reproducible via
-  `build_cazy2go.py` (UniProt CAZy↔EC × ec2go), SSSOM-structurally valid.
-- **Marginal-vs-interpro2go**: computed (`compare_cazy_interpro.py`) — only 20% masked; and
-  **closure-filtered** (`closure_cazy_interpro.py`) — 97% of the marginal survives closure (74%
-  altitude, 23% true-gap; only 3% descendant-masked).
-- **Next**: (1) `cazy2go` LinkML schema + `validate-cazy-mappings` recipe mirroring
-  `validate-rhea-mappings` (incl. GO-label term validation of a generated terms file); (2) subfamily
-  resolution for the poly-specific families from dbCAN-sub (so TRUE_GAP/altitude terms can be
-  attributed safely); (3) curate the ~110 mono-specific safe wins + the 98 TRUE_GAP families into
-  the `cazy2go.sssom.yaml` proper; (4) GlycoCoO→GO alignment SSSOM; (5) GlyGen-join confirmatory
-  probe over the exemplars.
+- **Safe propagation set**: `cazy2go.safe.sssom.yaml` — **89 rows** (`select_cazy2go_safe.py`):
+  mono-specific families with a specific GO MF that is a closure-confirmed gain over `interpro2go`
+  (53 true-gap + 36 altitude-gain; 52 InterPro-masked and 21 generic-term families dropped).
+  `skos:exactMatch`, safe to propagate at family level.
+- **Generated**: `cazy2go.generated.sssom.yaml` — 702 rows / 283 families (`build_cazy2go.py`),
+  full derivation incl. poly-specific `narrowMatch` families.
+- **Validation**: all three sets pass `just validate-cazy-mappings` — SSSOM structural validation +
+  GO term/label validation (MF-branch-bound) on the regenerated `*.terms.yaml`, via the new
+  `cazy_go_mapping.yaml` schema (mirrors `rhea_go_mapping`). Object labels in the safe/generated sets
+  come from the GO ontology, so labels match.
+- **Marginal-vs-interpro2go**: computed (`compare_cazy_interpro.py`, 20% masked) and closure-filtered
+  (`closure_cazy_interpro.py`, 97% of marginal survives: 74% altitude, 23% true-gap).
+- **Next**: (1) subfamily resolution for poly-specific families from dbCAN-sub (so their TRUE_GAP /
+  altitude terms become safely attributable); (2) hand-review the 89 safe rows (esp. the 53 true-gaps)
+  toward GO/InterPro2GO curation; (3) GlycoCoO→GO alignment SSSOM; (4) GlyGen-join confirmatory probe.

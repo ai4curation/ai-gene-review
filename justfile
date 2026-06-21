@@ -77,6 +77,16 @@ validate-rhea-mappings:
 	uv run python projects/RHEA/sssom_to_terms.py projects/RHEA/rhea2go.sssom.yaml -o projects/RHEA/rhea2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/RHEA/rhea2go.terms.yaml -s src/ai_gene_review/schema/rhea_go_mapping.yaml -t RHEAGOMappingSet --labels -c conf/oak_config.yaml
 
+# Validate the CAZy->GO mapping sets (projects/GLYCOBIOLOGY/cazy2go*.sssom.yaml):
+# (1) SSSOM structural validation of all three sets, then (2) GO term/label validation on the
+# regenerated nested files (seed, safe propagation set, and full generated derivation).
+validate-cazy-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/GLYCOBIOLOGY/cazy2go.sssom.yaml projects/GLYCOBIOLOGY/cazy2go.safe.sssom.yaml projects/GLYCOBIOLOGY/cazy2go.generated.sssom.yaml
+	for base in cazy2go cazy2go.safe cazy2go.generated; do \
+	  uv run python projects/GLYCOBIOLOGY/sssom_to_terms.py projects/GLYCOBIOLOGY/$base.sssom.yaml -o projects/GLYCOBIOLOGY/$base.terms.yaml; \
+	  uv run linkml-term-validator validate-data projects/GLYCOBIOLOGY/$base.terms.yaml -s src/ai_gene_review/schema/cazy_go_mapping.yaml -t CAZYGOMappingSet --labels -c conf/oak_config.yaml; \
+	done
+
 # Validate the hand-curated Pfam entry reviews (interpro/pfam/<PFAM>/<PFAM>-review.yaml):
 # (1) structural + premise checks (Pfam membership, member list, GO non-obsolete/aspect, parent
 # entry carries no equivalent term, gene_review paths exist, REJECTED backed by a same-family
