@@ -49,3 +49,28 @@ ATP6V1C1 is found at:
 - Extracellular exosome (HDA, PMID:19056867) likely reflects contamination.
 - Multiple Reactome TAS annotations for cytosol reflect V1-V0 disassembly; valid but non-core.
 - The TAS annotations from PMID:8250920 provide the original characterization of the C subunit as part of V-ATPase.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1C1/ATP6V1C1-deep-research-falcon.md`,
+33 citations). It corroborates the C1 regulatory-subunit core above and adds new
+human-genetics evidence.
+
+- **Core confirmed / sharpened.** C1 is a single-copy V1 subunit forming part of
+  the **stator/collar**: it interacts with the peripheral stalks and the V0
+  a-subunit to keep non-rotating components fixed, coupling A3B3 ATP hydrolysis to
+  rotor-driven proton translocation, and is required for V1 assembly. It is **not**
+  catalytic itself. The C subunit is also the classic point of **reversible
+  V1–V0 dissociation** regulation. No change to the assembly/regulatory calls.
+- **New: ATP6V1C1 is now a monogenic disease gene (Carpentieri 2024).**
+  Dominantly-acting variants cause a multisystem/lysosomal neurodevelopmental
+  syndrome with **DOORS-like** features via **gain-of-function over-acidification**
+  (abnormal lysosomal pH, defective autophagic flux, substrate accumulation,
+  impaired cilium biogenesis) — paralleling the ATP6V1B2 GOF mechanism. Disease
+  context; does not change normal-function calls.
+- **Other (non-core) context:** LAMTOR5/Ragulator–mTORC1 link to lupus-like
+  autoimmunity (Zhang 2024); cancer roles incl. androgen-receptor handling in
+  prostate cancer; plasma-membrane V-ATPase in osteoclast/renal acid secretion.
+
+Net: no change to calls — C1 is the single-copy regulatory/stator V1 subunit
+essential for V-ATPase assembly and energy coupling.
