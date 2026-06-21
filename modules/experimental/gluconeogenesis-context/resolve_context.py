@@ -40,6 +40,8 @@ def resolve(module_path: str, threshold: float) -> dict:
 
     report: dict[str, dict] = {}
     for tissue in tissues:
+        # _t=tissue binds the current loop value as a default arg (closure capture),
+        # so each per-tissue predicate sees its own tissue rather than the last one.
         def holds(atom, _t=tissue):
             return expressed(atom.gene_symbol, _t) if atom.gene_symbol else True
 

@@ -13,7 +13,7 @@ GTEx v8 tissue expression and resolves which route is active where.
 
 ## What it does
 
-1. **`module_logic.py`** compiles a `ModuleReview` YAML into a monotone boolean
+1. **`src/ai_gene_review/module_logic.py`** compiles a `ModuleReview` YAML into a monotone boolean
    circuit — `parts`/`annotons` → AND, `variant_sets` → OR — then enumerates the
    *routes* (one choice per variant set) and the *AND-core* (atoms required by
    every route = gate candidates). Pure logic, no data dependency, doctested.
