@@ -88,3 +88,26 @@ context. Keep as non-core.
 - MARK_AS_OVER_ANNOTATED: GO:0016241 regulation of macroautophagy (NAS, not specific).
 - KEEP_AS_NON_CORE: GO:0001669 acrosomal vesicle (ortholog IEA, plausible for testis
   isoform but unverified in human); GO:0005829 cytosol (TAS, coarse).
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1E2/ATP6V1E2-deep-research-falcon.md`,
+29 citations). It corroborates the testis-restricted E-paralog identity above and
+adds a genuinely **ATP6V1E2-specific function**; no change to annotation calls.
+
+- **Core confirmed.** E2 is a paralog of the E subunit forming the EG peripheral
+  stalks (stator) of V1 — structural/regulatory, not catalytic; testis/sperm-
+  restricted vs ubiquitous E1.
+- **Tissue-specific function — sperm acrosomal acidification (Chavez 2024).** Loss
+  of ATP6V1E2 function impairs **acrosomal acidification**, required for the
+  acrosome reaction and fertilization — one of the few functions attributed
+  specifically to E2 rather than V-ATPase broadly. This supports an acrosomal/
+  reproductive functional context for E2 (the molecular function remains the E
+  peripheral-stalk role; the BP/CC context is sperm acrosome).
+- **Other (non-core) leads:** downregulation in a homocysteine neurotoxicity /
+  synaptic-vesicle-cycle model (Wang 2025); a Tibetan-population SNP (rs896210)
+  associated with high-altitude polycythemia, possibly synergizing with EPAS1/
+  HIF-2α (Ran 2026) — preliminary genetic-association context, not a function call.
+
+Net: no change to calls — E2 is the testis/sperm-restricted E peripheral-stalk
+paralog supporting V-ATPase assembly and (notably) acrosomal acidification.
