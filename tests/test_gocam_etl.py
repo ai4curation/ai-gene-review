@@ -104,6 +104,29 @@ def test_build_gene_index(minerva_raw, tmp_path):
     assert any(line.startswith("WB:WBGene00006575\t") for line in lines[1:])
 
 
+def test_index_is_deterministic_and_lf(minerva_raw, tmp_path):
+    model = minerva_json_to_model(minerva_raw)
+    out = src_path(model.id, cache_dir=tmp_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(model_to_yaml(model))
+
+    index = build_gene_index(cache_dir=tmp_path)
+    first = index.read_bytes()
+    # Regenerating must produce a byte-identical file (no diff churn).
+    build_gene_index(cache_dir=tmp_path)
+    assert index.read_bytes() == first
+    # LF line endings only (no CR).
+    assert b"\r" not in first
+    # Every activity is exactly one physical line with all columns (no embedded
+    # newlines / CSV quoting), so line-based tooling stays correct.
+    body = index.read_text().splitlines()[1:]
+    cells = [line.split("\t") for line in body]
+    assert all(len(c) == len(INDEX_COLUMNS) for c in cells)
+    # Rows are sorted by (model_id, activity_id, gene_product).
+    keys = [(c[2], c[5], c[0]) for c in cells]
+    assert keys == sorted(keys)
+
+
 def test_load_cached_model_absent(tmp_path):
     assert load_cached_model("gomodel:doesnotexist", cache_dir=tmp_path) is None
 

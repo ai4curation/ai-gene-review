@@ -266,6 +266,20 @@ def cache_all_production_models(
     return {"total": total, "ok": ok, "failed": failed, "failures": failures}
 
 
+def _clean_field(value: Optional[str]) -> str:
+    """Collapse internal whitespace so a field stays on one TSV line.
+
+    Examples:
+        >>> _clean_field(None)
+        ''
+        >>> _clean_field('a\\tb\\nc  d')
+        'a b c d'
+    """
+    if value is None:
+        return ""
+    return " ".join(str(value).split())
+
+
 def iter_activity_rows(model: Model) -> Iterator[GoCamActivityRow]:
     """Yield one :class:`GoCamActivityRow` per activity (annoton) in a model."""
     objects = {obj.id: obj for obj in (model.objects or [])}
@@ -317,10 +331,20 @@ def build_gene_index(
     for src in sorted(cache_dir.glob("*/*-src.yaml")):
         model = Model(**yaml.safe_load(src.read_text()))
         rows.extend(iter_activity_rows(model))
+    # Deterministic global ordering so regenerating the index produces a stable
+    # byte-for-byte file (no diff churn) regardless of filesystem traversal or
+    # upstream activity ordering. activity_id is unique, making the key total.
+    # Field values are whitespace-collapsed so every activity is exactly one
+    # physical line (titles can contain embedded newlines/tabs), keeping the TSV
+    # safe for line-based tooling (grep/awk/cut) and avoiding quoting churn.
+    table = sorted(
+        ([_clean_field(v) for v in row.as_index_row()] for row in rows),
+        key=lambda values: (values[2], values[5], values[0]),  # model, activity, gene
+    )
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", newline="") as handle:
-        writer = csv.writer(handle, delimiter="\t")
+        # Force LF line endings (csv defaults to CRLF) to avoid cross-platform churn.
+        writer = csv.writer(handle, delimiter="\t", lineterminator="\n")
         writer.writerow(INDEX_COLUMNS)
-        for row in rows:
-            writer.writerow(["" if v is None else v for v in row.as_index_row()])
+        writer.writerows(table)
     return out
