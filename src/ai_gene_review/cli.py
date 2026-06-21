@@ -3551,6 +3551,186 @@ def gocam_index(
     typer.echo(f"✓ Wrote {index} ({n_rows} activity rows)")
 
 
+@app.command()
+def subtraction_report(
+    paths: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Gene review YAML files or directories (default: genes/)"),
+    ] = None,
+    reference: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--ref",
+            "-r",
+            help="Reference id(s) to subtract, e.g. GO_REF:0000033 (repeatable)",
+        ),
+    ] = None,
+    evidence: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--evidence",
+            "-e",
+            help="Evidence code(s) to subtract, e.g. IBA (repeatable)",
+        ),
+    ] = None,
+    mode: Annotated[
+        str,
+        typer.Option(
+            help="When both --ref and --evidence are given: 'any' (match either) or 'all' (match both)"
+        ),
+    ] = "any",
+    keep_only: Annotated[
+        bool,
+        typer.Option(
+            "--keep-only",
+            help="Invert: subtract everything EXCEPT the filter (e.g. --keep-only -e IBA "
+            "removes all non-IBA annotations, showing what is lost if IBA were the only "
+            "evidence -- i.e. where IBA is too conservative)",
+        ),
+    ] = False,
+    exclude_branch: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--exclude-branch",
+            help="Drop terms under this branch from the report, e.g. GO:0005488 to "
+            "suppress low-information 'binding' molecular functions (repeatable)",
+        ),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output",
+            "-o",
+            help="Output path. For markdown a file; for tsv a prefix "
+            "(writes <prefix>-lost-annotations.tsv and <prefix>-core-functions.tsv)",
+        ),
+    ] = None,
+    output_format: Annotated[
+        str,
+        typer.Option("--format", "-f", help="Output format: markdown or tsv"),
+    ] = "markdown",
+    adapter: Annotated[
+        str,
+        typer.Option(help="OAK adapter for GO closure"),
+    ] = "sqlite:obo:go",
+    no_closure: Annotated[
+        bool,
+        typer.Option(
+            "--no-closure",
+            help="Disable ontology closure (exact-term matching only)",
+        ),
+    ] = False,
+    max_detail_genes: Annotated[
+        Optional[int],
+        typer.Option(help="Limit per-gene detail in the markdown report"),
+    ] = None,
+):
+    """Report what is lost if a REF/evidence-code is removed from reviews.
+
+    For the chosen reference id(s) and/or evidence code(s) (e.g. IBA /
+    GO_REF:0000033), simulates removing the matching annotations and reports:
+
+    \b
+    1. Endorsed (ACCEPT/KEEP_AS_NON_CORE) annotations that disappear, flagged
+       UNIQUE (no survivor covers the term) or REDUNDANT (a surviving annotation
+       still asserts the term or a more specific descendant).
+    2. Each core_functions GO term as RETAINED (still grounded by a survivor),
+       LOST (only the subtracted evidence grounded it), or UNSUPPORTED.
+
+    Closure (is_a + part_of) is applied so a specific surviving annotation can
+    ground a more general core-function term.
+
+    Use --keep-only to invert the scenario: subtract everything EXCEPT the
+    filter. ``--keep-only -e IBA`` removes all non-IBA annotations, so LOST
+    core_functions are the biology that IBA alone would miss (IBA too
+    conservative).
+
+    Examples:
+
+    \b
+        ai-gene-review subtraction-report -e IBA
+        ai-gene-review subtraction-report -r GO_REF:0000033 -o reports/iba --format tsv
+        ai-gene-review subtraction-report genes/human -e IBA -e ISS
+        ai-gene-review subtraction-report genes/human --keep-only -e IBA
+    """
+    from ai_gene_review.analysis.subtraction_report import (
+        SubtractionFilter,
+        SubtractionReporter,
+        iter_review_files,
+        make_go_ancestor_fn,
+        render_markdown,
+        summarize,
+        write_tsv_reports,
+    )
+
+    if not reference and not evidence:
+        typer.echo(
+            "Error: provide at least one --ref or --evidence to subtract.", err=True
+        )
+        raise typer.Exit(code=1)
+
+    filt = SubtractionFilter.create(
+        reference_ids=reference or [],
+        evidence_codes=evidence or [],
+        mode=mode,
+        complement=keep_only,
+    )
+
+    search_paths = paths if paths else [Path("genes")]
+    files = iter_review_files(search_paths)
+    if not files:
+        typer.echo("Error: no *-ai-review.yaml files found.", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(
+        f"Analyzing {len(files)} review files (filter: {filt.describe()})...", err=True
+    )
+
+    exclude_branches = frozenset(exclude_branch or [])
+    if no_closure:
+        if exclude_branches:
+            typer.echo(
+                "Error: --exclude-branch requires ontology closure (drop --no-closure).",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        reporter = SubtractionReporter()
+    else:
+        reporter = SubtractionReporter(
+            ancestors=make_go_ancestor_fn(adapter),
+            exclude_branches=exclude_branches,
+        )
+
+    results = reporter.analyze_files(files, filt)
+
+    if output_format == "tsv":
+        prefix = output if output else Path("reports/subtraction")
+        lost_path, cf_path = write_tsv_reports(results, prefix)
+        typer.echo(f"✓ Wrote {lost_path}")
+        typer.echo(f"✓ Wrote {cf_path}")
+    elif output_format == "markdown":
+        md = render_markdown(results, filt, max_detail_genes=max_detail_genes)
+        if output:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(md)
+            typer.echo(f"✓ Wrote {output}")
+        else:
+            typer.echo(md)
+    else:
+        typer.echo(f"Error: unknown format {output_format!r}", err=True)
+        raise typer.Exit(code=1)
+
+    summary = summarize(results, filt)
+    sc = summary["core_function_status_counts"]
+    typer.echo(
+        f"Summary: {summary['n_subtracted_annotations']} annotations subtracted; "
+        f"{summary['n_lost_endorsed']} endorsed lost "
+        f"({summary['n_lost_endorsed_unique']} unique); "
+        f"core_functions terms RETAINED {sc['RETAINED']} / LOST {sc['LOST']} / "
+        f"UNSUPPORTED {sc['UNSUPPORTED']}",
+        err=True,
+    )
+
+
 def main():
     """Main entry point for the CLI."""
     app()

@@ -1509,6 +1509,29 @@ spkw-analysis:
     @if [ ! -f exports/annotations.duckdb ]; then just export-annotations-duckdb; fi
     uv run python scripts/query_redundancy.py all
 
+# Report what is lost if an evidence code is subtracted (default: IBA), closure-aware.
+# Shows uniquely-lost endorsed annotations and orphaned core_functions terms.
+# Example: just subtraction-report-evidence ISS genes/human
+subtraction-report-evidence evidence="IBA" paths="genes":
+    uv run ai-gene-review subtraction-report {{paths}} -e {{evidence}}
+
+# Write the IBA subtraction report as two TSVs under reports/.
+subtraction-report-iba-tsv output="reports/iba-subtraction":
+    @mkdir -p reports
+    uv run ai-gene-review subtraction-report genes -e IBA -r GO_REF:0000033 --format tsv -o {{output}}
+
+# Inverse: what core biology would be LOST if IBA were the only evidence (IBA too conservative).
+# LOST core_functions terms are grounded only by non-IBA (often experimental) evidence.
+# --exclude-branch GO:0005488 drops low-information 'binding' molecular functions.
+subtraction-report-iba-only-tsv paths="genes" output="reports/iba-only":
+    @mkdir -p reports
+    uv run ai-gene-review subtraction-report {{paths}} --keep-only -e IBA -r GO_REF:0000033 --exclude-branch GO:0005488 --format tsv -o {{output}}
+
+# Ranked report of human genes whose curated core molecular functions (non-binding)
+# IBA alone would miss; enriches with evidence codes. Writes reports/iba-too-conservative-core-mf.md
+subtraction-report-iba-conservative-core-mf:
+    uv run python projects/IBA_REVIEW/iba_too_conservative_core_mf.py
+
 # Generate statistics HTML report from annotation data
 stats output_file="docs/stats_report.html":
     @echo "📊 Generating statistics report..."
