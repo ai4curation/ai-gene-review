@@ -34,6 +34,11 @@ publications/
   PMID_123456.md <-- cached publication text (this should be available for you, DO NOT EDIT)
 reactome/
   R-HSA-NNNNNN.md <- cached reactome entry
+gocams/
+  MODEL/  <-- one folder per production GO-CAM model (bare local id)
+    MODEL-src.yaml <- cached gocam-py model (activities/annotons; DO NOT EDIT)
+    MODEL-review.yaml <- optional reviewer assessment
+  index.tsv <- gene_product -> GO-CAM activity (annoton) index; join key to reviews/modules
 
 You can regenerate the derived files by running commands like:
 

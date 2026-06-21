@@ -85,3 +85,24 @@ Design notes:
   evidence.
 - Use `connections` to join nodes or annotons by document-scoped IDs. These can
   be stated at any level, including above variant nodes.
+- Use `gocam_associations` (on a `ModuleNode` or a `ModuleAnnoton`) to ground an
+  abstract/non-grounded module element in one or more **production GO-CAM**
+  models. Each `GoCamAssociation` carries a required `model` (e.g.
+  `gomodel:568b0f9600000284`) and an optional `activity` pinning a specific
+  annoton within that model. The referenced models are cached under
+  `gocams/<model_id>/<model_id>-src.yaml` (see `gocams/README.md`); the
+  `gocams/index.tsv` gene→activity index is the join key. Example:
+
+  ```yaml
+  annotons:
+    - id: a1
+      label: TIR-1 signaling adaptor
+      participant:
+        selector_type: GENE
+        gene:
+          preferred_term: tir-1
+      gocam_associations:
+        - model: gomodel:568b0f9600000284
+          activity: gomodel:568b0f9600000284/57ec3a7e00000079
+          title: "Antibacterial innate immune response in the intestine via MAPK cascade (C. elegans)"
+  ```

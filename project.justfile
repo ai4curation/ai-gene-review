@@ -147,6 +147,31 @@ fetch-panther-paint family *args="":
 fetch-panther-paint-all *args="":
     uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
 
+# Fetch and cache a single GO-CAM model to gocams/<id>/<id>-src.yaml
+# Example: just fetch-gocam gomodel:568b0f9600000284
+fetch-gocam model_id *args="":
+    uv run ai-gene-review fetch-gocam {{model_id}} {{args}}
+
+# Cache all ~2k production GO-CAM models, then rebuild gocams/index.tsv
+# Example: just cache-gocams
+# Example: just cache-gocams --limit 50
+cache-gocams *args="":
+    uv run ai-gene-review cache-gocams {{args}}
+
+# Rebuild gocams/index.tsv (gene product -> GO-CAM activity) from the cache
+gocam-index *args="":
+    uv run ai-gene-review gocam-index {{args}}
+
+# Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
+# Example: just seed-gocam-review 568b0f9600000284
+seed-gocam-review model_id *args="":
+    uv run ai-gene-review seed-gocam-review {{model_id}} {{args}}
+
+# Validate a GO-CAM review file against the schema
+# Example: just validate-gocam-review gocams/568b0f9600000284/568b0f9600000284-review.yaml
+validate-gocam-review file:
+    uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C GoCamReview {{file}}
+
 # Report review status of gene description files
 # Example: just descriptions-status yeast
 # Example: just descriptions-status yeast --all

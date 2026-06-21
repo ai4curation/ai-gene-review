@@ -30,3 +30,57 @@ endocytic, junctional, and slit-diaphragm partner complexes to actin-rich
 cortical structures. Alzheimer relevance should be represented through
 endosomal trafficking modules involving RIN3/BIN1/CD2AP and APP/tau-related
 cellular phenotypes, not as generic protein-binding function.
+
+## Falcon deep research integration (2026-06-21)
+
+A freshly-grounded Falcon/Edison deep-research report (CD2AP-deep-research-falcon.md, ~22 cited
+sources) is now available; it corroborates the existing review's core picture well — CD2AP as a
+multi-SH3 scaffold/adaptor linking nephrin/podocin slit-diaphragm and junctional complexes to actin,
+plus endocytic/vesicle trafficking and Alzheimer relevance — and adds no contradictions, only
+context. The following Falcon-sourced citations are NOT yet independently verified against full text.
+
+Genuinely new or refined findings beyond the current notes/review:
+
+- Explicit nephrin–podocin–CD2AP–actin axis: CD2AP scaffolds the slit-diaphragm receptor nephrin and
+  binds the podocin C-terminus, coupling slit-diaphragm signaling to F-actin via cortactin and
+  synaptopodin [Blaine & Dylewski, Cells 2020, doi:10.3390/cells9071700; Ha, World J Nephrol 2013,
+  doi:10.5527/wjn.v2.i1.1]. This refines the existing review, which treats slit diaphragm largely as
+  electronically-transferred localization rather than a named nephrin/podocin partner module.
+- Insulin-responsive Glut4 trafficking: CD2AP forms a complex with the clathrin adaptor GGA2 and
+  co-fractionates with Glut4/IRAP/sortilin; loss of CD2AP disrupts GSV/clathrin recycling and
+  attenuates insulin-stimulated glucose uptake in podocytes [Tolvanen et al., J Cell Sci 2015,
+  doi:10.1242/jcs.175075]. This is a NEW functional module not represented in the existing review.
+- Neuronal NGF/TrkA trophic-signaling scaffold: CD2AP is enriched in TrkA+ basal-forebrain
+  cholinergic neurons, co-localizes with Rab5 endosomes, and couples TrkA to PI3K-p85/Akt to support
+  NGF-dependent axon growth and retrograde signaling [Fitzsimons et al., bioRxiv 2024,
+  doi:10.1101/2024.07.24.604961 — preprint, treat cautiously]. Refines the currently generic
+  neuron-projection/synapse non-core annotations toward a specific NGF/Rab5 retrograde-trafficking role.
+- MYO1F/CASS podosome and phagocytic-cup module: proximity-labeling (BioID) in myeloid cells places
+  CD2AP with ASAP1, SH3BP2 and SH3KBP1/CIN85 in an SH3-dependent "CASS" adaptor group recruited to
+  podosomes and phagocytic cups in macrophages/microglia [Arden et al., J Cell Sci 2024,
+  doi:10.1242/jcs.264357]. This adds molecular partners and a phagocytosis context to the existing
+  KEEP_AS_NON_CORE podosome annotation (GO:0002102).
+- Dose-sensitive synaptic role: heterozygous Cd2ap mice show altered dendritic branching/spine
+  density, impaired ubiquitin-proteasome activity, increased paired-pulse facilitation, and mild
+  learning deficits, supporting a haploinsufficient presynaptic requirement [SH3-superfamily/synaptic
+  work cited as Mehrabipour et al., Cells 2023, doi:10.3390/cells12162054 — NOTE: this token is cited
+  by Falcon for synaptic-plasticity claims that read like a separate mouse study, so the citation
+  mapping should be checked against full text before reuse].
+- Glioblastoma CD2AP–TRIM5–NF-κB axis: CD2AP stabilizes TRIM5 and promotes NF-κB activity and GBM
+  progression [Zhang et al., Cell Death Dis 2024, doi:10.1038/s41419-024-07094-7]. New disease context
+  (oncogenic), absent from the existing review; would be non-core if curated.
+- OCRL/IPIP27A link: CD2AP associates with the inositol-5-phosphatase OCRL via IPIP27A in podocytes,
+  tying it to endosomal trafficking and actin polymerization [Preston et al., Pediatr Nephrol 2020,
+  doi:10.1007/s00467-019-04317-4]. Corroborates the endocytic-adaptor theme.
+
+Discrepancies / annotations to revisit:
+- No direct contradictions with the existing review or its action calls.
+- The Glut4/GGA2/insulin-trafficking and NGF/TrkA/Rab5 modules suggest the existing endocytic-adaptor
+  core could be strengthened with a clathrin/endocytic-vesicle process term (e.g. consider whether
+  GO:0072583 clathrin-dependent endocytosis or GO:0006897 endocytosis better captures the
+  Tolvanen/Arden evidence than relying on GO:0030276 clathrin binding alone). Defer pending full-text
+  verification.
+- The MYO1F/CASS data (Arden 2024) provide a concrete molecular basis for the GO:0002102 podosome
+  KEEP_AS_NON_CORE call and could be cited there if verified.
+- Per project guidelines, do not promote any of these to "protein binding"; route new partner
+  evidence through specific adaptor/SH3/actin or process terms instead.
