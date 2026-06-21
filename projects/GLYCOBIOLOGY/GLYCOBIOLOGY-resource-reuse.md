@@ -83,6 +83,26 @@ annotation — but the marginal-vs-`ec2go` contribution still needs closure-filt
 families) is the next refinement, seedable from the **dbCAN-sub subfamily → EC** table
 ([dbCAN3](https://pubmed.ncbi.nlm.nih.gov/37125649/)).
 
+### Did it yield anything new, or just confirm?
+
+At the **GO-term level it is confirmatory by construction** — derived through `ec2go`, it cannot mint
+a term `ec2go` lacks. But the join surfaced genuinely new, actionable signal:
+
+- **19 GO-coverage-gap families** — curated EC(s) but no `ec2go` term at all. Notably a whole class:
+  the **auxiliary-activity / LPMO redox CAZymes** (AA9, 28 reviewed members; AA10–AA14; CBM104) on
+  EC 1.14.99.54/56, plus **GH130** (β-mannoside phosphorylases) and **GT81**. Systematic GO-MF gaps,
+  not confirmation. (Some are partial ECs / `ec2go` lag; AA9 & GH130 carry full ECs — real candidates.)
+- **Independent rediscovery of the B3GALNT2 gap**: `EC 2.4.1.313` is absent from `ec2go` and is
+  carried by **GT31** — the same gap our hand B3GALNT2 review raised as a `proposed_new_term`, found
+  here with zero manual input. Validates the gap-finding (not just echoing known annotations).
+- **A coarseness map**: GT1 → 33 GO MF terms (214 members), GH13 → 27, GH1 → 25, GT4 → 21 — quantifies
+  exactly which families are too heterogeneous to propagate from (the `narrowMatch` set) and should be
+  prioritised for dbCAN-sub subfamily resolution.
+
+**Not yet computed** — the true marginal-knowledge test is `cazy2go` vs **`interpro2go`** (families
+reaching a GO MF no InterPro signature for that family already supplies). Both xrefs are on the
+UniProt records, so it is tractable; this is the key follow-up.
+
 ## Status
 
 - **Seed**: `cazy2go.sssom.yaml` — 5 exemplar GT-family rows, review-backed, GO ids QuickGO-verified.
