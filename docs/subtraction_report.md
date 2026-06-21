@@ -55,6 +55,28 @@ ai-gene-review subtraction-report genes -e IBA --format tsv -o reports/iba
 ai-gene-review subtraction-report -e IBA --no-closure
 ```
 
+### Inverse direction: "use only IBA" (where IBA is too conservative)
+
+`--keep-only` inverts the filter — it subtracts everything *except* the
+filter. `--keep-only -e IBA` removes all non-IBA annotations, so the report
+shows what is lost if IBA were the only evidence used:
+
+- **LOST `core_functions` terms** are grounded only by non-IBA (often
+  experimental) evidence — molecular functions IBA alone would miss. This is the
+  signal that IBA is *too conservative* for that gene.
+- **Lost endorsed annotations** are the non-IBA `ACCEPT`/`KEEP_AS_NON_CORE`
+  calls that IBA does not reproduce.
+
+```bash
+ai-gene-review subtraction-report genes/human --keep-only -e IBA -r GO_REF:0000033
+just subtraction-report-iba-only-tsv          # TSVs under reports/
+```
+
+Because closure is applied, an IBA annotation to a *more general* parent does
+**not** count as grounding a specific experimental child — so a gene where IBA
+gives only the broad term and experiment pins the specific activity correctly
+shows the specific term as LOST.
+
 Just recipes:
 
 ```bash

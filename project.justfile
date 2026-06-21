@@ -1520,6 +1520,12 @@ subtraction-report-iba-tsv output="reports/iba-subtraction":
     @mkdir -p reports
     uv run ai-gene-review subtraction-report genes -e IBA -r GO_REF:0000033 --format tsv -o {{output}}
 
+# Inverse: what core biology would be LOST if IBA were the only evidence (IBA too conservative).
+# LOST core_functions terms are grounded only by non-IBA (often experimental) evidence.
+subtraction-report-iba-only-tsv paths="genes" output="reports/iba-only":
+    @mkdir -p reports
+    uv run ai-gene-review subtraction-report {{paths}} --keep-only -e IBA -r GO_REF:0000033 --format tsv -o {{output}}
+
 # Generate statistics HTML report from annotation data
 stats output_file="docs/stats_report.html":
     @echo "📊 Generating statistics report..."

@@ -3581,6 +3581,15 @@ def subtraction_report(
             help="When both --ref and --evidence are given: 'any' (match either) or 'all' (match both)"
         ),
     ] = "any",
+    keep_only: Annotated[
+        bool,
+        typer.Option(
+            "--keep-only",
+            help="Invert: subtract everything EXCEPT the filter (e.g. --keep-only -e IBA "
+            "removes all non-IBA annotations, showing what is lost if IBA were the only "
+            "evidence -- i.e. where IBA is too conservative)",
+        ),
+    ] = False,
     output: Annotated[
         Optional[Path],
         typer.Option(
@@ -3625,12 +3634,18 @@ def subtraction_report(
     Closure (is_a + part_of) is applied so a specific surviving annotation can
     ground a more general core-function term.
 
+    Use --keep-only to invert the scenario: subtract everything EXCEPT the
+    filter. ``--keep-only -e IBA`` removes all non-IBA annotations, so LOST
+    core_functions are the biology that IBA alone would miss (IBA too
+    conservative).
+
     Examples:
 
     \b
         ai-gene-review subtraction-report -e IBA
         ai-gene-review subtraction-report -r GO_REF:0000033 -o reports/iba --format tsv
         ai-gene-review subtraction-report genes/human -e IBA -e ISS
+        ai-gene-review subtraction-report genes/human --keep-only -e IBA
     """
     from ai_gene_review.analysis.subtraction_report import (
         SubtractionFilter,
@@ -3652,6 +3667,7 @@ def subtraction_report(
         reference_ids=reference or [],
         evidence_codes=evidence or [],
         mode=mode,
+        complement=keep_only,
     )
 
     search_paths = paths if paths else [Path("genes")]

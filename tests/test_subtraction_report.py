@@ -122,6 +122,54 @@ def test_filter_mode_all_requires_both():
     )
 
 
+def test_filter_complement_inverts_match():
+    """complement=True subtracts everything that does NOT match (keep-only)."""
+    f = SubtractionFilter.create(evidence_codes=["IBA"], complement=True)
+    assert not f.matches({"evidence_type": "IBA"})  # IBA is kept
+    assert f.matches({"evidence_type": "IDA"})  # everything else subtracted
+    assert f.matches({"evidence_type": None})
+    assert "except" in f.describe().lower()
+
+
+def test_keep_only_iba_loses_experimental_core_function(reporter):
+    """Keeping only IBA: a non-IBA-grounded MF core function becomes LOST."""
+    review = {
+        "id": "P1",
+        "gene_symbol": "G",
+        "existing_annotations": [
+            {
+                "term": _term("GO:0002", "specific"),
+                "evidence_type": "IDA",
+                "original_reference_id": "PMID:1",
+                "review": {"action": "ACCEPT"},
+            },
+            {
+                "term": _term("GO:0100", "cytoplasm"),
+                "evidence_type": "IBA",
+                "original_reference_id": "GO_REF:0000033",
+                "review": {"action": "ACCEPT"},
+            },
+        ],
+        "core_functions": [
+            {
+                "description": "c",
+                "molecular_function": _term("GO:0002"),
+                "locations": [_term("GO:0100")],
+            }
+        ],
+    }
+    filt = SubtractionFilter.create(evidence_codes=["IBA"], complement=True)
+    result = reporter.analyze_review(review, filt)
+
+    # The experimental MF GO:0002 is subtracted (non-IBA) -> grounded only by it
+    cov = {(c.slot, c.term_id): c for c in result.core_function_coverage}
+    assert cov[("molecular_function", "GO:0002")].status == "LOST"
+    # The IBA-grounded location survives
+    assert cov[("locations", "GO:0100")].status == "RETAINED"
+    # The endorsed experimental annotation is the loss
+    assert [la.term_id for la in result.lost_annotations] == ["GO:0002"]
+
+
 def test_subtract_iba_lost_annotations(review, reporter):
     filt = SubtractionFilter.create(evidence_codes=["IBA"])
     result = reporter.analyze_review(review, filt)

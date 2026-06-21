@@ -121,11 +121,18 @@ class SubtractionFilter:
     :attr:`reference_ids` and/or its ``evidence_type`` is in
     :attr:`evidence_codes`. When both sets are populated, :attr:`mode` controls
     whether *either* (``"any"``) or *both* (``"all"``) must match.
+
+    Set :attr:`complement` to ``True`` to invert the selection -- subtract
+    everything that does *not* match. This expresses a "keep only X" scenario:
+    ``SubtractionFilter.create(evidence_codes=["IBA"], complement=True)``
+    removes every non-IBA annotation, so the report shows what is lost if IBA
+    were the only evidence used (i.e. where IBA is too conservative).
     """
 
     reference_ids: frozenset[str] = frozenset()
     evidence_codes: frozenset[str] = frozenset()
     mode: str = "any"
+    complement: bool = False
 
     def __post_init__(self) -> None:
         if self.mode not in ("any", "all"):
@@ -141,12 +148,14 @@ class SubtractionFilter:
         reference_ids: Iterable[str] = (),
         evidence_codes: Iterable[str] = (),
         mode: str = "any",
+        complement: bool = False,
     ) -> "SubtractionFilter":
         """Convenience constructor accepting any iterables."""
         return cls(
             reference_ids=frozenset(reference_ids),
             evidence_codes=frozenset(evidence_codes),
             mode=mode,
+            complement=complement,
         )
 
     def matches(self, annotation: dict) -> bool:
@@ -156,9 +165,8 @@ class SubtractionFilter:
             checks.append(annotation.get("original_reference_id") in self.reference_ids)
         if self.evidence_codes:
             checks.append(annotation.get("evidence_type") in self.evidence_codes)
-        if not checks:
-            return False
-        return all(checks) if self.mode == "all" else any(checks)
+        base = bool(checks) and (all(checks) if self.mode == "all" else any(checks))
+        return (not base) if self.complement else base
 
     def describe(self) -> str:
         """Human-readable one-line description of the filter."""
@@ -168,7 +176,10 @@ class SubtractionFilter:
         if self.evidence_codes:
             parts.append("evidence in {" + ", ".join(sorted(self.evidence_codes)) + "}")
         joiner = " AND " if self.mode == "all" else " OR "
-        return joiner.join(parts)
+        inner = joiner.join(parts)
+        if self.complement:
+            return f"everything except ({inner})"
+        return inner
 
 
 @dataclass(frozen=True)
