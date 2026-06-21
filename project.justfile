@@ -1615,19 +1615,25 @@ gen-all: gen-project pydantic
 
 # Deploy linkml-browser app for viewing exported annotations
 deploy-browser: export-annotations-json
-    @echo "Deploying linkml-browser to app/ directory..."
-    @rm -rf app
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Deploying linkml-browser to app/ directory..."
+    tmp_dir="$(mktemp -d)"
+    trap 'rm -rf "$tmp_dir"' EXIT
     uv run linkml-browser deploy \
         exports/exported_annotations.json \
-        app \
+        "$tmp_dir" \
         --schema src/ai_gene_review/schema/display_schema.json \
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
-    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py app/data.js
-    @cp src/ai_gene_review/browser/index.html app/
-    @echo "Browser deployed to app/ directory"
-    @echo "To view: open app/index.html or run 'just serve-browser'"
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js"
+    mkdir -p app
+    cp "$tmp_dir/data.js" app/data.js
+    cp "$tmp_dir/schema.js" app/schema.js
+    cp src/ai_gene_review/browser/index.html app/
+    echo "Browser deployed to app/ directory"
+    echo "To view: open app/index.html or run 'just serve-browser'"
 
 # Serve the linkml-browser app locally  
 serve-browser:
@@ -1636,17 +1642,24 @@ serve-browser:
 
 # Update browser data without regenerating HTML
 update-browser-data: export-annotations-json
-    @echo "Updating browser data..."
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Updating browser data..."
+    tmp_dir="$(mktemp -d)"
+    trap 'rm -rf "$tmp_dir"' EXIT
     uv run linkml-browser deploy \
         exports/exported_annotations.json \
-        app \
+        "$tmp_dir" \
         --schema src/ai_gene_review/schema/display_schema.json \
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
-    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py app/data.js
-    @cp src/ai_gene_review/browser/index.html app/
-    @echo "Data updated in app/"
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js"
+    mkdir -p app
+    cp "$tmp_dir/data.js" app/data.js
+    cp "$tmp_dir/schema.js" app/schema.js
+    cp src/ai_gene_review/browser/index.html app/
+    echo "Data updated in app/"
 
 # ============== Markdown and Documentation Tools ==============
 

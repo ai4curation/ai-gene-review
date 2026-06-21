@@ -7,22 +7,16 @@ import argparse
 import json
 from pathlib import Path
 
+from ai_gene_review.export.browser_payload import compact_browser_rows
+
 
 PREFIX = "window.searchData = "
 READY_EVENT = "window.dispatchEvent(new Event('searchDataReady'));"
 
 
 def compact_rows(data: object) -> object:
-    """Drop inert top-level values from row-oriented linkml-browser data."""
-    if not isinstance(data, list):
-        return data
-
-    return [
-        {key: value for key, value in row.items() if value is not None and value != []}
-        if isinstance(row, dict)
-        else row
-        for row in data
-    ]
+    """Compact row-oriented linkml-browser data."""
+    return compact_browser_rows(data)
 
 
 def minify_data_js(path: Path) -> int:

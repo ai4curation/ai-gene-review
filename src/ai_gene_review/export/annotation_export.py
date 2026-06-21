@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Union, Optional
 
 from ai_gene_review.datamodel.gene_review_model import GeneReview, ExistingAnnotation
+from ai_gene_review.export.browser_payload import compact_browser_rows
 
 
 class _AttrDict:
@@ -458,16 +459,11 @@ class AnnotationExporter:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Strip null/None values and empty lists to reduce file size.
-        # In JS, accessing a missing key returns undefined (falsy, same as null).
-        compact = [
-            {k: v for k, v in ann.items() if v is not None and v != []}
-            for ann in annotations
-        ]
+        compact = compact_browser_rows(annotations)
 
         with open(output_path, "w") as f:
             f.write("window.searchData = ")
-            json.dump(compact, f, separators=(",", ":"), default=str)
+            json.dump(compact, f, separators=(",", ":"), default=str, ensure_ascii=False)
             f.write(";\n")
             f.write("window.dispatchEvent(new Event('searchDataReady'));\n")
 
