@@ -54,6 +54,42 @@ ontology-structured (closure-aware) enrichment, causal direction and
 regulation, and a shared vocabulary with gene-level omics for multi-omics
 integration.
 
+**There is a catch that has to be handled first** (and the pilot below confirms
+it dominates): Rhea writes participants in their **major protonation state at
+pH 7.3** (`citrate(3-)`, `ATP(4-)`, `succinyl-CoA(5-)`), whereas metabolomics
+repositories report the **neutral** species (`citric acid`, `ATP`). A direct
+ChEBI-id match between the two therefore fails almost completely. The fix is to
+expand each metabolite over ChEBI's `is_protonated_form_of` /
+`is_deprotonated_form_of` relations into its **protonation family** before
+matching.
+
+## Pilot result — the bridge works, but only after protonation normalization
+
+A reproducible coverage probe ([`probe/`](METABOLOMICS/probe/README.md),
+[RESULTS.md](METABOLOMICS/probe/RESULTS.md)) ran the
+`metabolite → Rhea → rhea2go → GO` bridge on 26 central-carbon / amino-acid /
+nucleotide / cofactor metabolites, reported by **neutral name** as a repository
+would. Computed live from OLS4 (ChEBI), the Rhea REST API and GO `rhea2go`:
+
+| Match strategy | Metabolites reaching a Rhea reaction / GO MF |
+|---|---|
+| **Exact ChEBI id** (neutral, as reported) | **0 / 26** |
+| **Protonation-normalized** (ChEBI conjugate family) | **22 / 26** |
+
+So the bridge is **essentially empty without protonation normalization and
+near-complete with it** — e.g. neutral `ATP (CHEBI:15422)` matches nothing, but
+its family member `ATP(4-) (CHEBI:30616)` (the form Rhea uses) reaches **492 GO
+molecular-function terms**; `NAD+` → 447, `acetyl-CoA` → 385. This both
+validates the core idea and pins down protonation normalization as a mandatory
+preprocessing step for *any* metabolite→GO bridge.
+
+The 4 residual misses (isocitric acid, L-lactic acid, D-glucose, D-glucose
+6-phosphate) are themselves informative: they are a **second, distinct**
+ID-mismatch class — **stereochemistry/anomer** and **generic-vs-structurally-
+specific** ChEBI mismatch — that protonation expansion does not fix, and which a
+follow-up must address with tautomer/enantiomer traversal or InChIKey-skeleton
+matching.
+
 ## Why GO is not used for metabolomics today (the gap)
 
 GO annotates **gene products**, not metabolites — so out of the box GO says
@@ -99,11 +135,15 @@ A GO-native counterpart to SMPDB/KEGG enrichment:
 
 1. Harmonize the study's significant metabolites to **ChEBI** (via RefMet /
    MetaboLights mappings).
-2. For each ChEBI compound, collect **Rhea reactions** in which it is a
+2. **Normalize protonation state** — expand each ChEBI compound into its
+   protonation family (`is_protonated_form_of` / `is_deprotonated_form_of`) so it
+   can match the charged form Rhea uses. The pilot shows this step is *not*
+   optional: it moves coverage from 0/26 to 22/26.
+3. For each family, collect **Rhea reactions** in which any member is a
    participant.
-3. Map those reactions to **GO MF** enzyme-activity terms via `rhea2go`
+4. Map those reactions to **GO MF** enzyme-activity terms via `rhea2go`
    (already tooled in the [RHEA project](RHEA.md)), and to genes via GOA.
-4. Lift to **GO biological process** (via the enzymes' BP annotations and/or
+5. Lift to **GO biological process** (via the enzymes' BP annotations and/or
    GO-CAM context) and run **closure-aware ORA** over the GO BP graph.
 
 The argument for value: GO's `is_a`/`part_of` structure gives principled
@@ -175,12 +215,14 @@ tooling rather than duplicating it:
 
 ## Follow-Up Targets
 
-| Target | Rationale |
-|--------|-----------|
-| ChEBI→Rhea→`rhea2go` coverage probe over a real MetaboLights study | Quantify the bridge before building enrichment; reuses RHEA tooling |
-| Prototype GO-BP ORA on one benchmark study metabolite set | Minimal demonstration of Approach A vs SMPDB/KEGG baseline |
-| Inventory GO-CAM metabolic models + their ChEBI input/output compounds | Feasibility of Approach B (the "full network" path) |
-| Glucose-metabolism GO-CAM perturbation worked example | Direct analogue of the Genetics 2023 precedent |
+| Target | Status | Rationale |
+|--------|--------|-----------|
+| ChEBI→Rhea→`rhea2go` coverage probe + protonation normalization | **DONE** ([probe](METABOLOMICS/probe/RESULTS.md)) | Bridge connects 22/26 only after protonation normalization (0/26 exact) |
+| Run the probe over a real MetaboLights/Workbench study (`--chebi-file`) | TODO | Replace the demo set with deposited study metabolites; the runner already accepts it |
+| Add stereochemistry/anomer + generic-vs-specific resolution | TODO | The residual-miss class the protonation fix does not cover (InChIKey-skeleton / tautomer traversal) |
+| Lift matched reactions to GO BP + closure-aware ORA | TODO | Turn coverage into a statistical enrichment (Approach A vs SMPDB/KEGG baseline) |
+| Inventory GO-CAM metabolic models + their ChEBI input/output compounds | TODO | Feasibility of Approach B (the "full network" path) |
+| Glucose-metabolism GO-CAM perturbation worked example | TODO | Direct analogue of the Genetics 2023 precedent |
 
 ## References
 
@@ -213,8 +255,14 @@ tooling rather than duplicating it:
 
 - **Started**: 2026-06-21
 - **Maturity**: SCOPING — problem framed, tool landscape surveyed, three
-  candidate approaches defined around the ChEBI→Rhea→GO→GO-CAM bridge. No
-  enrichment prototype run yet; coverage probe is the first follow-up.
+  candidate approaches defined around the ChEBI→Rhea→GO→GO-CAM bridge, and a
+  **working coverage probe** ([`probe/`](METABOLOMICS/probe/README.md)) that
+  confirms the bridge connects (22/26) but only after **protonation
+  normalization** (0/26 exact). Enrichment (GO-BP ORA) is the next step.
+- **Computed live**: coverage probe over 26 metabolites via OLS4 (ChEBI),
+  Rhea REST (18,558 reactions, 14,251 participant ChEBIs) and GO `rhea2go`
+  (7,746 mappings); protonation families via ChEBI
+  `is_protonated_form_of`/`is_deprotonated_form_of`.
 - **Key idea**: ChEBI is the bridge from metabolite repositories (MetaboLights,
   Workbench/RefMet) into Rhea reactions, `rhea2go` GO molecular functions, GOA
   genes, and GO-CAM causal networks — giving a GO-native, closure-aware,

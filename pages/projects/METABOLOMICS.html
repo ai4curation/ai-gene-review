@@ -390,6 +390,50 @@ analyst something the KEGG/SMPDB enrichment they already run does not:<br />
 ontology-structured (closure-aware) enrichment, causal direction and<br />
 regulation, and a shared vocabulary with gene-level omics for multi-omics<br />
 integration.</p>
+<p><strong>There is a catch that has to be handled first</strong> (and the pilot below confirms<br />
+it dominates): Rhea writes participants in their <strong>major protonation state at<br />
+pH 7.3</strong> (<code>citrate(3-)</code>, <code>ATP(4-)</code>, <code>succinyl-CoA(5-)</code>), whereas metabolomics<br />
+repositories report the <strong>neutral</strong> species (<code>citric acid</code>, <code>ATP</code>). A direct<br />
+ChEBI-id match between the two therefore fails almost completely. The fix is to<br />
+expand each metabolite over ChEBI's <code>is_protonated_form_of</code> /<br />
+<code>is_deprotonated_form_of</code> relations into its <strong>protonation family</strong> before<br />
+matching.</p>
+<h2 id="pilot-result-the-bridge-works-but-only-after-protonation-normalization">Pilot result — the bridge works, but only after protonation normalization</h2>
+<p>A reproducible coverage probe (<a href="METABOLOMICS/probe/README.html"><code>probe/</code></a>,<br />
+<a href="METABOLOMICS/probe/RESULTS.html">RESULTS.md</a>) ran the<br />
+<code>metabolite → Rhea → rhea2go → GO</code> bridge on 26 central-carbon / amino-acid /<br />
+nucleotide / cofactor metabolites, reported by <strong>neutral name</strong> as a repository<br />
+would. Computed live from OLS4 (ChEBI), the Rhea REST API and GO <code>rhea2go</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Match strategy</th>
+<th>Metabolites reaching a Rhea reaction / GO MF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Exact ChEBI id</strong> (neutral, as reported)</td>
+<td><strong>0 / 26</strong></td>
+</tr>
+<tr>
+<td><strong>Protonation-normalized</strong> (ChEBI conjugate family)</td>
+<td><strong>22 / 26</strong></td>
+</tr>
+</tbody>
+</table>
+<p>So the bridge is <strong>essentially empty without protonation normalization and<br />
+near-complete with it</strong> — e.g. neutral <code>ATP (CHEBI:15422)</code> matches nothing, but<br />
+its family member <code>ATP(4-) (CHEBI:30616)</code> (the form Rhea uses) reaches <strong>492 GO<br />
+molecular-function terms</strong>; <code>NAD+</code> → 447, <code>acetyl-CoA</code> → 385. This both<br />
+validates the core idea and pins down protonation normalization as a mandatory<br />
+preprocessing step for <em>any</em> metabolite→GO bridge.</p>
+<p>The 4 residual misses (isocitric acid, L-lactic acid, D-glucose, D-glucose<br />
+6-phosphate) are themselves informative: they are a <strong>second, distinct</strong><br />
+ID-mismatch class — <strong>stereochemistry/anomer</strong> and <strong>generic-vs-structurally-<br />
+specific</strong> ChEBI mismatch — that protonation expansion does not fix, and which a<br />
+follow-up must address with tautomer/enantiomer traversal or InChIKey-skeleton<br />
+matching.</p>
 <h2 id="why-go-is-not-used-for-metabolomics-today-the-gap">Why GO is not used for metabolomics today (the gap)</h2>
 <p>GO annotates <strong>gene products</strong>, not metabolites — so out of the box GO says<br />
 nothing about a list of m/z features or ChEBI IDs. Consequently the metabolomics<br />
@@ -468,7 +512,11 @@ and the Wishart-group resources, with what is reusable vs what we would build.</
 <ol>
 <li>Harmonize the study's significant metabolites to <strong>ChEBI</strong> (via RefMet /<br />
    MetaboLights mappings).</li>
-<li>For each ChEBI compound, collect <strong>Rhea reactions</strong> in which it is a<br />
+<li><strong>Normalize protonation state</strong> — expand each ChEBI compound into its<br />
+   protonation family (<code>is_protonated_form_of</code> / <code>is_deprotonated_form_of</code>) so it<br />
+   can match the charged form Rhea uses. The pilot shows this step is <em>not</em><br />
+   optional: it moves coverage from 0/26 to 22/26.</li>
+<li>For each family, collect <strong>Rhea reactions</strong> in which any member is a<br />
    participant.</li>
 <li>Map those reactions to <strong>GO MF</strong> enzyme-activity terms via <code>rhea2go</code><br />
    (already tooled in the <a href="RHEA.html">RHEA project</a>), and to genes via GOA.</li>
@@ -541,24 +589,39 @@ tooling rather than duplicating it:</p>
 <thead>
 <tr>
 <th>Target</th>
+<th>Status</th>
 <th>Rationale</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>ChEBI→Rhea→<code>rhea2go</code> coverage probe over a real MetaboLights study</td>
-<td>Quantify the bridge before building enrichment; reuses RHEA tooling</td>
+<td>ChEBI→Rhea→<code>rhea2go</code> coverage probe + protonation normalization</td>
+<td><strong>DONE</strong> (<a href="METABOLOMICS/probe/RESULTS.html">probe</a>)</td>
+<td>Bridge connects 22/26 only after protonation normalization (0/26 exact)</td>
 </tr>
 <tr>
-<td>Prototype GO-BP ORA on one benchmark study metabolite set</td>
-<td>Minimal demonstration of Approach A vs SMPDB/KEGG baseline</td>
+<td>Run the probe over a real MetaboLights/Workbench study (<code>--chebi-file</code>)</td>
+<td>TODO</td>
+<td>Replace the demo set with deposited study metabolites; the runner already accepts it</td>
+</tr>
+<tr>
+<td>Add stereochemistry/anomer + generic-vs-specific resolution</td>
+<td>TODO</td>
+<td>The residual-miss class the protonation fix does not cover (InChIKey-skeleton / tautomer traversal)</td>
+</tr>
+<tr>
+<td>Lift matched reactions to GO BP + closure-aware ORA</td>
+<td>TODO</td>
+<td>Turn coverage into a statistical enrichment (Approach A vs SMPDB/KEGG baseline)</td>
 </tr>
 <tr>
 <td>Inventory GO-CAM metabolic models + their ChEBI input/output compounds</td>
+<td>TODO</td>
 <td>Feasibility of Approach B (the "full network" path)</td>
 </tr>
 <tr>
 <td>Glucose-metabolism GO-CAM perturbation worked example</td>
+<td>TODO</td>
 <td>Direct analogue of the Genetics 2023 precedent</td>
 </tr>
 </tbody>
@@ -594,8 +657,14 @@ tooling rather than duplicating it:</p>
 <ul>
 <li><strong>Started</strong>: 2026-06-21</li>
 <li><strong>Maturity</strong>: SCOPING — problem framed, tool landscape surveyed, three<br />
-  candidate approaches defined around the ChEBI→Rhea→GO→GO-CAM bridge. No<br />
-  enrichment prototype run yet; coverage probe is the first follow-up.</li>
+  candidate approaches defined around the ChEBI→Rhea→GO→GO-CAM bridge, and a<br />
+<strong>working coverage probe</strong> (<a href="METABOLOMICS/probe/README.html"><code>probe/</code></a>) that<br />
+  confirms the bridge connects (22/26) but only after <strong>protonation<br />
+  normalization</strong> (0/26 exact). Enrichment (GO-BP ORA) is the next step.</li>
+<li><strong>Computed live</strong>: coverage probe over 26 metabolites via OLS4 (ChEBI),<br />
+  Rhea REST (18,558 reactions, 14,251 participant ChEBIs) and GO <code>rhea2go</code><br />
+  (7,746 mappings); protonation families via ChEBI<br />
+<code>is_protonated_form_of</code>/<code>is_deprotonated_form_of</code>.</li>
 <li><strong>Key idea</strong>: ChEBI is the bridge from metabolite repositories (MetaboLights,<br />
   Workbench/RefMet) into Rhea reactions, <code>rhea2go</code> GO molecular functions, GOA<br />
   genes, and GO-CAM causal networks — giving a GO-native, closure-aware,<br />
