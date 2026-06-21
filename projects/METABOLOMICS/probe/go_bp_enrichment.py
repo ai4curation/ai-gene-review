@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+import time
 import urllib.parse
 import urllib.request
 from collections import defaultdict
@@ -54,10 +55,19 @@ UNIPROT = "https://rest.uniprot.org/uniprotkb/search"
 DEFAULT_COFACTOR_DEGREE = 500
 
 
-def _get(url: str, timeout: int = 90):
-    req = urllib.request.Request(url, headers={"User-Agent": "ai-gene-review-metabolomics/1.0"})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return resp.headers, resp.read().decode(errors="replace")
+def _get(url: str, timeout: int = 90, retries: int = 3):
+    # Retry with exponential backoff like rhea._get_text / chebi._get_json, so a
+    # transient failure mid-pagination in download_enzymes() does not lose progress.
+    last: Exception | None = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "ai-gene-review-metabolomics/1.0"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.headers, resp.read().decode(errors="replace")
+        except Exception as e:  # noqa: BLE001 - retry on any transient network error
+            last = e
+            time.sleep(2 ** attempt)
+    raise RuntimeError(f"UniProt request failed after {retries} tries: {url}: {last}")
 
 
 def download_enzymes(taxon: int = 9606) -> str:

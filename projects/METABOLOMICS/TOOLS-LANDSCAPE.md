@@ -132,12 +132,12 @@ GO-native metabolomics interpretation feasible without inventing new mappings.
 
 - MAGI — https://pubs.acs.org/doi/10.1021/acschembio.8b01107 (PMID:30896917)
 - mummichog — https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3701697/
-- MetaboAnalyst 6.0 — https://academic.oup.com/nar/article/52/W1/W398/7642060
+- MetaboAnalyst 6.0 (PMID:38587201) — https://academic.oup.com/nar/article/52/W1/W398/7642060
 - MetaboAnalyst functional-analysis vignette —
   https://www.metaboanalyst.ca/resources/vignettes/Functional_Analysis_global_metabolomics.html
 - Metabolomics Workbench / RefMet —
   https://www.metabolomicsworkbench.org/databases/refmet/index.php
 - MetaboLights — https://pmc.ncbi.nlm.nih.gov/articles/PMC10767962/
 - GO-CAM — https://pmc.ncbi.nlm.nih.gov/articles/PMC7012280/ (PMID:31548717)
-- GO-CAM metabolic phenotypes (Genetics 2023) —
+- GO-CAM metabolic phenotypes (Genetics 2023, PMID:37579192) —
   https://academic.oup.com/genetics/article/225/2/iyad152/7242464

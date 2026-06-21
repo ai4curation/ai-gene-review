@@ -386,12 +386,12 @@ strategy, phasing, and the KEGG-licensing caveat are in
   [PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC7012280/)
 - **GO-CAM metabolic phenotypes** — *Biochemical pathways represented by GO
   Causal Activity Models identify distinct phenotypes resulting from mutations in
-  pathways*, Genetics 225(2):iyad152, 2023.
+  pathways*, Genetics 225(2):iyad152, 2023. PMID:37579192.
   [Genetics](https://academic.oup.com/genetics/article/225/2/iyad152/7242464)
 - **mummichog** — Li et al., *Predicting Network Activity from High Throughput
   Metabolomics*, PLoS Comput. Biol. 2013.
   [PMC](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3701697/)
-- **MetaboAnalyst 6.0** — Pang et al., Nucleic Acids Res. 2024.
+- **MetaboAnalyst 6.0** — Pang et al., Nucleic Acids Res. 2024. PMID:38587201.
   [NAR](https://academic.oup.com/nar/article/52/W1/W398/7642060)
 - **MetaboLights** — Yurekten et al., *MetaboLights: open data repository for
   metabolomics*, Nucleic Acids Res. 2024.
