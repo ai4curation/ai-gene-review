@@ -133,6 +133,20 @@ fetch-descriptions organism gene:
 fetch-descriptions-bulk organism *args="":
     uv run ai-gene-review fetch-descriptions-bulk {{organism}} --output-dir . {{args}}
 
+# Fetch PANTHER PAINT (PTN node-level) annotations for a family.
+# Resolves the family's PTN tree nodes and slices the node-level IBD.gaf
+# (IBD/IRD/IKR, plus any IBA-on-node) into interpro/panther/<FAMILY>/<FAMILY>-paint.tsv.
+# Requires the family's <FAMILY>-entries.csv (fetch a member gene first).
+# Example: just fetch-panther-paint PTHR10177
+# Example: just fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
+fetch-panther-paint family *args="":
+    uv run ai-gene-review fetch-panther-paint {{family}} --output-dir . {{args}}
+
+# Bulk-generate PANTHER PAINT slices for every cached family (single leaf-GAF pass).
+# Families whose members resolve to no node-level annotations are skipped.
+fetch-panther-paint-all *args="":
+    uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
+
 # Report review status of gene description files
 # Example: just descriptions-status yeast
 # Example: just descriptions-status yeast --all
@@ -202,6 +216,17 @@ deep-research-openscientist organism gene_id *args="":
 #   just deep-research-codex METEA C5B1I4 --alias mllA
 deep-research-codex organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+
+# Deep research on an InterPro entry (family/domain) behind InterPro2GO annotations.
+# Metadata is auto-fetched and cached under interpro/<database>/<ID>/ if absent.
+# Output: interpro/<database>/<ID>/<ID>-deep-research-<provider>.md
+# Provider defaults to falcon (Edison).
+# Examples:
+#   just deep-research-interpro-family IPR000719                    # falcon (Edison)
+#   just deep-research-interpro-family IPR001128 openai --fallback perplexity-lite
+#   just deep-research-interpro-family PTHR10314 perplexity --database panther
+deep-research-interpro-family interpro_id provider="falcon" *args="":
+    uv run python scripts/deep_research_interpro_family.py {{interpro_id}} {{provider}} {{args}}
 
 # Fetch Edison/Falcon artifacts for a deep research trajectory and attach them to a report
 # Example: just fetch-research-artifacts <trajectory-id> genes/human/TP53/TP53-deep-research-falcon.md
@@ -469,7 +494,16 @@ validate-files files:
 validate-deep-research:
     uv run python scripts/validate_deep_research.py
 
-# Validate module YAML files against the ModuleReview schema
+# Aggregate all curated KnowledgeGap entries into a structured register
+# (reports/knowledge_gaps.tsv + projects/FUNCTION_KNOWLEDGE_GAPS/structured-gaps.md)
+aggregate-knowledge-gaps:
+    uv run python scripts/aggregate_knowledge_gaps.py
+
+# Validate module YAML files: (1) structural schema validation against
+# ModuleReview, and (2) ontology term-label validation (GO/CHEBI/PO/SBO/... ids
+# resolve and their labels match). The external linkml-term-validator only
+# checks enum-bound slots, which ModuleReview lacks, so module term labels are
+# checked by the project's module_validator instead.
 validate-modules:
     #!/usr/bin/env bash
     set -uo pipefail
@@ -480,9 +514,12 @@ validate-modules:
     fi
     rc=0
     while IFS= read -r f; do
-        echo "Validating $f"
+        echo "Schema-validating $f"
         uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f" || rc=1
     done <<< "$files"
+    echo "Validating module term labels..."
+    # shellcheck disable=SC2086
+    uv run python -m ai_gene_review.validation.module_validator $files || rc=1
     exit "$rc"
 
 # Full validation of a single gene file (schema + terms + references + best practices)
