@@ -1437,14 +1437,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     run_parser.add_argument("--template", type=Path, default=DEFAULT_TEMPLATE)
     run_parser.add_argument("--dry-run", action="store_true")
     run_parser.add_argument("--overwrite", action="store_true")
-    run_parser.add_argument("--timeout-seconds", type=int, default=5400)
+    run_parser.add_argument("--timeout-seconds", type=int, default=8100)
 
     def add_run_options(subparser: argparse.ArgumentParser) -> None:
         subparser.add_argument("provider", help="Deep research provider")
         subparser.add_argument("--template", type=Path, default=DEFAULT_TEMPLATE)
         subparser.add_argument("--dry-run", action="store_true")
         subparser.add_argument("--overwrite", action="store_true")
-        subparser.add_argument("--timeout-seconds", type=int, default=5400)
+        subparser.add_argument("--timeout-seconds", type=int, default=8100)
 
     all_core_parser = subparsers.add_parser(
         "run-all-core",
