@@ -19,16 +19,26 @@ import csv
 import io
 import re
 import sys
+import time
 import urllib.request
 from pathlib import Path
 
 FTP = "https://ftp.ebi.ac.uk/pub/databases/metabolights/studies/public"
 
 
-def _get(url: str, timeout: int = 90) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": "ai-gene-review-metabolomics/1.0"})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return resp.read().decode(errors="replace")
+def _get(url: str, timeout: int = 90, retries: int = 3) -> str:
+    # Retry with exponential backoff, matching the other probe modules, so a
+    # transient failure during a study's multi-call fetch does not lose progress.
+    last: Exception | None = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "ai-gene-review-metabolomics/1.0"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.read().decode(errors="replace")
+        except Exception as e:  # noqa: BLE001 - retry on any transient network error
+            last = e
+            time.sleep(2 ** attempt)
+    raise RuntimeError(f"MetaboLights request failed after {retries} tries: {url}: {last}")
 
 
 def list_maf_files(acc: str) -> list[str]:
