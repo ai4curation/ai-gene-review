@@ -1,6 +1,6 @@
 ---
 title: "Metabolomics Interpretation with GO and GO-CAM"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE]
 ---
 
@@ -291,6 +291,19 @@ tooling rather than duplicating it:
 - **[Reactome Gap Filling](REACTOME_GAP_FILLING.md)** — Reactome is another
   curated, ChEBI-grounded reaction source convertible to/from GO-CAM.
 
+## Generality across studies
+
+The pipeline has been run on **four MetaboLights studies** spanning biofluid,
+platform and disease (urine NMR T2D; serum LC-MS cardiovascular; urine LC-MS
+physiology; serum LC-MS hepatocellular carcinoma) — see
+[CROSS-STUDY.md](METABOLOMICS/CROSS-STUDY.md). Protonation+skeleton normalization
+is decisive in every study (exact match captures only 8–39% of the normalized
+coverage), and GO enrichment reads out each study's own chemistry: the urine
+studies surface amino-acid/organic-acid metabolism, the serum LC-MS studies
+surface lipid/fatty-acid metabolism (FDR to 3e-89). The clearest remaining gap is
+**complex lipids**, which Rhea does not carry as discrete participants — the next
+methodological target.
+
 ## Toward an interactive demo
 
 The working [`probe/`](METABOLOMICS/probe/README.md) pipeline is the engine for an
@@ -322,7 +335,8 @@ strategy, phasing, and the KEGG-licensing caveat are in
 | Add stereochemistry/anomer + generic-vs-specific resolution | **DONE** (skeleton tier) | InChIKey-skeleton normalization; recovers the MTBLS1 diabetes BCAAs (Ile/Leu/Val), 49→58/64 |
 | Closure-aware GO enrichment (ORA) + KEGG baseline | **DONE** (MF level) | [GO MF enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-ENRICHMENT.md) vs [KEGG baseline](METABOLOMICS/probe/studies/MTBLS1-KEGG-BASELINE.md) on MTBLS1, same test |
 | Lift the enrichment from GO MF to GO **BP** | **DONE** | [GO BP enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-BP-ENRICHMENT.md) via Rhea→UniProt human enzymes→GOA BP; amino-acid metabolism/transport (FDR 9e-44) |
-| Run the pipeline over more MetaboLights/Workbench studies | TODO | `fetch_metabolights.py` + the three enrichment scripts generalise to any accession |
+| Run the pipeline over more MetaboLights studies | **DONE** (4 studies) | [Cross-study summary](METABOLOMICS/CROSS-STUDY.md): MTBLS1/90/404/19 — normalization decisive everywhere; each study recovers its own biology (urine→amino/organic acid, serum→lipid) |
+| Extend the bridge to complex lipids | TODO (next method gap) | Serum LC-MS residuals are lipids absent from Rhea as discrete participants (LIPID MAPS/SwissLipids → ChEBI) |
 | Interactive demo (precomputed showcase → FastAPI app) | PLANNED | See [DEMO-PLAN.md](METABOLOMICS/DEMO-PLAN.md): static gallery here + app in a new repo reusing the probe engine |
 | Inventory GO-CAM metabolic models + their ChEBI input/output compounds | TODO | Feasibility of Approach B (the "full network" path) |
 | Glucose-metabolism GO-CAM perturbation worked example | TODO | Direct analogue of the Genetics 2023 precedent |
@@ -357,8 +371,8 @@ strategy, phasing, and the KEGG-licensing caveat are in
 ## Project Status
 
 - **Started**: 2026-06-21
-- **Maturity**: SCOPING → early IN_PROGRESS — problem framed, tool landscape
-  surveyed, and a **working end-to-end pipeline**
+- **Maturity**: IN_PROGRESS — problem framed, tool landscape
+  surveyed, and a **working end-to-end pipeline** validated on four studies
   ([`probe/`](METABOLOMICS/probe/README.md)): two-tier ChEBI normalization
   (protonation + InChIKey-skeleton), the `metabolite→Rhea→rhea2go→GO` bridge, a
   closure-aware GO ORA, and a like-for-like KEGG-pathway baseline — demonstrated
@@ -373,6 +387,9 @@ strategy, phasing, and the KEGG-licensing caveat are in
     enzyme layer) — all recover amino-acid / central-carbon biology; GO
     additionally resolves specific activities (transaminase, amino-acid
     oxidase/racemase) and processes (amino-acid metabolism/transport, FDR 9e-44).
+  - **Generality across 4 MetaboLights studies** ([CROSS-STUDY.md](METABOLOMICS/CROSS-STUDY.md)):
+    coverage 53–91% after normalization; study-appropriate GO BP (urine→amino/
+    organic acid, serum→lipid/fatty-acid metabolism, FDR to 3e-89).
 - **Key idea**: ChEBI is the bridge from metabolite repositories (MetaboLights,
   Workbench/RefMet) into Rhea reactions, `rhea2go` GO molecular functions, GOA
   genes, and GO-CAM causal networks — giving a GO-native, closure-aware,

@@ -21,9 +21,10 @@ GO?** — and where that demo should live.
    client-side viewer on `ai4curation.io/ai-gene-review/`. Zero infra, immediate,
    and it nails the UX before any server exists.
 3. **Build the interactive app in a new repo** (`ai4curation/metabolomics-go-demo`)
-   as a small **FastAPI service** wrapping the existing engine, with a
-   **lightweight frontend** that can be embedded back into the Pages site.
-   Deploy to **Hugging Face Spaces** (Docker) or Render/Fly.
+   as a **Streamlit app** wrapping the existing engine (signed-off choice for
+   the MVP), deployed to **Hugging Face Spaces**. Pathway baseline =
+   **Reactome/SMPDB** (not KEGG). (A FastAPI JSON API can be added later if an
+   embeddable/headless interface is needed.)
 4. **Keep the engine here.** The [`probe/`](probe/README.md) modules are the
    reproducible scientific core; the app repo depends on them (pip install from a
    pinned tag), so the science stays version-controlled with the curation work
@@ -171,12 +172,24 @@ write-through caching.
   round-trips; mitigate with the prebuilt common-metabolite table + a spinner +
   write-through cache.
 
-## Open questions for sign-off
+## Decisions (signed off)
 
-- **Baseline:** keep KEGG (with the licensing caveat) or switch to Reactome/SMPDB
-  for a cleanly redistributable demo?
-- **Frontend taste:** fastest-MVP (Streamlit) vs embeddable-on-Pages
-  (FastAPI + static UI)? The doc recommends the latter.
-- **Hosting:** Hugging Face Spaces (simplest for a Python demo) vs Render/Fly?
+- **Baseline → Reactome / SMPDB**, not KEGG. Both are openly redistributable, so
+  the whole demo can be cached and shared without the KEGG restriction. The
+  current `kegg_baseline.py` stays only as an internal cross-check; the app's
+  pathway baseline will be Reactome (ChEBI participants are native to Reactome,
+  so the ChEBI bridge applies directly) and/or SMPDB.
+- **Frontend → Streamlit on Hugging Face Spaces.** Fastest route to a live,
+  interactive MVP; single Python app reusing the engine. (Embedding into the
+  Pages site, if wanted later, can be an `<iframe>` to the Space.)
+- **Hosting → Hugging Face Spaces** (Docker or native Streamlit).
+- **Sequencing → validate generality first.** Before building the app, run the
+  pipeline over several more MetaboLights studies (different biofluid / platform /
+  disease / organism) to confirm the coverage uplift and enrichment hold up. See
+  the cross-study summary linked from the [project page](../METABOLOMICS.md).
+
+## Remaining open questions
+
+- **SMPDB vs Reactome (or both)** as the concrete pathway baseline to implement.
 - **Scope of v1:** is "paste a list / pick a study → coverage + 3-way enrichment"
   the right MVP cut, deferring the network and GO-CAM views to Phase 3?

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
@@ -69,6 +70,12 @@ def _get_json(url: str, timeout: int = 60, retries: int = 3) -> dict:
                 data = json.loads(resp.read().decode())
             _cache_put(url, data)
             return data
+        except urllib.error.HTTPError as e:
+            if e.code in (400, 404):  # deterministic "no such term / bad id" — don't retry
+                _cache_put(url, {})
+                return {}
+            last = e
+            time.sleep(2 ** attempt)
         except Exception as e:  # noqa: BLE001 - retry on any transient network error
             last = e
             time.sleep(2 ** attempt)

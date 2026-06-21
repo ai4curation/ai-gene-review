@@ -56,16 +56,17 @@ def _get(url: str, timeout: int = 90):
         return resp.headers, resp.read().decode(errors="replace")
 
 
-def download_human_enzymes() -> str:
-    """All reviewed human enzymes (catalytic activity) with Rhea + GO-BP; cached.
+def download_enzymes(taxon: int = 9606) -> str:
+    """All reviewed enzymes (catalytic activity) of ``taxon`` with Rhea + GO-BP.
 
-    Follows UniProt REST cursor pagination and concatenates the TSV pages.
+    Follows UniProt REST cursor pagination and concatenates the TSV pages; cached
+    per taxon.
     """
-    cache = rhea.CACHE / "uniprot_human_enzymes.tsv"
+    cache = rhea.CACHE / f"uniprot_enzymes_{taxon}.tsv"
     if cache.exists():
         return cache.read_text()
     params = urllib.parse.urlencode({
-        "query": "reviewed:true AND organism_id:9606 AND (cc_catalytic_activity:*)",
+        "query": f"reviewed:true AND organism_id:{taxon} AND (cc_catalytic_activity:*)",
         "fields": "accession,rhea,go_p", "format": "tsv", "size": 500,
     })
     url = f"{UNIPROT}?{params}"
@@ -123,6 +124,8 @@ def main() -> int:
     ap.add_argument("--cofactor-degree", type=int, default=DEFAULT_COFACTOR_DEGREE,
                     help="Rhea reaction-degree at/above which a participant is treated "
                          "as currency/cofactor (default %(default)s)")
+    ap.add_argument("--taxon", type=int, default=9606,
+                    help="NCBI taxon for the enzyme/GO-BP layer (default 9606 = human)")
     args = ap.parse_args()
 
     tokens = []
@@ -131,11 +134,12 @@ def main() -> int:
         if line and not line.startswith("#"):
             tokens.append(line.split()[0].split("\t")[0])
 
-    print("Loading Rhea network, human enzymes (UniProt), GO ontology ...", file=sys.stderr)
+    print(f"Loading Rhea network, taxon {args.taxon} enzymes (UniProt), GO ontology ...",
+          file=sys.stderr)
     idx = rhea.RheaIndex()
-    enz_rhea, enz_bp, rxn_enz = parse_enzymes(download_human_enzymes())
+    enz_rhea, enz_bp, rxn_enz = parse_enzymes(download_enzymes(args.taxon))
     parents, label, namespace = load_go_obo()
-    print(f"  human enzymes with Rhea: {len(enz_rhea)}; "
+    print(f"  taxon-{args.taxon} enzymes with Rhea: {len(enz_rhea)}; "
           f"reactions catalysed: {len(rxn_enz)}", file=sys.stderr)
 
     # enzyme -> closed BP set (restricted to biological_process namespace)

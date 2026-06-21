@@ -50,6 +50,9 @@ def study_title(acc: str) -> str:
     return ""
 
 
+_CHEBI = re.compile(r"CHEBI:\s*(\d+)", re.IGNORECASE)
+
+
 def chebi_ids_from_maf(acc: str, maf: str) -> list[tuple[str, str]]:
     text = _get(f"{FTP}/{acc}/{maf}")
     rows = list(csv.DictReader(io.StringIO(text), delimiter="\t"))
@@ -57,8 +60,9 @@ def chebi_ids_from_maf(acc: str, maf: str) -> list[tuple[str, str]]:
     for r in rows:
         did = (r.get("database_identifier") or "").strip()
         name = (r.get("metabolite_identification") or "").strip()
-        if did.upper().startswith("CHEBI:"):
-            out.append((did.upper().replace("CHEBI: ", "CHEBI:"), name))
+        # A cell may carry several ids (e.g. "CHEBI:131590|CHEBI:91296"); take all.
+        for num in _CHEBI.findall(did):
+            out.append((f"CHEBI:{num}", name))
     return out
 
 
