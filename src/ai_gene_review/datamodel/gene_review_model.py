@@ -172,6 +172,24 @@ class VariantSelectionEnum(str, Enum):
     """
 
 
+class ConformanceStatusEnum(str, Enum):
+    """
+    How closely a module node matches a template motif it conforms to.
+    """
+    EXACT = "EXACT"
+    """
+    The node matches the template motif exactly: same steps, function terms, and connection topology, with no recorded deviations.
+    """
+    WITH_DEVIATIONS = "WITH_DEVIATIONS"
+    """
+    The node matches the template motif apart from the differences listed in deviations (e.g. a merged or missing tier, a substituted term).
+    """
+    EXTENDS = "EXTENDS"
+    """
+    The node contains the full template motif and adds further steps or structure beyond it.
+    """
+
+
 class ParticipantSelectorTypeEnum(str, Enum):
     """
     How a module annoton participant is selected.
@@ -1460,6 +1478,7 @@ class GeneReview(ConfiguredBaseModel):
     status: Optional[GeneReviewStatusEnum] = Field(default=None, description="""Overall status of the gene review""", json_schema_extra = { "linkml_meta": {'alias': 'status',
          'domain_of': ['GeneReview',
                        'ModuleReview',
+                       'Conformance',
                        'GoCamReview',
                        'KnowledgeGap',
                        'RuleReview',
@@ -1827,6 +1846,7 @@ class EvidenceItem(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -1888,6 +1908,7 @@ class Descriptor(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -1949,6 +1970,7 @@ class ChemicalEntityDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2010,6 +2032,7 @@ class GeneDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2071,6 +2094,7 @@ class GeneProductDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2134,6 +2158,7 @@ class FamilyDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2195,6 +2220,7 @@ class AncestralNodeDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2256,6 +2282,7 @@ class DomainDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2317,6 +2344,7 @@ class CellularComponentDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2379,6 +2407,7 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2447,6 +2476,7 @@ class ComplexUnit(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2508,6 +2538,7 @@ class CellTypeDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2569,6 +2600,7 @@ class AnatomicalEntityDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2630,6 +2662,7 @@ class DevelopmentalStageDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2691,6 +2724,7 @@ class TaxonDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2760,6 +2794,7 @@ class MolecularFunctionDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2826,6 +2861,7 @@ class BiologicalProcessDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2887,6 +2923,7 @@ class RelationDescriptor(Descriptor):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -2963,6 +3000,7 @@ class ModuleReview(ConfiguredBaseModel):
     status: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'status',
          'domain_of': ['GeneReview',
                        'ModuleReview',
+                       'Conformance',
                        'GoCamReview',
                        'KnowledgeGap',
                        'RuleReview',
@@ -2987,6 +3025,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3061,6 +3100,7 @@ class ModuleNode(ConfiguredBaseModel):
     parts: Optional[list[ModulePart]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'parts', 'domain_of': ['ModuleNode']} })
     variant_sets: Optional[list[ModuleVariantSet]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'variant_sets', 'domain_of': ['ModuleNode']} })
     connections: Optional[list[ModuleConnection]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'connections', 'domain_of': ['ModuleNode']} })
+    conforms_to: Optional[list[Conformance]] = Field(default=None, description="""Reusable template motifs that this node (together with its parts and connections) is an instance of. Conformance is a compositional, bundle-scoped consistency check: a concrete cascade may freely extend its start and end, while an inner sub-bundle node declares that its parts match a generic motif (e.g. the three-tier MAP kinase relay).""", json_schema_extra = { "linkml_meta": {'alias': 'conforms_to', 'domain_of': ['ModuleNode']} })
     gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM models (or specific activities) that realize this module node as a whole.""", json_schema_extra = { "linkml_meta": {'alias': 'gocam_associations', 'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'evidence',
          'domain_of': ['Descriptor',
@@ -3081,6 +3121,47 @@ class ModuleNode(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'GoCamAssociation',
+                       'GoCamReview',
+                       'GoCamActivityReview',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection',
+                       'RuleConditionSet',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment']} })
+
+
+class Conformance(ConfiguredBaseModel):
+    """
+    Assertion that a module node (together with its parts and connections) is an instance of a reusable template module or motif, optionally recording how it deviates from that template. Modeled after the dismech conforms_to pattern: conformance is a consistency check, not inheritance.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    template: str = Field(default=..., description="""Reference to the template, as a module path relative to modules/ with an optional node id after a hash (e.g. \"mapk_relay\" or \"mapk_relay#map2k\"). The referenced template defines the required steps, function terms, and connection topology this node must contain.""", json_schema_extra = { "linkml_meta": {'alias': 'template', 'domain_of': ['Conformance']} })
+    status: Optional[ConformanceStatusEnum] = Field(default=None, description="""Whether the node matches the template exactly, matches with the noted deviations, or matches the core motif while extending it.""", json_schema_extra = { "linkml_meta": {'alias': 'status',
+         'domain_of': ['GeneReview',
+                       'ModuleReview',
+                       'Conformance',
+                       'GoCamReview',
+                       'KnowledgeGap',
+                       'RuleReview',
+                       'PredictionReview']} })
+    deviations: Optional[list[str]] = Field(default=None, description="""Specific differences from the template (e.g. a missing or merged tier, a substituted function term). Listed deviations are treated as informational rather than errors during conformance QC.""", json_schema_extra = { "linkml_meta": {'alias': 'deviations', 'domain_of': ['Conformance']} })
+    notes: Optional[str] = Field(default=None, description="""Free-text rationale or context for the conformance and any deviations.""", json_schema_extra = { "linkml_meta": {'alias': 'notes',
+         'domain_of': ['EvidenceItem',
+                       'Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3127,6 +3208,7 @@ class ModulePart(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3194,6 +3276,7 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3264,6 +3347,7 @@ class ModuleAnnoton(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3330,6 +3414,7 @@ class GoCamAssociation(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3397,6 +3482,7 @@ class GoCamReview(ConfiguredBaseModel):
     status: Optional[GoCamReviewStatusEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'status',
          'domain_of': ['GeneReview',
                        'ModuleReview',
+                       'Conformance',
                        'GoCamReview',
                        'KnowledgeGap',
                        'RuleReview',
@@ -3408,6 +3494,7 @@ class GoCamReview(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3466,6 +3553,7 @@ class GoCamActivityReview(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3540,6 +3628,7 @@ class ParticipantSelector(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3589,6 +3678,7 @@ class ModuleContext(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3653,6 +3743,7 @@ class ModuleConnection(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -3871,6 +3962,7 @@ class KnowledgeGap(ConfiguredBaseModel):
     status: Optional[KnowledgeGapStatusEnum] = Field(default=None, description="""Lifecycle status of the gap, tracking progress toward resolution.""", json_schema_extra = { "linkml_meta": {'alias': 'status',
          'domain_of': ['GeneReview',
                        'ModuleReview',
+                       'Conformance',
                        'GoCamReview',
                        'KnowledgeGap',
                        'RuleReview',
@@ -3966,6 +4058,7 @@ class RuleReview(ConfiguredBaseModel):
     status: Optional[RuleReviewStatusEnum] = Field(default=None, description="""Status of the rule review""", json_schema_extra = { "linkml_meta": {'alias': 'status',
          'domain_of': ['GeneReview',
                        'ModuleReview',
+                       'Conformance',
                        'GoCamReview',
                        'KnowledgeGap',
                        'RuleReview',
@@ -4026,6 +4119,7 @@ class RuleConditionSet(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4207,6 +4301,7 @@ class ParsimonyAssessment(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4254,6 +4349,7 @@ class LiteratureSupportAssessment(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4301,6 +4397,7 @@ class ConditionOverlapAssessment(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4348,6 +4445,7 @@ class GOSpecificityAssessment(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4395,6 +4493,7 @@ class TaxonomicScopeAssessment(ConfiguredBaseModel):
                        'ComplexUnit',
                        'ModuleReview',
                        'ModuleNode',
+                       'Conformance',
                        'ModulePart',
                        'ModuleVariantSet',
                        'ModuleAnnoton',
@@ -4482,6 +4581,7 @@ class PredictionReview(ConfiguredBaseModel):
     status: Optional[GeneReviewStatusEnum] = Field(default=None, description="""Overall status of the gene review""", json_schema_extra = { "linkml_meta": {'alias': 'status',
          'domain_of': ['GeneReview',
                        'ModuleReview',
+                       'Conformance',
                        'GoCamReview',
                        'KnowledgeGap',
                        'RuleReview',
@@ -4571,6 +4671,7 @@ BiologicalProcessDescriptor.model_rebuild()
 RelationDescriptor.model_rebuild()
 ModuleReview.model_rebuild()
 ModuleNode.model_rebuild()
+Conformance.model_rebuild()
 ModulePart.model_rebuild()
 ModuleVariantSet.model_rebuild()
 ModuleAnnoton.model_rebuild()

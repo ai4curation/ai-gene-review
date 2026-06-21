@@ -9,6 +9,7 @@ committed nicotine module.
 from pathlib import Path
 
 import pytest
+import yaml
 
 from ai_gene_review.validation.module_validator import (
     compare_label,
@@ -198,3 +199,54 @@ def test_nicotine_module_terms_resolve_for_real():
     path = MODULES_DIR / "nicotine_biosynthesis.yaml"
     result = validate_module_file(path)
     assert result.errors == [], "\n".join(result.errors)
+
+
+# --------------------------------------------------------------------------- #
+# Conformance is enforced through validate_module_file (offline, injected resolver)
+# --------------------------------------------------------------------------- #
+
+
+def _skip_label_resolver(curie):
+    """Resolver that treats labels as unvalidated, isolating the conformance check.
+
+    Label checking degrades to advisory warnings, so any remaining *errors* come
+    solely from conformance.
+    """
+    return ("unavailable", None, set())
+
+
+def test_validate_module_file_passes_conformant_module():
+    # erk_cascade's erk_relay bundle conforms EXACTly to mapk_relay, so with
+    # label checking skipped the file should validate with no errors.
+    result = validate_module_file(
+        MODULES_DIR / "erk_cascade.yaml", resolver=_skip_label_resolver
+    )
+    assert result.errors == [], "\n".join(result.errors)
+
+
+def test_validate_module_file_flags_bad_conformance(tmp_path):
+    # A node conforming to a non-existent template must produce a hard error.
+    doc = {
+        "id": "MODULE:bad",
+        "title": "bad",
+        "module": {
+            "id": "bad",
+            "label": "bad",
+            "parts": [
+                {
+                    "node": {
+                        "id": "relay",
+                        "label": "relay",
+                        "conforms_to": [{"template": "no_such_motif"}],
+                    }
+                }
+            ],
+        },
+    }
+    path = tmp_path / "bad_module.yaml"
+    path.write_text(yaml.safe_dump(doc), encoding="utf-8")
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert not result.is_valid
+    assert any(
+        "conformance" in e.lower() and "template" in e.lower() for e in result.errors
+    )

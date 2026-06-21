@@ -6,10 +6,12 @@ This module computes the derived stats surfaced on rendered module pages:
 1. ``run_data_qc`` -- LinkML recommended-field compliance (via ``linkml-data-qc``)
 2. ``leaf_nodes_missing_representatives`` -- terminal nodes that do not ground to
    any concrete protein (a "representative member")
-3. ``module_gene_review_summary`` -- for every ``UniProtKB`` grounding in a module,
+3. ``conformance_violations`` -- for every node declaring ``conforms_to`` a
+   template motif, whether the bundle's tiers and connection topology match it
+4. ``module_gene_review_summary`` -- for every ``UniProtKB`` grounding in a module,
    whether the gene has a review, whether that review is complete, and whether it
    has deep research
-4. ``module_deep_research`` -- whether the module document as a whole has an
+5. ``module_deep_research`` -- whether the module document as a whole has an
    associated deep-research report
 
 The functions are deliberately pure (apart from the filesystem-scanning helpers)
@@ -20,13 +22,19 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import yaml
 
-DEFAULT_SCHEMA_PATH = (
-    Path(__file__).parent / "schema" / "gene_review.yaml"
-)
+DEFAULT_SCHEMA_PATH = Path(__file__).parent / "schema" / "gene_review.yaml"
+
+# Repository modules directory, used to resolve conformance `template` references.
+DEFAULT_MODULES_DIR = Path("modules")
+
+# A predicate (child_curie, parent_curie) -> bool answering "is child a subclass
+# of parent?". Conformance tier matching uses it to accept a more specific term
+# than the template's. Default is identity (exact-term) matching only.
+SubclassPredicate = Callable[[str, str], bool]
 
 # Selector types whose participant can ground to a concrete protein.
 _GROUNDED_TERM_PREFIXES = ("UniProtKB:",)
@@ -76,6 +84,7 @@ def base_accession(curie_or_id: Any) -> Optional[str]:
 # ---------------------------------------------------------------------------
 # Module tree traversal
 # ---------------------------------------------------------------------------
+
 
 def iter_nodes(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Return every module node, including the root and all nested descendants.
@@ -218,9 +227,7 @@ def collect_uniprot_groundings(data: dict[str, Any]) -> list[dict[str, Any]]:
         if isinstance(obj, dict):
             term = obj.get("term")
             term_id = term.get("id") if isinstance(term, dict) else None
-            if isinstance(term_id, str) and term_id.startswith(
-                _GROUNDED_TERM_PREFIXES
-            ):
+            if isinstance(term_id, str) and term_id.startswith(_GROUNDED_TERM_PREFIXES):
                 acc = base_accession(term_id)
                 if acc and acc not in found:
                     found[acc] = {
@@ -240,6 +247,246 @@ def collect_uniprot_groundings(data: dict[str, Any]) -> list[dict[str, Any]]:
 
     walk(data.get("module"))
     return [found[key] for key in sorted(found)]
+
+
+# ---------------------------------------------------------------------------
+# Conformance checking
+# ---------------------------------------------------------------------------
+
+
+def _node_function_term_id(node: dict[str, Any]) -> Optional[str]:
+    """Return the representative molecular-function term id of a tier node.
+
+    Prefers a declared ``function`` role; falls back to the participant's
+    ``required_function`` selector. Returns the first such term id found across
+    the node's annotons.
+    """
+    for annoton in as_list(node.get("annotons")):
+        if not isinstance(annoton, dict):
+            continue
+        for holder_key in ("function",):
+            holder = annoton.get(holder_key)
+            if isinstance(holder, dict):
+                term = holder.get("term")
+                if isinstance(term, dict) and isinstance(term.get("id"), str):
+                    return term["id"]
+        participant = annoton.get("participant")
+        if isinstance(participant, dict):
+            required = participant.get("required_function")
+            if isinstance(required, dict):
+                term = required.get("term")
+                if isinstance(term, dict) and isinstance(term.get("id"), str):
+                    return term["id"]
+    return None
+
+
+def node_tier_terms(node: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return the ordered child steps of a node as tier descriptors.
+
+    Each entry is ``{"id", "role", "function_id"}`` for one ``parts[].node``,
+    ordered by the part ``order`` (parts without an explicit order keep their
+    document order, sorted after ordered ones).
+    """
+    parts = [p for p in as_list(node.get("parts")) if isinstance(p, dict)]
+
+    def sort_key(item: tuple[int, dict[str, Any]]) -> tuple[int, int]:
+        index, part = item
+        order = part.get("order")
+        return (0, order) if isinstance(order, int) else (1, index)
+
+    tiers: list[dict[str, Any]] = []
+    for _, part in sorted(enumerate(parts), key=sort_key):
+        child = part.get("node")
+        if not isinstance(child, dict):
+            continue
+        tiers.append(
+            {
+                "id": child.get("id"),
+                "role": part.get("role"),
+                "function_id": _node_function_term_id(child),
+            }
+        )
+    return tiers
+
+
+def _normalized_edges(node: dict[str, Any]) -> set[tuple[int, int, str]]:
+    """Return a node's internal connections as positional ``(i, j, type)`` edges.
+
+    Child-step ids are indexed by tier order, so the topology can be compared
+    across a template and a conforming bundle independently of id naming.
+    Connections that reference ids outside the node's own child steps are
+    ignored (they wire the bundle to its surroundings, not the motif).
+    """
+    tiers = node_tier_terms(node)
+    index = {t["id"]: i for i, t in enumerate(tiers) if t["id"] is not None}
+    edges: set[tuple[int, int, str]] = set()
+    for connection in as_list(node.get("connections")):
+        if not isinstance(connection, dict):
+            continue
+        source = connection.get("source")
+        target = connection.get("target")
+        if source in index and target in index:
+            edges.add(
+                (index[source], index[target], str(connection.get("connection_type")))
+            )
+    return edges
+
+
+def resolve_template_node(
+    template_ref: str,
+    modules_dir: Path = DEFAULT_MODULES_DIR,
+) -> Optional[dict[str, Any]]:
+    """Resolve a conformance ``template`` reference to its module node.
+
+    The reference is ``<stem>`` (the module file ``<stem>.yaml``, whose root
+    ``module`` node is the motif) or ``<stem>#<node_id>`` to select a nested
+    node. Returns ``None`` if the file or node cannot be found.
+    """
+    stem, _, node_id = template_ref.partition("#")
+    path = Path(modules_dir) / f"{stem}.yaml"
+    if not path.exists():
+        return None
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not node_id:
+        module = data.get("module")
+        return module if isinstance(module, dict) else None
+    for node in iter_nodes(data):
+        if node.get("id") == node_id:
+            return node
+    return None
+
+
+def _terms_match(
+    child_id: Optional[str],
+    parent_id: Optional[str],
+    subclass_of: Optional[SubclassPredicate],
+) -> bool:
+    """Return True when ``child_id`` equals or is a subclass of ``parent_id``."""
+    if child_id is not None and child_id == parent_id:
+        return True
+    if subclass_of and child_id and parent_id and subclass_of(child_id, parent_id):
+        return True
+    return False
+
+
+def _check_one_conformance(
+    node: dict[str, Any],
+    conformance: dict[str, Any],
+    modules_dir: Path,
+    subclass_of: Optional[SubclassPredicate],
+) -> list[dict[str, Any]]:
+    """Check a single ``conforms_to`` entry on a node, returning violations.
+
+    Severity policy keyed on the declared ``status``:
+
+    - ``EXACT`` (or unset): structural mismatches are ``error``.
+    - ``WITH_DEVIATIONS``: structural mismatches are downgraded to ``info``
+      (they are expected, explained by ``deviations``); a ``warning`` is raised
+      if ``WITH_DEVIATIONS`` is declared with no deviations listed.
+    - ``EXTENDS``: the node must contain every template tier (by term, in order)
+      and may add more; only missing tiers are reported, as ``error``.
+    """
+    node_id = node.get("id")
+    template_ref = str(conformance.get("template"))
+    status = (conformance.get("status") or "EXACT").upper()
+    deviations = as_list(conformance.get("deviations"))
+
+    def violation(message: str, severity: str) -> dict[str, Any]:
+        return {
+            "node_id": node_id,
+            "template": template_ref,
+            "status": status,
+            "severity": severity,
+            "message": message,
+        }
+
+    template_node = resolve_template_node(template_ref, modules_dir)
+    if template_node is None:
+        return [violation(f"conformance template '{template_ref}' not found", "error")]
+
+    expected = node_tier_terms(template_node)
+    actual = node_tier_terms(node)
+
+    # Severity for structural mismatches depends on the declared status.
+    mismatch_severity = "info" if status == "WITH_DEVIATIONS" else "error"
+    violations: list[dict[str, Any]] = []
+
+    if status == "WITH_DEVIATIONS" and not deviations:
+        violations.append(
+            violation("status WITH_DEVIATIONS but no deviations listed", "warning")
+        )
+
+    if status == "EXTENDS":
+        # Template tiers must appear, in order, as a subsequence of the node's.
+        actual_terms = [a["function_id"] for a in actual]
+        cursor = 0
+        for tier in expected:
+            match_at = None
+            for j in range(cursor, len(actual_terms)):
+                if _terms_match(actual_terms[j], tier["function_id"], subclass_of):
+                    match_at = j
+                    break
+            if match_at is None:
+                violations.append(
+                    violation(
+                        f"EXTENDS: template tier {tier['function_id']} "
+                        "missing from the bundle",
+                        "error",
+                    )
+                )
+            else:
+                cursor = match_at + 1
+        return violations
+
+    # EXACT / WITH_DEVIATIONS: counts, per-tier terms, and topology must match.
+    if len(actual) != len(expected):
+        violations.append(
+            violation(
+                f"tier count {len(actual)} does not match template "
+                f"{len(expected)} ({template_ref})",
+                mismatch_severity,
+            )
+        )
+    for position, (exp, act) in enumerate(zip(expected, actual), start=1):
+        if not _terms_match(act["function_id"], exp["function_id"], subclass_of):
+            violations.append(
+                violation(
+                    f"tier {position} function {act['function_id']} does not "
+                    f"match template {exp['function_id']}",
+                    mismatch_severity,
+                )
+            )
+    if _normalized_edges(node) != _normalized_edges(template_node):
+        violations.append(
+            violation(
+                "connection topology does not match the template motif",
+                mismatch_severity,
+            )
+        )
+    return violations
+
+
+def conformance_violations(
+    data: dict[str, Any],
+    modules_dir: Path = DEFAULT_MODULES_DIR,
+    subclass_of: Optional[SubclassPredicate] = None,
+) -> list[dict[str, Any]]:
+    """Return all conformance violations across a module document.
+
+    Walks every node, and for each ``conforms_to`` entry resolves the template
+    motif and verifies the node's tiers and topology against it. An empty list
+    means every declared conformance holds.
+    """
+    violations: list[dict[str, Any]] = []
+    for node in iter_nodes(data):
+        for conformance in as_list(node.get("conforms_to")):
+            if isinstance(conformance, dict):
+                violations.extend(
+                    _check_one_conformance(
+                        node, conformance, Path(modules_dir), subclass_of
+                    )
+                )
+    return violations
 
 
 # ---------------------------------------------------------------------------
@@ -384,6 +631,7 @@ def module_gene_review_summary(
 # Module-level deep research
 # ---------------------------------------------------------------------------
 
+
 def module_deep_research(yaml_path: Path) -> dict[str, Any]:
     """Detect a module-level deep-research report next to the module YAML.
 
@@ -403,9 +651,7 @@ def module_deep_research(yaml_path: Path) -> dict[str, Any]:
     marker = "-deep-research-"
     for md in files:
         report_stem = md.name.removesuffix(".md")
-        provider = (
-            report_stem.rsplit(marker, 1)[-1] if marker in report_stem else None
-        )
+        provider = report_stem.rsplit(marker, 1)[-1] if marker in report_stem else None
         providers.append({"file": md.name, "provider": provider or None})
     return {"has_deep_research": bool(files), "reports": providers}
 
@@ -413,6 +659,7 @@ def module_deep_research(yaml_path: Path) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # linkml-data-qc compliance
 # ---------------------------------------------------------------------------
+
 
 def run_data_qc(
     yaml_path: Path,
@@ -466,6 +713,9 @@ def collect_module_qc(
     return {
         "data_qc": data_qc,
         "leaf_nodes_missing_representatives": leaf_nodes_missing_representatives(data),
+        "conformance_violations": conformance_violations(
+            data, modules_dir=yaml_path.parent
+        ),
         "gene_reviews": module_gene_review_summary(
             data, gene_index=gene_index, genes_dir=genes_dir
         ),
