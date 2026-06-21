@@ -159,6 +159,13 @@ analysis would be the deciding evidence:
 - [x] HIGH non-structural leads (skn-1, ASCL1, CLCN7) run, reviewed, and wired in —
       all three actionable over-annotation verdicts; established that code execution
       is triggered mainly by structural questions.
+- [x] Tweaked the prompt template (`templates/gene_hypothesis_deep_research.md`) to
+      encourage *executing* hypothesis-matched analyses (hydropathy/topology +
+      targeting motifs; active-site/motif residue checks; binding-domain/PWM;
+      domain/orthology) and saving the computed result as provenance, with a hard
+      "never fabricate / inconclusive is fine / say so if web-only" clause.
+- [ ] Re-run a non-structural case (e.g. a fresh topology question) to test whether
+      the template tweak actually shifts behaviour toward executed provenance.
 - [ ] Run the MED non-structural leads (WFS1, SORL1, CTBP1).
 - [ ] Write up the systematic-mis-annotation cases (MJ1511/MJ0742; CLCN7's ~1,198
       propagated annotations; pmp20 family) as examples of family-level error
