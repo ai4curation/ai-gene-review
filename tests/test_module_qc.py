@@ -322,6 +322,7 @@ def test_collect_module_qc_smoke():
     assert set(qc) == {
         "data_qc",
         "leaf_nodes_missing_representatives",
+        "conformance_violations",
         "gene_reviews",
         "module_deep_research",
     }
