@@ -96,60 +96,83 @@ umbrella; GlyTouCan is the shared structure-ID backbone they all link to.
 
 ## Exemplar reviews (calibration set)
 
-Three human genes were chosen to calibrate the over-/under-annotation hypotheses
-across the main functional axes of animal glycobiology — one **glycosyltransferase**,
-one **lectin**, and one **CDG** gene:
+Seven human genes were reviewed to calibrate the over-/under-annotation
+hypotheses across the main functional axes of animal glycobiology. Phase 1
+covered one **glycosyltransferase**, one **lectin**, and one **CDG** gene;
+Phase 2 broadened the GT axis across four more transferase sub-types
+(O-fucosyl-, GlcNAc-branching-, sialyl-, galactosyl-). Each Phase-2 gene was
+reviewed with a **FutureHouse Falcon deep-research report integrated from the
+start**, and the Phase-1 three were retro-fitted with their Falcon findings.
 
-| Gene | UniProt | Axis | Why chosen | GOA annotations |
-|------|---------|------|------------|----------------:|
-| **B3GALNT2** | Q8NCR0 | Glycosyltransferase (CAZy GT31) | β-1,3-GalNAc-T in α-dystroglycan O-mannosyl glycan (matriglycan) elongation; dystroglycanopathy (secondary CDG); already flagged in [RHEA](RHEA.md) as lacking a specific acetylgalactosaminyltransferase GO term | 16 |
-| **LGALS3** | P17931 | Lectin (galectin) | chimera-type β-galactoside-binding galectin; large, pleiotropic annotation set — ideal stress-test for the "generic protein binding → carbohydrate binding" and pleiotropy/non-core hypotheses | 105 |
-| **PMM2** | O15305 | CDG (precursor supply) | phosphomannomutase 2; PMM2-CDG (CDG-Ia) is the most common CDG; tests "substrate guilt-by-association" on a metabolic enzyme that only supplies a GDP-mannose precursor | 23 |
+| Gene | UniProt | Axis (CAZy) | Why chosen |
+|------|---------|-------------|------------|
+| **B3GALNT2** | Q8NCR0 | β-1,3-GalNAc-T (GT31) | α-dystroglycan O-mannosyl (matriglycan) elongation; dystroglycanopathy (secondary CDG); [RHEA](RHEA.md)-flagged GO gap |
+| **LGALS3** | P17931 | lectin (galectin) | chimera-type β-galactoside-binding galectin; large pleiotropic set — protein-binding + pleiotropy stress-test |
+| **PMM2** | O15305 | CDG (precursor) | phosphomannomutase 2; PMM2-CDG is the commonest CDG; "guilt-by-association" on a precursor-supply enzyme |
+| **POFUT1** | Q9H488 | O-fucosyl-T (GT65) | ER O-fucosyltransferase on EGF repeats; Notch O-fucosylation; ER (not Golgi) localization test |
+| **MGAT1** | P26572 | GlcNAc-T I (GT13) | medial-Golgi gatekeeper committing N-glycans to hybrid/complex processing |
+| **ST6GAL1** | P15907 | sialyl-T (GT29) | trans-Golgi α-2,6-sialyltransferase (CD22 ligand / CD75 epitope) |
+| **B4GALT1** | P15291 | β-1,4-Gal-T (GT7) | LacNAc synthase; bifunctional lactose synthase with α-lactalbumin; CDG-IID |
 
-Each gene was fetched (`fetch-gene`) and fully reviewed against the repo workflow
-(literature research, per-annotation action, `core_functions`,
-`proposed_new_terms`). All three validate clean (`status: DRAFT`).
+All seven validate clean (`status: DRAFT`).
 
-### Verdict distributions
+### Verdict distributions (authoritative, from the YAMLs)
 
-| Gene | N | ACCEPT | NON_CORE | OVER_ANNOTATED | MODIFY | REMOVE |
-|------|--:|-------:|---------:|---------------:|-------:|-------:|
-| B3GALNT2 (GT) | 16 | 5 | 2 | 3 | 6 | 0 |
-| LGALS3 (lectin) | 105 | 21 | 64 | 20 | 0 | 0 |
-| PMM2 (CDG) | 23 | 16 | 2 | 1 | 1 | 3 |
+| Gene | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW |
+|------|--:|-------:|---------:|-----:|-------:|-------:|----:|
+| B3GALNT2 | 16 | 5 | 2 | 2 | 7 | 0 | 0 |
+| LGALS3 | 106 | 21 | 64 | 20 | 0 | 0 | 1 |
+| PMM2 | 23 | 16 | 2 | 1 | 1 | 3 | 0 |
+| POFUT1 | 21 | 15 | 2 | 3 | 1 | 0 | 0 |
+| MGAT1 | 26 | 11 | 6 | 5 | 4 | 0 | 0 |
+| ST6GAL1 | 35 | 23 | 5 | 2 | 4 | 1 | 0 |
+| B4GALT1 | 76 | 44 | 21 | 6 | 5 | 0 | 0 |
+| **Total** | **303** | **135** | **102** | **39** | **22** | **4** | **1** |
+
+Only **4/303 REMOVE** (all high-throughput-interactome `protein binding`), against
+**102 NON_CORE + 39 OVER + 22 MODIFY** — i.e. ~54% of annotations are *demoted or
+refined* but ~99% are *retained in some form*. The mis-annotation signal is
+overwhelmingly **altitude/specificity and pleiotropy**, not wrong functions —
+exactly the project's prediction.
 
 ### What the exemplars confirmed (audit hypotheses → evidence)
 
+- **Generic-MF-term collapse to the specific activity is the dominant GT fix.**
+  Every transferase carried over-general parent MF terms that were **MODIFY**'d to
+  the specific child: B3GALNT2 (`UDP-glycosyltransferase`/`hexosyltransferase` →
+  `GO:0008376`), MGAT1 (`acetylglucosaminyltransferase` → `GO:0003827` GlcNAc-TI),
+  ST6GAL1 (`sialyltransferase` → `GO:0003835` α-2,6-sialyl-T), B4GALT1
+  (`galactosyltransferase`/`UDP-galactosyltransferase` → `GO:0003831`).
 - **Substrate "guilt-by-association" over-annotation is real and gene-class-dependent.**
-  Both the GT (B3GALNT2) and the precursor enzyme (PMM2) carry downstream
-  whole-pathway/process terms that exceed their molecular role. On B3GALNT2 the
-  broad `glycoprotein biosynthetic process` / generic `protein O-linked
-  glycosylation` were **MODIFY**'d down to the precise `GO:0035269` (O-mannosyl,
-  the α-dystroglycan core-M3 pathway it actually elongates). On PMM2 — which only
-  supplies the GDP-mannose precursor and is **not** a glycosyltransferase —
-  `protein N-linked glycosylation` and `glycoprotein biosynthetic process` were
-  kept **NON_CORE** (true at the disease/organism level, not the enzyme's MF).
-- **Generic-MF-term collapse to the specific activity.** B3GALNT2's parent terms
-  (`UDP-glycosyltransferase activity`, `hexosyltransferase activity`, IEA/IBA)
-  were MODIFY'd to the IDA/TAS-supported specific `GO:0008376`.
+  GTs and the precursor enzyme (PMM2) carry downstream whole-pathway terms beyond
+  their molecular role. B3GALNT2's broad process terms were MODIFY'd to the precise
+  `GO:0035269` (O-mannosyl). PMM2 — which only supplies GDP-mannose and is *not* a
+  glycosyltransferase — had `protein N-linked glycosylation` kept **NON_CORE**.
+  MGAT1's many complex-N-glycan-dependent physiologies are likewise NON_CORE.
+- **Compartment errors.** POFUT1 is a soluble **ER-luminal** enzyme; its `membrane`
+  calls (TM-prediction/proteomics) were over-annotated and ER localization affirmed
+  — a reminder that GT localization annotations need the right organelle.
 - **Lectin "protein binding" under-specificity is pervasive.** Galectin-3 carried
-  **21** generic `protein binding` (GO:0005515) IPI annotations — *all* downgraded
-  as uninformative; many are in fact glycan-mediated lectin contacts whose
-  informative MF is `carbohydrate binding` (GO:0030246) / galactoside binding.
-- **Pleiotropy ≠ core.** The dominant LGALS3 verdict was **KEEP_AS_NON_CORE (64/105)**:
-  its immune/apoptosis/fibrosis/cancer biology is downstream of one core
-  activity — β-galactoside binding by the single CRD plus N-terminal-tail
-  self-association/LLPS giving lattice multivalency.
-- **GO coverage gaps surfaced for curation.** Reviews proposed **4 new terms**:
-  a protein-O-mannose β-1,3-GalNAc-transferase activity (B3GALNT2, closing the
-  [RHEA](RHEA.md)-flagged EC 2.4.1.313 gap); a phosphomannomutase-in-GDP-mannose-
-  biosynthesis term (PMM2, to capture precursor supply at correct granularity);
-  and galectin-glycan-lattice-assembly + damaged-endomembrane-glycan-sensor terms
-  (LGALS3).
-- **Citation hygiene.** The PMM2 review flagged FlyBase's `GDP-mannose
-  biosynthetic process` IMP as **MISCITED** (PMID:9525984 is about MPI/CDG-Ib, a
-  different enzyme) — kept the correct term but recorded the wrong reference via
-  `reference_review` rather than overruling the experimental annotation.
+  **21** generic `protein binding` (GO:0005515) IPI annotations — *all* downgraded;
+  many are glycan-mediated lectin contacts whose informative MF is `carbohydrate
+  binding` (GO:0030246).
+- **Pleiotropy ≠ core.** The dominant LGALS3 verdict was **NON_CORE (64/106)**; its
+  immune/apoptosis/fibrosis/cancer biology is downstream of one core activity
+  (β-galactoside CRD binding + N-terminal LLPS lattice). A new `GO:0062093 lysophagy`
+  annotation was *added* (the damaged-endomembrane glycan-sensing role).
+- **GO coverage gaps surfaced for curation — 7 `proposed_new_terms`** across the set:
+  protein-O-mannose β-1,3-GalNAc-T activity (B3GALNT2, the [RHEA](RHEA.md)-flagged
+  EC 2.4.1.313 gap); galectin-glycan-lattice-assembly + damaged-endomembrane-glycan-
+  sensor (LGALS3); phosphomannomutase-in-GDP-mannose-biosynthesis (PMM2);
+  O-fucosylation-coupled ER quality control (POFUT1); oligomannose→complex N-glycan
+  conversion (MGAT1); protein-N-glycan α-2,6-sialyltransferase activity (ST6GAL1);
+  and a **lactose synthase complex** CC term (B4GALT1).
+- **Citation hygiene (verify, don't trust).** Reviews flagged real citation problems
+  via `reference_review`: PMM2's FlyBase IMP **MISCITED** (PMID:9525984 is MPI/CDG-Ib,
+  a different enzyme); POFUT1's MF TAS to a *Drosophila* survey marked MISCITED; and
+  across all Falcon integrations, preprint-only / unresolvable-PMID claims and a
+  stale EC number (ST6GAL1 "2.4.99.1" → current 2.4.3.1) were rejected and recorded
+  in notes rather than cited.
 
 Net: across 144 annotations the verdict skew (only 3 REMOVE, all
 high-throughput-interactome `protein binding`; heavy NON_CORE + MODIFY) matches
@@ -206,12 +229,15 @@ fuller candidate list; these are the already-curated anchors.
 
 - **Started**: 2026-06-21
 - **Maturity**: IN_PROGRESS — scope, GO anchor-term set (QuickGO-verified), and
-  external resource landscape defined; **3 exemplar reviews complete** (B3GALNT2,
-  LGALS3, PMM2; 144 annotations; all validate clean) and they confirm the
-  altitude/specificity + pleiotropy over-annotation hypotheses.
+  external resource landscape defined; **7 exemplar reviews complete** (B3GALNT2,
+  LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1; 303 annotations; all validate
+  clean), each backed by a **FutureHouse Falcon deep-research report** integrated
+  into the YAML. They confirm the altitude/specificity + pleiotropy
+  over-annotation hypotheses (135 ACCEPT / 102 NON_CORE / 39 OVER / 22 MODIFY /
+  4 REMOVE / 1 NEW).
 - **Next steps**: (1) run the GOA closure query for the anchor terms across the
   animal taxa to enumerate the glycogene set and its verdict baseline; (2) flesh
   out [GLYCOBIOLOGY-resources.md](GLYCOBIOLOGY/GLYCOBIOLOGY-resources.md) with
-  access recipes; (3) promote the 4 exemplar `proposed_new_terms` as GO new-term
-  requests; (4) extend the review pass to the already-curated anchor genes
-  (GPC6, Notch1/POFUT axis, Uggt1).
+  access recipes; (3) promote the 7 exemplar `proposed_new_terms` as GO new-term
+  requests; (4) extend the review/Falcon pass to the already-curated anchor genes
+  (GPC6, Notch1, Uggt1) and a glycosidase/CDG type-II gene.
