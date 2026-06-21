@@ -140,37 +140,44 @@ separate, more permissive tier. The 6 final residuals are acyl/conjugate
 derivatives Rhea only represents in bound form (e.g. N-hexanoylglycine,
 methyl N-acetylvalinate, the N-methylpyridone-carboxamides).
 
-### GO function enrichment vs a KEGG-pathway baseline
+### Three enrichments on the same metabolites: KEGG vs GO-MF vs GO-BP
 
-With 58/64 metabolites connected, the bridge supports an actual **closure-aware
-enrichment** ([`go_enrichment.py`](METABOLOMICS/probe/go_enrichment.py), result:
-[MTBLS1-GO-ENRICHMENT](METABOLOMICS/probe/studies/MTBLS1-GO-ENRICHMENT.md)).
-Each metabolite is mapped into Rhea-participant space, lifted to GO via `rhea2go`
-and propagated over `is_a`/`part_of` closure, then a one-sided hypergeometric ORA
-(BH-FDR) is run against the whole Rhea/GO metabolic universe (7,174 background
-metabolites). For comparison, the **incumbent KEGG-pathway ORA**
-([`kegg_baseline.py`](METABOLOMICS/probe/kegg_baseline.py), result:
-[MTBLS1-KEGG-BASELINE](METABOLOMICS/probe/studies/MTBLS1-KEGG-BASELINE.md)) is
-run on the *same* metabolites with the *same* test:
+With 58/64 metabolites connected, the bridge supports closure-aware
+**hypergeometric enrichment (BH-FDR)**, run three ways on the *same* metabolite
+set with the *same* test, so the contribution of GO is directly visible:
 
-| KEGG baseline (pathway membership) | GO function enrichment (activity + closure) |
-|---|---|
-| Alanine, aspartate & glutamate metabolism | amino-acid transaminase activity |
-| Citrate cycle (TCA) | L-/D-amino-acid oxidase activity |
-| Pyruvate metabolism | amino-acid racemase activity |
-| Nicotinate & nicotinamide metabolism | primary methylamine oxidase activity |
-| Glyoxylate & dicarboxylate metabolism | dicarboxylic-acid transmembrane transporter activity |
+- **KEGG-pathway ORA** — the incumbent baseline
+  ([`kegg_baseline.py`](METABOLOMICS/probe/kegg_baseline.py) →
+  [result](METABOLOMICS/probe/studies/MTBLS1-KEGG-BASELINE.md)): ChEBI→KEGG
+  compound→pathway, vs all KEGG pathway compounds.
+- **GO molecular-function ORA** — metabolite→Rhea→`rhea2go`→GO MF + closure
+  ([`go_enrichment.py`](METABOLOMICS/probe/go_enrichment.py) →
+  [result](METABOLOMICS/probe/studies/MTBLS1-GO-ENRICHMENT.md)), vs the Rhea/GO
+  metabolic universe (7,174 metabolites).
+- **GO biological-process ORA** — lifted through the **enzyme/gene layer**:
+  metabolite→Rhea reaction→human Swiss-Prot enzyme (UniProt)→GO BP + closure
+  ([`go_bp_enrichment.py`](METABOLOMICS/probe/go_bp_enrichment.py) →
+  [result](METABOLOMICS/probe/studies/MTBLS1-GO-BP-ENRICHMENT.md)), a gene-set
+  ORA of the 488 implicated enzymes vs all 4,052 human metabolic enzymes.
 
-Both recover the amino-acid / central-carbon biology expected for a T2D urine
-study, validating the approach. The **value GO adds** is visible in the right
-column: instead of broad pathway buckets it reports the specific **molecular
-activities** the perturbed metabolites implicate (transamination, amino-acid
-oxidation/racemisation, methylamine oxidation — note the methylamine hit tracks
-the urinary dimethylamine/trimethylamine/sarcosine in the panel), and the
-ontology's closure aggregates many specific enzyme activities into
-significantly-enriched higher-level functions. The current enrichment is at GO
-**molecular-function** level (because `rhea2go` is an MF mapping); lifting to GO
-**biological process** via the enzyme/gene layer (GOA / GO-CAM) is the next step.
+| KEGG pathway (membership) | GO molecular function (activity) | GO biological process (enzyme layer) |
+|---|---|---|
+| Alanine, aspartate & glutamate metabolism | amino-acid transaminase activity | amino acid metabolic process (4.3×, FDR 9e-44) |
+| Citrate cycle (TCA) | L-/D-amino-acid oxidase activity | dicarboxylic acid metabolic process (6.0×) |
+| Pyruvate metabolism | amino-acid racemase activity | amino acid transport / transmembrane transport (5–7×) |
+| Nicotinate & nicotinamide metabolism | primary methylamine oxidase activity | proteinogenic amino acid metabolic process (4.2×) |
+| Glyoxylate & dicarboxylate metabolism | dicarboxylic-acid transporter activity | carboxylic acid metabolic process (2.4×) |
+
+All three recover the amino-acid / central-carbon biology expected for a T2D
+urine study, validating the bridge. The **value GO adds** is the two right
+columns: where KEGG gives broad pathway buckets, GO resolves the specific
+**molecular activities** (transamination, amino-acid oxidation/racemisation,
+methylamine oxidation — the methylamine hit tracks the urinary
+dimethylamine/trimethylamine/sarcosine in the panel) *and*, through the enzyme
+layer, the specific **biological processes** (amino-acid metabolism and
+transport, dicarboxylic-acid metabolism), each aggregated by the ontology's
+`is_a`/`part_of` closure. The BP lift is organism-specific (human) by
+construction and currency metabolites are excluded by Rhea reaction-degree.
 
 ## Why GO is not used for metabolomics today (the gap)
 
@@ -302,8 +309,9 @@ tooling rather than duplicating it:
 | ChEBI→Rhea→`rhea2go` coverage probe + protonation normalization | **DONE** ([probe](METABOLOMICS/probe/RESULTS.md)) | Bridge connects 22/26 only after protonation normalization (0/26 exact) |
 | Run the probe over a real MetaboLights study | **DONE** ([MTBLS1](METABOLOMICS/probe/studies/MTBLS1-RESULTS.md)) | 64 curated metabolites: 8/64 exact → 49/64 normalized (6× uplift); `fetch_metabolights.py` pulls any accession |
 | Add stereochemistry/anomer + generic-vs-specific resolution | **DONE** (skeleton tier) | InChIKey-skeleton normalization; recovers the MTBLS1 diabetes BCAAs (Ile/Leu/Val), 49→58/64 |
-| Closure-aware GO enrichment (ORA) + KEGG baseline | **DONE** (MF level) | [GO enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-ENRICHMENT.md) vs [KEGG baseline](METABOLOMICS/probe/studies/MTBLS1-KEGG-BASELINE.md) on MTBLS1, same test |
-| Lift the enrichment from GO MF to GO **BP** | TODO | `rhea2go` is MF-only; BP needs the enzyme/gene layer (GOA / GO-CAM) |
+| Closure-aware GO enrichment (ORA) + KEGG baseline | **DONE** (MF level) | [GO MF enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-ENRICHMENT.md) vs [KEGG baseline](METABOLOMICS/probe/studies/MTBLS1-KEGG-BASELINE.md) on MTBLS1, same test |
+| Lift the enrichment from GO MF to GO **BP** | **DONE** | [GO BP enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-BP-ENRICHMENT.md) via Rhea→UniProt human enzymes→GOA BP; amino-acid metabolism/transport (FDR 9e-44) |
+| Run the pipeline over more MetaboLights/Workbench studies | TODO | `fetch_metabolights.py` + the three enrichment scripts generalise to any accession |
 | Inventory GO-CAM metabolic models + their ChEBI input/output compounds | TODO | Feasibility of Approach B (the "full network" path) |
 | Glucose-metabolism GO-CAM perturbation worked example | TODO | Direct analogue of the Genetics 2023 precedent |
 
@@ -345,13 +353,14 @@ tooling rather than duplicating it:
   on a real study.
 - **Computed live** (OLS4 ChEBI, Rhea REST = 18,558 reactions / 14,251
   participant ChEBIs, GO `rhea2go` = 7,746 mappings, `go-basic.obo` closure,
-  KEGG REST):
+  UniProt REST = 4,142 human enzymes with Rhea+GO, KEGG REST):
   - Coverage, MetaboLights **MTBLS1** (64 curated metabolites): exact **8/64** →
     +protonation **49/64** → +skeleton **58/64**; demo set 0/26 → 22/26 → 25/26.
-  - GO function enrichment vs KEGG-pathway baseline on MTBLS1 (same hypergeometric
-    test): both recover amino-acid / central-carbon biology; GO additionally
-    resolves the specific enzyme activities (transaminase, amino-acid
-    oxidase/racemase, methylamine oxidase).
+  - Three enrichments on MTBLS1, same hypergeometric test — **KEGG pathways**,
+    **GO molecular function**, and **GO biological process** (via the human
+    enzyme layer) — all recover amino-acid / central-carbon biology; GO
+    additionally resolves specific activities (transaminase, amino-acid
+    oxidase/racemase) and processes (amino-acid metabolism/transport, FDR 9e-44).
 - **Key idea**: ChEBI is the bridge from metabolite repositories (MetaboLights,
   Workbench/RefMet) into Rhea reactions, `rhea2go` GO molecular functions, GOA
   genes, and GO-CAM causal networks — giving a GO-native, closure-aware,

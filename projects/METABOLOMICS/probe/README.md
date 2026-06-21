@@ -44,18 +44,22 @@ what recovers the diabetes BCAAs.
 
 ## Enrichment + baseline
 
-With the metabolites connected, the bridge supports a real enrichment, compared
-against the incumbent KEGG-pathway ORA on the same study and the same test:
+With the metabolites connected, the bridge supports real enrichment three ways
+on the same study and the same hypergeometric test (BH-FDR):
 
-- [`go_enrichment.py`](go_enrichment.py) → [studies/MTBLS1-GO-ENRICHMENT.md](studies/MTBLS1-GO-ENRICHMENT.md)
-  — closure-aware (`is_a`/`part_of`) hypergeometric ORA of GO terms reached via
-  `rhea2go`. Surfaces specific activities (amino-acid transaminase/oxidase/racemase,
-  methylamine oxidase).
 - [`kegg_baseline.py`](kegg_baseline.py) → [studies/MTBLS1-KEGG-BASELINE.md](studies/MTBLS1-KEGG-BASELINE.md)
-  — KEGG-pathway ORA baseline (Ala/Asp/Glu metabolism, TCA, pyruvate metabolism).
+  — incumbent KEGG-**pathway** ORA (Ala/Asp/Glu metabolism, TCA, pyruvate metabolism).
+- [`go_enrichment.py`](go_enrichment.py) → [studies/MTBLS1-GO-ENRICHMENT.md](studies/MTBLS1-GO-ENRICHMENT.md)
+  — closure-aware GO **molecular-function** ORA via `rhea2go` (amino-acid
+  transaminase/oxidase/racemase, methylamine oxidase).
+- [`go_bp_enrichment.py`](go_bp_enrichment.py) → [studies/MTBLS1-GO-BP-ENRICHMENT.md](studies/MTBLS1-GO-BP-ENRICHMENT.md)
+  — GO **biological-process** ORA via the enzyme/gene layer: metabolite → Rhea
+  reaction → human Swiss-Prot enzyme (UniProt) → GO BP (amino-acid metabolism &
+  transport, dicarboxylic-acid metabolism). Currency metabolites excluded by
+  Rhea reaction-degree.
 
-GO reports the molecular activities the perturbed metabolites implicate; KEGG
-reports pathway-membership buckets — complementary readouts on identical input.
+KEGG gives pathway-membership buckets; GO resolves the specific molecular
+activities *and* biological processes — complementary readouts on identical input.
 
 ## Run it
 
@@ -70,6 +74,8 @@ uv run python coverage_probe.py --chebi-file studies/MTBLS1.chebi.txt \
     --source "MetaboLights MTBLS1"
 uv run python go_enrichment.py --chebi-file studies/MTBLS1.chebi.txt \
     --out studies/MTBLS1-GO-ENRICHMENT.md --source "MetaboLights MTBLS1"
+uv run python go_bp_enrichment.py --chebi-file studies/MTBLS1.chebi.txt \
+    --out studies/MTBLS1-GO-BP-ENRICHMENT.md --source "MetaboLights MTBLS1"
 uv run python kegg_baseline.py --chebi-file studies/MTBLS1.chebi.txt \
     --out studies/MTBLS1-KEGG-BASELINE.md --source "MetaboLights MTBLS1"
 ```
@@ -82,7 +88,9 @@ uv run python kegg_baseline.py --chebi-file studies/MTBLS1.chebi.txt \
 - [`rhea.py`](rhea.py) — Rhea reaction→participant index + `rhea2go` GO mapping,
   both fetched live (Rhea REST, GO external2go).
 - [`coverage_probe.py`](coverage_probe.py) — three-tier coverage + RESULTS writer.
-- [`go_enrichment.py`](go_enrichment.py) — closure-aware GO ORA (go-basic.obo).
+- [`go_enrichment.py`](go_enrichment.py) — closure-aware GO **MF** ORA (go-basic.obo).
+- [`go_bp_enrichment.py`](go_bp_enrichment.py) — GO **BP** ORA via human enzymes
+  (UniProt REST → GOA BP); data-driven cofactor exclusion by Rhea degree.
 - [`kegg_baseline.py`](kegg_baseline.py) — KEGG-pathway ORA baseline (KEGG REST).
 - [`fetch_metabolights.py`](fetch_metabolights.py) — pull any MetaboLights
   accession's curated ChEBI metabolites from its MAF into `studies/<ACC>.chebi.txt`.
