@@ -20,8 +20,8 @@ closure and a one-sided hypergeometric test (BH-FDR). Live + cached.
 
 | GO BP term | k/n | K/N | Fold | FDR |
 |---|---:|---:|---:|---:|
-| GO:0046942 carboxylic acid transport | 94/467 | 195/4052 | 4.2× | 1.3e-36 |
 | GO:0015849 organic acid transport | 94/467 | 195/4052 | 4.2× | 1.3e-36 |
+| GO:0046942 carboxylic acid transport | 94/467 | 195/4052 | 4.2× | 1.3e-36 |
 | GO:0019752 carboxylic acid metabolic process | 168/467 | 607/4052 | 2.4× | 7.0e-31 |
 | GO:0043436 oxoacid metabolic process | 170/467 | 627/4052 | 2.4× | 3.3e-30 |
 | GO:0006520 amino acid metabolic process | 81/467 | 211/4052 | 3.3× | 7.9e-23 |
@@ -55,7 +55,5 @@ closure and a one-sided hypergeometric test (BH-FDR). Live + cached.
 
 This completes the bridge from metabolomics to GO **biological process** by
 routing through the curated enzyme/gene annotations (the layer GO-CAM also
-builds on). It is organism-specific (human) by construction. Compare with the
-[GO molecular-function enrichment](MTBLS404-GO-ENRICHMENT.md)
-(activities) and the [KEGG-pathway baseline](MTBLS404-KEGG-BASELINE.md)
-(pathway membership) on the same metabolites.
+builds on). It is organism-specific (human) by construction.
+Compare with [GO molecular-function enrichment (activities)](MTBLS404-GO-ENRICHMENT.md) on the same metabolites.

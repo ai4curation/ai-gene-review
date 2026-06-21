@@ -55,3 +55,9 @@ KEGG/SMPDB ORA reports **pathway membership** — broad buckets like
 specific **molecular activities** (transaminase, amino-acid oxidase, racemase)
 and uses the ontology's `is_a`/`part_of` closure to aggregate them — a
 complementary, finer-grained readout on the identical metabolite set and test.
+
+> **Note.** This KEGG baseline is kept as an *illustrative* cross-check only
+> (KEGG is the recognizable incumbent). KEGG data carries redistribution
+> restrictions, so the going-forward / demo pathway baseline is an openly
+> redistributable source — **Reactome / SMPDB** — and KEGG is not expanded to
+> the other studies. Only derived enrichment statistics are recorded here.

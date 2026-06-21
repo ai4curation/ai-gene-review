@@ -167,6 +167,11 @@ def main() -> int:
     L.append("specific **molecular activities** (transaminase, amino-acid oxidase, racemase)")
     L.append("and uses the ontology's `is_a`/`part_of` closure to aggregate them — a")
     L.append("complementary, finer-grained readout on the identical metabolite set and test.")
+    L.append("\n> **Note.** This KEGG baseline is kept as an *illustrative* cross-check only")
+    L.append("> (KEGG is the recognizable incumbent). KEGG data carries redistribution")
+    L.append("> restrictions, so the going-forward / demo pathway baseline is an openly")
+    L.append("> redistributable source — **Reactome / SMPDB** — and KEGG is not expanded to")
+    L.append("> the other studies. Only derived enrichment statistics are recorded here.")
     args.out.write_text("\n".join(L) + "\n")
     print(f"\nWrote {args.out}", file=sys.stderr)
     return 0

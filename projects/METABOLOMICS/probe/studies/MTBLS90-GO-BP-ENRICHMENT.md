@@ -33,8 +33,8 @@ closure and a one-sided hypergeometric test (BH-FDR). Live + cached.
 | GO:0046942 carboxylic acid transport | 91/486 | 195/4052 | 3.9× | 4.4e-33 |
 | GO:0015849 organic acid transport | 91/486 | 195/4052 | 3.9× | 4.4e-33 |
 | GO:0008610 lipid biosynthetic process | 138/486 | 430/4052 | 2.7× | 3.5e-30 |
-| GO:0006869 lipid transport | 83/486 | 178/4052 | 3.9× | 6.0e-30 |
 | GO:0010876 lipid localization | 83/486 | 178/4052 | 3.9× | 6.0e-30 |
+| GO:0006869 lipid transport | 83/486 | 178/4052 | 3.9× | 6.0e-30 |
 | GO:0006644 phospholipid metabolic process | 95/486 | 241/4052 | 3.3× | 1.8e-27 |
 | GO:0046503 glycerolipid catabolic process | 41/486 | 51/4052 | 6.7× | 2.7e-27 |
 | GO:0044281 small molecule metabolic process | 241/486 | 1117/4052 | 1.8× | 3.5e-26 |
@@ -55,7 +55,5 @@ closure and a one-sided hypergeometric test (BH-FDR). Live + cached.
 
 This completes the bridge from metabolomics to GO **biological process** by
 routing through the curated enzyme/gene annotations (the layer GO-CAM also
-builds on). It is organism-specific (human) by construction. Compare with the
-[GO molecular-function enrichment](MTBLS90-GO-ENRICHMENT.md)
-(activities) and the [KEGG-pathway baseline](MTBLS90-KEGG-BASELINE.md)
-(pathway membership) on the same metabolites.
+builds on). It is organism-specific (human) by construction.
+Compare with [GO molecular-function enrichment (activities)](MTBLS90-GO-ENRICHMENT.md) on the same metabolites.

@@ -304,6 +304,37 @@ surface lipid/fatty-acid metabolism (FDR to 3e-89). The clearest remaining gap i
 **complex lipids**, which Rhea does not carry as discrete participants — the next
 methodological target.
 
+## Limitations & honest caveats
+
+The pipeline is a scoping demonstration, not a finished tool. The main caveats,
+in one place:
+
+- **Skeleton normalization is stereo/charge-blind.** The second coverage tier
+  matches on InChIKey skeleton, so it can match a reported generic compound to
+  either enantiomer (e.g. an unspecified amino acid to both L- and D- Rhea
+  forms). This is appropriate when the reported ChEBI is itself stereo-unspecified
+  (common for NMR) but should not be read as stereospecific evidence; it is
+  reported as a separate, more permissive tier.
+- **The GO-BP enrichment is organism-specific and inference-based.** It routes
+  through human (taxon 9606) Swiss-Prot enzymes and their GOA BP annotations, so
+  it is only valid for human studies (configurable via `--taxon`) and inherits any
+  GOA annotation bias. A curated reaction→process source (Reactome) would be a
+  cleaner cross-check — see follow-ups.
+- **Lipid coverage gap.** Complex lipids (sphingomyelins, phosphatidylcholines,
+  triacylglycerols) are largely absent from Rhea as discrete participants, so
+  lipid-rich serum LC-MS studies connect at ~53–59% vs ~65–91% for polar-metabolite
+  urine studies. This is a real, localizable bridge gap, not noise.
+- **Cofactor handling is a heuristic.** Currency metabolites are excluded by Rhea
+  reaction-degree (default ≥500); the threshold is data-driven and reported, but
+  it is still a cutoff, not a curated cofactor list.
+- **ORA, not topology.** The enrichment is over-representation with ontology
+  closure; it does not (yet) use reaction-network topology (mummichog-style) or
+  causal direction (GO-CAM). That is Approach B.
+- **KEGG baseline is illustrative only.** Retained for the recognizable
+  side-by-side on MTBLS1, with a licensing note; KEGG carries redistribution
+  restrictions, so the going-forward pathway baseline is Reactome/SMPDB and KEGG
+  is not expanded to other studies.
+
 ## Toward an interactive demo
 
 The working [`probe/`](METABOLOMICS/probe/README.md) pipeline is the engine for an
@@ -337,6 +368,9 @@ strategy, phasing, and the KEGG-licensing caveat are in
 | Lift the enrichment from GO MF to GO **BP** | **DONE** | [GO BP enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-BP-ENRICHMENT.md) via Rhea→UniProt human enzymes→GOA BP; amino-acid metabolism/transport (FDR 9e-44) |
 | Run the pipeline over more MetaboLights studies | **DONE** (4 studies) | [Cross-study summary](METABOLOMICS/CROSS-STUDY.md): MTBLS1/90/404/19 — normalization decisive everywhere; each study recovers its own biology (urine→amino/organic acid, serum→lipid) |
 | Extend the bridge to complex lipids | TODO (next method gap) | Serum LC-MS residuals are lipids absent from Rhea as discrete participants (LIPID MAPS/SwissLipids → ChEBI) |
+| Reactome as a curated BP cross-check | TODO | Reactome maps reactions→pathways→GO-BP with human curation (and is ChEBI-grounded); validate the enzyme-layer BP route against it |
+| Metabolomics → Reactome black-box-event prioritization | TODO (high-leverage) | The bridge names the reactions a metabolite implicates; Reactome BBEs are reactions with unknown catalyst/transporter → feed the existing [Reactome gap-filling](REACTOME_GAP_FILLING.md) collaboration |
+| Approach B — GO-CAM causal trace | TODO | Locate a perturbed metabolite as a GO-CAM activity input/output and trace upstream/downstream (Reactome is the practical substrate) |
 | Interactive demo (precomputed showcase → FastAPI app) | PLANNED | See [DEMO-PLAN.md](METABOLOMICS/DEMO-PLAN.md): static gallery here + app in a new repo reusing the probe engine |
 | Inventory GO-CAM metabolic models + their ChEBI input/output compounds | TODO | Feasibility of Approach B (the "full network" path) |
 | Glucose-metabolism GO-CAM perturbation worked example | TODO | Direct analogue of the Genetics 2023 precedent |

@@ -237,10 +237,16 @@ def main() -> int:
     L.append("\n## Where this sits\n")
     L.append("This completes the bridge from metabolomics to GO **biological process** by")
     L.append("routing through the curated enzyme/gene annotations (the layer GO-CAM also")
-    L.append("builds on). It is organism-specific (human) by construction. Compare with the")
-    L.append(f"[GO molecular-function enrichment]({Path(args.out).name.replace('GO-BP-ENRICHMENT','GO-ENRICHMENT')})")
-    L.append(f"(activities) and the [KEGG-pathway baseline]({Path(args.out).name.replace('GO-BP-ENRICHMENT','KEGG-BASELINE')})")
-    L.append("(pathway membership) on the same metabolites.")
+    L.append("builds on). It is organism-specific (human) by construction.")
+    # Cross-link only to companion reports that actually exist for this study.
+    sibs = []
+    for tag, desc in [("GO-ENRICHMENT", "GO molecular-function enrichment (activities)"),
+                      ("KEGG-BASELINE", "KEGG-pathway baseline (membership)")]:
+        cand = Path(args.out).name.replace("GO-BP-ENRICHMENT", tag)
+        if (Path(args.out).parent / cand).exists():
+            sibs.append(f"[{desc}]({cand})")
+    if sibs:
+        L.append("Compare with " + " and ".join(sibs) + " on the same metabolites.")
     args.out.write_text("\n".join(L) + "\n")
     print(f"\nWrote {args.out}", file=sys.stderr)
     return 0
