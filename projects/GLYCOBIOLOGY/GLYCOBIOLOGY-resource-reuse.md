@@ -170,6 +170,14 @@ silent on entirely**.
   come from the GO ontology, so labels match.
 - **Marginal-vs-interpro2go**: computed (`compare_cazy_interpro.py`, 20% masked) and closure-filtered
   (`closure_cazy_interpro.py`, 97% of marginal survives: 74% altitude, 23% true-gap).
-- **Next**: (1) subfamily resolution for poly-specific families from dbCAN-sub (so their TRUE_GAP /
-  altitude terms become safely attributable); (2) hand-review the 89 safe rows (esp. the 53 true-gaps)
-  toward GO/InterPro2GO curation; (3) GlycoCoO→GO alignment SSSOM; (4) GlyGen-join confirmatory probe.
+- **TRUE_GAP hand-review**: done — [`cazy2go-truegap-review.md`](cazy2go-truegap-review.md)
+  (34 ENDORSE / 13 CAUTION / 6 REJECT; artifacts auto-filtered from the safe set).
+- **Subfamily resolution**: done — [`cazy2go-subfamily.md`](cazy2go-subfamily.md). dbCAN-sub was
+  inaccessible, so resolved via InterPro co-occurrence within reviewed members
+  ([`subfamily_resolve.py`](subfamily_resolve.py), [`cazy2go.subfamily.tsv`](cazy2go.subfamily.tsv)):
+  66/90 poly-specific families resolved; **71 CONFIRMS** (re-derives existing `interpro2go` — method
+  validation) + **210 family-specific PROPOSED** signature→GO candidates across 56 families (e.g.
+  GH28→polygalacturonase, GT4→sucrose synthase, GH47→α-1,2-mannosidase). Fixes the poly-specific
+  safety problem by attributing each activity to its InterPro-signature subfamily.
+- **Next**: (1) human GO/InterPro2GO curator sign-off on the 34 ENDORSE true-gaps + 210 subfamily
+  proposals before any submission; (2) GlycoCoO→GO alignment SSSOM; (3) GlyGen-join confirmatory probe.
