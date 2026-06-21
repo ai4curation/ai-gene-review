@@ -13,6 +13,32 @@ from deep_research_client.templates import TemplateManager  # type: ignore[impor
 from ai_gene_review.etl.gene import expand_organism_name, fetch_uniprot_data, resolve_gene_to_uniprot
 
 
+# Official UniProtKB accession syntax (6 or 10 characters). Used to decide
+# whether a positional argument is an accession or a gene symbol, so that
+# all-uppercase gene symbols 6-10 chars long (e.g. ATP6AP1, ATP6V1H, CCDC47)
+# are NOT misclassified as accessions.
+# https://www.uniprot.org/help/accession_numbers
+_UNIPROT_ACCESSION_RE = re.compile(
+    r'^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$'
+)
+
+
+def is_uniprot_accession(value: str) -> bool:
+    """Return True if ``value`` looks like a UniProtKB accession.
+
+    Examples:
+        >>> is_uniprot_accession("Q9H2V7")
+        True
+        >>> is_uniprot_accession("A0A024R161")
+        True
+        >>> is_uniprot_accession("ATP6AP1")
+        False
+        >>> is_uniprot_accession("SPNS1")
+        False
+    """
+    return bool(_UNIPROT_ACCESSION_RE.match(value))
+
+
 def extract_uniprot_fields(uniprot_text: str, uniprot_id: str) -> dict:
     """Extract key structured fields from a UniProt text entry.
 
@@ -270,10 +296,7 @@ def research_gene_unified(
         deep-research-unified PSEAE Q9HXE5 --alias rhlB --provider openai
         deep-research-unified worm pgl-1 --output-dir custom/path
     """
-    # Determine if gene_or_uniprot is a UniProt ID or gene symbol
-    uniprot_pattern = re.compile(r'^[A-Z][0-9][A-Z0-9]{3}[0-9]$|^[A-Z0-9]{6,10}$')
-
-    if uniprot_pattern.match(gene_or_uniprot):
+    if is_uniprot_accession(gene_or_uniprot):
         # Likely a UniProt ID
         uniprot_id = gene_or_uniprot
         gene_symbol = alias if alias else gene_or_uniprot
