@@ -77,6 +77,26 @@ Because closure is applied, an IBA annotation to a *more general* parent does
 gives only the broad term and experiment pins the specific activity correctly
 shows the specific term as LOST.
 
+### Suppressing low-information branches
+
+`--exclude-branch` drops every term under a given branch (closure-aware) from
+both the lost-annotation and core-function reports. Use `GO:0005488` to remove
+generic `binding` molecular functions (including `protein binding`), which carry
+little mechanistic information:
+
+```bash
+ai-gene-review subtraction-report genes/human --keep-only -e IBA \
+    --exclude-branch GO:0005488 -f tsv -o reports/iba-only
+```
+
+The ranked, evidence-enriched view of the **curated core molecular functions**
+IBA alone would miss (binding excluded) is produced by
+`projects/IBA_REVIEW/iba_too_conservative_core_mf.py`
+(`just subtraction-report-iba-conservative-core-mf`), which writes
+`reports/iba-too-conservative-core-mf.md`. A term promoted into `core_functions`
+is the curator's highest-confidence judgement of what the gene does, so these are
+weighted above ordinary `ACCEPT` annotations.
+
 Just recipes:
 
 ```bash

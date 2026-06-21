@@ -287,15 +287,25 @@ class SubtractionReporter:
             as grounding a core function / surviving information.
         endorsed_actions: ``review.action`` values reported as losses when
             subtracted.
+        exclude_branches: Term ids whose descendants are dropped from both the
+            lost-annotation and core-function reports. Use to suppress
+            low-information branches such as ``GO:0005488`` (binding).
     """
 
     ancestors: AncestorFn = _identity_ancestor_fn
     supporting_actions: frozenset[str] = DEFAULT_SUPPORTING_ACTIONS
     endorsed_actions: frozenset[str] = DEFAULT_ENDORSED_ACTIONS
+    exclude_branches: frozenset[str] = frozenset()
 
     def _is_grounded(self, target: str, effective_ids: Iterable[str]) -> bool:
         """True if some effective term is ``target`` or a descendant of it."""
         return any(target in self.ancestors(x) for x in effective_ids)
+
+    def _is_excluded(self, term_id: str) -> bool:
+        """True if ``term_id`` is in (a descendant of) an excluded branch."""
+        if not self.exclude_branches:
+            return False
+        return bool(self.exclude_branches & self.ancestors(term_id))
 
     def analyze_review(
         self, review: dict, filt: SubtractionFilter
@@ -340,7 +350,7 @@ class SubtractionReporter:
             if action not in self.endorsed_actions:
                 continue
             term_id = _term_id(ann.get("term"))
-            if not term_id:
+            if not term_id or self._is_excluded(term_id):
                 continue
             covered_by = tuple(
                 sorted({x for x in retained_support if term_id in self.ancestors(x)})
@@ -363,6 +373,8 @@ class SubtractionReporter:
         for idx, cf in enumerate(review.get("core_functions") or []):
             description = cf.get("description")
             for slot, term_id, term_label in _iter_core_function_terms(cf):
+                if self._is_excluded(term_id):
+                    continue
                 retained_hits = tuple(
                     sorted(
                         {x for x in retained_support if term_id in self.ancestors(x)}

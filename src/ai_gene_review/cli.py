@@ -13,7 +13,11 @@ from typing_extensions import Annotated
 
 from linkml_data_qc.analyzer import ComplianceAnalyzer
 
-from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
+from ai_gene_review.etl.gene import (
+    fetch_gene_data,
+    fetch_gene_data_ncRNA,
+    expand_organism_name,
+)
 from ai_gene_review.etl.publication import (
     cache_publications,
     convert_doi_publication,
@@ -136,9 +140,13 @@ def fetch_gene(
         differences_not_updated = []
         if not force:
             if result.get("uniprot_differences") and not result.get("uniprot_updated"):
-                differences_not_updated.append(f"{file_prefix}-uniprot.txt differs from remote")
+                differences_not_updated.append(
+                    f"{file_prefix}-uniprot.txt differs from remote"
+                )
             if result.get("goa_differences") and not result.get("goa_updated"):
-                differences_not_updated.append(f"{file_prefix}-goa.tsv differs from remote")
+                differences_not_updated.append(
+                    f"{file_prefix}-goa.tsv differs from remote"
+                )
 
         if differences_not_updated:
             typer.echo("")
@@ -182,9 +190,7 @@ def fetch_ncrna(
     organism: Annotated[
         str, typer.Argument(help="Organism name (e.g., human, mouse, yeast)")
     ],
-    gene: Annotated[
-        str, typer.Argument(help="Gene symbol (e.g., SNORD3A, XIST, H19)")
-    ],
+    gene: Annotated[str, typer.Argument(help="Gene symbol (e.g., SNORD3A, XIST, H19)")],
     rnacentral_id: Annotated[
         Optional[str],
         typer.Option(
@@ -201,9 +207,7 @@ def fetch_ncrna(
     ] = None,
     no_seed: Annotated[
         bool,
-        typer.Option(
-            "--no-seed", help="Skip creating ai-review.yaml structure"
-        ),
+        typer.Option("--no-seed", help="Skip creating ai-review.yaml structure"),
     ] = False,
     alias: Annotated[
         Optional[str],
@@ -258,10 +262,16 @@ def fetch_ncrna(
         # Report any differences found that weren't updated
         differences_not_updated = []
         if not force:
-            if result.get("rnacentral_differences") and not result.get("rnacentral_updated"):
-                differences_not_updated.append(f"{file_prefix}-rnacentral.json differs from remote")
+            if result.get("rnacentral_differences") and not result.get(
+                "rnacentral_updated"
+            ):
+                differences_not_updated.append(
+                    f"{file_prefix}-rnacentral.json differs from remote"
+                )
             if result.get("goa_differences") and not result.get("goa_updated"):
-                differences_not_updated.append(f"{file_prefix}-goa.tsv differs from remote")
+                differences_not_updated.append(
+                    f"{file_prefix}-goa.tsv differs from remote"
+                )
 
         if differences_not_updated:
             typer.echo("")
@@ -736,7 +746,10 @@ def validate(
         ),
     ] = None,
     show_timing: Annotated[
-        bool, typer.Option("--show-timing", help="Show timing information for validation steps")
+        bool,
+        typer.Option(
+            "--show-timing", help="Show timing information for validation steps"
+        ),
     ] = False,
 ):
     """Validate gene review YAML files.
@@ -836,7 +849,10 @@ def validate(
         # Write TSV output if requested
         if tsv_output:
             try:
-                from ai_gene_review.validation.validation_report import BatchValidationReport
+                from ai_gene_review.validation.validation_report import (
+                    BatchValidationReport,
+                )
+
                 # Create a batch report with single file for TSV output
                 batch_report = BatchValidationReport(reports=[report])
                 batch_report.write_tsv(str(tsv_output))
@@ -1321,9 +1337,13 @@ def backfill_isoforms(
                 typer.echo("No isoform-specific annotations found in GOA file")
                 return
 
-            typer.echo(f"Found {len(isoform_anns)} isoform-specific annotations in GOA:")
+            typer.echo(
+                f"Found {len(isoform_anns)} isoform-specific annotations in GOA:"
+            )
             for ann in isoform_anns:
-                typer.echo(f"  {ann.go_id} ({ann.evidence_code}, {ann.reference}) -> {ann.isoform}")
+                typer.echo(
+                    f"  {ann.go_id} ({ann.evidence_code}, {ann.reference}) -> {ann.isoform}"
+                )
 
             typer.echo("\nUse without --dry-run to apply these updates")
         except (ValueError, FileNotFoundError) as e:
@@ -1335,7 +1355,9 @@ def backfill_isoforms(
         updated_count, output_path = validator.backfill_isoforms(yaml_file, goa_file)
 
         if updated_count > 0:
-            typer.echo(f"✓ Updated {updated_count} annotations with isoform info in {output_path}")
+            typer.echo(
+                f"✓ Updated {updated_count} annotations with isoform info in {output_path}"
+            )
         else:
             typer.echo("✓ No annotations needed isoform updates")
 
@@ -1399,7 +1421,9 @@ def backfill_qualifiers(
                 typer.echo("No recognized qualifiers found in GOA file")
                 return
 
-            typer.echo(f"Found {len(qualified)} GOA annotations with recognized qualifiers:")
+            typer.echo(
+                f"Found {len(qualified)} GOA annotations with recognized qualifiers:"
+            )
             for ann, qualifier in qualified:
                 typer.echo(
                     f"  {qualifier} {ann.go_id} {ann.go_term} "
@@ -1416,7 +1440,9 @@ def backfill_qualifiers(
         updated_count, output_path = validator.backfill_qualifiers(yaml_file, goa_file)
 
         if updated_count > 0:
-            typer.echo(f"Updated {updated_count} annotations with qualifier info in {output_path}")
+            typer.echo(
+                f"Updated {updated_count} annotations with qualifier info in {output_path}"
+            )
         else:
             typer.echo("No annotations needed qualifier updates")
 
@@ -1551,7 +1577,10 @@ def refresh_publications(
     ] = 0,
     force_all: Annotated[
         bool,
-        typer.Option("--force-all", help="Force refresh ALL publications, not just those missing full text"),
+        typer.Option(
+            "--force-all",
+            help="Force refresh ALL publications, not just those missing full text",
+        ),
     ] = False,
 ):
     """Refresh publications cache for PMC articles with missing full text.
@@ -1597,37 +1626,39 @@ def refresh_publications(
 
     # Find candidates for refresh
     typer.echo("Scanning publications folder...")
-    
+
     if force_all:
         # Get ALL publications for forced refresh
         import re
-        
+
         candidates = []
         for file_path in sorted(publications_dir.glob("PMID_*.md")):
             match = re.match(r"PMID_(\d+)\.md", file_path.name)
             if match:
                 pmid = match.group(1)
-                candidates.append({
-                    'pmid': pmid,
-                    'file': file_path.name,
-                    'pmcid': None,  # Will be determined during refresh
-                    'full_text_available': False,  # Force refresh regardless
-                    'has_full_text_section': False
-                })
-        
+                candidates.append(
+                    {
+                        "pmid": pmid,
+                        "file": file_path.name,
+                        "pmcid": None,  # Will be determined during refresh
+                        "full_text_available": False,  # Force refresh regardless
+                        "has_full_text_section": False,
+                    }
+                )
+
         if not candidates:
             typer.echo("No publication files found.")
             return
-            
+
         typer.echo(f"Found {len(candidates)} publications to force refresh.")
     else:
         # Normal mode: only get candidates missing full text
         candidates = find_pmc_candidates(publications_dir)
-        
+
         if not candidates:
             typer.echo("No candidates found for refresh.")
             return
-        
+
         typer.echo(
             f"Found {len(candidates)} publications with PMC IDs but missing full text."
         )
@@ -1666,10 +1697,14 @@ def convert_doi_publications(
         Path, typer.Option("--dir", help="Publications directory")
     ] = Path("publications"),
     dry_run: Annotated[
-        bool, typer.Option("--dry-run", help="Show what would be converted without making changes")
+        bool,
+        typer.Option(
+            "--dry-run", help="Show what would be converted without making changes"
+        ),
     ] = False,
     delay: Annotated[
-        float, typer.Option("--delay", "-d", help="Delay between DOI lookups in seconds")
+        float,
+        typer.Option("--delay", "-d", help="Delay between DOI lookups in seconds"),
     ] = 0.5,
 ):
     """Convert DOI-keyed publication files to PMID-keyed format.
@@ -1730,7 +1765,9 @@ def convert_doi_publications(
             else:
                 failed += 1
 
-    typer.echo(f"\nConversion complete: {converted} converted, {skipped} skipped (PMID exists), {failed} failed")
+    typer.echo(
+        f"\nConversion complete: {converted} converted, {skipped} skipped (PMID exists), {failed} failed"
+    )
 
 
 @app.command()
@@ -1748,7 +1785,8 @@ def refresh_publications_active(
         float, typer.Option("--delay", "-d", help="Delay between requests")
     ] = 0.5,
     dry_run: Annotated[
-        bool, typer.Option("--dry-run", help="Show what would be refreshed without fetching")
+        bool,
+        typer.Option("--dry-run", help="Show what would be refreshed without fetching"),
     ] = False,
 ):
     """Refresh publication stubs for genes under active review.
@@ -1769,10 +1807,14 @@ def refresh_publications_active(
         typer.echo("No active reviews found.")
         return
 
-    typer.echo(f"Found {len(result['reviews'])} active reviews with {len(result['pmids'])} unique PMIDs")
+    typer.echo(
+        f"Found {len(result['reviews'])} active reviews with {len(result['pmids'])} unique PMIDs"
+    )
 
     for r in result["reviews"]:
-        typer.echo(f"  {r['organism']}/{r['gene']} ({r['status']}) - {r['pmid_count']} PMIDs")
+        typer.echo(
+            f"  {r['organism']}/{r['gene']} ({r['status']}) - {r['pmid_count']} PMIDs"
+        )
 
     if dry_run:
         missing = []
@@ -1786,7 +1828,10 @@ def refresh_publications_active(
                 stubs.append(pmid)
             else:
                 content = pub_file.read_text()
-                if "full_text_available: false" in content or "full_text_available: true" not in content:
+                if (
+                    "full_text_available: false" in content
+                    or "full_text_available: true" not in content
+                ):
                     stubs.append(pmid)
                 else:
                     cached.append(pmid)
@@ -1797,7 +1842,9 @@ def refresh_publications_active(
         return
 
     success_count = cache_publications(result["pmids"], publications_dir, force, delay)
-    typer.echo(f"\nRefreshed {success_count}/{len(result['pmids'])} publications for active reviews")
+    typer.echo(
+        f"\nRefreshed {success_count}/{len(result['pmids'])} publications for active reviews"
+    )
 
 
 @app.command()
@@ -1856,23 +1903,23 @@ def visualize(
     ] = False,
 ):
     """Visualize gene review annotations and their actions.
-    
+
     Creates a clean SVG visualization showing:
     - GO terms organized hierarchically by GO slim categories
     - Review actions (Accept, Modify, Remove, etc.) with visual indicators
     - Proposed replacement terms for modifications
-    
+
     Examples:
         ai-gene-review visualize genes/human/CFAP300/CFAP300-ai-review.yaml
         ai-gene-review visualize genes/yeast/LPL1/LPL1-ai-review.yaml -o lpl1-visual.svg
         ai-gene-review visualize test.yaml --format png --stats
     """
     yaml_file = Path(yaml_file)
-    
+
     if not yaml_file.exists():
         typer.echo(f"Error: File not found: {yaml_file}", err=True)
         raise typer.Exit(code=1)
-    
+
     # Determine output path
     if output is None:
         # Default: same directory as input, with -review-visual suffix
@@ -1883,39 +1930,41 @@ def visualize(
         # Add extension if not present
         if not output.suffix:
             output = output.with_suffix(f".{format}")
-    
+
     typer.echo(f"Visualizing {yaml_file.name}...")
-    
+
     try:
         # Create visualizer
         from ai_gene_review.draw.layout_engine import LayoutConfig
+
         config = LayoutConfig()
         visualizer = ReviewVisualizer(layout_config=config, slim_subset=slim)
-        
+
         # Load and visualize the file
         visualizer.visualize_file(yaml_file)
-        
+
         # Show statistics if requested
         if show_stats:
             import yaml as pyyaml
             from ai_gene_review.export.annotation_export import _dict_to_obj
+
             with open(yaml_file) as f:
                 data = pyyaml.safe_load(f)
             gene_review = _dict_to_obj(data)
             stats = visualizer.get_summary_stats(gene_review)
-            
+
             typer.echo("\nSummary Statistics:")
             typer.echo(f"  Total annotations: {stats['total_annotations']}")
             typer.echo("  Actions:")
-            for action, count in stats['actions'].items():
+            for action, count in stats["actions"].items():
                 if count > 0:
-                    pct = stats['action_percentages'][action]
+                    pct = stats["action_percentages"][action]
                     typer.echo(f"    {action}: {count} ({pct:.1f}%)")
-        
+
         # Save the visualization
         visualizer.save(output, format)
         typer.echo(f"✓ Visualization saved to: {output}")
-        
+
     except ImportError as e:
         if "Cairo" in str(e):
             typer.echo(
@@ -1935,11 +1984,17 @@ def visualize(
 def update_status(
     files: Annotated[
         Optional[List[Path]],
-        typer.Argument(help="Gene review YAML file(s) to check/update (if omitted, scans all genes)"),
+        typer.Argument(
+            help="Gene review YAML file(s) to check/update (if omitted, scans all genes)"
+        ),
     ] = None,
     dry_run: Annotated[
         bool,
-        typer.Option("--dry-run", "-n", help="Don't actually update files, just report what would be done"),
+        typer.Option(
+            "--dry-run",
+            "-n",
+            help="Don't actually update files, just report what would be done",
+        ),
     ] = False,
     verbose: Annotated[
         bool,
@@ -1947,7 +2002,11 @@ def update_status(
     ] = False,
     report_only: Annotated[
         bool,
-        typer.Option("--report-only", "-r", help="Only show files with status issues (mismatch or missing)"),
+        typer.Option(
+            "--report-only",
+            "-r",
+            help="Only show files with status issues (mismatch or missing)",
+        ),
     ] = False,
 ):
     """Check and update the status field in gene review files.
@@ -2019,7 +2078,9 @@ def update_status(
             for result in issues:
                 file_path = Path(result["file"])
                 if result["needs_update"]:
-                    typer.echo(f"  ⚠ {file_path}: status not set (should be {result['expected_status']})")
+                    typer.echo(
+                        f"  ⚠ {file_path}: status not set (should be {result['expected_status']})"
+                    )
                 elif result["status_mismatch"]:
                     typer.echo(
                         f"  ⚠ {file_path}: status mismatch "
@@ -2062,11 +2123,16 @@ def arba_sync(
     ] = Path("rules/arba"),
     limit: Annotated[
         Optional[int],
-        typer.Option("--limit", "-l", help="Maximum number of rules to fetch (for testing)"),
+        typer.Option(
+            "--limit", "-l", help="Maximum number of rules to fetch (for testing)"
+        ),
     ] = None,
     go_only: Annotated[
         bool,
-        typer.Option("--go-only/--all", help="Only sync rules with GO annotations (default: GO only)"),
+        typer.Option(
+            "--go-only/--all",
+            help="Only sync rules with GO annotations (default: GO only)",
+        ),
     ] = True,
 ):
     """Sync ARBA (Association-Rule-Based Annotator) rules from UniProt.
@@ -2107,7 +2173,10 @@ def arba_sync(
     # Progress callback
     def progress(fetched: int, total_available: int, matched: int) -> None:
         pct = (fetched / total_available) * 100 if total_available > 0 else 0
-        typer.echo(f"  Scanned: {fetched}/{total_available} ({pct:.1f}%) | Matched: {matched}", nl=False)
+        typer.echo(
+            f"  Scanned: {fetched}/{total_available} ({pct:.1f}%) | Matched: {matched}",
+            nl=False,
+        )
         typer.echo("\r", nl=False)
 
     typer.echo(f"Syncing ARBA rules to {cache_dir}...")
@@ -2119,7 +2188,7 @@ def arba_sync(
         batch_size=batch_size,
         cache=True,
         go_only=go_only,
-        progress_callback=progress
+        progress_callback=progress,
     ):
         count += 1
         if limit and count >= limit:
@@ -2161,6 +2230,7 @@ def arba_stats(
     meta_file = cache_dir / "_metadata.json"
     if meta_file.exists():
         import json
+
         metadata = json.loads(meta_file.read_text())
         typer.echo(f"  Last sync: {metadata.get('last_sync', 'unknown')}")
 
@@ -2230,7 +2300,9 @@ def arba_lookup(
                 if ann.reaction.ec_number:
                     typer.echo(f"    EC: {ann.reaction.ec_number}")
             elif ann.subcellular_location:
-                typer.echo(f"  Subcellular location: {ann.subcellular_location.location}")
+                typer.echo(
+                    f"  Subcellular location: {ann.subcellular_location.location}"
+                )
             elif ann.pathway:
                 typer.echo(f"  Pathway: {ann.pathway}")
             elif ann.text:
@@ -2285,7 +2357,9 @@ def arba_search(
             elif ann.subcellular_location:
                 ann_summary = f"Location: {ann.subcellular_location.location}"
 
-        typer.echo(f"  {rule.uni_rule_id}: {ann_summary} [{rule.statistics.total_count} proteins]")
+        typer.echo(
+            f"  {rule.uni_rule_id}: {ann_summary} [{rule.statistics.total_count} proteins]"
+        )
 
     if next_cursor:
         typer.echo("\n(More results available, increase --limit to see more)")
@@ -2310,11 +2384,16 @@ def unirule_sync(
     ] = Path("rules/unirule"),
     limit: Annotated[
         Optional[int],
-        typer.Option("--limit", "-l", help="Maximum number of rules to fetch (for testing)"),
+        typer.Option(
+            "--limit", "-l", help="Maximum number of rules to fetch (for testing)"
+        ),
     ] = None,
     go_only: Annotated[
         bool,
-        typer.Option("--go-only/--all", help="Only sync rules with GO annotations (default: GO only)"),
+        typer.Option(
+            "--go-only/--all",
+            help="Only sync rules with GO annotations (default: GO only)",
+        ),
     ] = True,
 ):
     """Sync UniRule (expert-curated annotation rules) from UniProt.
@@ -2347,7 +2426,10 @@ def unirule_sync(
 
     def progress(fetched: int, total_available: int, matched: int) -> None:
         pct = (fetched / total_available) * 100 if total_available > 0 else 0
-        typer.echo(f"  Scanned: {fetched}/{total_available} ({pct:.1f}%) | Matched: {matched}", nl=False)
+        typer.echo(
+            f"  Scanned: {fetched}/{total_available} ({pct:.1f}%) | Matched: {matched}",
+            nl=False,
+        )
         typer.echo("\r", nl=False)
 
     typer.echo(f"Syncing UniRules to {cache_dir}...")
@@ -2358,7 +2440,7 @@ def unirule_sync(
         batch_size=batch_size,
         cache=True,
         go_only=go_only,
-        progress_callback=progress
+        progress_callback=progress,
     ):
         count += 1
         if limit and count >= limit:
@@ -2393,6 +2475,7 @@ def unirule_stats(
     meta_file = cache_dir / "_metadata.json"
     if meta_file.exists():
         import json
+
         metadata = json.loads(meta_file.read_text())
         typer.echo(f"  Last sync: {metadata.get('last_sync', 'unknown')}")
 
@@ -2457,7 +2540,9 @@ def unirule_lookup(
                 if ann.reaction.ec_number:
                     typer.echo(f"    EC: {ann.reaction.ec_number}")
             elif ann.subcellular_location:
-                typer.echo(f"  Subcellular location: {ann.subcellular_location.location}")
+                typer.echo(
+                    f"  Subcellular location: {ann.subcellular_location.location}"
+                )
             elif ann.pathway:
                 typer.echo(f"  Pathway: {ann.pathway}")
             elif ann.text:
@@ -2476,11 +2561,15 @@ def rules_enrich(
     ] = "all",
     limit: Annotated[
         Optional[int],
-        typer.Option("--limit", "-l", help="Maximum number of rules to enrich (for testing)"),
+        typer.Option(
+            "--limit", "-l", help="Maximum number of rules to enrich (for testing)"
+        ),
     ] = None,
     force: Annotated[
         bool,
-        typer.Option("--force", "-f", help="Force re-enrich even if .enriched.json exists"),
+        typer.Option(
+            "--force", "-f", help="Force re-enrich even if .enriched.json exists"
+        ),
     ] = False,
 ):
     """Enrich cached rules with labels for GO terms, InterPro, FunFam, and taxa.
@@ -2522,11 +2611,15 @@ def rules_enrich(
         arba_dir = cache_dir / "arba"
         if arba_dir.exists():
             # Match original files, exclude .enriched.json
-            dirs_to_process.append(("ARBA", arba_dir, "ARBA*/ARBA*.json", ".enriched.json"))
+            dirs_to_process.append(
+                ("ARBA", arba_dir, "ARBA*/ARBA*.json", ".enriched.json")
+            )
     if rule_type in ("unirule", "all"):
         unirule_dir = cache_dir / "unirule"
         if unirule_dir.exists():
-            dirs_to_process.append(("UniRule", unirule_dir, "UR*/UR*.json", ".enriched.json"))
+            dirs_to_process.append(
+                ("UniRule", unirule_dir, "UR*/UR*.json", ".enriched.json")
+            )
 
     if not dirs_to_process:
         typer.echo(f"No rules found in {cache_dir}")
@@ -2539,8 +2632,7 @@ def rules_enrich(
         typer.echo(f"\nProcessing {name} rules in {rule_dir}...")
         # Get original files (exclude .enriched.json)
         rule_files = sorted(
-            f for f in rule_dir.glob(pattern)
-            if not f.name.endswith(enriched_suffix)
+            f for f in rule_dir.glob(pattern) if not f.name.endswith(enriched_suffix)
         )
         count = len(rule_files)
 
@@ -2572,9 +2664,13 @@ def rules_enrich(
 
             total_enriched += 1
 
-        typer.echo(f"\n  Completed {name}: {total_enriched} enriched, {total_skipped} skipped")
+        typer.echo(
+            f"\n  Completed {name}: {total_enriched} enriched, {total_skipped} skipped"
+        )
 
-    typer.echo(f"\nTotal: {total_enriched} rules enriched, {total_skipped} skipped (already exist)")
+    typer.echo(
+        f"\nTotal: {total_enriched} rules enriched, {total_skipped} skipped (already exist)"
+    )
 
     # Show cache stats
     typer.echo(f"\nLabel cache saved to {cache_dir / '_labels.json'}")
@@ -2596,7 +2692,10 @@ def rules_export(
     ] = "all",
     enriched: Annotated[
         bool,
-        typer.Option("--enriched/--raw", help="Use enriched files with labels (default: enriched)"),
+        typer.Option(
+            "--enriched/--raw",
+            help="Use enriched files with labels (default: enriched)",
+        ),
     ] = True,
 ):
     """Export rules to CSV with one row per condition set.
@@ -2623,7 +2722,9 @@ def rules_export(
     from ai_gene_review.etl.rule_export import export_rules_to_csv, create_go_summary
 
     if enriched:
-        typer.echo("Using enriched files (run `just rules-enrich` first if labels are missing)")
+        typer.echo(
+            "Using enriched files (run `just rules-enrich` first if labels are missing)"
+        )
     else:
         typer.echo("Using raw files (labels will be empty)")
 
@@ -2638,7 +2739,7 @@ def rules_export(
         output_path=output,
         rule_type=rule_type,
         use_enriched=enriched,
-        progress_callback=progress
+        progress_callback=progress,
     )
 
     typer.echo(f"\n✓ Exported {rows} rows to {output}")
@@ -2661,11 +2762,15 @@ def rules_validate(
     ] = Path("rules"),
     all_reviews: Annotated[
         bool,
-        typer.Option("--all", "-a", help="Validate all *-review.yaml files in cache directory"),
+        typer.Option(
+            "--all", "-a", help="Validate all *-review.yaml files in cache directory"
+        ),
     ] = False,
     verbose: Annotated[
         bool,
-        typer.Option("--verbose", "-v", help="Show detailed messages including warnings"),
+        typer.Option(
+            "--verbose", "-v", help="Show detailed messages including warnings"
+        ),
     ] = False,
 ):
     """Validate rule review YAML files against the LinkML schema.
@@ -2700,7 +2805,9 @@ def rules_validate(
     elif files:
         all_files = list(files)
     else:
-        typer.echo("Please specify file(s) or use --all to validate all reviews", err=True)
+        typer.echo(
+            "Please specify file(s) or use --all to validate all reviews", err=True
+        )
         raise typer.Exit(code=1)
 
     # Track results
@@ -2741,15 +2848,21 @@ def rules_sync(
     ] = Path("rules"),
     all_reviews: Annotated[
         bool,
-        typer.Option("--all", "-a", help="Sync all *-review.yaml files in cache directory"),
+        typer.Option(
+            "--all", "-a", help="Sync all *-review.yaml files in cache directory"
+        ),
     ] = False,
     rule_type: Annotated[
         str,
-        typer.Option("--rule-type", "-t", help="Rule type to sync (arba, unirule, or all)"),
+        typer.Option(
+            "--rule-type", "-t", help="Rule type to sync (arba, unirule, or all)"
+        ),
     ] = "all",
     dry_run: Annotated[
         bool,
-        typer.Option("--dry-run", help="Show what would be updated without writing files"),
+        typer.Option(
+            "--dry-run", help="Show what would be updated without writing files"
+        ),
     ] = False,
 ):
     """Sync rule review YAML files with analysis data.
@@ -2770,16 +2883,15 @@ def rules_sync(
         # Dry run to preview changes
         ai-gene-review rules-sync --all --dry-run
     """
-    from ai_gene_review.etl.rule_review_sync import sync_review_with_analysis, sync_all_reviews
+    from ai_gene_review.etl.rule_review_sync import (
+        sync_review_with_analysis,
+        sync_all_reviews,
+    )
 
     if all_reviews:
         # Sync all reviews
         typer.echo(f"Syncing all {rule_type} reviews in {cache_dir}...")
-        stats = sync_all_reviews(
-            cache_dir,
-            rule_type=rule_type,
-            dry_run=dry_run
-        )
+        stats = sync_all_reviews(cache_dir, rule_type=rule_type, dry_run=dry_run)
 
         typer.echo()
         typer.echo(f"Reviews processed: {stats['reviews_processed']}")
@@ -2794,17 +2906,18 @@ def rules_sync(
         # Sync specific files
         for yaml_file in files:
             typer.echo(f"Syncing {yaml_file}...")
-            stats = sync_review_with_analysis(
-                yaml_file,
-                dry_run=dry_run
-            )
+            stats = sync_review_with_analysis(yaml_file, dry_run=dry_run)
 
-            if stats['status'] == 'updated':
-                if stats.get('condition_sets_populated', 0) > 0:
-                    typer.echo(f"  ✓ Populated {stats['condition_sets_populated']} condition set(s) from enriched.json")
-                typer.echo(f"  ✓ Updated {stats['condition_sets_updated']} condition set(s)")
+            if stats["status"] == "updated":
+                if stats.get("condition_sets_populated", 0) > 0:
+                    typer.echo(
+                        f"  ✓ Populated {stats['condition_sets_populated']} condition set(s) from enriched.json"
+                    )
+                typer.echo(
+                    f"  ✓ Updated {stats['condition_sets_updated']} condition set(s)"
+                )
                 typer.echo(f"  ✓ Generated {stats.get('entries_generated', 0)} entries")
-            elif stats['status'] == 'skipped':
+            elif stats["status"] == "skipped":
                 typer.echo(f"  ⊘ Skipped: {stats['reason']}")
 
             if dry_run:
@@ -2834,7 +2947,9 @@ def render_projects(
     ] = False,
     verbose: Annotated[
         bool,
-        typer.Option("--verbose", "-v", help="Show detailed output including all warnings"),
+        typer.Option(
+            "--verbose", "-v", help="Show detailed output including all warnings"
+        ),
     ] = False,
 ):
     """Render project markdown files to HTML with auto-linked gene symbols.
@@ -2926,10 +3041,14 @@ def render_projects(
                 typer.echo(f"✗ {md_file.name}: {e}", err=True)
 
         if total_warnings and not verbose:
-            typer.echo(f"\n{len(total_warnings)} warnings total (use --verbose to see all)")
+            typer.echo(
+                f"\n{len(total_warnings)} warnings total (use --verbose to see all)"
+            )
 
     else:
-        typer.echo("Please specify file(s) or use --all to render all projects", err=True)
+        typer.echo(
+            "Please specify file(s) or use --all to render all projects", err=True
+        )
         raise typer.Exit(code=1)
 
 
@@ -2941,11 +3060,15 @@ def render_modules(
     ] = None,
     output_dir: Annotated[
         Path,
-        typer.Option("--output-dir", "-o", help="Output directory for module HTML files"),
+        typer.Option(
+            "--output-dir", "-o", help="Output directory for module HTML files"
+        ),
     ] = Path("pages/modules"),
     modules_dir: Annotated[
         Path,
-        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+        typer.Option(
+            "--modules-dir", "-m", help="Directory containing module YAML files"
+        ),
     ] = Path("modules"),
     all_modules: Annotated[
         bool,
@@ -2995,7 +3118,9 @@ def render_modules(
                 )
                 total_warnings.extend(warnings)
                 if warnings:
-                    typer.echo(f"Rendered {module_file} -> {output_path} ({len(warnings)} warnings)")
+                    typer.echo(
+                        f"Rendered {module_file} -> {output_path} ({len(warnings)} warnings)"
+                    )
                     if verbose:
                         for warning in warnings:
                             typer.echo(f"    - {warning}")
@@ -3005,9 +3130,13 @@ def render_modules(
                 typer.echo(f"Error rendering {module_file}: {error}", err=True)
 
         if total_warnings and not verbose:
-            typer.echo(f"\n{len(total_warnings)} warnings total (use --verbose to see all)")
+            typer.echo(
+                f"\n{len(total_warnings)} warnings total (use --verbose to see all)"
+            )
     else:
-        typer.echo("Please specify file(s) or use --all to render all modules", err=True)
+        typer.echo(
+            "Please specify file(s) or use --all to render all modules", err=True
+        )
         raise typer.Exit(code=1)
 
 
@@ -3027,7 +3156,9 @@ def render_module_notation(
     ] = None,
     modules_dir: Annotated[
         Path,
-        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+        typer.Option(
+            "--modules-dir", "-m", help="Directory containing module YAML files"
+        ),
     ] = Path("modules"),
     all_modules: Annotated[
         bool,
@@ -3076,14 +3207,17 @@ def render_module_notation(
 @app.command()
 def compare_module_regulation(
     module_file: Annotated[
-        Path, typer.Argument(help="Curated module YAML (e.g. modules/methionine_cycle.yaml)")
+        Path,
+        typer.Argument(help="Curated module YAML (e.g. modules/methionine_cycle.yaml)"),
     ],
     maud_toml: Annotated[
         Path, typer.Argument(help="Maud model TOML to ingest as a regulatory source")
     ],
     mapping: Annotated[
         Optional[Path],
-        typer.Option("--mapping", "-m", help="Reviewed id-mapping (source ids -> module symbols)"),
+        typer.Option(
+            "--mapping", "-m", help="Reviewed id-mapping (source ids -> module symbols)"
+        ),
     ] = None,
     emit_candidates: Annotated[
         bool,
@@ -3134,15 +3268,13 @@ def compare_module_regulation(
 
 @app.command()
 def fetch_descriptions(
-    organism: Annotated[
-        str, typer.Argument(help="Organism name (e.g., human, yeast)")
-    ],
-    gene: Annotated[
-        str, typer.Argument(help="Gene symbol (e.g., CAT2, TP53)")
-    ],
+    organism: Annotated[str, typer.Argument(help="Organism name (e.g., human, yeast)")],
+    gene: Annotated[str, typer.Argument(help="Gene symbol (e.g., CAT2, TP53)")],
     output_dir: Annotated[
         Optional[Path],
-        typer.Option("--output-dir", "-o", help="Output directory (default: current directory)"),
+        typer.Option(
+            "--output-dir", "-o", help="Output directory (default: current directory)"
+        ),
     ] = None,
 ):
     """Fetch gene descriptions from external sources (Alliance_Imported, Alliance_Automated, UniProt, RefSeq).
@@ -3166,12 +3298,12 @@ def fetch_descriptions(
 
 @app.command()
 def fetch_descriptions_bulk(
-    organism: Annotated[
-        str, typer.Argument(help="Organism name (e.g., yeast, human)")
-    ],
+    organism: Annotated[str, typer.Argument(help="Organism name (e.g., yeast, human)")],
     output_dir: Annotated[
         Optional[Path],
-        typer.Option("--output-dir", "-o", help="Output directory (default: current directory)"),
+        typer.Option(
+            "--output-dir", "-o", help="Output directory (default: current directory)"
+        ),
     ] = None,
     delay: Annotated[
         float,
@@ -3195,7 +3327,10 @@ def fetch_descriptions_bulk(
     typer.echo(f"Fetching descriptions for all {organism} genes...")
     try:
         count = fetch_organism_descriptions(
-            organism, base_path=output_dir, delay=delay, gene_symbols=genes,
+            organism,
+            base_path=output_dir,
+            delay=delay,
+            gene_symbols=genes,
         )
         typer.echo(f"Fetched descriptions for {count} genes")
     except Exception as e:
@@ -3205,12 +3340,12 @@ def fetch_descriptions_bulk(
 
 @app.command()
 def descriptions_status(
-    organism: Annotated[
-        str, typer.Argument(help="Organism name (e.g., yeast, human)")
-    ],
+    organism: Annotated[str, typer.Argument(help="Organism name (e.g., yeast, human)")],
     output_dir: Annotated[
         Optional[Path],
-        typer.Option("--output-dir", "-o", help="Output directory (default: current directory)"),
+        typer.Option(
+            "--output-dir", "-o", help="Output directory (default: current directory)"
+        ),
     ] = None,
     update: Annotated[
         bool,
@@ -3232,7 +3367,9 @@ def descriptions_status(
     """
     from ai_gene_review.etl.descriptions import compute_organism_description_status
 
-    report = compute_organism_description_status(organism, base_path=output_dir, update=update)
+    report = compute_organism_description_status(
+        organism, base_path=output_dir, update=update
+    )
 
     typer.echo(f"\nDescription review status for {organism} ({report.total} genes):")
     for status in ["STUB", "IN_PROGRESS", "REVIEWED", "COMPLETE"]:
@@ -3267,7 +3404,8 @@ def analyze_evidence_sources(
         Path, typer.Option("--output-dir", help="Directory for the report and TSVs")
     ] = Path("reports/evidence_sources"),
     refresh: Annotated[
-        bool, typer.Option("--refresh", help="Re-fetch all publication types from PubMed")
+        bool,
+        typer.Option("--refresh", help="Re-fetch all publication types from PubMed"),
     ] = False,
     no_network: Annotated[
         bool,
@@ -3342,7 +3480,9 @@ def fetch_panther_paint(
     ] = None,
     force_download: Annotated[
         bool,
-        typer.Option("--force-download", help="Re-download source GAFs even if cached."),
+        typer.Option(
+            "--force-download", help="Re-download source GAFs even if cached."
+        ),
     ] = False,
 ):
     """Fetch PANTHER PAINT (PTN node-level) annotations for a family (or --all).
@@ -3401,7 +3541,9 @@ def fetch_panther_paint(
         )
         raise typer.Exit(code=1)
 
-    typer.echo(f"Resolving PTN nodes for {family} (this downloads/caches PAINT GAFs)...")
+    typer.echo(
+        f"Resolving PTN nodes for {family} (this downloads/caches PAINT GAFs)..."
+    )
     tsv_path, nodes = fetch_family_paint(
         family,
         entries_csv=entries_csv,
@@ -3421,9 +3563,7 @@ def fetch_panther_paint(
 def fetch_gocam(
     model_id: Annotated[
         str,
-        typer.Argument(
-            help="GO-CAM model id (bare, gomodel: CURIE, or model URL)"
-        ),
+        typer.Argument(help="GO-CAM model id (bare, gomodel: CURIE, or model URL)"),
     ],
     cache_dir: Annotated[
         Path,
@@ -3555,9 +3695,7 @@ def gocam_index(
 def subtraction_report(
     paths: Annotated[
         Optional[List[Path]],
-        typer.Argument(
-            help="Gene review YAML files or directories (default: genes/)"
-        ),
+        typer.Argument(help="Gene review YAML files or directories (default: genes/)"),
     ] = None,
     reference: Annotated[
         Optional[List[str]],
@@ -3590,6 +3728,14 @@ def subtraction_report(
             "evidence -- i.e. where IBA is too conservative)",
         ),
     ] = False,
+    exclude_branch: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--exclude-branch",
+            help="Drop terms under this branch from the report, e.g. GO:0005488 to "
+            "suppress low-information 'binding' molecular functions (repeatable)",
+        ),
+    ] = None,
     output: Annotated[
         Optional[Path],
         typer.Option(
@@ -3675,12 +3821,24 @@ def subtraction_report(
     if not files:
         typer.echo("Error: no *-ai-review.yaml files found.", err=True)
         raise typer.Exit(code=1)
-    typer.echo(f"Analyzing {len(files)} review files (filter: {filt.describe()})...", err=True)
+    typer.echo(
+        f"Analyzing {len(files)} review files (filter: {filt.describe()})...", err=True
+    )
 
+    exclude_branches = frozenset(exclude_branch or [])
     if no_closure:
+        if exclude_branches:
+            typer.echo(
+                "Error: --exclude-branch requires ontology closure (drop --no-closure).",
+                err=True,
+            )
+            raise typer.Exit(code=1)
         reporter = SubtractionReporter()
     else:
-        reporter = SubtractionReporter(ancestors=make_go_ancestor_fn(adapter))
+        reporter = SubtractionReporter(
+            ancestors=make_go_ancestor_fn(adapter),
+            exclude_branches=exclude_branches,
+        )
 
     results = reporter.analyze_files(files, filt)
 

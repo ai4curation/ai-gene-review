@@ -277,6 +277,57 @@ def test_negated_annotation_not_counted(reporter):
     assert result.n_subtracted == 1
 
 
+def test_excluded_branch_skips_terms():
+    """exclude_branches drops core terms / lost annotations under a branch."""
+    # GO:0500 is a 'binding' root; GO:0002 is_a GO:0500.
+    anc = {
+        "GO:0500": {"GO:0500"},
+        "GO:0002": {"GO:0002", "GO:0500"},
+        "GO:0100": {"GO:0100"},
+    }
+
+    def ancestors(t):
+        return anc.get(t, {t})
+
+    reporter = SubtractionReporter(
+        ancestors=ancestors, exclude_branches=frozenset({"GO:0500"})
+    )
+    review = {
+        "id": "P1",
+        "gene_symbol": "G",
+        "existing_annotations": [
+            {
+                "term": _term("GO:0002", "a binding term"),
+                "evidence_type": "IBA",
+                "original_reference_id": "GO_REF:0000033",
+                "review": {"action": "ACCEPT"},
+            },
+            {
+                "term": _term("GO:0100", "an activity"),
+                "evidence_type": "IBA",
+                "original_reference_id": "GO_REF:0000033",
+                "review": {"action": "ACCEPT"},
+            },
+        ],
+        "core_functions": [
+            {
+                "description": "c",
+                "molecular_function": _term("GO:0002"),  # binding -> excluded
+                "directly_involved_in": [_term("GO:0100")],
+            }
+        ],
+    }
+    filt = SubtractionFilter.create(evidence_codes=["IBA"])
+    result = reporter.analyze_review(review, filt)
+
+    # The binding term GO:0002 is excluded from both reports.
+    assert all(la.term_id != "GO:0002" for la in result.lost_annotations)
+    assert all(c.term_id != "GO:0002" for c in result.core_function_coverage)
+    # The non-binding activity term is still reported.
+    assert any(la.term_id == "GO:0100" for la in result.lost_annotations)
+    assert any(c.term_id == "GO:0100" for c in result.core_function_coverage)
+
+
 def test_no_closure_means_exact_match_only(review):
     """Without an ancestor function, GO:0100 is no longer covered by GO:0101."""
     reporter = SubtractionReporter()  # identity ancestors

@@ -1522,9 +1522,15 @@ subtraction-report-iba-tsv output="reports/iba-subtraction":
 
 # Inverse: what core biology would be LOST if IBA were the only evidence (IBA too conservative).
 # LOST core_functions terms are grounded only by non-IBA (often experimental) evidence.
+# --exclude-branch GO:0005488 drops low-information 'binding' molecular functions.
 subtraction-report-iba-only-tsv paths="genes" output="reports/iba-only":
     @mkdir -p reports
-    uv run ai-gene-review subtraction-report {{paths}} --keep-only -e IBA -r GO_REF:0000033 --format tsv -o {{output}}
+    uv run ai-gene-review subtraction-report {{paths}} --keep-only -e IBA -r GO_REF:0000033 --exclude-branch GO:0005488 --format tsv -o {{output}}
+
+# Ranked report of human genes whose curated core molecular functions (non-binding)
+# IBA alone would miss; enriches with evidence codes. Writes reports/iba-too-conservative-core-mf.md
+subtraction-report-iba-conservative-core-mf:
+    uv run python projects/IBA_REVIEW/iba_too_conservative_core_mf.py
 
 # Generate statistics HTML report from annotation data
 stats output_file="docs/stats_report.html":
