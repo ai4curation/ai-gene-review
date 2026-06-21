@@ -32,7 +32,7 @@ import yaml
 from ai_gene_review.analysis.subtraction_report import (
     SubtractionFilter,
     SubtractionReporter,
-    _effective_term_ids,
+    effective_term_ids,
     make_go_ancestor_fn,
 )
 
@@ -56,7 +56,7 @@ def grounding_evidence(
     for ann in review.get("existing_annotations") or []:
         if ann.get("evidence_type") == "IBA" or ann.get("negated"):
             continue
-        for eff in _effective_term_ids(ann):
+        for eff in effective_term_ids(ann):
             if core_term in ancestors(eff):
                 out.append(
                     (ann.get("evidence_type") or "?", ann.get("original_reference_id") or "")
@@ -80,7 +80,8 @@ def main() -> None:
     seen: set[tuple[str, str]] = set()
 
     for path in files:
-        review = yaml.safe_load(open(path))
+        with open(path) as fh:
+            review = yaml.safe_load(fh)
         if not isinstance(review, dict):
             continue
         result = reporter.analyze_review(review, filt)

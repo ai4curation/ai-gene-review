@@ -39,7 +39,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable, Optional, Sequence, Union
+from typing import Callable, Iterable, Iterator, Optional, Sequence, Union
 
 import yaml
 
@@ -247,7 +247,7 @@ def _term_label(term: Optional[dict]) -> Optional[str]:
     return None
 
 
-def _effective_term_ids(annotation: dict) -> list[str]:
+def effective_term_ids(annotation: dict) -> list[str]:
     """Return the term id(s) an annotation effectively asserts.
 
     For ``MODIFY`` actions with ``proposed_replacement_terms`` the replacement
@@ -263,7 +263,9 @@ def _effective_term_ids(annotation: dict) -> list[str]:
     return [tid] if tid else []
 
 
-def _iter_core_function_terms(core_function: dict):
+def _iter_core_function_terms(
+    core_function: dict,
+) -> Iterator[tuple[str, str, Optional[str]]]:
     """Yield ``(slot, term_id, term_label)`` for each GO term in an entry."""
     for slot in CORE_FUNCTION_TERM_SLOTS:
         value = core_function.get(slot)
@@ -331,7 +333,7 @@ class SubtractionReporter:
             review_obj = ann.get("review") or {}
             action = review_obj.get("action")
             if action in self.supporting_actions:
-                eff = _effective_term_ids(ann)
+                eff = effective_term_ids(ann)
                 (subtracted_support if subtracted else retained_support).extend(eff)
 
         result = GeneSubtractionResult(
