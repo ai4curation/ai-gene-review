@@ -185,8 +185,8 @@ def test_bbsome_leaf_grounding():
 
 
 def test_ras_mapk_flags_abstract_family_leaves():
-    # ras_mapk_cascade.yaml uses some FAMILY selectors without representatives.
-    data = load_module("ras_mapk_cascade.yaml")
+    # erk_cascade.yaml uses some FAMILY selectors without representatives.
+    data = load_module("erk_cascade.yaml")
     flagged = leaf_nodes_missing_representatives(data)
     # At least one leaf (e.g. the SOS GEF step) lacks representative members.
     assert any(
