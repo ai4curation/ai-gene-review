@@ -94,6 +94,16 @@ Headline resources:
 The GlySpace Alliance (GlyGen + Glyco@Expasy + GlyCosmos) is the coordinating
 umbrella; GlyTouCan is the shared structure-ID backbone they all link to.
 
+### Reusing these resources for curation
+
+How the resources feed GO curation (forward `cazy2go` propagation, GlycoCoO→GO
+alignment, and confirmatory GlyGen cross-checks; GO-CAM/pathway deferred) is a
+decision record in
+[GLYCOBIOLOGY-resource-reuse.md](GLYCOBIOLOGY/GLYCOBIOLOGY-resource-reuse.md),
+with a seeded [`cazy2go.sssom.yaml`](GLYCOBIOLOGY/cazy2go.sssom.yaml) (CAZy
+family → GO molecular function, the glyco analogue of `interpro2go`) built from
+the exemplar GT families.
+
 ## Exemplar reviews (calibration set)
 
 Seven human genes were reviewed to calibrate the over-/under-annotation
