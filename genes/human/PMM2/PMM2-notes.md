@@ -138,3 +138,63 @@ common congenital disorder of glycosylation.
   metabolic process.
 - locations: GO:0005829 cytosol.
 - substrates: D-mannose 6-phosphate / alpha-D-mannose 1-phosphate (CHEBI:58735 / CHEBI:58409).
+
+## Falcon integration (2026-06-21)
+
+Integrated findings from `PMM2-deep-research-falcon.md` (FutureHouse Falcon, 25 citations) into
+the already-complete review. Conservative enrichment only — no `action` values were flipped.
+
+### References added (resolved to PMID, fetched into cache, with reference_review)
+
+- **PMID:36214454** — Vignogna et al. 2022, eLife, "Evolutionary rescue of phosphomannomutase
+  deficiency in yeast models of human disease." Yeast SEC53/PMM2 model; corroborates that PMM2
+  loss-of-function impairs N-linked glycosylation and that p.Phe119Leu/F126L acts via a
+  dimer/stability defect [PMID:36214454 "mutations in the phosphomannomutase gene PMM2, which
+  affect protein N-linked"]. relevance HIGH→set MEDIUM (model organism), correctness VERIFIED.
+- **PMID:40572562** — Hay Mele et al. 2025, Molecules, "In Silico Analysis of Phosphomannomutase-2
+  Dimer Interface Stability and Heterodimerization with Phosphomannomutase-1." Supports the obligate
+  homodimer quaternary structure and the catalytic (R141H) vs interface (F119L) defect distinction
+  [PMID:40572562 "Structurally, PMM2 functions as an obligate homodimer"]; Man-1-P pivotal for
+  GDP-mannose/Dol-P-Man synthesis. relevance HIGH, correctness VERIFIED.
+- **PMID:37257447** — Radenkovic et al. 2023, Cell Reports Medicine, "Tracer metabolomics reveals
+  the role of aldose reductase in glycosylation." Confirms PMM2 deficiency depletes GDP-mannose
+  [PMID:37257447 "caused by PMM2 deficiency, presents with depleted GDP-mannose and abnormal"] and
+  explicitly states PMM2 is not directly involved in polyol metabolism. relevance MEDIUM,
+  correctness VERIFIED.
+
+### Annotation summaries enriched (no action changes)
+
+- GO:0006487 protein N-linked glycosylation (KEEP_AS_NON_CORE): added Vignogna 2022 corroboration
+  + verbatim supported_by.
+- GO:0009298 GDP-mannose biosynthetic process (IEA, ACCEPT): added Radenkovic 2023 (GDP-mannose
+  depletion) and Mele 2025 (Man-1-P pivotal step) verbatim supported_by.
+- core_functions: description now notes the obligate-homodimer active form and the R141H (catalytic)
+  vs F119L (interface) defect distinction; added Mele 2025 to core_functions supported_by.
+
+### Falcon claims NOT added as citations / rejected (with reason)
+
+- **Aldose-reductase / polyol "metabolic rewiring" as a PMM2 function** — rejected as a PMM2
+  function. Radenkovic 2023 itself states PMM2 is not directly involved in polyol metabolism; this
+  is a downstream/compensatory effect. Used only to support the core GDP-mannose role and to justify
+  NOT annotating polyol metabolism.
+- **PMM1/PMM2 heterodimer** (Mele 2025) — computational only; PMM1 does not compensate for PMM2 in
+  vivo. Does NOT justify a PMM1-containing-complex annotation. Noted in reference_review only.
+- **Edmondson et al. 2025 mouse model** (neurodevelopmental/cerebellar/synaptic) — NOT added as a
+  citation. It is a bioRxiv preprint (doi:10.1101/2025.06.01.657261) without a PubMed PMID, so it is
+  not fetchable per the citation rule; findings are downstream organism-level phenotypes, not core
+  PMM2 function. Recorded here in notes only.
+- **TNFR1/inflammatory signaling** (Pascoal 2025), **ER stress/UPR, mitochondrial dysfunction,
+  autophagy** (Ligezka 2023, Parrado 2022), **PMM2-TRIM28 colorectal-cancer interaction** (Peng 2026)
+  — all pleiotropic/context-specific downstream consequences per Falcon's own risk assessment; not
+  core function, not added. Consistent with the existing review's scope.
+- **Budhraja 2024, Garapati 2024, Mangione 2025, Tran 2020, Sosicka 2021, Pradeep 2023, Medico 2025**
+  — biomarker/therapy/metabolomics/general-chaperone papers reinforcing already-captured core
+  conclusions; not added to avoid citation bloat (Tran 2020 = PMID:32660097 is a general chaperone
+  review, only MEDIUM relevance and not PMM2-specific).
+
+### Validation
+
+`uv run ai-gene-review validate genes/human/PMM2/PMM2-ai-review.yaml --terms` → "Valid (with 1
+warnings)"; the sole warning is advisory (no annotation cites the deep-research .md file). All
+added supporting_text strings are verbatim substrings of the fetched cached publications; all new
+reference titles match the fetched records. No ❌ ERROR.
