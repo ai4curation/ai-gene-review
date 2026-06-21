@@ -1,0 +1,17 @@
+# BIN1 curation notes
+
+## 2026-06-19
+
+- Deep-research attempt with `just deep-research-falcon human BIN1 --fallback perplexity-lite` timed out after 180 seconds with no generated research artifact, so this manual review uses cached UniProt, GOA, PANTHER family, and publication evidence.
+- BIN1 encodes amphiphysin II, a BAR-domain and SH3-domain membrane remodeling/adaptor protein with major brain and skeletal-muscle isoforms. UniProt frames the core function as control of plasma membrane curvature, membrane shaping/remodeling, T-tubule formation, vesicle sorting, BACE1 trafficking, and actin remodeling.
+- The BAR-domain membrane-curvature function is the core molecular function. BAR domains "generate and sense membrane curvature" by binding negatively charged membranes [PMID:18658220 "BAR domains generate and sense membrane curvature"], and BIN1 N-BAR disease mutants impair membrane tubulation in vivo and in vitro [PMID:24755653 "two mutants showed impaired membrane tubulation both in vivo and in vitro"].
+- Muscle T-tubule and neuronal endocytic-domain localization are well supported. Amphiphysin II/BIN1 is concentrated around T tubules in skeletal muscle and beneath the plasma membrane at axon initial segments and nodes of Ranvier in brain [PMID:9182667 "In skeletal muscle, amphiphysin II is concentrated around T tubules, while in brain it is concentrated in the cytomatrix beneath the plasmamembrane of axon initial segments and nodes of Ranvier"].
+- The SH3-domain adaptor function is core for endocytosis and muscle membrane remodeling. BIN1 mutations can disrupt DNM2 interaction and membrane tubule recruitment, supporting dynamin/GTPase-binding annotations [PMID:17676042 "the functional interaction between BIN1 and DNM2 is necessary for normal muscle function and positioning of nuclei"].
+- BACE1 trafficking and amyloid-beta production annotations are real but non-core. The cached abstract says BIN1 depletion increases BACE1 by impaired endosomal trafficking and reduced lysosomal degradation [PMID:27179792 "the depletion of BIN1 increases cellular BACE1 levels through impaired endosomal trafficking and reduces BACE1 lysosomal degradation"], which supports cargo trafficking rather than direct aspartic protease inhibitor activity.
+- Tau binding is supported and Alzheimer-relevant, but I kept it non-core because it is a context-specific disease/pathology interaction rather than the primary BAR-domain membrane remodeling role [PMID:25051234 "BIN1 interacts with the microtubule-associated protein Tau"].
+- Nuclear/MYC/transcription/cell-cycle/apoptosis annotations are retained as non-core because they represent tumor-suppressor or isoform-specific literature rather than the main membrane-remodeling function.
+- Generic `protein binding` annotations are over-annotated; more informative binding terms such as phospholipid binding, clathrin binding, GTPase binding, and actin filament binding are retained where supported.
+
+## 2026-06-20 second-pass audit
+
+The second-pass audit added manual `reference_review` metadata for BIN1 membrane-curvature/BAR-domain evidence, disease-mutant membrane tubulation evidence, DNM2 interaction evidence, BIN1-BACE1 trafficking, and BIN1/tau/clusterin Alzheimer-context interaction evidence. No annotation action changes were needed: BIN1 remains curated primarily as a BAR/SH3 membrane-remodeling and endocytic adaptor, with BACE1/tau/Alzheimer outputs retained as non-core context rather than the defining molecular function.

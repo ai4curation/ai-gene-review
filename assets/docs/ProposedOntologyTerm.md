@@ -6,10 +6,11 @@ A proposed new ontology term that should exist but doesn't currently
 URI: [gene_review:ProposedOntologyTerm](https://w3id.org/ai4curation/gene_review/ProposedOntologyTerm)
 
 
-[![img](https://yuml.me/diagram/nofunky;dir:TB/class/[TermMapping],[Term],[SupportingTextInReference],[SupportingTextInReference]<supported_by%200..*-++[ProposedOntologyTerm&#124;proposed_name:string;proposed_definition:string;justification:string%20%3F],[TermMapping]<proposed_mappings%200..*-++[ProposedOntologyTerm],[Term]<proposed_parent%200..1-++[ProposedOntologyTerm],[GeneReview]++-%20proposed_new_terms%200..*>[ProposedOntologyTerm],[GeneReview])](https://yuml.me/diagram/nofunky;dir:TB/class/[TermMapping],[Term],[SupportingTextInReference],[SupportingTextInReference]<supported_by%200..*-++[ProposedOntologyTerm&#124;proposed_name:string;proposed_definition:string;justification:string%20%3F],[TermMapping]<proposed_mappings%200..*-++[ProposedOntologyTerm],[Term]<proposed_parent%200..1-++[ProposedOntologyTerm],[GeneReview]++-%20proposed_new_terms%200..*>[ProposedOntologyTerm],[GeneReview])
+[![img](https://yuml.me/diagram/nofunky;dir:TB/class/[TermMapping],[Term],[SupportingTextInReference],[SupportingTextInReference]<supported_by%200..*-++[ProposedOntologyTerm&#124;proposed_name:string;proposed_definition:string;justification:string%20%3F],[TermMapping]<proposed_mappings%200..*-++[ProposedOntologyTerm],[Term]<proposed_parent%200..1-++[ProposedOntologyTerm],[KnowledgeGap]++-%20proposed_terms%200..*>[ProposedOntologyTerm],[GeneReview]++-%20proposed_new_terms%200..*>[ProposedOntologyTerm],[KnowledgeGap],[GeneReview])](https://yuml.me/diagram/nofunky;dir:TB/class/[TermMapping],[Term],[SupportingTextInReference],[SupportingTextInReference]<supported_by%200..*-++[ProposedOntologyTerm&#124;proposed_name:string;proposed_definition:string;justification:string%20%3F],[TermMapping]<proposed_mappings%200..*-++[ProposedOntologyTerm],[Term]<proposed_parent%200..1-++[ProposedOntologyTerm],[KnowledgeGap]++-%20proposed_terms%200..*>[ProposedOntologyTerm],[GeneReview]++-%20proposed_new_terms%200..*>[ProposedOntologyTerm],[KnowledgeGap],[GeneReview])
 
 ## Referenced by Class
 
+ *  **None** *[➞proposed_terms](knowledgeGap__proposed_terms.md)*  <sub>0..\*</sub>  **[ProposedOntologyTerm](ProposedOntologyTerm.md)**
  *  **None** *[proposed_new_terms](proposed_new_terms.md)*  <sub>0..\*</sub>  **[ProposedOntologyTerm](ProposedOntologyTerm.md)**
 
 ## Attributes

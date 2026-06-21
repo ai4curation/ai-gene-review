@@ -1,7 +1,7 @@
 
 # Enum: GOTermEnum
 
-A term in the GO ontology
+A term in the GO ontology (including roots, to allow ND annotations)
 
 URI: [gene_review:GOTermEnum](https://w3id.org/ai4curation/gene_review/GOTermEnum)
 
