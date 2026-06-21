@@ -53,5 +53,64 @@ This carbohydrate-binding + lattice-forming activity is the CORE function; nearl
 - GO:0061684 (chaperone-mediated autophagy? no) — not used
 - locations: GO:0005634 nucleus, GO:0005737 cytoplasm, GO:0005576 extracellular region, GO:0009986 cell surface, GO:0031012 extracellular matrix (all CC, in GOA)
 - BP: GO:0061709 (reticulophagy? no). Endomembrane damage response — GO:0061912 selective autophagy? Will use GO:0007165 sparingly. For lattice/adhesion will keep BP minimal.
+
+## Falcon integration (2026-06-21)
+
+Integrated the FutureHouse Falcon deep-research report (LGALS3-deep-research-falcon.md, 23 citations)
+into the existing, already-complete review. Conservative enrichment only — no `action` flips on the
+105 reviewed annotations.
+
+### References added (resolved to PMID via NCBI ID converter, fetched with `fetch-pmid`, full text cached)
+- **PMID:32521192** — Jia et al. 2020, *Autophagy*, "MERIT, a cellular system coordinating lysosomal
+  repair, removal and replacement" (DOI 10.1080/15548627.2020.1779451; Falcon key `jia2020meritacellular`).
+  HIGH/VERIFIED. Landmark lysophagy paper. Verbatim: [PMID:32521192 "LGALS3 (galectin 3) detects
+  membrane damage by detecting exposed lumenal glycosyl groups, recruits and organizes ESCRT components
+  PDCD6IP/ALIX, CHMP4A, and CHMPB at damaged sites on the lysosomes, and facilitates ESCRT-driven repair
+  of lysosomal membrane. At later stages, LGALS3 cooperates with TRIM16, an autophagy receptor-regulator,
+  to engage autophagy machinery in removal of excessively damaged lysosomes."]
+- **PMID:34612142** — Burbidge et al. 2022, *Autophagy*, "LGALS3 (galectin 3) mediates an unconventional
+  secretion of SNCA/α-synuclein…" (DOI 10.1080/15548627.2021.1967615; Falcon `burbidge2022lgals3(galectin3)`).
+  HIGH/VERIFIED. Verbatim: [PMID:34612142 "We demonstrate that LGALS3 (galectin 3) mediates the release of
+  SNCA following vesicular damage."]
+- **PMID:41194217** — Liu et al. 2025, *Biol Direct*, "Galectin-3 directs mitophagy…" (DOI
+  10.1186/s13062-025-00692-1; Falcon `liu2025galectin3directsmitophagy`). MEDIUM/VERIFIED. Ties LLPS to
+  intracellular organelle QC. Verbatim: [PMID:41194217 "mutations in key residues that confer the
+  liquid-liquid phase separation (LLPS) properties of Galectin-3 abrogates its mitochondrial
+  relocalization, ULK1 recruitment, and mitophagy"].
+
+Note: Falcon also cites the TMED10 secretion paper (zhang2020atranslocationpathway, Cell 2020); this is the
+SAME paper already in the review as PMID:32272059 (the title there reads "A Translocation Pathway for
+Vesicle-Mediated Unconventional Protein Secretion"). Not re-added.
+
+### Annotation / core_function enrichment
+- Added a NEW existing_annotation **GO:0062093 lysophagy** (involved_in, IDA, PMID:32521192), with
+  supporting_text from Jia 2020 and a second verbatim quote on glycan-recognition being required to
+  initiate autophagy. This captures the damaged-endomembrane glycan-sensing → ESCRT repair →
+  TRIM16-dependent lysophagy role, which was previously only in `description` and `proposed_new_terms`
+  but absent from GOA/existing_annotations. GO:0062093 verified via QuickGO ("the selective autophagy
+  process in which a damaged lysosome is degraded by macroautophagy").
+- Strengthened core_function GO:0140693 (molecular condensate scaffold activity) with the Liu 2025
+  verbatim quote showing LLPS-disrupting mutations abolish galectin-3 mitophagy — direct functional
+  evidence that the LLPS/condensate activity drives intracellular organelle quality control.
+- Strengthened the `proposed_new_terms` "damaged endomembrane glycan sensor activity" with the Jia 2020
+  verbatim "detects membrane damage by detecting exposed lumenal glycosyl groups" (previously only a weak
+  title-fragment quote from PMID:27693506).
+
+### Falcon claims NOT integrated (with reasons)
+- **Pyroptosis**: Falcon explicitly argues galectin-8 (not galectin-3) couples endomembrane damage to
+  noncanonical inflammasome/pyroptosis (shivcharan2025). The existing review already contains no LGALS3
+  pyroptosis annotation, so nothing to add or change — consistent with Falcon's caution.
+- **Direct synaptic remodeling / Lewy-body localization**: Falcon flags both as over-extensions (indirect
+  / pathology-specific). No such annotations exist in the review; not added (would be over-annotation).
+- **Integrin (αvβ1/αvβ5/αvβ6) and TGFβRII binding in fibrosis** (calver2024): real but context-specific
+  fibrosis mechanism. Not added as a new annotation — would be generic "protein binding"/context-specific
+  signaling that the review already deliberately down-weights; left for the notes only.
+- **Mitophagy as an existing_annotation**: kept the Liu 2025 paper as a reference and folded its LLPS
+  evidence into the condensate-scaffold core_function, but did NOT add a standalone mitophagy
+  existing_annotation — it is emerging/single-study and more context-specific than lysosomal lysophagy,
+  per Falcon's own "moderate / emerging" grading.
+- Falcon's cancer/heart-failure review citations (radziejewska2023, zaborska2023, tan2021, lozinski2024,
+  mukherjee2025, zhang2025) are secondary reviews restating known lectin/lattice biology already covered
+  by primary citations in the review; not added as top-level references.
 </content>
 </invoke>
