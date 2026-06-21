@@ -44,6 +44,16 @@ REVIEW_BACKED = {
     "GT65": "POFUT1 (Q9H488) review",
 }
 
+# Hand-review (cazy2go-truegap-review.md) found systematic artifacts to exclude from the SAFE set:
+#  * CBM* families are non-catalytic carbohydrate-binding modules -- any EC on a member belongs to its
+#    appended catalytic domain, not the CBM. Skip all CBM families.
+#  * A CAZyme family mapping to a PEPTIDASE MF (GO:0008233 descendants) is multidomain bleed-through
+#    (e.g. GT44 clostridial-toxin autoprotease domain), not the family's activity. Drop.
+#  * GO:0016837 (carbon-oxygen lyase acting on polysaccharides) is reached only via the partial
+#    EC 4.2.2.- and is too generic for a safe family-level row; treat as a generic parent.
+PEPTIDASE_ROOT = "GO:0008233"
+SAFE_EXTRA_GENERIC = {"GO:0016837"}
+
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
@@ -67,13 +77,19 @@ def main():
     rows = []
     stats = Counter()
     for fam in sorted(fam_ec, key=lambda f: (f[:2], int("".join(filter(str.isdigit, f)) or 0))):
+        if fam.startswith("CBM"):
+            stats["dropped_cbm_noncatalytic"] += 1
+            continue  # non-catalytic binding module (hand-review artifact class)
         cazy_go = cazy_go_for_family(fam_ec[fam], ec2go)
         if len(cazy_go) != 1:
             continue  # not mono-specific
         go_id, _ec2go_label = next(iter(cazy_go.items()))
-        if go_id in GENERIC_PARENTS:
+        if go_id in GENERIC_PARENTS or go_id in SAFE_EXTRA_GENERIC:
             stats["dropped_generic"] += 1
             continue  # term too generic to be a useful family mapping
+        if PEPTIDASE_ROOT in anc(go_id):
+            stats["dropped_peptidase_artifact"] += 1
+            continue  # CAZyme family -> peptidase MF = multidomain bleed-through (e.g. GT44)
         # closure classification vs interpro2go
         ipr_go = set()
         for ipr in fam_ipr[fam]:
