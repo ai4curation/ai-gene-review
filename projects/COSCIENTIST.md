@@ -92,6 +92,19 @@ questions; for topology/regulatory questions it behaves as an expert reasoner ov
 sequence features and curated databases. The verdicts are still high-value — CLCN7
 delivered a *second* systematic-mis-annotation catch (after MJ1511/MJ0742).
 
+**The prompt template can shift this — validated by an A/B test.** After tweaking
+`templates/gene_hypothesis_deep_research.md` to ask the agent to *execute*
+hypothesis-matched analyses (and save provenance), the CLCN7 topology question was
+re-run with **only the template changed**. The original run produced zero provenance;
+the re-run **computed a Kyte–Doolittle hydropathy profile from the UniProt sequence**,
+aligned the 10 TM helices to UniProt topology, and localized the lysosomal sorting
+motifs — saved as provenance — while reaching the identical over-annotation verdict
+and honestly labelling the computation "supportive provenance rather than novel
+evidence" (no fabricated web-only DeepTMHMM result). So for **topology / pure-sequence**
+questions the behaviour gap is largely promptable. ChIP/expression questions that
+depend on web-only resources (ChIP-Atlas, DeepTMHMM web server) remain limited by
+tool access, not prompting.
+
 **Evidence integrity.** Across all runs, cited PMIDs were real, on-target, and
 verbatim-quotable; no hallucinated citations were found. Every `supporting_text`
 wired into a review is checked as a verbatim substring of its source.
@@ -164,8 +177,11 @@ analysis would be the deciding evidence:
       targeting motifs; active-site/motif residue checks; binding-domain/PWM;
       domain/orthology) and saving the computed result as provenance, with a hard
       "never fabricate / inconclusive is fine / say so if web-only" clause.
-- [ ] Re-run a non-structural case (e.g. a fresh topology question) to test whether
-      the template tweak actually shifts behaviour toward executed provenance.
+- [x] Validated the template tweak with a CLCN7 A/B re-run: same question, only the
+      template changed; behaviour shifted from zero provenance to a computed
+      Kyte–Doolittle hydropathy + sorting-motif analysis, identical verdict, honest
+      labelling. Confirms topology behaviour is promptable; ChIP/expression remain
+      tool-access-limited.
 - [ ] Run the MED non-structural leads (WFS1, SORL1, CTBP1).
 - [ ] Write up the systematic-mis-annotation cases (MJ1511/MJ0742; CLCN7's ~1,198
       propagated annotations; pmp20 family) as examples of family-level error
