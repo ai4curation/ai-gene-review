@@ -99,9 +99,34 @@ a term `ec2go` lacks. But the join surfaced genuinely new, actionable signal:
   exactly which families are too heterogeneous to propagate from (the `narrowMatch` set) and should be
   prioritised for dbCAN-sub subfamily resolution.
 
-**Not yet computed** — the true marginal-knowledge test is `cazy2go` vs **`interpro2go`** (families
-reaching a GO MF no InterPro signature for that family already supplies). Both xrefs are on the
-UniProt records, so it is tractable; this is the key follow-up.
+**`cazy2go` vs `interpro2go` (computed)** — the marginal-knowledge test, via
+[`compare_cazy_interpro.py`](compare_cazy_interpro.py) (UniProt CAZy+EC+InterPro × `ec2go` ×
+`interpro2go`). **This is the opposite of the RHEA result**: where RHEA was ~84% masked by EC2GO,
+`cazy2go` is only **20% masked** by `interpro2go` —
+
+- **283** families have a `cazy2go` GO MF term; **56 (20%)** are fully masked by `interpro2go`, but
+  **227 (80%)** reach ≥1 GO MF term InterPro does **not** supply (**544** marginal (family,GO) pairs,
+  exact-match upper bound).
+- **Why the inverse of RHEA:** `interpro2go` is deliberately *conservative* — a signature maps to GO
+  only when the term holds for **all** matching proteins, so for heterogeneous enzyme families it
+  withholds the specific catalytic term (or gives only a generic parent). `cazy2go` (via EC) supplies
+  the **reaction-level specificity** InterPro withholds. The two routes are **complementary by
+  altitude**, not redundant.
+- **The safe, actionable win = 110 mono-specific (`exactMatch`) families** with a marginal term →
+  safe to propagate at family level. Headliners: **GT27** (polypeptide-GalNAc-T, mucin-type
+  O-glycosylation initiators, 46 members), **GT66** (OST glycotransferase, N-glycosylation), **GT39**
+  (dolichyl-P-mannose-protein mannosyltransferase), **GT13** (GnT-I), **GT21** (ceramide
+  glucosyltransferase), **GH109** (α-N-acetylgalactosaminidase). (A handful only reach a generic
+  `hexosyltransferase activity` and are weaker.)
+- **The other 117 marginal families are poly-specific** (`narrowMatch`) — real specificity gain but
+  **unsafe at family level**; route via subfamily/EC (dbCAN-sub).
+- **Caveat:** exact-match upper bound — many marginal specific terms are *descendants* of a generic
+  term InterPro already supplies, so a protein isn't unannotated; the gain is **altitude/specificity**.
+  Ontology-closure filtering (the RHEA method) would shrink the 544 headline.
+
+**Bottom line:** `cazy2go` is **not** mostly redundant with `interpro2go` — it adds reaction-level MF
+specificity for ~110 families safely (family-level) and ~117 more via subfamilies. That is a real,
+quantified contribution over the existing InterPro route.
 
 ## Status
 
