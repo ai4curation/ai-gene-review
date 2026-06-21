@@ -135,20 +135,10 @@ window.searchSchema = {
           "field": "term_id",
           "label": "GO ID",
           "type": "curie",
+          "linkTextField": "term_label",
           "role": "primary"
-        },
-        {
-          "field": "term_label",
-          "label": "GO Term",
-          "type": "string",
-          "role": "secondary"
         }
       ]
-    },
-    {
-      "field": "term_ontology",
-      "label": "Aspect",
-      "type": "string"
     },
     {
       "field": "evidence_type",
@@ -164,13 +154,8 @@ window.searchSchema = {
           "field": "original_reference_id",
           "label": "Orig Ref",
           "type": "curie",
+          "linkTextField": "original_reference_title",
           "role": "primary"
-        },
-        {
-          "field": "original_reference_title",
-          "label": "Orig Title",
-          "type": "string",
-          "role": "secondary"
         }
       ]
     },
