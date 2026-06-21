@@ -122,6 +122,53 @@ M. africanum TB protection [UniProt POLYMORPHISM; PMID:1675710, 1304173, 1599481
 - complex id: GO:1905370 serine-type endopeptidase complex (verified CC, is_a descendant of
   GO:0032991 protein-containing complex — appropriate for in_complex).
 
-## Falcon integration
+## Falcon integration (2026-06-21)
 
-(see dated subsection appended below after the Falcon report completed)
+FutureHouse Falcon deep-research report generated 2026-06-21 (genes/human/MBL2/MBL2-deep-research-falcon.md,
+template gene_research_go_focused_compat.md). Verified its claims against the primary literature.
+
+Findings USED (corroborated, concordant with primary literature):
+- Core MF = Ca2+-dependent carbohydrate binding; substrate specificity D-mannose / GlcNAc / L-fucose /
+  glucose, discriminating against D-galactose (consistent with C-type-lectin 3'/4'-OH coordination).
+- Domain architecture (N-terminal Cys-rich + collagen-like + neck/coiled-coil + CRD) and oligomerization
+  (multimers of homotrimers; higher-order assembly required for full activity); disease variants impair
+  oligomerization (Larsen 2004 J Biol Chem, real DOI). Reinforces my oligomer/macropattern proposed term.
+- Core BP = lectin-pathway complement activation, innate defense, opsonization; MBL-MASP1/2/3 complexes.
+- Explicitly flags cytoplasm / cytosol / nucleus / synapse / apoptosis-execution / pyroptosis / neuronal /
+  developmental roles as UNSUPPORTED, high-risk. (None of these are in the MBL2 GOA, so no action needed,
+  but this independently supports my REMOVE of multivesicular body and surfactant homeostasis as off-target.)
+- Apoptotic-cell clearance (Nauta 2004 J Immunol) noted as a context-specific role — consistent with UniProt
+  RN[18] PubMed:14515269; not present in the current GOA so not annotated, recorded here as context.
+
+Falcon citations checked: all 11 key references resolve to real, peer-reviewed published papers with valid
+DOIs (Takahashi 2006, Jack 2001, Dobó 2024, Yongqing 2012, Larsen 2004, Cedzyński 2023, Mu 2020, Zhou 2016,
+Andrade 2024, Bayarri-Olmos 2024, Nauta 2004). No preprint-only or unresolvable-PMID claims were found.
+
+Findings NOT used / treated with caution:
+- The report's own citation keys (e.g. "mu2020...", "nauta2004...") are not PMIDs and several of these papers
+  are not in our publications/ cache, so I did NOT add them as YAML supporting_text references (which require a
+  verbatim cached substring). The Falcon report itself is cited as a file: reference with a verbatim quote, and
+  flagged MEDIUM relevance / VERIFIED in reference_review.
+- Mu 2020 (calreticulin/opsonophagocytosis) is in an "early vertebrate" (teleost) model — cross-species; used
+  only as context, not to drive a human MBL2 annotation.
+- No new GO annotations were created solely on Falcon's say-so; every accepted/added term is grounded in the
+  primary literature and verified GO IDs.
+
+## Review outcome summary (2026-06-21)
+
+- Verdict distribution across 79 existing annotations: ACCEPT 33; KEEP_AS_NON_CORE 16; MARK_AS_OVER_ANNOTATED 26;
+  REMOVE 3; MODIFY 1.
+- Downgraded all 23 generic GO:0005515 "protein binding" IPI annotations (MARK_AS_OVER_ANNOTATED), plus the
+  D-mannose-binding TAS miscited to the LBP paper, the proteolysis IDA (MBL is not a protease), and the
+  signaling-receptor-binding IPI (an altered-self/CK1 ligand, not a signaling receptor), toward the informative
+  carbohydrate-binding MF / complex-membership representation.
+- 1 MODIFY: GO:0048306 calcium-dependent protein binding (PMID:35102342, SARS spike) ->
+  GO:0120153 calcium-dependent carbohydrate binding (the spike interaction is glycan-mediated via the CRD).
+- 3 REMOVE: GO:0005771 multivesicular body and GO:0043129 surfactant homeostasis (IBA over-propagation from
+  surfactant-protein paralogs), and GO:0006979 response to oxidative stress (misattributes the host endothelial
+  stress response to MBL, which merely recognizes the exposed CK1 ligand).
+- Core functions: (1) Ca2+-dependent carbohydrate binding (GO:0120153); (2) D-mannose binding (GO:0005537);
+  (3) pattern-recognition-receptor activity (GO:0038187) as part of the MBL-MASP serine-type endopeptidase
+  complex (GO:1905370) driving the lectin pathway (GO:0001867) and innate defense (GO:0045087, GO:0042742).
+- 1 proposed new term: "collectin oligomer carbohydrate-pattern recognition" (multivalent oligomer-dependent
+  macropattern discrimination).
