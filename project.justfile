@@ -1509,6 +1509,17 @@ spkw-analysis:
     @if [ ! -f exports/annotations.duckdb ]; then just export-annotations-duckdb; fi
     uv run python scripts/query_redundancy.py all
 
+# Report what is lost if an evidence code is subtracted (default: IBA), closure-aware.
+# Shows uniquely-lost endorsed annotations and orphaned core_functions terms.
+# Example: just subtraction-report-evidence ISS genes/human
+subtraction-report-evidence evidence="IBA" paths="genes":
+    uv run ai-gene-review subtraction-report {{paths}} -e {{evidence}}
+
+# Write the IBA subtraction report as two TSVs under reports/.
+subtraction-report-iba-tsv output="reports/iba-subtraction":
+    @mkdir -p reports
+    uv run ai-gene-review subtraction-report genes -e IBA -r GO_REF:0000033 --format tsv -o {{output}}
+
 # Generate statistics HTML report from annotation data
 stats output_file="docs/stats_report.html":
     @echo "📊 Generating statistics report..."
