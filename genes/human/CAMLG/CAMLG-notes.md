@@ -53,3 +53,34 @@ Well supported: ER membrane / ER (multiple EXP/IDA: PMID:23041287, PMID:31417168
 - NON-CORE (real but secondary/contextual): protein stabilization (GO:0050821, WRB/CAML context); B cell homeostasis (GO:0001782); defense response (GO:0006952); signal transduction (GO:0007165).
 - NON-CORE single-study (RNF122): negative regulation of protein ubiquitination (GO:0031397), negative regulation of proteasomal ubiquitin-dependent protein catabolic process (GO:0032435), ubiquitin protein ligase binding (GO:0031625).
 - OVER-ANNOTATED: bare protein binding (all IPI), generic membrane, cytoplasm.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/CAMLG/CAMLG-deep-research-falcon.md`,
+25 citations). It strongly corroborates the GET/TRC insertase-receptor core above and
+adds substrate-specificity and disease-mechanism detail; no change to the core call.
+
+- **Core confirmed.** CAMLG (with WRB) is the ER receptor for TRC40/GET3 that
+  inserts tail-anchored (type-IV, C-terminal single-TMD) proteins post-
+  translationally; substrate selectivity is for **relatively long, hydrophobic
+  C-terminal TMDs** (less-hydrophobic TA proteins default to the EMC pathway).
+  Supports the GET-complex (GO:0043529) and TA-insertion calls.
+- **Specific TA-protein clients (Wilson 2022; Tirincsi 2022; Jung 2023).** The
+  client spectrum is enriched for **trafficking SNAREs** — STX5, BET1L, SEC22B,
+  VAMP7, **VTI1A** (itself a PROTEOSTASIS gene in this batch), STX6, VAPA/VAPB —
+  plus Sec61β/γ and nuclear-membrane TA proteins (emerin/EMD, CUX1). Useful
+  has-input/affected-client context for the insertase function.
+- **CDG2Z mechanism made concrete.** CAMLG-CDG (congenital disorder of
+  glycosylation) arises because loss of TA insertion **mislocalizes Golgi SNAREs,
+  especially STX5 and BET1L** (membrane→cytosol), disrupting Golgi trafficking and
+  causing combined N-/O-glycosylation defects (Wilson 2022). This is the
+  mechanistic basis for the CDG2Z disease noted above — links the ER insertase MF
+  to the downstream glycosylation phenotype.
+- **Quality-control interplay.** CAMLG/TRC works with **SGTA and the BAG6
+  complex**, which route TA proteins between productive insertion and
+  ubiquitin-mediated degradation (Farkas 2021) — supports the proteostasis (PN)
+  framing and the protein-stabilization context.
+
+Net: no change to calls — CAMLG is the mammal-specific ER GET-pathway insertase
+receptor subunit (with WRB) for tail-anchored proteins; the new client/disease
+detail strengthens that core and its proteostasis relevance.
