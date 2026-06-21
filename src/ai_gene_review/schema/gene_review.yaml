@@ -928,6 +928,98 @@ classes:
       notes:
         range: string
 
+  GoCamReview:
+    description: >-
+      A reviewer's assessment of a cached production GO-CAM model
+      (gocams/<model_id>/<model_id>-src.yaml), recorded alongside it as
+      gocams/<model_id>/<model_id>-review.yaml. Captures a standalone reading of
+      the model, per-activity (annoton) QC against GO-CAM best practice, and the
+      consistency of each activity with the corresponding gene annotation review.
+      Validate standalone with `-C GoCamReview`.
+    tree_root: true
+    slots:
+      - title
+      - description
+      - references
+    attributes:
+      model:
+        range: string
+        required: true
+        identifier: true
+        description: >-
+          GO-CAM model id (gomodel:... or the bare local id) matching the cached
+          gocams/<model_id>/ folder.
+      taxon:
+        range: string
+        description: Primary taxon of the model, e.g. NCBITaxon:6239.
+      summary:
+        range: string
+        description: >-
+          Reviewer's standalone reading of what the model asserts (the causal
+          story), independent of the curation project.
+      status:
+        range: GoCamReviewStatusEnum
+      activity_reviews:
+        range: GoCamActivityReview
+        multivalued: true
+        inlined_as_list: true
+        description: Per-activity (annoton) reviews.
+      notes:
+        range: string
+
+  GoCamActivityReview:
+    description: >-
+      Review of a single GO-CAM activity (annoton): the cached gene
+      product / molecular function / process / location, a best-practice QC
+      verdict, and how the activity relates to the gene's annotation review.
+    attributes:
+      activity_id:
+        range: string
+        required: true
+        description: >-
+          Activity individual id within the model, e.g.
+          gomodel:568b0f9600000284/57ec3a7e00000079.
+      gene_product:
+        range: string
+        description: enabled_by gene product id as cached (e.g. UniProtKB:..., WB:...).
+      molecular_function:
+        range: string
+        description: Molecular function GO id of the activity as cached.
+      biological_process:
+        range: string
+        description: part_of biological process GO id as cached, if any.
+      cellular_component:
+        range: string
+        description: occurs_in cellular component GO id as cached, if any.
+      verdict:
+        range: GoCamClaimVerdictEnum
+        description: >-
+          Overall best-practice/evidence verdict for this activity (mirrors the
+          OK / UNCERTAIN / WRONG forensic-review scale).
+      qc_flags:
+        range: GoCamQcFlagEnum
+        multivalued: true
+        description: Specific GO-CAM best-practice issues observed for this activity.
+      consistency:
+        range: GoCamConsistencyEnum
+        description: >-
+          How this activity relates to the gene's annotation review
+          (genes/**/<gene>-ai-review.yaml).
+      gene_review:
+        range: string
+        description: >-
+          Reference to the gene review compared against, e.g.
+          file:human/TP53/TP53-ai-review.yaml.
+      supporting_text:
+        range: string
+        description: Verbatim supporting text from a cited reference, where applicable.
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
   ParticipantSelector:
     description: >-
       A selector for a concrete or abstract participant in a module annoton.
@@ -2877,3 +2969,88 @@ enums:
         description: A publication or source that does not fit the other categories.
       UNKNOWN:
         description: The publication type could not be determined (e.g. PubMed metadata unavailable).
+
+  GoCamReviewStatusEnum:
+    description: Progress state of a GO-CAM model review.
+    permissible_values:
+      DRAFT:
+        description: Review started; activities not yet fully assessed.
+      IN_PROGRESS:
+        description: Some activities reviewed; review ongoing.
+      COMPLETE:
+        description: All activities reviewed.
+
+  GoCamClaimVerdictEnum:
+    description: >-
+      Forensic-review verdict for a GO-CAM activity, mirroring the
+      OK / UNCERTAIN / WRONG scale used for claim validation: does the asserted
+      activity hold up against the cited evidence and GO-CAM best practice?
+    permissible_values:
+      OK:
+        description: >-
+          The activity is well supported and follows best practice (correct MF
+          specificity, correct causal/has-input usage, adequate evidence).
+      UNCERTAIN:
+        description: >-
+          Defensible but imprecise or under-supported; a minor best-practice or
+          evidence issue that needs qualification.
+      WRONG:
+        description: >-
+          The activity contradicts the evidence or violates a hard best-practice
+          rule (e.g. binding-as-function, wrong causal directionality).
+
+  GoCamConsistencyEnum:
+    description: >-
+      How a GO-CAM activity relates to the corresponding gene's annotation review
+      (genes/**/<gene>-ai-review.yaml).
+    permissible_values:
+      CONSISTENT:
+        description: The activity's function matches an accepted core function in the gene review.
+      MORE_SPECIFIC:
+        description: The activity asserts a more specific function than the gene review.
+      MORE_GENERAL:
+        description: The activity asserts a more general function than the gene review.
+      RELATED:
+        description: Same general area but neither a clean subsumption nor a match.
+      CONFLICT:
+        description: >-
+          The activity asserts a function the gene review removed, negated, or
+          marked as over-annotated.
+      NOT_IN_REVIEW:
+        description: The function is not represented in the gene review (candidate gap).
+      NO_GENE_REVIEW:
+        description: No gene review exists yet for this gene product.
+
+  GoCamQcFlagEnum:
+    description: >-
+      Specific GO-CAM best-practice issues observed for an activity. Derived from
+      the GO-CAM annotation best-practice checklist (see gocams/BEST_PRACTICE.md).
+    permissible_values:
+      BINDING_AS_FUNCTION:
+        description: >-
+          Molecular function is a bare 'binding' term with no functional
+          consequence specified (use catalytic/receptor/adaptor/sequestering MF).
+      GENERIC_MF:
+        description: An overly generic MF term is used where a specific child term applies.
+      HAS_INPUT_MISUSE:
+        description: >-
+          'has input' used incorrectly, e.g. a receptor's ligand or a TF's DNA
+          instead of the substrate/target gene/downstream effector.
+      DIRECT_VS_INDIRECT_CAUSAL:
+        description: >-
+          Direct regulation asserted for a multi-step (indirect) mechanism, or
+          vice versa.
+      INCORRECT_DIRECTIONALITY:
+        description: Causal edge directionality (subject -> object) appears reversed.
+      MISSING_LOCATION:
+        description: Activity lacks an 'occurs in' cellular component.
+      MISSING_PROCESS:
+        description: Activity is not connected to a biological process via 'part of'.
+      ORPHAN_ACTIVITY:
+        description: Activity has no causal connections to the rest of the model.
+      MISSING_EVIDENCE:
+        description: An activity or relationship lacks an evidence code / reference.
+      COMPLEX_SUBUNIT_REPRESENTATION:
+        description: >-
+          Complex represented with a complex term where a specific active subunit
+          is known (or vice versa).

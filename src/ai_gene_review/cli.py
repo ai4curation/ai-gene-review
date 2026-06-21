@@ -3505,6 +3505,34 @@ def cache_gocams(
 
 
 @app.command()
+def seed_gocam_review(
+    model_id: Annotated[
+        str,
+        typer.Argument(help="GO-CAM model id (must already be cached)"),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Overwrite an existing review stub"),
+    ] = False,
+):
+    """Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml.
+
+    One activity_reviews entry is created per cached annoton, pre-filled with the
+    gene product / MF / BP / CC and PENDING assessments to be completed by a
+    reviewer. Validate with:
+    `uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C GoCamReview <file>`
+    """
+    from ai_gene_review.etl.gocam import seed_gocam_review as _seed
+
+    out = _seed(model_id, cache_dir=cache_dir, force=force)
+    typer.echo(f"✓ Seeded GO-CAM review stub: {out}")
+
+
+@app.command()
 def gocam_index(
     cache_dir: Annotated[
         Path,

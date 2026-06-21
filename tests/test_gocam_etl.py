@@ -9,6 +9,7 @@ from ai_gene_review.etl.gocam import (
     INDEX_COLUMNS,
     GoCamActivityRow,
     build_gene_index,
+    build_review_stub,
     cache_gocam_model,
     iter_activity_rows,
     list_production_models,
@@ -16,6 +17,8 @@ from ai_gene_review.etl.gocam import (
     minerva_json_to_model,
     model_to_yaml,
     normalize_gocam_id,
+    review_path,
+    seed_gocam_review,
     src_path,
 )
 
@@ -125,6 +128,45 @@ def test_index_is_deterministic_and_lf(minerva_raw, tmp_path):
     # Rows are sorted by (model_id, activity_id, gene_product).
     keys = [(c[2], c[5], c[0]) for c in cells]
     assert keys == sorted(keys)
+
+
+def test_build_review_stub(minerva_raw):
+    model = minerva_json_to_model(minerva_raw)
+    stub = build_review_stub(model)
+    assert stub["model"] == "gomodel:568b0f9600000284"
+    assert stub["status"] == "DRAFT"
+    assert len(stub["activity_reviews"]) == len(model.activities)
+    a0 = stub["activity_reviews"][0]
+    assert set(a0) >= {
+        "activity_id",
+        "gene_product",
+        "molecular_function",
+        "verdict",
+        "consistency",
+    }
+    assert a0["verdict"] == "UNCERTAIN"
+    assert a0["consistency"] == "NO_GENE_REVIEW"
+
+
+def test_seed_gocam_review_writes_and_is_idempotent(minerva_raw, tmp_path):
+    model = minerva_json_to_model(minerva_raw)
+    src = src_path(model.id, cache_dir=tmp_path)
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text(model_to_yaml(model))
+
+    out = seed_gocam_review(model.id, cache_dir=tmp_path)
+    assert out == review_path(model.id, cache_dir=tmp_path)
+    assert out.exists()
+
+    # Idempotent: a second call without force does not overwrite.
+    mtime = out.stat().st_mtime
+    seed_gocam_review(model.id, cache_dir=tmp_path)
+    assert out.stat().st_mtime == mtime
+
+
+def test_seed_gocam_review_requires_cached_model(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        seed_gocam_review("gomodel:doesnotexist", cache_dir=tmp_path)
 
 
 def test_load_cached_model_absent(tmp_path):

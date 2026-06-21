@@ -10,9 +10,10 @@ the gene/`reactome`/`publications` caches.
 gocams/
   <model_id>/
     <model_id>-src.yaml      # canonical fetched model (DO NOT EDIT)
-    <model_id>-review.yaml   # (optional) reviewer assessment of the model
+    <model_id>-review.yaml   # (optional) reviewer assessment (GoCamReview)
     <model_id>-notes.md      # (optional) reviewer notes
   index.tsv                  # gene_product -> GO-CAM activity (annoton) index
+  BEST_PRACTICE.md           # rubric for reading/reviewing GO-CAM activities
   README.md
 ```
 
@@ -56,6 +57,21 @@ One row per activity (annoton) across all cached models, with columns:
 
 `gene_product` is the join key used to relate GO-CAM annotons back to gene
 reviews (`genes/**/*-ai-review.yaml`) and to module documents (`modules/`).
+
+## Reviewing a model
+
+Each model folder leaves room for a reviewer assessment validated against the
+`GoCamReview` schema class. Seed a stub (one entry per cached activity) and
+validate it:
+
+```bash
+just seed-gocam-review 568b0f9600000284
+just validate-gocam-review gocams/568b0f9600000284/568b0f9600000284-review.yaml
+```
+
+The stub pre-fills each activity's gene product / MF / BP / CC with `PENDING`
+assessments. See `BEST_PRACTICE.md` for the rubric (verdicts, QC flags, and
+consistency-with-gene-review categories) behind the schema's enums.
 
 ## Referencing GO-CAMs from modules
 

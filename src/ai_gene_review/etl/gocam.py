@@ -312,6 +312,78 @@ def iter_activity_rows(model: Model) -> Iterator[GoCamActivityRow]:
         )
 
 
+def review_path(model_id: str, cache_dir: Path = DEFAULT_CACHE_DIR) -> Path:
+    """Return the ``-review.yaml`` path for a model id."""
+    mid = normalize_gocam_id(model_id)
+    return model_dir(mid, cache_dir) / f"{mid}-review.yaml"
+
+
+def build_review_stub(model: Model) -> dict:
+    """Build a ``GoCamReview`` stub dict from a cached model.
+
+    One ``activity_reviews`` entry is seeded per activity (annoton), pre-filled
+    with the cached gene product / MF / BP / CC and ``PENDING`` assessments for a
+    reviewer to complete.
+    """
+    activity_reviews = []
+    for row in iter_activity_rows(model):
+        activity_reviews.append(
+            {
+                "activity_id": row.activity_id,
+                "gene_product": row.gene_product,
+                "molecular_function": row.molecular_function,
+                "biological_process": row.biological_process,
+                "cellular_component": row.cellular_component,
+                "verdict": "UNCERTAIN",
+                "consistency": "NO_GENE_REVIEW",
+                "notes": "PENDING review.",
+            }
+        )
+    return {
+        "model": model.id,
+        "title": getattr(model, "title", None),
+        "taxon": getattr(model, "taxon", None),
+        "status": "DRAFT",
+        "summary": "PENDING: reviewer's standalone reading of the model's causal story.",
+        "activity_reviews": activity_reviews,
+        "references": [],
+    }
+
+
+def seed_gocam_review(
+    model_id: str,
+    cache_dir: Path = DEFAULT_CACHE_DIR,
+    force: bool = False,
+) -> Path:
+    """Write a ``GoCamReview`` stub for a cached model, if not already present.
+
+    Args:
+        model_id: GO-CAM model id (must already be cached as ``-src.yaml``).
+        cache_dir: Top-level cache directory.
+        force: Overwrite an existing ``-review.yaml``.
+
+    Returns:
+        Path to the ``-review.yaml`` (written or pre-existing).
+
+    Raises:
+        FileNotFoundError: if the model has not been cached yet.
+    """
+    mid = normalize_gocam_id(model_id)
+    out = review_path(mid, cache_dir)
+    if out.exists() and not force:
+        return out
+    model = load_cached_model(mid, cache_dir)
+    if model is None:
+        raise FileNotFoundError(
+            f"GO-CAM {mid} is not cached; run `fetch-gocam {mid}` first."
+        )
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(
+        yaml.dump(build_review_stub(model), sort_keys=False, allow_unicode=True)
+    )
+    return out
+
+
 def build_gene_index(
     cache_dir: Path = DEFAULT_CACHE_DIR,
     output: Optional[Path] = None,

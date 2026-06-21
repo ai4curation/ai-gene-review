@@ -162,6 +162,16 @@ cache-gocams *args="":
 gocam-index *args="":
     uv run ai-gene-review gocam-index {{args}}
 
+# Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
+# Example: just seed-gocam-review 568b0f9600000284
+seed-gocam-review model_id *args="":
+    uv run ai-gene-review seed-gocam-review {{model_id}} {{args}}
+
+# Validate a GO-CAM review file against the schema
+# Example: just validate-gocam-review gocams/568b0f9600000284/568b0f9600000284-review.yaml
+validate-gocam-review file:
+    uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C GoCamReview {{file}}
+
 # Report review status of gene description files
 # Example: just descriptions-status yeast
 # Example: just descriptions-status yeast --all
