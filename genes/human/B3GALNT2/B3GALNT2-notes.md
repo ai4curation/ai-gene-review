@@ -34,3 +34,20 @@
 3. GO-gap (RHEA project): there is NO GO MF term specific to EC 2.4.1.313 ("protein O-mannose beta-1,3-N-acetylgalactosaminyltransferase" / the core-M3 GalNAc transfer). GO:0008376 is defined as transfer "to an oligosaccharide", which is broader than the protein-O-mannose-glycan acceptor B3GALNT2 actually uses in vivo. A new child term is warranted.
 4. "protein binding" GO:0005515 (IPI, TMBIM1) is uninformative per curation guidelines; MODIFY/over-annotation.
 5. Do NOT remove experimental annotations (IDA/IMP) on the basis of cached abstracts; all are consistent with the gene's verified function.
+
+## Falcon integration (2026-06-21)
+
+Integrated the FutureHouse Falcon deep-research report (`B3GALNT2-deep-research-falcon.md`) into the review. The report's conclusions broadly agree with the existing review (core M3 / matriglycan biology, ER-primary localization, avoidance of apoptosis/inflammation/pyroptosis/synaptic over-annotations). Changes made:
+
+- **Added 1 reference: PMID:30898876** (Nakane et al. 2019, J Biol Chem 294:7433-7444, "Identification of mammalian glycoproteins with type-I LacdiNAc structures synthesized by the glycosyltransferase B3GALNT2"). Resolved from DOI 10.1074/jbc.ra118.006892 in the Falcon report; PMID confirmed via PubMed eutils; full text fetched into cache. `reference_review`: relevance MEDIUM, correctness VERIFIED. This is the one genuinely new primary paper in the report.
+  - Adds: B3GALNT2-dependent type-I LacdiNAc (GalNAc-beta1,3-GlcNAc) on **N-glycans** of mainly intracellular/ER glycoproteins (LRP1, nicastrin) beyond the alpha-DG O-mannosyl glycan. [PMID:30898876 "Our results further revealed that LDN presence on low-density lipoprotein receptor-related protein 1 and nicastrin depends on B3GALNT2, indicating the occurrence of type-I LDN in vivo in mammalian cells."]
+  - Provides independent localization evidence reconciling ER (core) vs Golgi (non-core): [PMID:30898876 "B3GALNT2 mainly localizes in the ER and partly in the Golgi apparatus"]. Used this verbatim quote as `supported_by` on the IBA Golgi-membrane annotation to back the KEEP_AS_NON_CORE call.
+- **Enriched the IBA Golgi-membrane annotation summary** with the Nakane corroboration (no action change; KEEP_AS_NON_CORE retained, now better supported).
+- **Refined the top-level `description`** to note the N-glycan/intracellular type-I LacdiNAc activity (kept project-independent, flagged its significance as not yet established) and to state ER-mainly/Golgi-partly localization.
+- **Updated the third `suggested_question`** to reflect that the N-glycan substrate question is now partly addressed by PMID:30898876.
+
+Falcon claims NOT acted on (with reasons):
+- All other report citations are review/contextual papers (Praissman & Wells 2014, Sheikh 2017, Willer 2014, Endo 2015, Bouchet-Séraphin 2015, Bigotti & Brancaccio 2021, Sharaf-Eldin 2025, Togayachi 2026). They restate known core M3 / matriglycan pathway and disease biology already captured by the existing references and primary citations (PMID:23929950, PMID:23453667, PMID:14724282, Reactome). Adding them as citations would not strengthen any specific annotation; not added.
+- Falcon repeatedly frames B3GALNT2 localization as "ER, not primarily Golgi" and at one point implies the Golgi annotation should be downweighted further. The existing review already keeps Golgi as non-core; the Nakane primary data ("mainly ER, partly Golgi") actually justifies *retaining* the Golgi annotation rather than removing it, so no REMOVE was applied (consistent with not overruling on partial evidence).
+- Falcon's muscle/brain/ECM "biological process" discussion describes downstream disease consequences (cobblestone lissencephaly, sarcolemmal integrity, laminin binding). These are organism-level phenotypes of the glycosylation defect, not direct B3GALNT2 GO process functions; no new BP annotations proposed (the review already centers on GO:0035269 O-mannosylation). Consistent with Falcon's own annotation-risk assessment.
+- No PMID was added for any claim that could not be resolved/fetched; the only resolvable new primary paper was Nakane 2019.
