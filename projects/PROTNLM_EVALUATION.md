@@ -1,140 +1,120 @@
 ---
 title: ProtNLM2 Evaluation
-species: []
-sidecars: {}
+maturity: COMPLETE
+tags: [EVALUATION, ML_PREDICTIONS]
+species: [9PRIM, ABRPR, AEDAE, AQUCT, ARAHY, ARATH, ARTAN, ASPOR, BALMU, BORPE, BOVIN, CAEEL, CALMI, CANLF, CHRVO, COLLI, COTJA, CUCME, DANRE, DEIRA, DROPS, DROVI, GADMO, GIBF5, JUGRE, MACFA, MAIZE, MYTGA, ORYSI, ORYSJ, PANPA, PARTE, PHATC, RABIT, SOYBN, STRCO, TAKRU, TOBAC, TRIV3, WHEAT, XANCP, XENNA, XENTR]
+genes: [A0A061AL94, A0A1S3BTE3, A0A1S3Y076, A0A2G9RZF1, A0A2I0M3K7, A0A2I4G8T1, A0A2K5UJ34, A0A2R9CAF4, A0A2U1PS28, A0A3B6GK97, A0A3B6NKR6, A0A3B6RKV1, A0A444Z7V7, A0A4W3GVU1, A0A674PKV4, A0A6I8TLE4, A0A6I8W8A2, A0A804UIX9, A0A8B6BFL6, A0A8B6GS20, A0A8B8L1Z3, A0A8B8WEG2, A0A8C2TBA7, A0A8C5FPT8, A0A8C9H4D2, A0A8I3PI07, A0A8J0SCI2, A0A8J1IYX6, A0A8M9QG43, A0BFB4, A2FPI7, B4MAQ2, B7FXQ8, B8BAB0, C6T1A2, D3VIU4, E1BL04, F4JLB7, F6LAX4, F6WPT1, G1TUN6, Q2U1U6, Q6YYC5, Q7NUH2, Q7VZI5, Q8P365, Q9KZ33, Q9L243, Q9RSY6, S0EDH7]
 ---
 # ProtNLM2 Evaluation
 
-Systematic evaluation of Google's ProtNLM2 protein name and function predictions against expert-curated AIGR gene reviews and existing UniProt/GO annotations.
+Evaluation of Google's ProtNLM2 GO term predictions against expert-curated AIGR gene reviews and existing GOA annotations, using the ARGO-ProtNLM-50 benchmark (50 proteins, 14 taxonomic groups, 75 GO predictions).
 
-**References:**
-- [UniProt ProtNLM help page](https://www.uniprot.org/help/ProtNLM)
-- [ProtNLM2 accession list (FTP)](https://ftp.ebi.ac.uk/pub/contrib/UniProt/ProtNLM2/List_of_UniProt_accessions_that_have_ProtNLM2_annotations.tsv)
+## Key findings
 
-## What is ProtNLM2?
+1. **ProtNLM2 is strongest for uncharacterized proteins**: 12/23 (52%) of NOT_IN_GOA predictions were correct and novel — identifying genuine functions like DNA binding for a KilA-N domain protein (A2FPI7), ECM organization for OLFML2A (A0A8C9H4D2), and nuclear localization for MCM-4 (A0A061AL94).
 
-ProtNLM2 is a transformer-based sequence-to-sequence model (T5 architecture) developed by Google DeepMind in collaboration with UniProt. It is trained on 240 million proteins from UniProt release 2023_04 (Swiss-Prot + TrEMBL) and takes amino acid sequence, organism TaxID, and AlphaFold secondary structure as inputs. The original ProtNLM predicted only protein names; ProtNLM2 expands to GO terms, subcellular locations, keywords, and function comments.
+2. **"Exact" matches are mostly less precise, not novel**: 13/19 (68%) are parent terms of more specific existing annotations (e.g., predicting "cytoplasm" when "clathrin-coated vesicle" is already annotated). ProtNLM2 captures broad functional categories but lacks resolution.
 
-Predictions are post-processed by the **Evidencer** — a corroboration pipeline that checks each prediction against string matches, phmmer sequence similarity (bit score > 25), and TM-align structural similarity. Predictions failing GO taxon constraints or lacking corroboration are excluded. See the [UniProt help page](https://www.uniprot.org/help/ProtNLM) for full details.
+3. **Frequency bias is the dominant error mode** (13/22 error annotations): the model over-predicts common GO terms (membrane, transferase activity, phosphorylation) without biological specificity, especially problematic for proteins with unusual functions.
 
-## Data source
+4. **Cross-kingdom errors persist despite taxon filtering**: animal-specific terms (neuronal cell body, protein antigen binding) predicted for plant proteins, indicating the Evidencer's taxon constraint checking has gaps.
 
-### REST API (recommended, reproducible)
+5. **Paralog discrimination is a weakness**: the model conflates catalytically active and inactive family members (MTMR9 pseudophosphatase, RIC7 lacking kinase domain) — a Type 6 error that sequence similarity methods inherently struggle with.
 
-Predictions are fetched from the UniProt REST API endpoint `https://rest.uniprot.org/uniprotkb/protnlm/{accession}`. The canonical accession list (26,856 entries) is published at the [FTP site](https://ftp.ebi.ac.uk/pub/contrib/UniProt/ProtNLM2/List_of_UniProt_accessions_that_have_ProtNLM2_annotations.tsv).
+6. **Expert review substantially revises mechanical assessment**: the automated category mapping (EXACT→CNN, NO_OVERLAP→UNC) was heavily corrected once protein biology was considered (EXACT→LSP, MORE_SPECIFIC→NPI, etc.).
 
-```bash
-python projects/PROTNLM_EVALUATION/fetch_protnlm_api.py          # fetch all + convert to TSVs
-python projects/PROTNLM_EVALUATION/fetch_protnlm_api.py --resume  # resume interrupted fetch
-python projects/PROTNLM_EVALUATION/fetch_protnlm_api.py --convert-only  # re-convert existing JSONL
-```
+## Aggregate results (75 predictions, 39 proteins)
 
-The API returns JSON with evidence inline per prediction. The fetch script saves raw JSONL (`protnlm_api.jsonl`) for reproducibility and converts to the same 3 TSV files used by the analysis notebooks.
+Assessment categories follow [de Crécy-Lagard et al. 2025 (PMID:40703034)](https://pubmed.ncbi.nlm.nih.gov/40703034/).
 
-### Pre-release XML (historical)
+| Category | Code | CS | Count | % |
+|----------|------|----|-------|---|
+| Correct novel | COR | 2 | 17 | 23% |
+| Correct not novel | CNN | 2 | 11 | 15% |
+| Less precise | LSP | 2 | 18 | 24% |
+| Uncertain | UNC | 1 | 13 | 17% |
+| Nonparalog incorrect | NPI | 0 | 14 | 19% |
+| Paralog incorrect | PLI | 0 | 2 | 3% |
+| **Total** | | | **75** | **Mean CS: 1.40/2.0 (70%)** |
 
-The original analysis used a pre-release XML export (`post-processed-2026_02_28k.xml`, 28,553 entries) parsed by `parse_protnlm_xml.py`. This included 1,697 entries subsequently removed during quality filtering (64.5% Swiss-Prot entries excluded from the TrEMBL-only public pilot, plus QC-filtered TrEMBL entries). The API serves the same predictions in a cleaner format.
-
-## Prediction types
-
-| Type | Count | Description |
-|------|-------|-------------|
-| Protein name | 28,553 | Every entry gets a predicted name (22,467 recommended, 6,086 submitted) |
-| GO terms | 6,833 entries | GO annotations derived from model predictions |
-| Subcellular location | 13,690 entries | Predicted localization |
-| Function comment | 5,438 entries | Free-text functional description |
-| Name only | 8,690 entries | Only protein name predicted, no GO/location/function |
-
-## Evidencer corroboration provenance
-
-Each prediction has a model score (0–1, threshold 0.05) and post-hoc corroboration from the Evidencer showing what supported each prediction:
-
-- **domain** (9,950): Domain architecture match
-- **GO** (8,727): Direct GO term prediction
-- **PANTHER** (4,190): PANTHER family/subfamily match
-- **keyword** (4,111): UniProt keyword match
-- **InterPro** (1,022): InterPro family match
-- **recommended_protein_name** (543): Name transferred from characterized homolog
-- Plus many smaller categories (Pfam, SUPFAM, Gene3D, CDD, etc.)
-
-## ARGO-ProtNLM-50 Benchmark
-
-A curated set of 50 proteins for systematic evaluation, stratified across:
-- 14 taxonomic groups (mammals, plants, bacteria, fish, insects, fungi, etc.)
-- 4 prediction categories (rich, partial, go_only, name_only)
-- Multiple evidence methods (string match, phmmer, tmalign)
-- 5 case studies from the exploratory analysis (trivially correct, phmmer transfer, false positive, cross-kingdom error, ontology gap)
-
-All 50 are in the public pilot release. See `argo_protnlm_50.csv`.
-
-## Files
-
-| File | Description |
-|------|-------------|
-| `PROTNLM_EVALUATION/fetch_protnlm_api.py` | Fetches from REST API -> JSONL + TSV files |
-| `PROTNLM_EVALUATION/parse_protnlm_xml.py` | Legacy parser: XML -> TSV files |
-| `PROTNLM_EVALUATION/fetch_taxonomy.py` | Fetches species from UniProt REST API |
-| `PROTNLM_EVALUATION/argo_protnlm_50.csv` | Benchmark set of 50 proteins for evaluation |
-| `PROTNLM_EVALUATION/entries.tsv` | One row per entry (accession, name, prediction counts) |
-| `PROTNLM_EVALUATION/predictions.tsv` | One row per GO/function/location prediction |
-| `PROTNLM_EVALUATION/evidence.tsv` | One row per evidence block (scores, provenance) |
-| `PROTNLM_EVALUATION/taxonomy.tsv` | Accession -> species mapping from UniProt |
-| `PROTNLM_EVALUATION/protnlm_summary.ipynb` | Exploratory analysis notebook |
-| `PROTNLM_EVALUATION/protnlm_bench50_eval.ipynb` | ARGO-ProtNLM-50 benchmark evaluation notebook |
-
-## Overlap with AIGR reviews
-
-Only 8 of 1,334 reviewed genes appear in this 28K dataset (all TrEMBL/unreviewed proteins): C5AXM3, O94267, Q09490, Q21303, Q86WA8, Q9BZE2, Q9UNW9, Q9XUS3.
-
-## ARGO-ProtNLM-50 Evaluation Results
-
-All 50 benchmark proteins received full AIGR annotation reviews (`*-ai-review.yaml`), falcon deep research, and the 39 proteins with GO predictions received biologically informed prediction assessments (`*-protnlm-predictions-review.yaml`). Assessment categories follow [de Crécy-Lagard et al. 2025 (PMID:40703034)](https://pubmed.ncbi.nlm.nih.gov/40703034/).
-
-### Aggregate results (75 predictions across 39 proteins)
-
-| Category | Code | CS | Count | % | Description |
-|----------|------|----|-------|---|-------------|
-| Correct novel | COR | 2 | 17 | 23% | Biologically accurate, adds new information beyond GOA |
-| Correct not novel | CNN | 2 | 11 | 15% | Correct but already captured in existing annotations |
-| Less precise | LSP | 2 | 18 | 24% | Correct at higher level but more specific term exists in GOA |
-| Uncertain | UNC | 1 | 13 | 17% | Cannot validate or refute from available evidence |
-| Nonparalog incorrect | NPI | 0 | 14 | 19% | Refuted by biological evidence |
-| Paralog incorrect | PLI | 0 | 2 | 3% | Wrong paralog subfamily assignment |
-| **Total** | | | **75** | | **Mean CS: 1.40/2.0; Aggregate: 105/150 (70%)** |
-
-**Concordant** (CS=2): 46/75 (61%) — predictions supported by evidence
-**Uncertain** (CS=1): 13/75 (17%) — insufficient evidence to judge
-**Discordant** (CS=0): 16/75 (21%) — predictions refuted by evidence
+**Concordant** (CS=2): 46/75 (61%) | **Uncertain** (CS=1): 13/75 (17%) | **Discordant** (CS=0): 16/75 (21%)
 
 ### Results by GOA overlap category
 
 | Match category | n | Dominant assessments |
 |----------------|---|---------------------|
-| EXACT | 19 | LSP:13, CNN:6 — predictions match existing GOA but are typically parent terms |
+| EXACT | 19 | LSP:13, CNN:6 — typically parent terms of existing annotations |
 | MORE_SPECIFIC | 6 | CNN:3, NPI:2, UNC:1 — some correctly refine GOA, others overreach |
 | LESS_SPECIFIC | 1 | LSP:1 |
-| NO_OVERLAP | 26 | NPI:9, UNC:6, COR:5, PLI:2 — mixed; novel predictions often wrong |
+| NO_OVERLAP | 26 | NPI:9, UNC:6, COR:5, PLI:2 — novel predictions often wrong |
 | NOT_IN_GOA | 23 | COR:12, UNC:6, NPI:3 — best category for genuinely novel discoveries |
 
 ### Error analysis (16 incorrect predictions)
 
-| Error type | Count | Description |
-|------------|-------|-------------|
-| FREQUENCY_BIAS | 13 | Model defaults to high-frequency training labels (e.g., generic "membrane", "transferase activity") |
-| PARALOG_OVERANNOTATION | 4 | Wrong subfamily — e.g., predicting phosphatase activity for catalytically dead MTMR9, kinase activity for kinase-domain-lacking RIC7 |
-| PATHWAY_CONTEXT_IGNORED | 3 | Cross-kingdom errors — e.g., neuronal/immune terms for plant proteins |
-| TRAINING_DATA_CONTAMINATION | 2 | Predictions that simply reproduce existing IEA annotations |
+| Error type | Count | Examples |
+|------------|-------|---------|
+| FREQUENCY_BIAS | 13 | Generic "membrane", "transferase activity" for proteins with unusual functions |
+| PARALOG_OVERANNOTATION | 4 | Phosphatase activity for catalytically dead MTMR9; kinase activity for RIC7 (no kinase domain) |
+| PATHWAY_CONTEXT_IGNORED | 3 | Neuronal/immune terms for plant proteins |
+| TRAINING_DATA_CONTAMINATION | 2 | Predictions that reproduce existing IEA annotations |
 
-### Key findings
+## Illustrative case studies
 
-1. **ProtNLM2 is strongest for uncharacterized proteins (NOT_IN_GOA)**: 12/23 (52%) of these predictions were correct and novel, identifying genuine functions like DNA binding for a KilA-N domain protein (A2FPI7), ECM organization for OLFML2A (A0A8C9H4D2), and nuclear localization for MCM-4 (A0A061AL94).
+These 5 proteins (included in ARGO-50) were identified during exploratory analysis and represent the main error patterns. Each has a full AIGR review (`*-ai-review.yaml`) and prediction assessment (`*-protnlm-predictions-review.yaml`).
 
-2. **EXACT matches are predominantly less precise, not novel**: 13/19 (68%) of "exact" matches are actually parent terms of more specific existing annotations (e.g., predicting "cytoplasm" when "clathrin-coated vesicle" is already annotated). This suggests ProtNLM2 captures broad functional categories but lacks resolution.
+### Trivially correct: A0A3B6GK97 (wheat patatin)
 
-3. **Frequency bias is the dominant error mode** (13/22 error annotations): The model over-predicts common GO terms (membrane, transferase activity, phosphorylation) without biological specificity. This is especially problematic for proteins with unusual functions (e.g., HERC3 truncation lacking HECT domain, auxilin's repurposed PTEN-like domain).
+ProtNLM2 predicts `lipid catabolic process` > GOA's `lipid metabolic process`. The protein already has IBA annotations for glycerophospholipase + monoacylglycerol lipase activity. In wheat GOA, 94% of proteins with glycerophospholipase activity already have lipid catabolic process annotated. ProtNLM2 is doing bookkeeping, not discovering biology.
 
-4. **Cross-kingdom errors persist despite taxon constraint filtering**: 3 predictions applied animal-specific terms (neuronal cell body, protein antigen binding) to plant proteins, indicating the Evidencer's taxon constraint checking has gaps.
+### Phmmer transfer: A0A3B6RKV1 (wheat JmjC)
 
-5. **Paralog discrimination is a weakness**: The model conflates catalytically active and inactive family members (MTMR9 pseudophosphatase, RIC7 lacking kinase domain), a Type 6 error pattern that sequence similarity methods inherently struggle with.
+ProtNLM2 predicts 5 specific plant biology terms (gibberellin signaling, photomorphogenesis, seed germination, epigenetic regulation, red light response). All 5 trace to one phmmer hit: Q67XX3 = *Arabidopsis* JMJ22 (score 689.2). This is ISS/ISO-style annotation transfer — the "added value" over IBA is that ProtNLM2 transfers BP annotations that PAINT's more conservative approach chose not to propagate.
 
-6. **Assessment quality depends on biological synthesis**: The mechanical category mapping (EXACT→CNN, NO_OVERLAP→UNC) used in preliminary analysis was substantially revised by expert review. For example, many "EXACT" matches were reclassified from CNN to LSP, and several "MORE_SPECIFIC" predictions from CNN to NPI, after considering protein biology.
+### False positive: F4JLB7 (Arabidopsis RIC7)
+
+ProtNLM2 predicts `kinase activity` + `phosphorylation` (score 0.23). The phmmer hit is mouse LRRK2 (score 33, barely above noise) — a 2,527 aa multidomain protein with LRR + ROC + COR + kinase domains. RIC7 only has LRR repeats and is a ROP GTPase effector, not a kinase. Classic multidomain annotation leakage.
+
+### Cross-kingdom error: F6LAX4 (wheat PP2A scaffold)
+
+ProtNLM2 predicts `neuron projection`, `neuronal cell body`, and `protein antigen binding` for a wheat protein. Plants have no neurons and no adaptive immune system. The predictions leak from mammalian PP2A orthologs that are annotated to neuronal compartments. All 6 predictions scored CS=0 (NPI).
+
+### Ontology gap: Q9KZ33 (S. coelicolor sigma factor)
+
+IBA: `sigma factor activity`. ProtNLM2: `transcription initiation`. These are biologically coupled but classified as NO_OVERLAP because there is no is_a/part_of path between "regulation of transcription initiation" (MF ancestry) and "DNA-templated transcription" (BP ancestry). This is a real limitation of closure-based evaluation, not a ProtNLM2 error.
+
+## What is ProtNLM2?
+
+ProtNLM2 is a T5-based seq2seq model developed by Google DeepMind with UniProt, trained on 240M proteins (UniProt 2023_04). It predicts protein names, GO terms, subcellular locations, and function comments from amino acid sequence, organism TaxID, and AlphaFold secondary structure.
+
+Predictions are post-processed by the **Evidencer** — a corroboration pipeline that checks each prediction against string matches, phmmer sequence similarity (bit score > 25), and TM-align structural similarity. Predictions failing GO taxon constraints or lacking corroboration are excluded. See the [UniProt help page](https://www.uniprot.org/help/ProtNLM) for details.
+
+## ARGO-ProtNLM-50 benchmark design
+
+50 proteins curated for systematic evaluation, stratified across:
+- 14 taxonomic groups (mammals, plants, bacteria, fish, insects, fungi, etc.)
+- 4 prediction categories (rich, partial, go_only, name_only)
+- Multiple evidence methods (string match, phmmer, tmalign)
+- 5 case studies from exploratory analysis (see above)
+
+All 50 received full AIGR annotation reviews with falcon deep research. The 39 with GO predictions received biologically informed prediction assessments. The 11 name-only proteins have reviews but no prediction-review YAMLs. See [`argo_protnlm_50.csv`](PROTNLM_EVALUATION/argo_protnlm_50.csv).
+
+## Overlap with existing AIGR reviews
+
+Only 8 of 1,334 previously reviewed genes appear in the ProtNLM2 dataset (all TrEMBL/unreviewed): C5AXM3, O94267, Q09490, Q21303, Q86WA8, Q9BZE2, Q9UNW9, Q9XUS3.
+
+## References
+
+- [UniProt ProtNLM help page](https://www.uniprot.org/help/ProtNLM)
+- [ProtNLM2 accession list (FTP)](https://ftp.ebi.ac.uk/pub/contrib/UniProt/ProtNLM2/List_of_UniProt_accessions_that_have_ProtNLM2_annotations.tsv)
+- [de Crécy-Lagard et al. 2025 (PMID:40703034)](https://pubmed.ncbi.nlm.nih.gov/40703034/) — assessment categories
+
+## Files and methods
+
+| File | Description |
+|------|-------------|
+| [`argo_protnlm_50.csv`](PROTNLM_EVALUATION/argo_protnlm_50.csv) | Benchmark set of 50 proteins |
+| [`protnlm_summary.ipynb`](PROTNLM_EVALUATION/protnlm_summary.ipynb) | Exploratory analysis (full 28K dataset) |
+| [`protnlm_bench50_eval.ipynb`](PROTNLM_EVALUATION/protnlm_bench50_eval.ipynb) | ARGO-ProtNLM-50 benchmark evaluation |
+| [`fetch_protnlm_api.py`](PROTNLM_EVALUATION/fetch_protnlm_api.py) | REST API fetch pipeline |
+| [`protnlm_evaluation_slides.md`](PROTNLM_EVALUATION/protnlm_evaluation_slides.md) | Slide deck (Marp) |
+| [Data history](PROTNLM_EVALUATION/data_history.md) | XML vs API data source history |

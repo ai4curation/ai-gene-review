@@ -1,0 +1,164 @@
+# Citations for Research Query
+
+**Query:** # AIGR Gene Hypothesis Deep Research
+
+You are evaluating one focused gene curation hypothesis for AI Gene Review.
+This is not a general gene overview. Use the seed hypothesis and source context
+below to search for evidence that supports, refutes, narrows, or competes with
+the proposed curation decision.
+
+## Target Gene
+
+- **Organism code:** MAIZE
+- **Taxon:** Zea mays (NCBITaxon:4577)
+- **Gene directory:** A0A804UIX9
+- **Gene symbol:** A0A804UIX9
+- **UniProt accession:** A0A804UIX9
+
+## Focus
+
+- **Focus type:** core_function
+- **Hypothesis slug:** core-function-1-go-0003674
+- **Source file:** genes/MAIZE/A0A804UIX9/A0A804UIX9-ai-review.yaml
+- **Source selector:** core_functions[1]
+
+## Seed Hypothesis
+
+molecular_function (GO:0003674) is a core function of A0A804UIX9. Current rationale: The molecular function of A0A804UIX9 is unknown. The protein contains two PGG domains (PF13962) of uncharacterized function and is predicted to be a multi-pass integral membrane protein with six transmembrane helices. No experimental data exist for this protein or close homologs that would allow confident functional assignment. PANTHER classifies it in the CASKIN family (PTHR24177, subfamily SF432), but the biological significance of this classification for a plant protein is unclear.
+
+## Term and Decision Context
+
+- Molecular function: molecular_function (GO:0003674)
+- Description: The molecular function of A0A804UIX9 is unknown. The protein contains two PGG domains (PF13962) of uncharacterized function and is predicted to be a multi-pass integral membrane protein with six transmembrane helices. No experimental data exist for this protein or close homologs that would allow confident functional assignment. PANTHER classifies it in the CASKIN family (PTHR24177, subfamily SF432), but the biological significance of this classification for a plant protein is unclear.
+
+- Locations: membrane (GO:0016020)
+
+## Reference Context
+
+- file:MAIZE/A0A804UIX9/A0A804UIX9-deep-research-falcon.md
+
+## Source Context YAML
+
+```yaml
+description: |
+  The molecular function of A0A804UIX9 is unknown. The protein contains two PGG domains (PF13962) of uncharacterized function and is predicted to be a multi-pass integral membrane protein with six transmembrane helices. No experimental data exist for this protein or close homologs that would allow confident functional assignment. PANTHER classifies it in the CASKIN family (PTHR24177, subfamily SF432), but the biological significance of this classification for a plant protein is unclear.
+molecular_function:
+  id: GO:0003674
+  label: molecular_function
+locations:
+- id: GO:0016020
+  label: membrane
+supported_by:
+- reference_id: file:MAIZE/A0A804UIX9/A0A804UIX9-deep-research-falcon.md
+  supporting_text: |
+    [UniProt record indicates Membrane, Transmembrane, Transmembrane helix keywords predicted by Phobius, with six transmembrane helices at residues 54-73, 102-123, 135-154, 166-189, 222-239, and 269-290]
+```
+
+## Research Objective
+
+Build a focused report that helps a curator decide whether this hypothesis
+should affect the gene review. Address the focus type directly:
+
+1. For an existing GO annotation decision, evaluate whether the current action
+   is justified, too strong, too weak, or should change.
+2. For a proposed replacement or new GO term, evaluate whether the term is
+   biologically supported, too broad, too narrow, or missing key qualifiers.
+3. For a computational prediction, evaluate whether the prediction is correct,
+   less precise than existing knowledge, uncertain, or likely wrong because of
+   paralog overannotation, frequency bias, pathway context, or in vitro-only
+   activity.
+4. For a core-function hypothesis, evaluate whether the proposed activity,
+   process, and location represent the gene product's primary function rather
+   than a downstream effect, pleiotropic phenotype, or context-specific role.
+5. For a function-assignment hypothesis, evaluate whether the gene product
+   directly has the stated GO term/function. Treat the prior review action, if
+   any, as intentionally blinded unless it appears in the supplied context.
+
+Use primary literature whenever possible. Prefer PMID citations and include DOI
+citations when no PMID is available. Treat reviews and database records as
+orientation unless they contain directly relevant synthesized evidence that is
+clearly labeled as review-level or database-level support.
+
+Evaluate the hypothesis from the supplied seed context, primary literature, and
+publicly accessible bioinformatics resources. Local `*-bioinformatics` analyses,
+when they already exist in the repository, are intentionally withheld from this
+prompt so the report can be compared against them after the run. Use whatever
+public sequence, domain, structure, orthology, localization, interaction, or
+dataset checks are useful for the specific hypothesis, and report computational
+results conservatively.
+
+## Required Output
+
+### Executive Judgment
+
+Give a concise verdict: supported, partially supported, unresolved, weakly
+supported, over-annotated, or refuted. Explain the reasoning and the most
+important caveats.
+
+### Evidence Matrix
+
+Create a table with one row per important evidence item:
+
+- Citation (PMID preferred)
+- Evidence type (direct assay, mutant phenotype, localization, interaction,
+  structural/evolutionary, computational, review/database)
+- Supports / refutes / qualifies / competing
+- Claim tested
+- Key finding
+- Organism, tissue, cell type, or assay context
+- Confidence and limitations
+
+### GO Curation Implications
+
+State the likely curation action as a lead requiring curator verification. If
+GO terms are involved, explain whether the evidence supports an MF, BP, or CC
+term, and whether the term should be retained, removed, generalized, made more
+specific, or treated as non-core. Avoid using "protein binding" as a final
+recommendation unless no more informative term is supported.
+
+### Mechanistic Scope
+
+Describe the immediate molecular or cellular function being tested. Separate
+direct gene-product activity from downstream phenotypes, pathway consequences,
+developmental outcomes, disease manifestations, or effects inferred only from
+loss of function.
+
+### Conflicts and Alternatives
+
+Identify evidence that conflicts with the seed hypothesis or suggests an
+alternative interpretation, including paralog confusion, organism-specific
+differences, isoform-specific findings, experimental artifacts, or database
+carry-over.
+
+### Knowledge Gaps
+
+List explicit uncertainties that matter for curation. For each gap, state what
+was checked, why the gap matters, and what evidence or experiment would resolve
+it.
+
+### Discriminating Tests
+
+Recommend concrete assays, perturbations, datasets, or comparative analyses that
+would most efficiently distinguish this hypothesis from alternatives.
+
+### Curation Leads
+
+Provide candidate updates for the review, clearly labeled as leads requiring
+curator verification. Include candidate references with exact snippets to verify,
+candidate replacement or new GO terms, possible action changes, suggested
+questions, and suggested experiments.
+
+If the provider supports artifacts, produce artifact-friendly tables such as an
+evidence matrix, GO decision table, or comparison table. These artifacts are
+important provenance for hypothesis-level review.
+
+**Provider:** openscientist
+**Generated:** 2026-06-22T03:22:06.632711
+
+1. PMID:37995686
+2. PMID:41223222
+3. PMID:31727973
+4. PMID:14507999
+5. PMID:18643991
+6. PMID:20520716
+7. PMID:40658737

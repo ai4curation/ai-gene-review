@@ -920,10 +920,16 @@ def template_vars(record: GeneHypothesisRecord, *, genes_root: Path) -> dict[str
         record.source_context,
         genes_root=genes_root,
     )
+    uniprot_accession = record.gene
+    if record.source_file and record.source_file.exists():
+        source_data = load_yaml(record.source_file)
+        uniprot_accession = str(source_data.get("id") or record.gene)
+
     return {
         "organism": record.organism,
         "gene": record.gene,
         "gene_symbol": record.gene_symbol,
+        "uniprot_accession": uniprot_accession,
         "taxon_id": record.taxon_id,
         "taxon_label": record.taxon_label,
         "focus_type": record.focus_type,

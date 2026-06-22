@@ -11,6 +11,7 @@ the proposed curation decision.
 - **Taxon:** {taxon_label} ({taxon_id})
 - **Gene directory:** {gene}
 - **Gene symbol:** {gene_symbol}
+- **UniProt accession:** {uniprot_accession}
 
 ## Focus
 
