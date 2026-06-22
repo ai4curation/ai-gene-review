@@ -9,6 +9,10 @@ tags: [PIPELINE, FLAGSHIP]
 **Project Start Date:** 2026-04-09
 **Focus:** Identification, annotation, and curation of catalytically inactive enzyme homologs
 
+## Slides
+
+- [Slides](PSEUDOENZYMES/slides/PSEUDOENZYMES-slides.html) (Marp source: [PSEUDOENZYMES-slides.md](PSEUDOENZYMES/slides/PSEUDOENZYMES-slides.md)) — AI generated
+
 ## Project Overview
 
 Pseudoenzymes are proteins that retain the structural fold and (often) the

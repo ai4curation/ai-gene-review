@@ -12,6 +12,10 @@ genes: [CALCA, K9IFT7, K9IFY6, K9IIP0, K9IJK6, K9IMD0, K9IUF6, K9IWC0, K9IWH5, K
 
 Project to curate vampire bat (Desmodus rotundus; UniProt code DESRO) salivary gland proteins that modulate host hemostasis and immunity, based on the Vampirome transcriptome/proteome study. This project cross-links with PARASITE_IMMUNE_MODULATORS for broader parasite immune modulators work.
 
+## Slides
+
+- [Slides](VAMPIROME/slides/VAMPIROME-slides.html) (Marp source: [VAMPIROME-slides.md](VAMPIROME/slides/VAMPIROME-slides.md)) — AI generated
+
 ## Sources and project files
 
 - Table 4 extract: `projects/VAMPIROME/table4_extract.md`
