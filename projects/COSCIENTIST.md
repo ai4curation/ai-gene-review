@@ -152,10 +152,14 @@ analysis would be the deciding evidence:
 
 ## Operational lessons
 
-- **Give jobs ample time.** Real 3-iteration runs take ~50–90 min; structural runs
-  routinely exceed the upstream 3600 s default and get cancelled mid-analysis. The
-  `just` recipes now inject `--param timeout=7200` (the API ceiling, `le=7200`) and
-  the subprocess wall (`--timeout-seconds`, default 8100 s) is kept above it.
+- **Give jobs ample time, then scope.** Real 3-iteration runs take ~50–90 min;
+  structural runs routinely exceed the upstream 3600 s default and get cancelled
+  mid-analysis. The `just` recipes now inject `--param timeout=7200` (the API ceiling,
+  `le=7200`) and keep the subprocess wall (`--timeout-seconds`, default 8100 s) above
+  it. When a job still hits the 7200 s cap — common for human proteins asked a
+  multi-faceted question — the fix is **scope, not time**: re-run with one decisive
+  analysis and/or `max_iterations=2` (C18orf21: 7200 s timeout → 2708 s when narrowed
+  to Foldseek-only).
 - **A job can exit 0 yet write nothing.** Always confirm `openscientist.md` (and the
   `openscientist_artifacts/` dir) exist. Two empty-output failure modes: timeout
   (`… timed out after Ns … cancelled` → raise the timeout) and a transient
@@ -185,6 +189,13 @@ analysis would be the deciding evidence:
       Kyte–Doolittle hydropathy + sorting-motif analysis, identical verdict, honest
       labelling. Confirms topology behaviour is promptable; ChIP/expression remain
       tool-access-limited.
+- [x] Executable-bioinformatics + Proteostasis-Network batch run and wired in
+      (Rv0311 intein REMOVE; NPLOC4 pseudo-DUB; HSPA12A/HSPA12B pseudo-chaperones,
+      no GO:0140662; AARSD1 AlaX editing confirmed; RvY_17310 left UNDECIDED after
+      verifying the paralog claims; C18orf21 → RMP24/RNase MRP recorded as a
+      verification-gated lead). DNAJC28 pending its re-run.
+- [ ] Formalize C18orf21 → RNase MRP (GO:0000172) once the 2025–26 primary papers
+      are fetched/cached and verified.
 - [ ] Run the MED non-structural leads (WFS1, SORL1, CTBP1).
 - [ ] Write up the systematic-mis-annotation cases (MJ1511/MJ0742; CLCN7's ~1,198
       propagated annotations; pmp20 family) as examples of family-level error
