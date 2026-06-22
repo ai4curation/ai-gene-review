@@ -1126,6 +1126,10 @@ render-organism organism:
 render-all:
     uv run python -m ai_gene_review.render --all genes/
 
+# Render prediction evaluation table from *-predictions-review.yaml files
+render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':
+    uv run python -m ai_gene_review.render_prediction_eval '{{pattern}}' -o '{{output}}' --title '{{title}}'
+
 # Render project markdown files to HTML with auto-linked gene symbols
 render-projects:
     uv run ai-gene-review render-projects --all
