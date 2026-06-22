@@ -54,3 +54,36 @@ Started: 2025-11-10
 - **DCN**: Collagen fibrillogenesis, TGF-β regulation
 - **SPARC**: Parent family member, Ca²⁺ binding, collagen binding, anti-adhesive
 
+## Relationship to the Matrisome project (evaluation: low yield)
+
+We evaluated whether the [Matrisome project](https://sites.google.com/uic.edu/matrisome) /
+[MatrisomeDB](https://matrisomedb.org) (Naba/Hynes) is a useful source of GO annotations for ECM gene
+review. **Conclusion: it adds little**, recorded here so we don't re-investigate it.
+
+- **It is a membership lookup list, not a GO source.** The matrisome assigns each gene to one of six
+  families (core: Collagens, ECM Glycoproteins, Proteoglycans; associated: ECM-affiliated Proteins,
+  ECM Regulators, Secreted Factors). MatrisomeDB reprocesses public ECM proteomics; it does **not**
+  deposit GO annotations. The `GO:0031012` HDA annotations in GOA are made independently by GO
+  curators (GO_Central, BHF-UCL) citing the underlying proteomics papers.
+- **No molecular function, and it collapses to one generic CC term.** The families are
+  localization/membership labels — "Secreted Factor" is at most `GO:0005576 extracellular region` (a
+  cellular component, not a function). As an annotation generator the whole resource yields at most
+  `GO:0031012 extracellular matrix` (a location), shared by all three core families.
+- **GOA already has it.** Cross-checking the matrisome masterlist against our reviewed genes: of 24
+  mappable core-matrisome genes, **19 already carry GO:0031012**, 1 was subsumed by a more specific
+  term, and only **4** lacked it (GAS6, IGFBP3, NTN3, mouse Gas6) — and those are the borderline "is
+  this really ECM-localized?" cases, not confident additions.
+- **The one modest nugget**: the **core vs matrisome-associated** split is a useful *soft prior on the
+  core/non-core decision* for ECM-localization annotations we already review — not a generator of new
+  ones. E.g. SERPINH1/HSP47 carries `GO:0031012` HDA annotations but the matrisome classes it as
+  *associated / ECM Regulator*, consistent with our `KEEP_AS_NON_CORE` call (peripheral
+  co-purification, not true ECM residence).
+- **Side finding**: `GO:0062023` "collagen-containing extracellular matrix" is **obsolete**
+  (`replaced_by GO:0031012`; go-ontology#29475, *"not clearly defined and usage has been
+  inconsistent"*), so the earlier GO push to reannotate metazoan ECM annotations to GO:0062023 has
+  been reversed — `GO:0031012` is the current term.
+
+(The throwaway family→GO mapping and gap-finder script used for this check are not retained; see git
+history if needed.)
+
+
