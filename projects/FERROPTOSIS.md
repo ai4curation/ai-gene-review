@@ -132,7 +132,7 @@ The ferroptosis mechanism is captured as a recursively decomposable module
 
 ## Slides
 
-- [Slides](FERROPTOSIS/slides/FERROPTOSIS-slides.html) (Marp source: [FERROPTOSIS-slides.md](FERROPTOSIS/slides/FERROPTOSIS-slides.md)) — AI generated
+- [Slides](FERROPTOSIS/slides/FERROPTOSIS-slides.html) (Marp source: [FERROPTOSIS-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/FERROPTOSIS/slides/FERROPTOSIS-slides.md)) — AI generated
 
 ## Key References
 
