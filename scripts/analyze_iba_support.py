@@ -235,7 +235,8 @@ def main():
         w.writerows(rows)
 
     # ---- summary ---- #
-    pct = lambda n, d: f"{100*n/d:.1f}%" if d else "n/a"
+    def pct(n, d):
+        return f"{100*n/d:.1f}%" if d else "n/a"
     print("\n" + "=" * 60)
     print("IBA INDEPENDENT-SUPPORT SUMMARY")
     print("=" * 60)

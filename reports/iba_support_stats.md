@@ -60,7 +60,13 @@ missing from almost the entire publications cache:
 
 So the "0 reviews" above is an artifact of missing metadata, not a real finding.
 **Prerequisite:** backfill `pubmed_publication_types` into the publications
-cache (from PubMed/EFetch) before the review-vs-primary split is meaningful.
+cache before the review-vs-primary split is meaningful. No new code is needed —
+`src/ai_gene_review/etl/publication.py` already fetches `pubmed_publication_types`
+and derives `publication_type`, and `just refresh-publications-force-all`
+re-fetches the whole cache. The catch is operational: it is a bulk re-fetch of
+~21k PubMed records (rate-limited, ~hours, needs NCBI network access), not an
+instant step. Once backfilled, re-running `scripts/analyze_iba_support.py` will
+populate the review tier.
 
 ## Takeaways for the next step (asta deep research)
 
@@ -71,6 +77,25 @@ cache (from PubMed/EFetch) before the review-vs-primary split is meaningful.
   cheaply; reserve full-text fetches for the ~11% that need them.
 - Expect false positives from `asta`; the per-annotation TSV gives an agent the
   exact gene/term/existing-refs context needed to sift results.
+
+### Running the asta support-finding pass
+
+A support-finding target now exists, modeled on the openscientist
+hypothesis-confirmation workflow. For one gene it researches each IBA annotation
+that lacks independent support and writes a per-annotation report an agent can
+sift:
+
+```bash
+just gene-iba-support-list human CFAP300                 # candidate IBAs (unsupported by default)
+just gene-iba-support-research asta human CFAP300 --dry-run   # preview the commands
+just gene-iba-support-research asta human CFAP300             # run; outputs under
+#   genes/human/CFAP300/CFAP300-hypotheses/iba-support-<term>/asta.md
+```
+
+Use `--include-supported` to also re-confirm already-supported IBAs,
+`--annotation-term-id GO:nnnnnnn` to target a single annotation, and
+`--overwrite` to replace existing outputs. The bare `asta` provider is also
+available for whole-gene deep research via `just deep-research-asta`.
 
 ## Reproduce
 

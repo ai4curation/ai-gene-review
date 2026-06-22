@@ -233,6 +233,14 @@ deep-research-cyberian organism gene_id *args="":
 deep-research-openscientist organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openscientist {{args}}
 
+# Deep research using Asta (fast provider; works like the other providers)
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-asta human TP53
+#   just deep-research-asta METEA C5B1I4 --alias mllA
+deep-research-asta organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} asta {{args}}
+
 # Deep research using Codex via agentapi (yolo mode)
 # Uses cyberian provider with agent_type=codex for autonomous research
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -327,6 +335,38 @@ gene-hypothesis-research-combined-core provider organism gene *args="":
         fi
     fi
     uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} "$provider" "${args[@]}"
+
+# List IBA annotations that are candidates for support-finding research
+# By default only IBAs lacking independent PMID/DOI support are listed.
+# Examples:
+#   just gene-iba-support-list human CFAP300
+#   just gene-iba-support-list human CFAP300 --missing-provider asta
+#   just gene-iba-support-list human CFAP300 --include-supported
+gene-iba-support-list organism gene *args="":
+    uv run python scripts/gene_hypothesis_deep_research.py list-iba {{organism}} {{gene}} {{args}}
+
+# Find independent literature support for a gene's IBA annotations via deep research
+# Mirrors gene-hypothesis-research; intended for the fast `asta` provider, which
+# is tuned for recall (expect false positives that an agent then sifts).
+# By default only IBAs lacking independent support are researched; existing
+# provider outputs are skipped unless --overwrite is supplied.
+# Examples:
+#   just gene-iba-support-research asta human CFAP300 --dry-run
+#   just gene-iba-support-research asta human CFAP300 --annotation-term-id GO:0005737
+#   just gene-iba-support-research asta human CFAP300 --include-supported
+gene-iba-support-research provider organism gene *args="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    provider="{{provider}}"
+    args=( {{args}} )
+    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
+        if [[ " ${args[*]} " == *" -- "* ]]; then
+            args+=(--param max_iterations=3)
+        else
+            args+=(-- --param max_iterations=3)
+        fi
+    fi
+    uv run python scripts/gene_hypothesis_deep_research.py run-iba-support {{organism}} {{gene}} "$provider" "${args[@]}"
 
 # ============== ASSAY_TO_FUNCTION readout-mining pipeline ==============
 

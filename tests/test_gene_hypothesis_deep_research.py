@@ -114,6 +114,129 @@ def make_gene_workspace(tmp_path: Path) -> Path:
     return genes_root
 
 
+def make_iba_workspace(tmp_path: Path) -> Path:
+    """Gene workspace with a mix of supported and unsupported IBA annotations."""
+    genes_root = tmp_path / "genes"
+    gene_dir = genes_root / "human" / "IBAT"
+    gene_dir.mkdir(parents=True)
+    write_yaml(
+        gene_dir / "IBAT-ai-review.yaml",
+        {
+            "id": "Q99999",
+            "gene_symbol": "IBAT",
+            "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+            "existing_annotations": [
+                {
+                    # IBA with NO independent support -> a candidate
+                    "term": {"id": "GO:0005737", "label": "cytoplasm"},
+                    "evidence_type": "IBA",
+                    "original_reference_id": "GO_REF:0000033",
+                    "review": {"action": "ACCEPT", "summary": "Plausible location."},
+                },
+                {
+                    # IBA WITH independent PMID support -> skipped by default
+                    "term": {"id": "GO:0005515", "label": "protein binding"},
+                    "evidence_type": "IBA",
+                    "original_reference_id": "GO_REF:0000033",
+                    "review": {
+                        "action": "KEEP_AS_NON_CORE",
+                        "summary": "Has an interaction paper.",
+                        "supported_by": [
+                            {
+                                "reference_id": "PMID:111",
+                                "supporting_text": "Interacts with partner X.",
+                            }
+                        ],
+                    },
+                },
+                {
+                    # Non-IBA annotation -> never a candidate
+                    "term": {"id": "GO:0003674", "label": "molecular_function"},
+                    "evidence_type": "IEA",
+                    "original_reference_id": "GO_REF:0000002",
+                    "review": {"action": "ACCEPT"},
+                },
+            ],
+        },
+    )
+    return genes_root
+
+
+def test_annotation_independent_literature_refs_excludes_original() -> None:
+    supported = {
+        "original_reference_id": "GO_REF:0000033",
+        "review": {
+            "supported_by": [{"reference_id": "PMID:111"}],
+            "additional_reference_ids": ["GO_REF:0000033", "file:x.md"],
+        },
+    }
+    unsupported = {
+        "original_reference_id": "GO_REF:0000033",
+        "review": {"supported_by": [{"reference_id": "file:local.md"}]},
+    }
+    assert ghr.annotation_independent_literature_refs(supported) == ["PMID:111"]
+    assert ghr.annotation_independent_literature_refs(unsupported) == []
+
+
+def test_iba_support_records_default_only_unsupported(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    records = ghr.iba_support_records(genes_root, "human", "IBAT")
+    slugs = {record.slug for record in records}
+    assert slugs == {"iba-support-go-0005737"}
+    record = records[0]
+    assert record.focus_type == "iba_support"
+    assert record.source_selector == "existing_annotations[1]"
+    assert "phylogenetic inference" in record.hypothesis_text
+
+
+def test_iba_support_records_include_supported(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    records = ghr.iba_support_records(
+        genes_root, "human", "IBAT", only_unsupported=False
+    )
+    slugs = {record.slug for record in records}
+    assert slugs == {"iba-support-go-0005737", "iba-support-go-0005515"}
+
+
+def test_iba_support_build_command_uses_iba_slug_and_template(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    record = ghr.iba_support_records(genes_root, "human", "IBAT")[0]
+    command = ghr.build_command(
+        record,
+        provider="asta",
+        genes_root=genes_root,
+        template=ghr.DEFAULT_IBA_TEMPLATE,
+        extra_args=[],
+    )
+    output_path = (
+        genes_root
+        / "human"
+        / "IBAT"
+        / "IBAT-hypotheses"
+        / "iba-support-go-0005737"
+        / "asta.md"
+    )
+    assert ["--provider", "asta"] == command[-6:-4]
+    assert ["--output", str(output_path)] == command[-4:-2]
+
+
+def test_run_iba_support_dry_run(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    exit_code = ghr.main(
+        [
+            "run-iba-support",
+            "human",
+            "IBAT",
+            "asta",
+            "--genes-root",
+            str(genes_root),
+            "--dry-run",
+        ]
+    )
+    assert exit_code == 0
+    assert not (genes_root / "human" / "IBAT" / "IBAT-hypotheses").exists()
+
+
 def test_slugify_normalizes_identifiers() -> None:
     assert ghr.slugify("GO:0005515") == "go-0005515"
     assert ghr.slugify("  Core function: DNA binding! ") == "core-function-dna-binding"

@@ -18,6 +18,7 @@ import yaml
 
 DEFAULT_GENES_ROOT = Path("genes")
 DEFAULT_TEMPLATE = Path("templates/gene_hypothesis_deep_research.md")
+DEFAULT_IBA_TEMPLATE = Path("templates/iba_support_deep_research.md")
 LOCAL_EVIDENCE_MAX_CHARS_PER_FILE = 12000
 LOCAL_EVIDENCE_MAX_CHARS_TOTAL = 24000
 FOCUS_TYPES = {
@@ -26,6 +27,7 @@ FOCUS_TYPES = {
     "proposed_go_term",
     "computational_prediction",
     "core_function",
+    "iba_support",
     "free_text",
 }
 FOCUS_TYPE_CHOICES = sorted(
@@ -715,6 +717,100 @@ def records_from_predictions(
                 source_file=predictions_path,
                 source_selector=f"predictions[{index}]",
                 source_context=prediction,
+            )
+        )
+    return uniquify_records(records)
+
+
+def annotation_independent_literature_refs(annotation: Mapping[str, Any]) -> list[str]:
+    """Return PMID/DOI refs that *independently* support an annotation.
+
+    "Independent" means a literature citation other than the annotation's own
+    ``original_reference_id`` (for an IBA that is the PANTHER ``GO_REF``). These
+    are the refs counted as independent support in
+    ``scripts/analyze_iba_support.py``.
+    """
+    original = str(annotation.get("original_reference_id") or "").strip()
+    refs: list[str] = []
+
+    def consider(ref: Any) -> None:
+        value = str(ref or "").strip()
+        if not (value.startswith("PMID:") or value.startswith("DOI:")):
+            return
+        if value == original or value in refs:
+            return
+        refs.append(value)
+
+    for support in annotation.get("supported_by") or []:
+        if isinstance(support, Mapping):
+            consider(support.get("reference_id"))
+    review = as_mapping(annotation.get("review"))
+    for support in review.get("supported_by") or []:
+        if isinstance(support, Mapping):
+            consider(support.get("reference_id"))
+    for ref in review.get("additional_reference_ids") or []:
+        consider(ref)
+    return refs
+
+
+def iba_support_hypothesis(gene_symbol: str, annotation: Mapping[str, Any]) -> str:
+    """Seed hypothesis for finding independent support for an IBA annotation."""
+    term = as_mapping(annotation.get("term"))
+    return (
+        f"The {gene_symbol} GO annotation to {term_label(term)} is currently supported "
+        f"only by phylogenetic inference (IBA; PANTHER GO_REF:0000033). Find independent "
+        f"literature evidence that directly supports or refutes this annotation for "
+        f"{gene_symbol} — ideally primary experimental evidence in {gene_symbol} "
+        f"itself, or clearly justified evidence in a well-supported ortholog. For each "
+        f"candidate, give the exact verbatim snippet that can be checked against the "
+        f"source so a curator can confirm it (the search is expected to surface false "
+        f"positives that must be filtered)."
+    )
+
+
+def iba_support_records(
+    genes_root: Path,
+    organism: str,
+    gene: str,
+    *,
+    only_unsupported: bool = True,
+) -> list[GeneHypothesisRecord]:
+    """Build one support-finding record per IBA annotation in a gene review.
+
+    With ``only_unsupported`` (the default), IBAs that already carry independent
+    PMID/DOI support are skipped, focusing the run on the annotations that still
+    need confirmation.
+    """
+    gene_dir = gene_dir_for(genes_root, organism, gene)
+    review_path = review_file_for(gene_dir, gene)
+    if not review_path.exists():
+        return []
+    data = load_yaml(review_path)
+    gene_symbol, taxon_id, taxon_label = gene_metadata(data, gene)
+    records: list[GeneHypothesisRecord] = []
+    for index, annotation in enumerate(data.get("existing_annotations") or [], start=1):
+        if not isinstance(annotation, Mapping):
+            continue
+        if str(annotation.get("evidence_type") or "").upper() != "IBA":
+            continue
+        if only_unsupported and annotation_independent_literature_refs(annotation):
+            continue
+        term = as_mapping(annotation.get("term"))
+        records.append(
+            make_record(
+                organism=organism,
+                gene=gene,
+                gene_symbol=gene_symbol,
+                taxon_id=taxon_id,
+                taxon_label=taxon_label,
+                focus_type="iba_support",
+                slug=f"iba-support-{term_slug(term)}",
+                hypothesis_text=iba_support_hypothesis(gene_symbol, annotation),
+                term_context=format_annotation_context(annotation),
+                reference_ids=collect_reference_ids(annotation),
+                source_file=review_path,
+                source_selector=f"existing_annotations[{index}]",
+                source_context=annotation,
             )
         )
     return uniquify_records(records)
@@ -1470,6 +1566,44 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Output slug for the combined core-function query.",
     )
 
+    list_iba_parser = subparsers.add_parser(
+        "list-iba",
+        help="List IBA annotations that are candidates for support-finding research.",
+    )
+    add_gene_args(list_iba_parser)
+    list_iba_parser.add_argument("--provider")
+    list_iba_parser.add_argument("--missing-provider")
+    list_iba_parser.add_argument(
+        "--include-supported",
+        action="store_true",
+        help="Also list IBAs that already have independent PMID/DOI support.",
+    )
+
+    iba_parser = subparsers.add_parser(
+        "run-iba-support",
+        help="Run deep research to find independent literature support for IBA annotations.",
+    )
+    add_gene_args(iba_parser)
+    iba_parser.add_argument("provider", help="Deep research provider")
+    iba_parser.add_argument("--template", type=Path, default=DEFAULT_IBA_TEMPLATE)
+    iba_parser.add_argument("--dry-run", action="store_true")
+    iba_parser.add_argument("--overwrite", action="store_true")
+    iba_parser.add_argument("--timeout-seconds", type=int, default=5400)
+    iba_parser.add_argument(
+        "--include-supported",
+        action="store_true",
+        help="Also research IBAs that already have independent PMID/DOI support.",
+    )
+    iba_parser.add_argument(
+        "--annotation-term-id",
+        help="Restrict to a single IBA annotation by GO term id (e.g. GO:0005737).",
+    )
+    iba_parser.add_argument(
+        "--stop-on-error",
+        action="store_true",
+        help="Stop after the first failed IBA-support run.",
+    )
+
     args = parser.parse_args(argv)
     args.research_args = research_args
     return args
@@ -1540,6 +1674,56 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             print_run_result(result)
             return 1 if result.status.startswith(("ERROR_", "TIMEOUT", "MISSING_")) else 0
+
+        if args.command == "list-iba":
+            records = iba_support_records(
+                args.genes_root,
+                args.organism,
+                args.gene,
+                only_unsupported=not args.include_supported,
+            )
+            list_records(
+                records,
+                genes_root=args.genes_root,
+                provider=args.provider,
+                missing_provider=args.missing_provider,
+            )
+            return 0
+
+        if args.command == "run-iba-support":
+            records = iba_support_records(
+                args.genes_root,
+                args.organism,
+                args.gene,
+                only_unsupported=not args.include_supported,
+            )
+            if args.annotation_term_id:
+                wanted = args.annotation_term_id.casefold()
+                records = [
+                    record
+                    for record in records
+                    if isinstance(record.source_context.get("term"), Mapping)
+                    and str(record.source_context["term"].get("id") or "").casefold()
+                    == wanted
+                ]
+            if not records:
+                raise ValueError(
+                    "No matching IBA annotations found "
+                    "(use --include-supported to include already-supported IBAs)."
+                )
+            results = run_batch(
+                records,
+                provider=args.provider,
+                genes_root=args.genes_root,
+                template=args.template,
+                extra_args=args.research_args,
+                timeout_seconds=args.timeout_seconds,
+                dry_run=args.dry_run,
+                overwrite=args.overwrite,
+                stop_on_error=args.stop_on_error,
+            )
+            print_batch_summary(results)
+            return 1 if has_failed_result(results) else 0
     except (FileNotFoundError, ValueError) as err:
         print(f"error: {err}", file=sys.stderr)
         return 2
