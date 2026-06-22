@@ -65,10 +65,30 @@ clearly labeled as review-level or database-level support.
 Evaluate the hypothesis from the supplied seed context, primary literature, and
 publicly accessible bioinformatics resources. Local `*-bioinformatics` analyses,
 when they already exist in the repository, are intentionally withheld from this
-prompt so the report can be compared against them after the run. Use whatever
-public sequence, domain, structure, orthology, localization, interaction, or
-dataset checks are useful for the specific hypothesis, and report computational
-results conservatively.
+prompt so the report can be compared against them after the run.
+
+Do not rely on literature alone. Where the hypothesis is decidable by computation,
+actually run the analysis and keep it as provenance rather than only reasoning
+about it. Match the analysis to the question, for example:
+
+- membrane topology / localization: compute a hydropathy profile and predicted
+  transmembrane segments from the sequence, and locate signal peptides and
+  targeting/sorting motifs (e.g. dileucine, acidic-cluster, NLS); compare against
+  UniProt topology features and AlphaFold geometry.
+- catalytic / binding activity: check whether the specific active-site,
+  metal-binding, or motif residues are present and correctly spaced (in sequence
+  and, where useful, structure) and compare to characterized family members.
+- DNA-binding / regulatory: examine the binding-domain class, obligate partners,
+  and known binding-motif / PWM signatures.
+- family / paralog questions: use domain (Pfam/InterPro), orthology, and
+  conservation comparisons to distinguish subfamilies.
+
+Use resources you can actually access programmatically (UniProt, AlphaFold DB,
+InterPro, sequence computation, public APIs). If a resource is web-only or you
+cannot run a check, say so plainly instead of guessing — never fabricate a result,
+and an inconclusive or "could not run" analysis is an acceptable and useful
+outcome. Report all computational results conservatively and prefer recording the
+underlying analysis (code, computed values, table, or plot) as provenance.
 
 ## Required Output
 
@@ -131,6 +151,10 @@ curator verification. Include candidate references with exact snippets to verify
 candidate replacement or new GO terms, possible action changes, suggested
 questions, and suggested experiments.
 
-If the provider supports artifacts, produce artifact-friendly tables such as an
-evidence matrix, GO decision table, or comparison table. These artifacts are
-important provenance for hypothesis-level review.
+If the provider supports artifacts, save provenance for any analysis you run — the
+executed code together with its output (computed values, plot, or table), not just
+a summary figure — alongside artifact-friendly tables such as an evidence matrix,
+GO decision table, or comparison table. Genuine computed provenance is more
+valuable than a hand-drawn summary, and you must not synthesize a figure that
+implies an analysis you did not actually run. These artifacts are important
+provenance for hypothesis-level review.

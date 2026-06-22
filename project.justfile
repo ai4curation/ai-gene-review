@@ -282,11 +282,21 @@ gene-hypothesis-research provider organism gene *args="":
     set -euo pipefail
     provider="{{provider}}"
     args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
-            args+=(--param max_iterations=3)
-        else
-            args+=(-- --param max_iterations=3)
+    # OpenScientist defaults: >=3 iterations for a real run, and a generous job
+    # timeout. Fold-discovery / structural runs routinely exceed the upstream
+    # 3600s default (they cancel mid-analysis), so default to 7200s -- the
+    # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
+    # Keep --timeout-seconds (subprocess wall) above this; the script default does.
+    if [[ "$provider" == "openscientist" ]]; then
+        extra=()
+        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ ${#extra[@]} -gt 0 ]]; then
+            if [[ " ${args[*]} " == *" -- "* ]]; then
+                args+=("${extra[@]}")
+            else
+                args+=(-- "${extra[@]}")
+            fi
         fi
     fi
     uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} "$provider" "${args[@]}"
@@ -301,11 +311,21 @@ gene-hypothesis-research-all-core provider organism gene *args="":
     set -euo pipefail
     provider="{{provider}}"
     args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
-            args+=(--param max_iterations=3)
-        else
-            args+=(-- --param max_iterations=3)
+    # OpenScientist defaults: >=3 iterations for a real run, and a generous job
+    # timeout. Fold-discovery / structural runs routinely exceed the upstream
+    # 3600s default (they cancel mid-analysis), so default to 7200s -- the
+    # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
+    # Keep --timeout-seconds (subprocess wall) above this; the script default does.
+    if [[ "$provider" == "openscientist" ]]; then
+        extra=()
+        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ ${#extra[@]} -gt 0 ]]; then
+            if [[ " ${args[*]} " == *" -- "* ]]; then
+                args+=("${extra[@]}")
+            else
+                args+=(-- "${extra[@]}")
+            fi
         fi
     fi
     uv run python scripts/gene_hypothesis_deep_research.py run-all-core {{organism}} {{gene}} "$provider" "${args[@]}"
@@ -319,11 +339,21 @@ gene-hypothesis-research-combined-core provider organism gene *args="":
     set -euo pipefail
     provider="{{provider}}"
     args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
-            args+=(--param max_iterations=3)
-        else
-            args+=(-- --param max_iterations=3)
+    # OpenScientist defaults: >=3 iterations for a real run, and a generous job
+    # timeout. Fold-discovery / structural runs routinely exceed the upstream
+    # 3600s default (they cancel mid-analysis), so default to 7200s -- the
+    # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
+    # Keep --timeout-seconds (subprocess wall) above this; the script default does.
+    if [[ "$provider" == "openscientist" ]]; then
+        extra=()
+        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ ${#extra[@]} -gt 0 ]]; then
+            if [[ " ${args[*]} " == *" -- "* ]]; then
+                args+=("${extra[@]}")
+            else
+                args+=(-- "${extra[@]}")
+            fi
         fi
     fi
     uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} "$provider" "${args[@]}"
