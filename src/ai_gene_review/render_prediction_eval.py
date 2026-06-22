@@ -23,6 +23,7 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -55,18 +56,33 @@ def load_prediction_review(path: Path) -> dict[str, Any]:
     return data
 
 
-def find_review_link(yaml_path: Path) -> str | None:
-    """Derive relative link to the gene's HTML review page, if it exists."""
+def find_review_link(yaml_path: Path, output_path: Path | None = None) -> str | None:
+    """Derive relative link to the gene's HTML review page.
+
+    The link is made relative to *output_path*'s parent directory so that
+    ``href`` values work from wherever the eval HTML is served.  Gene review
+    HTML lives alongside the YAML source (e.g.
+    ``genes/ORYSJ/Q6YYC5/Q6YYC5-ai-review.html``), not under ``pages/``.
+
+    >>> from pathlib import Path
+    >>> find_review_link(Path('genes/X/G/G-pred.yaml'), Path('projects/P/eval.html'))
+    >>> # returns None because the html doesn't exist on disk in tests
+    """
     gene_dir = yaml_path.parent
     gene_symbol = gene_dir.name
     html_path = gene_dir / f"{gene_symbol}-ai-review.html"
-    if html_path.exists():
-        return str(html_path)
-    return None
+    if not html_path.exists():
+        return None
+    if output_path is not None:
+        try:
+            return str(Path(os.path.relpath(html_path, output_path.parent)))
+        except ValueError:
+            pass
+    return str(html_path)
 
 
 def collect_predictions(
-    pattern: str, root: Path | None = None,
+    pattern: str, root: Path | None = None, output_path: Path | None = None,
 ) -> list[dict[str, Any]]:
     """Collect prediction review data from YAML files matching *pattern*.
 
@@ -78,7 +94,7 @@ def collect_predictions(
     results = []
     for p in paths:
         data = load_prediction_review(p)
-        data["review_link"] = find_review_link(p)
+        data["review_link"] = find_review_link(p, output_path)
         results.append(data)
     return results
 
@@ -187,7 +203,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    proteins = collect_predictions(args.pattern, root=Path(args.root))
+    out_path = Path(args.output) if args.output else None
+    proteins = collect_predictions(args.pattern, root=Path(args.root), output_path=out_path)
     if not proteins:
         print(f"No files found matching '{args.pattern}' under {args.root}", file=sys.stderr)
         sys.exit(1)
