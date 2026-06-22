@@ -24,6 +24,10 @@ where IBA is *wrong* (over-annotation, patterns 1–15), while
 quantifies where IBA *under-calls* established biology — 511 curated human core
 molecular functions that IBA alone would miss.
 
+## Slides
+
+- [Slides](IBA_REVIEW/slides/IBA_REVIEW-slides.html) (Marp source: [IBA_REVIEW-slides.md](IBA_REVIEW/slides/IBA_REVIEW-slides.md)) — AI generated
+
 ## IBA Quality Issues
 
 ### 1. Pseudo-Enzyme Propagation
