@@ -336,6 +336,28 @@ gene-hypothesis-research-combined-core provider organism gene *args="":
     fi
     uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} "$provider" "${args[@]}"
 
+# Find independent literature support for a gene-function hypothesis via deep research
+# Recall-tuned (expect false positives an agent then sifts); general-purpose,
+# not tied to IBA. Supply the hypothesis as free text, an existing annotation,
+# or a GO term. Intended for the fast `asta` provider but works with any provider.
+# Examples:
+#   just gene-function-support asta human TP53 --hypothesis "TP53 is a sequence-specific DNA-binding transcription factor" --dry-run
+#   just gene-function-support asta human TP53 --annotation-term-id GO:0003700
+#   just gene-function-support asta human TP53 --term-id GO:0003700 --term-label "DNA-binding transcription factor activity"
+gene-function-support provider organism gene *args="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    provider="{{provider}}"
+    args=( {{args}} )
+    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
+        if [[ " ${args[*]} " == *" -- "* ]]; then
+            args+=(--param max_iterations=3)
+        else
+            args+=(-- --param max_iterations=3)
+        fi
+    fi
+    uv run python scripts/gene_hypothesis_deep_research.py run-function-support {{organism}} {{gene}} "$provider" "${args[@]}"
+
 # List IBA annotations that are candidates for support-finding research
 # By default only IBAs lacking independent PMID/DOI support are listed.
 # Examples:
@@ -346,8 +368,8 @@ gene-iba-support-list organism gene *args="":
     uv run python scripts/gene_hypothesis_deep_research.py list-iba {{organism}} {{gene}} {{args}}
 
 # Find independent literature support for a gene's IBA annotations via deep research
-# Mirrors gene-hypothesis-research; intended for the fast `asta` provider, which
-# is tuned for recall (expect false positives that an agent then sifts).
+# Thin wrapper over gene-function-support: feeds each IBA annotation in as a
+# neutral gene-function hypothesis. Recall-tuned (expect false positives).
 # By default only IBAs lacking independent support are researched; existing
 # provider outputs are skipped unless --overwrite is supplied.
 # Examples:

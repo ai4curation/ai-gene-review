@@ -80,16 +80,26 @@ populate the review tier.
 
 ### Running the asta support-finding pass
 
-A support-finding target now exists, modeled on the openscientist
-hypothesis-confirmation workflow. For one gene it researches each IBA annotation
-that lacks independent support and writes a per-annotation report an agent can
-sift:
+A general **function-support** target now exists, modeled on the openscientist
+hypothesis-confirmation workflow but recall-tuned for finding evidence. It takes
+a gene-function hypothesis (free text, an existing annotation, or a GO term),
+neutralises any prior curation decision, and writes a per-hypothesis report an
+agent can sift:
 
 ```bash
-just gene-iba-support-list human CFAP300                 # candidate IBAs (unsupported by default)
-just gene-iba-support-research asta human CFAP300 --dry-run   # preview the commands
-just gene-iba-support-research asta human CFAP300             # run; outputs under
-#   genes/human/CFAP300/CFAP300-hypotheses/iba-support-<term>/asta.md
+# General (not IBA-specific) — supply a gene-function hypothesis:
+just gene-function-support asta human TP53 --hypothesis "TP53 is a sequence-specific DNA-binding transcription factor"
+just gene-function-support asta human TP53 --annotation-term-id GO:0003700
+just gene-function-support asta human TP53 --term-id GO:0003700 --term-label "DNA-binding transcription factor activity"
+```
+
+IBA support is a thin wrapper that feeds each IBA annotation into that flow:
+
+```bash
+just gene-iba-support-list human CFAP300                    # candidate IBAs (unsupported by default)
+just gene-iba-support-research asta human CFAP300 --dry-run # preview the commands
+just gene-iba-support-research asta human CFAP300           # run; outputs under
+#   genes/human/CFAP300/CFAP300-hypotheses/function-support-<term>/asta.md
 ```
 
 Use `--include-supported` to also re-confirm already-supported IBAs,

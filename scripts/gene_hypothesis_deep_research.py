@@ -18,7 +18,7 @@ import yaml
 
 DEFAULT_GENES_ROOT = Path("genes")
 DEFAULT_TEMPLATE = Path("templates/gene_hypothesis_deep_research.md")
-DEFAULT_IBA_TEMPLATE = Path("templates/iba_support_deep_research.md")
+DEFAULT_FUNCTION_SUPPORT_TEMPLATE = Path("templates/function_support_deep_research.md")
 LOCAL_EVIDENCE_MAX_CHARS_PER_FILE = 12000
 LOCAL_EVIDENCE_MAX_CHARS_TOTAL = 24000
 FOCUS_TYPES = {
@@ -27,7 +27,7 @@ FOCUS_TYPES = {
     "proposed_go_term",
     "computational_prediction",
     "core_function",
-    "iba_support",
+    "function_support",
     "free_text",
 }
 FOCUS_TYPE_CHOICES = sorted(
@@ -753,18 +753,74 @@ def annotation_independent_literature_refs(annotation: Mapping[str, Any]) -> lis
     return refs
 
 
-def iba_support_hypothesis(gene_symbol: str, annotation: Mapping[str, Any]) -> str:
-    """Seed hypothesis for finding independent support for an IBA annotation."""
+def function_support_hypothesis(gene_symbol: str, term: Mapping[str, Any]) -> str:
+    """Neutral gene-function hypothesis derived from a GO term.
+
+    The support-finding *objective* (find independent evidence, expect false
+    positives, quote verbatim snippets) lives in the template, so the hypothesis
+    itself is a plain claim a curator can adjudicate.
+    """
+    label = term_label(term)
+    if label:
+        return f"{gene_symbol} has the molecular function or biological role described by {label}."
+    return f"A specific molecular function or biological role should be assigned to {gene_symbol}."
+
+
+def _neutral_annotation_context(annotation: Mapping[str, Any]) -> tuple[dict[str, Any], str]:
+    """Build a blinded (no prior review decision) context for an annotation.
+
+    Mirrors :func:`function_assignment_record` so a support search is not biased
+    by the existing curation action.
+    """
     term = as_mapping(annotation.get("term"))
-    return (
-        f"The {gene_symbol} GO annotation to {term_label(term)} is currently supported "
-        f"only by phylogenetic inference (IBA; PANTHER GO_REF:0000033). Find independent "
-        f"literature evidence that directly supports or refutes this annotation for "
-        f"{gene_symbol} — ideally primary experimental evidence in {gene_symbol} "
-        f"itself, or clearly justified evidence in a well-supported ortholog. For each "
-        f"candidate, give the exact verbatim snippet that can be checked against the "
-        f"source so a curator can confirm it (the search is expected to surface false "
-        f"positives that must be filtered)."
+    neutral_context: dict[str, Any] = {
+        "term": annotation.get("term"),
+        "evidence_type": annotation.get("evidence_type"),
+        "original_reference_id": annotation.get("original_reference_id"),
+    }
+    lines = [
+        f"- Term: {term_label(term) or 'not specified'}",
+        f"- Existing evidence type: {annotation.get('evidence_type') or 'not specified'}",
+        f"- Original reference: {annotation.get('original_reference_id') or 'not specified'}",
+    ]
+    if annotation.get("negated") is not None:
+        neutral_context["negated"] = annotation.get("negated")
+        if annotation.get("negated"):
+            lines.append("- Existing annotation is negated: true")
+    if annotation.get("isoform") is not None:
+        neutral_context["isoform"] = annotation.get("isoform")
+        lines.append(f"- Isoform: {annotation['isoform']}")
+    return neutral_context, "\n".join(lines)
+
+
+def function_support_record_from_annotation(
+    *,
+    organism: str,
+    gene: str,
+    gene_symbol: str,
+    taxon_id: str,
+    taxon_label: str,
+    annotation: Mapping[str, Any],
+    source_selector: str,
+    source_file: Path | None,
+) -> GeneHypothesisRecord:
+    """Build a neutral function-support record from an existing annotation."""
+    term = as_mapping(annotation.get("term"))
+    neutral_context, term_context = _neutral_annotation_context(annotation)
+    return make_record(
+        organism=organism,
+        gene=gene,
+        gene_symbol=gene_symbol,
+        taxon_id=taxon_id,
+        taxon_label=taxon_label,
+        focus_type="function_support",
+        slug=f"function-support-{term_slug(term)}",
+        hypothesis_text=function_support_hypothesis(gene_symbol, term),
+        term_context=term_context,
+        reference_ids=collect_reference_ids(annotation),
+        source_file=source_file,
+        source_selector=source_selector,
+        source_context=neutral_context,
     )
 
 
@@ -775,11 +831,12 @@ def iba_support_records(
     *,
     only_unsupported: bool = True,
 ) -> list[GeneHypothesisRecord]:
-    """Build one support-finding record per IBA annotation in a gene review.
+    """Thin IBA wrapper: feed each IBA annotation into the function-support flow.
 
-    With ``only_unsupported`` (the default), IBAs that already carry independent
-    PMID/DOI support are skipped, focusing the run on the annotations that still
-    need confirmation.
+    Produces one neutral ``function_support`` record per IBA annotation. With
+    ``only_unsupported`` (the default), IBAs that already carry independent
+    PMID/DOI support are skipped, focusing the run on annotations still needing
+    confirmation.
     """
     gene_dir = gene_dir_for(genes_root, organism, gene)
     review_path = review_file_for(gene_dir, gene)
@@ -795,25 +852,110 @@ def iba_support_records(
             continue
         if only_unsupported and annotation_independent_literature_refs(annotation):
             continue
-        term = as_mapping(annotation.get("term"))
         records.append(
-            make_record(
+            function_support_record_from_annotation(
                 organism=organism,
                 gene=gene,
                 gene_symbol=gene_symbol,
                 taxon_id=taxon_id,
                 taxon_label=taxon_label,
-                focus_type="iba_support",
-                slug=f"iba-support-{term_slug(term)}",
-                hypothesis_text=iba_support_hypothesis(gene_symbol, annotation),
-                term_context=format_annotation_context(annotation),
-                reference_ids=collect_reference_ids(annotation),
-                source_file=review_path,
+                annotation=annotation,
                 source_selector=f"existing_annotations[{index}]",
-                source_context=annotation,
+                source_file=review_path,
             )
         )
     return uniquify_records(records)
+
+
+def function_support_record_from_args(args: argparse.Namespace) -> GeneHypothesisRecord:
+    """Build a single function-support record from CLI args.
+
+    Accepts exactly one of: a free-text ``--hypothesis``, an
+    ``--annotation-term-id`` (neutralised from the gene review), or a standalone
+    ``--term-id`` (with optional ``--term-label``).
+    """
+    selectors = [
+        bool(args.hypothesis),
+        args.annotation_term_id is not None,
+        args.term_id is not None,
+    ]
+    if sum(selectors) != 1:
+        raise ValueError(
+            "Specify exactly one of --hypothesis, --annotation-term-id, or --term-id."
+        )
+
+    gene_dir = gene_dir_for(args.genes_root, args.organism, args.gene)
+    review_path = review_file_for(gene_dir, args.gene)
+    predictions_path = predictions_file_for(gene_dir, args.gene)
+    metadata: Mapping[str, Any] = {}
+    if review_path.exists():
+        metadata = load_yaml(review_path)
+    elif predictions_path.exists():
+        metadata = load_yaml(predictions_path)
+    gene_symbol, taxon_id, taxon_label = gene_metadata(metadata, args.gene)
+    source_file = review_path if review_path.exists() else None
+
+    if args.annotation_term_id is not None:
+        record = select_record(
+            candidate_records(args.genes_root, args.organism, args.gene),
+            annotation_term_id=args.annotation_term_id,
+        )
+        return function_support_record_from_annotation(
+            organism=record.organism,
+            gene=record.gene,
+            gene_symbol=record.gene_symbol,
+            taxon_id=record.taxon_id,
+            taxon_label=record.taxon_label,
+            annotation=record.source_context,
+            source_selector=record.source_selector,
+            source_file=record.source_file,
+        )
+
+    if args.hypothesis:
+        term_context_lines: list[str] = []
+        if args.term_id or args.term_label:
+            term_context_lines.append(
+                f"- Term: {args.term_label or 'not specified'} ({args.term_id or 'no id'})"
+            )
+        term_context_lines.extend(f"- {item}" for item in args.context)
+        return make_record(
+            organism=args.organism,
+            gene=args.gene,
+            gene_symbol=gene_symbol,
+            taxon_id=taxon_id,
+            taxon_label=taxon_label,
+            focus_type="function_support",
+            slug=args.slug or f"function-support-{args.hypothesis}",
+            hypothesis_text=args.hypothesis,
+            term_context="\n".join(term_context_lines),
+            reference_ids=args.reference_id,
+            source_file=source_file,
+            source_selector="free-text",
+            source_context={
+                "hypothesis": args.hypothesis,
+                "term_id": args.term_id,
+                "term_label": args.term_label,
+                "context": args.context,
+                "reference_id": args.reference_id,
+            },
+        )
+
+    term = {"id": args.term_id, "label": args.term_label or ""}
+    return make_record(
+        organism=args.organism,
+        gene=args.gene,
+        gene_symbol=gene_symbol,
+        taxon_id=taxon_id,
+        taxon_label=taxon_label,
+        focus_type="function_support",
+        slug=args.slug or f"function-support-{term_slug(term)}",
+        hypothesis_text=function_support_hypothesis(gene_symbol, term),
+        term_context=f"- Term: {term_label(term)}",
+        reference_ids=args.reference_id,
+        source_file=source_file,
+        source_selector=f"term:{args.term_id}",
+        source_context={"term": term},
+    )
 
 
 def candidate_records(genes_root: Path, organism: str, gene: str) -> list[GeneHypothesisRecord]:
@@ -1566,6 +1708,48 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Output slug for the combined core-function query.",
     )
 
+    function_support_parser = subparsers.add_parser(
+        "run-function-support",
+        help=(
+            "Find independent literature support for a gene-function hypothesis "
+            "(free text, an existing annotation, or a GO term)."
+        ),
+    )
+    add_gene_args(function_support_parser)
+    function_support_parser.add_argument("provider", help="Deep research provider")
+    function_support_parser.add_argument(
+        "--hypothesis",
+        help="Free-text gene-function hypothesis to find support for.",
+    )
+    function_support_parser.add_argument(
+        "--annotation-term-id",
+        help="Derive a neutral hypothesis from an existing annotation by GO term id.",
+    )
+    function_support_parser.add_argument(
+        "--term-id",
+        help="Derive a neutral 'GENE has TERM' hypothesis from a GO term id.",
+    )
+    function_support_parser.add_argument("--term-label", help="Label for --term-id.")
+    function_support_parser.add_argument(
+        "--context",
+        action="append",
+        default=[],
+        help="Extra context line for the hypothesis (repeatable).",
+    )
+    function_support_parser.add_argument(
+        "--reference-id",
+        action="append",
+        default=[],
+        help="Seed reference id to include as context (repeatable).",
+    )
+    function_support_parser.add_argument("--slug", help="Override the output slug.")
+    function_support_parser.add_argument(
+        "--template", type=Path, default=DEFAULT_FUNCTION_SUPPORT_TEMPLATE
+    )
+    function_support_parser.add_argument("--dry-run", action="store_true")
+    function_support_parser.add_argument("--overwrite", action="store_true")
+    function_support_parser.add_argument("--timeout-seconds", type=int, default=5400)
+
     list_iba_parser = subparsers.add_parser(
         "list-iba",
         help="List IBA annotations that are candidates for support-finding research.",
@@ -1581,11 +1765,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
     iba_parser = subparsers.add_parser(
         "run-iba-support",
-        help="Run deep research to find independent literature support for IBA annotations.",
+        help=(
+            "Thin IBA wrapper around run-function-support: research each IBA "
+            "annotation as a gene-function hypothesis."
+        ),
     )
     add_gene_args(iba_parser)
     iba_parser.add_argument("provider", help="Deep research provider")
-    iba_parser.add_argument("--template", type=Path, default=DEFAULT_IBA_TEMPLATE)
+    iba_parser.add_argument("--template", type=Path, default=DEFAULT_FUNCTION_SUPPORT_TEMPLATE)
     iba_parser.add_argument("--dry-run", action="store_true")
     iba_parser.add_argument("--overwrite", action="store_true")
     iba_parser.add_argument("--timeout-seconds", type=int, default=5400)
@@ -1662,6 +1849,21 @@ def main(argv: Sequence[str] | None = None) -> int:
                 candidate_records(args.genes_root, args.organism, args.gene),
                 slug=args.slug,
             )
+            result = run_record(
+                record,
+                provider=args.provider,
+                genes_root=args.genes_root,
+                template=args.template,
+                extra_args=args.research_args,
+                timeout_seconds=args.timeout_seconds,
+                dry_run=args.dry_run,
+                overwrite=args.overwrite,
+            )
+            print_run_result(result)
+            return 1 if result.status.startswith(("ERROR_", "TIMEOUT", "MISSING_")) else 0
+
+        if args.command == "run-function-support":
+            record = function_support_record_from_args(args)
             result = run_record(
                 record,
                 provider=args.provider,

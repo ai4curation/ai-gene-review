@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 import yaml
 
 from scripts import gene_hypothesis_deep_research as ghr
@@ -182,11 +183,15 @@ def test_iba_support_records_default_only_unsupported(tmp_path: Path) -> None:
     genes_root = make_iba_workspace(tmp_path)
     records = ghr.iba_support_records(genes_root, "human", "IBAT")
     slugs = {record.slug for record in records}
-    assert slugs == {"iba-support-go-0005737"}
+    assert slugs == {"function-support-go-0005737"}
     record = records[0]
-    assert record.focus_type == "iba_support"
+    # IBA is a thin wrapper that produces neutral function-support records.
+    assert record.focus_type == "function_support"
     assert record.source_selector == "existing_annotations[1]"
-    assert "phylogenetic inference" in record.hypothesis_text
+    assert record.hypothesis_text == (
+        "IBAT has the molecular function or biological role described by "
+        "cytoplasm (GO:0005737)."
+    )
 
 
 def test_iba_support_records_include_supported(tmp_path: Path) -> None:
@@ -195,17 +200,34 @@ def test_iba_support_records_include_supported(tmp_path: Path) -> None:
         genes_root, "human", "IBAT", only_unsupported=False
     )
     slugs = {record.slug for record in records}
-    assert slugs == {"iba-support-go-0005737", "iba-support-go-0005515"}
+    assert slugs == {"function-support-go-0005737", "function-support-go-0005515"}
 
 
-def test_iba_support_build_command_uses_iba_slug_and_template(tmp_path: Path) -> None:
+def test_iba_support_record_blinds_prior_review_action(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    record = ghr.iba_support_records(genes_root, "human", "IBAT")[0]
+    command_text = "\n".join(
+        ghr.build_command(
+            record,
+            provider="asta",
+            genes_root=genes_root,
+            template=ghr.DEFAULT_FUNCTION_SUPPORT_TEMPLATE,
+            extra_args=[],
+        )
+    )
+    # The existing curation action/summary must not leak into the prompt.
+    assert "ACCEPT" not in command_text
+    assert "Plausible location" not in command_text
+
+
+def test_function_support_build_command_slug_and_template(tmp_path: Path) -> None:
     genes_root = make_iba_workspace(tmp_path)
     record = ghr.iba_support_records(genes_root, "human", "IBAT")[0]
     command = ghr.build_command(
         record,
         provider="asta",
         genes_root=genes_root,
-        template=ghr.DEFAULT_IBA_TEMPLATE,
+        template=ghr.DEFAULT_FUNCTION_SUPPORT_TEMPLATE,
         extra_args=[],
     )
     output_path = (
@@ -213,7 +235,7 @@ def test_iba_support_build_command_uses_iba_slug_and_template(tmp_path: Path) ->
         / "human"
         / "IBAT"
         / "IBAT-hypotheses"
-        / "iba-support-go-0005737"
+        / "function-support-go-0005737"
         / "asta.md"
     )
     assert ["--provider", "asta"] == command[-6:-4]
@@ -235,6 +257,63 @@ def test_run_iba_support_dry_run(tmp_path: Path) -> None:
     )
     assert exit_code == 0
     assert not (genes_root / "human" / "IBAT" / "IBAT-hypotheses").exists()
+
+
+def test_function_support_free_text_hypothesis(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    args = ghr.parse_args(
+        [
+            "run-function-support",
+            "human",
+            "IBAT",
+            "asta",
+            "--genes-root",
+            str(genes_root),
+            "--hypothesis",
+            "IBAT is a cytoskeletal adaptor",
+        ]
+    )
+    record = ghr.function_support_record_from_args(args)
+    assert record.focus_type == "function_support"
+    assert record.hypothesis_text == "IBAT is a cytoskeletal adaptor"
+    assert record.source_selector == "free-text"
+
+
+def test_function_support_from_term_id(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    args = ghr.parse_args(
+        [
+            "run-function-support",
+            "human",
+            "IBAT",
+            "asta",
+            "--genes-root",
+            str(genes_root),
+            "--term-id",
+            "GO:0003700",
+            "--term-label",
+            "DNA-binding transcription factor activity",
+        ]
+    )
+    record = ghr.function_support_record_from_args(args)
+    assert record.slug == "function-support-go-0003700"
+    assert "DNA-binding transcription factor activity (GO:0003700)" in record.hypothesis_text
+
+
+def test_function_support_requires_exactly_one_selector(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    args = ghr.parse_args(
+        [
+            "run-function-support",
+            "human",
+            "IBAT",
+            "asta",
+            "--genes-root",
+            str(genes_root),
+        ]
+    )
+    with pytest.raises(ValueError):
+        ghr.function_support_record_from_args(args)
 
 
 def test_slugify_normalizes_identifiers() -> None:

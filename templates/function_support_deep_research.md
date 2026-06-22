@@ -1,14 +1,21 @@
-# AIGR IBA-Support Deep Research
+# AIGR Function-Support Deep Research
 
-You are searching for **independent literature support** for a single GO
-annotation that is currently assigned to a gene **only by phylogenetic
-inference** (evidence code IBA, propagated from PANTHER `GO_REF:0000033`). IBA
-annotations are not, by themselves, experimental evidence — your job is to find
-primary (or well-justified orthologous) evidence that confirms or refutes the
-annotation for this specific gene.
+You are searching for **independent literature support for a single
+gene-function hypothesis**. The hypothesis below is a plain claim that a gene
+product has a particular molecular function, biological role, or cellular
+location. Your job is to find primary (or well-justified orthologous) evidence
+that **confirms or refutes** that claim for this specific gene.
 
-This is not a general gene overview, and it is not a re-litigation of the GO
-curation decision. Stay tightly focused on the one annotation below.
+This is a recall-oriented search: surface every plausible piece of supporting
+evidence, but make each candidate **independently checkable** so a downstream
+curator or agent can filter false positives. This is not a general gene
+overview, and any prior curation decision shown in the context is intentionally
+neutralised — judge the hypothesis on the external evidence, not on the existing
+annotation.
+
+A common use of this template is confirming annotations that currently rest only
+on phylogenetic inference (evidence code IBA, propagated from PANTHER
+`GO_REF:0000033`), but it applies to any gene-function hypothesis.
 
 ## Target Gene
 
@@ -24,11 +31,11 @@ curation decision. Stay tightly focused on the one annotation below.
 - **Source file:** {source_file}
 - **Source selector:** {source_selector}
 
-## Seed Hypothesis
+## Gene-Function Hypothesis
 
 {hypothesis_text}
 
-## Annotation Context
+## Hypothesis Context
 
 {term_context}
 
@@ -44,12 +51,12 @@ curation decision. Stay tightly focused on the one annotation below.
 
 ## Research Objective
 
-Find the strongest available **independent** evidence bearing on whether this
-GO term genuinely applies to {gene_symbol}. Prioritise, in order:
+Find the strongest available **independent** evidence bearing on whether the
+hypothesis is true for {gene_symbol}. Prioritise, in order:
 
-1. Direct experimental evidence in {gene_symbol} itself (the annotated gene in
-   the annotated organism): assays, mutant phenotypes, localisation,
-   interactions, structures.
+1. Direct experimental evidence in {gene_symbol} itself (the named gene in the
+   named organism): assays, mutant phenotypes, localisation, interactions,
+   structures.
 2. Direct experimental evidence in a clearly orthologous gene, where the
    orthology is well established and the function is expected to be conserved.
 3. Strong indirect or computational evidence (domain architecture, conserved
@@ -62,8 +69,8 @@ primary papers wherever possible.
 
 **Expect false positives.** This pipeline is tuned for recall, so a downstream
 curator/agent will sift your results. For every candidate you must therefore
-provide an **exact verbatim snippet** from the source that a curator can check,
-plus enough context (organism, assay, gene actually studied) to detect paralog
+provide an **exact verbatim snippet** from the source that can be checked, plus
+enough context (organism, assay, gene actually studied) to detect paralog
 confusion, wrong-organism carry-over, or claims that are really about a
 different gene.
 
@@ -90,12 +97,12 @@ A table with one row per candidate evidence item:
 ### Best Supporting References
 
 List the 1–3 references most suitable to add to the review's `supported_by`
-for this annotation, each with the exact snippet a curator should confirm. If
+for this hypothesis, each with the exact snippet a curator should confirm. If
 none qualify, say so explicitly.
 
 ### Conflicts and Alternatives
 
-Note any evidence that contradicts the annotation or that points to paralog
+Note any evidence that contradicts the hypothesis or that points to paralog
 confusion, organism-specific differences, isoform-specific findings, or
 database carry-over.
 
