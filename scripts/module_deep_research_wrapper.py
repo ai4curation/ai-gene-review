@@ -22,7 +22,7 @@ from typing import Any
 import yaml
 
 
-PROVIDERS = ("openai", "perplexity", "perplexity-lite", "falcon", "cyberian", "codex")
+PROVIDERS = ("openai", "perplexity", "perplexity-lite", "falcon", "cyberian", "codex", "asta")
 UNRESOLVED_PLACEHOLDER_PATTERNS = (
     "{module_title}",
     "{module_summary}",

@@ -112,5 +112,79 @@ Vesicle-Mediated Unconventional Protein Secretion"). Not re-added.
 - Falcon's cancer/heart-failure review citations (radziejewska2023, zaborska2023, tan2021, lozinski2024,
   mukherjee2025, zhang2025) are secondary reviews restating known lectin/lattice biology already covered
   by primary citations in the review; not added as top-level references.
-</content>
-</invoke>
+
+## 2026-06-22 — asta IBA-support sift (manual)
+
+Ran `just gene-iba-support-research asta human LGALS3` over the 15 IBA annotations that lacked
+independent literature support (outputs in `LGALS3-hypotheses/function-support-*/asta.md`). asta
+(Semantic Scholar relevance + snippet retrieval) returned 11–16 papers per term with verbatim
+snippets, PMIDs/DOIs and scores. I manually sifted every report.
+
+**Outcome: no supported_by added from this pass.** None of asta's candidates are adequate,
+term-specific *primary* evidence for the GO term in question. The hits fall into three
+false-positive classes:
+
+1. **Frequency bias toward recent disease papers.** The same modern cancer/disease studies recur
+   across many unrelated terms (HCC prognosis PMID:38643145; periplocin/CRC lysophagy PMID:37471054;
+   glioma prognosis PMID:32528967), surfaced because they use the symbol "LGALS3" plus a process word,
+   not because they assay that function.
+2. **Review / family-level statements**, not primary, gene-specific evidence (e.g. Liu & Rabinovich
+   2010 PMID:20146714 "Galectins, beta-galactoside-binding animal lectins"; Pregnancy Galectinology
+   review PMID:31231368). True but family-level orientation only.
+3. **Right gene, wrong specific process.** PMID:35230372 is "Macrophages secrete … galectin-3 to
+   regulate neutrophil **degranulation** after myocardial infarction" — asta's snippet paraphrased it
+   as neutrophil "migration", but the paper assays degranulation, so it does **not** support
+   GO:0030593 *neutrophil chemotaxis*. (This is the receptor/process-mismatch trap to watch for.)
+
+Crucially, asta **failed to surface the foundational primary literature** that actually established
+these galectin-3 functions — e.g. galectin-3 as a monocyte/macrophage chemoattractant (Sano et al.
+2000), the εBP/IgE-binding-protein biochemistry, and Mac-2/laminin binding. No laminin-, IgE/εBP-,
+or chemoattractant-titled primary paper appeared in any report; the only "disaccharide binding" hit
+was an incidental bone-phenotype study (PMID:36062328).
+
+**Tuning leverage for next runs** (the query is the prompt, truncated to ~500 chars, so wording
+matters): include legacy synonyms (`galectin-3`, `Mac-2`, `εBP`) alongside `LGALS3`, and consider
+asta date/citation params — the relevance model here skews to recent, highly-cited genomics-era
+papers and misses pre-2005 foundational biochemistry. For a well-studied gene like LGALS3, a targeted
+classic-literature lookup is more productive than asta; asta's recall value is likely higher for
+poorly-studied genes.
+
+## 2026-06-22 — manual PubMed curation of IBA support
+
+Followed the rule: *first check whether the deep-research (asta) report already surfaced the right
+paper; if not, iterate manually; if so, curate the snippet.* The asta report surfaced the correct
+foundational paper in **0 of 11** checked functions, so all support below was found by manual PubMed
+(NCBI E-utilities) search and verified verbatim against the fetched abstract in `publications/`.
+
+Added `supported_by` to **12 of 15** IBA annotations:
+
+| Term | GO | Reference | Note |
+|---|---|---|---|
+| monocyte chemotaxis | GO:0002548 | PMID:10925302 (Sano 2000) | galectin-3 induces monocyte migration, chemotactic |
+| macrophage chemotaxis | GO:0048246 | PMID:10925302 | "chemoattractant for monocytes and macrophages" |
+| positive chemotaxis | GO:0050918 | PMID:10925302 | parent of the above |
+| positive regulation of calcium ion import | GO:0090280 | PMID:10925302 | "galectin-3 caused a Ca2+ influx in monocytes" (same paper) |
+| laminin binding | GO:0043236 | PMID:2332426 (Woo 1990) | Mac-2 = laminin-binding protein = galectin-3 |
+| disaccharide binding | GO:0048030 | PMID:11434930 | ITC of galactose/poly-LacNAc binding; lactose/LacNAc are the disaccharide ligands |
+| IgE binding | GO:0019863 | PMID:8347574 | εBP (=Mac-2=galectin-3) "by virtue of its affinity for IgE"; ortholog (rat εBP) evidence, acceptable for an IBA |
+| nucleus | GO:0005634 | PMID:12070075 | galectin-3 in nuclear/cytoplasmic SMN complex; pre-mRNA splicing factor |
+| cytoplasm | GO:0005737 | PMID:12070075 | nucleocytoplasmic shuttling |
+| immunological synapse | GO:0001772 | PMID:19706535 | "recruited to the cytoplasmic side of the immunological synapse" |
+| eosinophil chemotaxis | GO:0048245 | PMID:23576987 | Gal-3−/− mice show decreased airway eosinophil recruitment |
+| neutrophil chemotaxis | GO:0030593 | PMID:11823514 | galectin-3 promotes neutrophil extravasation/recruitment (mechanism is adhesion-mediated transmigration, not a soluble chemoattractant gradient — supporting, not definitive, for the chemotaxis term) |
+
+**Not curated (3) — left honestly unsupported:**
+
+- **GO:0031012 extracellular matrix** — galectin-3 is clearly secreted/extracellular, but I did not
+  find a clean primary statement that it localises to the *extracellular matrix* specifically (vs
+  extracellular fluids / cell surface). Needs a dedicated ECM-deposition paper.
+- **GO:0045806 negative regulation of endocytosis** — the galectin-lattice-restricts-receptor-
+  endocytosis concept (Partridge/Dennis 2004; Lajoie 2007) is plausible but no clean primary paper
+  surfaced in a quick search; not added.
+- **GO:2001237 negative regulation of extrinsic apoptotic signaling pathway** — galectin-3 is broadly
+  anti-apoptotic (intracellular, NWGR/BH1 motif), but a paper tying it specifically to the *extrinsic*
+  (death-receptor) pathway was not located in a quick search; not added.
+
+Net: manual PubMed cleanly recovered the foundational literature (Sano 2000, Woo 1990, the εBP/IgE
+papers, the shuttling papers) that asta entirely missed — reinforcing the deprecation recommendation
+(issue #1599).
