@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3VIU4 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>D3VIU4</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/D3VIU4" target="_blank" class="term-link">
+                        D3VIU4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Xenorhabdus nematophila (strain ATCC 19061 / DSM 3370 / CCUG 14189 / LMG 1036 / NCIMB 9965 / AN6)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "D3VIU4";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="D3VIU4" data-a="DESCRIPTION: FliY (locus tag XNC1_0570) is a periplasmic solute..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FliY (locus tag XNC1_0570) is a periplasmic solute-binding protein of the bacterial solute-binding protein family 3 (SBP_bac_3, PF00497) in the Gram-negative entomopathogenic bacterium Xenorhabdus nematophila. It functions as the substrate-capture component of the FliY-YecSC (TcyJLN) ATP-binding cassette (ABC) transporter system, which imports L-cystine with high affinity (Km ~30 nM in E. coli orthologs). FliY is synthesized with an N-terminal signal peptide (residues 1-28) that directs its secretion into the periplasmic space, where it binds extracellular L-cystine and delivers it to the inner-membrane-associated YecSC complex for ATP-driven translocation into the cytoplasm. The imported cystine is reduced to L-cysteine, which serves as a central hub for synthesis of methionine, glutathione, iron-sulfur clusters, and other sulfur-containing biomolecules. Despite the &#34;fliY&#34; gene name (which derives solely from chromosomal proximity to flagellar genes), this protein has no role in flagellar assembly or motility; its function is restricted to cystine transport for sulfur assimilation. The protein is 262 amino acids long and contains the conserved Solute-binding protein family 3/N-terminal domain (IPR001638).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="D3VIU4" data-a="GO:0030288" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliY is a periplasmic solute-binding protein in Gram-negative bacteria. It contains an N-terminal signal peptide (residues 1-28) directing export across the inner membrane into the periplasm. As a component of the FliY-YecSC ABC transporter, it operates as a soluble protein in the outer membrane-bounded periplasmic space, where it captures L-cystine and delivers it to the inner-membrane YecSC complex. This localization is well-supported by the protein&#39;s signal peptide, its membership in the bacterial solute-binding protein 3 family, and the conserved architecture of Gram-negative ABC import systems. The ARBA prediction is consistent with the known biology.
+                        </div>
+                        
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030313" target="_blank" class="term-link">
+                                    GO:0030313
+                                </a>
+                            </span>
+                            <span class="term-label">cell envelope</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="D3VIU4" data-a="GO:0030313" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cell envelope annotation is derived from UniProtKB-SubCell mapping and is not incorrect -- FliY does reside within the cell envelope. However, this is a very broad term (GO:0030313) that encompasses the outer membrane, periplasmic space, inner membrane, and cell wall. The more specific annotation to outer membrane-bounded periplasmic space (GO:0030288) already captures the precise localization of FliY. Retaining this annotation as non-core since it is accurate but less informative than the periplasmic space annotation.
+                        </div>
+                        
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016597" target="_blank" class="term-link">
+                                    GO:0016597
+                                </a>
+                            </span>
+                            <span class="term-label">amino acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="D3VIU4" data-a="GO:0016597" data-r="file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliY is the periplasmic substrate-binding protein of the FliY-YecSC (TcyJLN) ABC transporter. Its primary molecular function is binding L-cystine with high affinity in the periplasm. The amino acid binding term captures this substrate-binding role. This is inferred from sequence similarity to the well-characterized E. coli FliY ortholog and from membership in the bacterial solute-binding protein family 3. The CDD annotation (cd13711, PBP2_Ngo0372_TcyA) further supports this functional assignment.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[Inferred from E. coli ortholog] FliY serves as the periplasmic substrate-binding component of an ATP-binding cassette (ABC) transporter complex designated FliY-YecSC. This system functions as a high-affinity importer of L-cystine.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015811" target="_blank" class="term-link">
+                                    GO:0015811
+                                </a>
+                            </span>
+                            <span class="term-label">L-cystine transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="D3VIU4" data-a="GO:0015811" data-r="file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliY functions as the substrate-capture component of the cystine ABC transporter system. Its role in L-cystine transport is inferred from sequence similarity to the E. coli FliY ortholog, which has been experimentally demonstrated to be essential for cystine import via the FliY-YecSC system. The UniProt submission name (&#34;Cysteine transport protein&#34;) and CDD domain hit (PBP2_Ngo0372_TcyA) are consistent with this functional assignment.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[Inferred from E. coli ortholog] Genetic deletion studies definitively established that FliY, together with a second cystine transporter YdjN (TcyP), constitutes one of only two cystine import systems in the bacterium. Double mutants lacking both fliY and ydjN are completely unable to import detectable levels of cystine.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                                    GO:0043190
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-binding cassette (ABC) transporter complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="D3VIU4" data-a="GO:0043190" data-r="file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliY is the periplasmic binding protein subunit of the FliY-YecSC ABC transporter complex. This complex membership is inferred from homology to the E. coli system where FliY, YecS, and YecC form the three-component ABC transporter, and from the UniProt annotation as an ABC superfamily periplasmic binding protein.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[Inferred from E. coli ortholog] The FliY-YecSC system operates through the canonical ABC transporter mechanism involving three protein components: FliY is the periplasmic substrate-binding protein, YecS the ATPase component, and YecC the integral membrane permease.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FliY is the periplasmic substrate-binding protein component of the FliY-YecSC (TcyJLN) ABC transporter complex. It captures L-cystine in the periplasm with high affinity and delivers it to the membrane-associated transporter components for ATP-dependent import. This supports sulfur assimilation under conditions of sulfur limitation.</h3>
+                <span class="vote-buttons" data-g="D3VIU4" data-a="FUNCTION: FliY is the periplasmic substrate-binding protein ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016597" target="_blank" class="term-link">
+                            amino acid binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015811" target="_blank" class="term-link">
+                                L-cystine transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                            ATP-binding cassette (ABC) transporter complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">[Inferred from E. coli ortholog characterization] FliY serves as the periplasmic substrate-binding component of an ATP-binding cassette (ABC) transporter complex designated FliY-YecSC (also known as TcyJLN). This system functions as a high-affinity importer of L-cystine. The FliY-YecSC system achieves half-maximal transport at approximately 30 nanomolar cystine concentration.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22125637" target="_blank" class="term-link">
+                            PMID:22125637
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The entomopathogenic bacterial endosymbionts Xenorhabdus and Photorhabdus: convergent lifestyles from divergent genomes</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">This is the genome sequencing paper for Xenorhabdus nematophila strain ATCC 19061, which identified the fliY gene (locus tag XNC1_0570) encoding the cysteine transport protein.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on D3VIU4 fliY from Xenorhabdus nematophila</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FliY serves as the periplasmic substrate-binding component of the FliY-YecSC (TcyJLN) ABC transporter complex for high-affinity L-cystine import. Studies in E. coli demonstrate that the FliY-YecSC system achieves half-maximal transport at approximately 30 nM cystine, about 100-fold higher affinity than the alternative YdjN transporter. The protein belongs to bacterial solute-binding protein family 3 and operates in the periplasmic space of Gram-negative bacteria.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(D3VIU4-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="D3VIU4" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Comprehensive Research Report: Gene fliY (D3VIU4) from Xenorhabdus nematophila</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">7 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-18T18:26:07.737234</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="D3VIU4-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-gene-fliy-d3viu4-from-xenorhabdus-nematophila">Comprehensive Research Report: Gene fliY (D3VIU4) from Xenorhabdus nematophila</h1>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>The fliY gene (UniProt: D3VIU4, locus tag: XNC1_0570) from <em>Xenorhabdus nematophila</em> strain ATCC 19061 encodes a periplasmic substrate-binding protein that functions as the substrate-capture component of a high-affinity ABC transporter system for cystine/cysteine uptake. While direct experimental characterization of this specific gene from <em>Xenorhabdus nematophila</em> has not been reported in the literature, extensive functional studies of orthologous proteins in closely related enterobacteria, particularly <em>Escherichia coli</em>, provide a robust foundation for inferring its function. The protein belongs to the bacterial solute-binding protein family 3 and plays a critical role in sulfur assimilation under conditions of sulfur limitation.</p>
+<h2 id="protein-function-and-molecular-mechanism">Protein Function and Molecular Mechanism</h2>
+<h3 id="primary-function-high-affinity-cystine-transport">Primary Function: High-Affinity Cystine Transport</h3>
+<p>The FliY protein serves as the periplasmic substrate-binding component of an ATP-binding cassette (ABC) transporter complex designated FliY-YecSC (also known as TcyJLN in alternative nomenclature) (imlay2015physiologicalrolesand pages 1-2, imlay2015physiologicalrolesand pages 5-7). This system functions as a high-affinity importer of L-cystine, the oxidized dimeric form of cysteine that predominates in aerobic extracellular environments (zhou2020escherichiacolik12 pages 1-2, imlay2015physiologicalrolesand pages 1-2).</p>
+<p>In <em>E. coli</em>, genetic deletion studies definitively established that FliY, together with a second cystine transporter YdjN (TcyP), constitutes one of only two cystine import systems in the bacterium. Double mutants lacking both <em>fliY</em> and <em>ydjN</em> are completely unable to import detectable levels of cystine and cannot grow when cystine is provided as the sole sulfur source (imlay2015physiologicalrolesand pages 4-5, imlay2015physiologicalrolesand pages 5-7). This demonstrates the essential and non-redundant role of the FliY-YecSC system in cystine acquisition.</p>
+<h3 id="transport-mechanism-and-molecular-partners">Transport Mechanism and Molecular Partners</h3>
+<p>The FliY-YecSC system operates through the canonical ABC transporter mechanism involving three protein components (imlay2015physiologicalrolesand pages 5-7):</p>
+<ol>
+<li><strong>FliY</strong>: The periplasmic substrate-binding protein that captures cystine from the extracellular milieu with high affinity</li>
+<li><strong>YecS</strong>: The ATPase component that provides energy for transport through ATP hydrolysis</li>
+<li><strong>YecC</strong>: The integral membrane permease that forms the translocation channel</li>
+</ol>
+<p>FliY is synthesized with a signal sequence that directs its secretion across the inner membrane into the periplasmic space, where it functions as a soluble protein to bind substrate and deliver it to the membrane-associated YecSC complex (imlay2015physiologicalrolesand pages 5-7, imlay2015physiologicalrolesand pages 7-9). Genetic complementation studies confirmed that deletion of <em>yecS</em> phenocopies deletion of <em>fliY</em>, establishing that YecS and YecC are the cognate membrane partners of FliY (imlay2015physiologicalrolesand pages 5-7).</p>
+<h3 id="substrate-specificity-and-binding-affinity">Substrate Specificity and Binding Affinity</h3>
+<p>The FliY-YecSC system exhibits remarkably high affinity for its substrate. Transport kinetic studies in <em>E. coli</em> determined that the system achieves half-maximal transport at approximately 30 nanomolar cystine concentration (imlay2015physiologicalrolesand pages 9-10). This represents approximately 100-fold higher affinity compared to the alternative cystine transporter YdjN (Km ~2 μM), positioning FliY-YecSC as the primary system for cystine acquisition when substrate availability is limited (imlay2015physiologicalrolesand pages 9-10).</p>
+<p>While L-cystine is the primary physiological substrate, the FliY-YecSC system also demonstrates ability to transport diaminopimelate (DAP), indicating some promiscuity for structurally related diamino compounds (imlay2015physiologicalrolesand pages 1-2, imlay2015physiologicalrolesand pages 9-10). However, cystine remains the key substrate for sulfur acquisition under natural growth conditions.</p>
+<p>Competitive growth experiments at very low cell densities demonstrated that the FliY system is essential for bacterial fitness when cystine concentrations are in the nanomolar range. Wild-type cells successfully outgrew <em>fliY</em> deletion mutants under these limiting conditions, whereas both strains grew comparably when micromolar cystine was provided (allowing the lower-affinity YdjN transporter to compensate) (imlay2015physiologicalrolesand pages 9-10).</p>
+<h2 id="cellular-localization">Cellular Localization</h2>
+<p>FliY functions as a soluble periplasmic binding protein in Gram-negative bacteria (imlay2015physiologicalrolesand pages 5-7, imlay2015physiologicalrolesand pages 7-9). The periplasmic location is essential for its role in the ABC transport process: FliY captures extracellular cystine that has crossed the outer membrane, binds it with high affinity in the periplasmic space, and then delivers the substrate to the inner-membrane-spanning YecSC complex for ATP-driven translocation into the cytoplasm. This localization is consistent with the characteristic architecture of bacterial ABC importers, which universally employ periplasmic or extracellular substrate-binding proteins to achieve high substrate affinity and specificity.</p>
+<h2 id="biological-pathways-and-metabolic-context">Biological Pathways and Metabolic Context</h2>
+<h3 id="sulfur-assimilation-pathway">Sulfur Assimilation Pathway</h3>
+<p>The FliY-YecSC transporter plays a central role in bacterial sulfur assimilation, particularly under conditions of sulfur limitation (zhou2020escherichiacolik12 pages 1-2, imlay2015physiologicalrolesand pages 1-2). The pathway proceeds as follows:</p>
+<ol>
+<li><strong>Cystine uptake</strong>: FliY-YecSC imports L-cystine from the extracellular environment</li>
+<li><strong>Reduction</strong>: Imported cystine is rapidly reduced to L-cysteine in the cytoplasm through glutathione-dependent processes (imlay2015physiologicalrolesand pages 4-5)</li>
+<li><strong>Central sulfur metabolism</strong>: The resulting cysteine pool serves as the hub for synthesis of all cellular sulfur-containing biomolecules, including methionine, iron-sulfur clusters, glutathione, lipoate, biotin, and other essential cofactors (zhou2020escherichiacolik12 pages 1-2, zhou2020escherichiacolik12 pages 2-4)</li>
+</ol>
+<p>This pathway is particularly critical in aerobic environments where extracellular cysteine spontaneously oxidizes to cystine (zhou2020escherichiacolik12 pages 1-2). Under these conditions, cystine import via FliY-YecSC provides a more economical route to sulfur acquisition compared to sulfate assimilation, which requires eight electrons and substantial ATP expenditure to reduce sulfate to sulfide before incorporation into cysteine (zhou2020escherichiacolik12 pages 1-2, zhou2020escherichiacolik12 pages 2-4).</p>
+<h3 id="transcriptional-regulation">Transcriptional Regulation</h3>
+<p>Expression of the <em>fliY</em> gene is tightly regulated in response to cellular sulfur status through the CysB transcriptional regulator (imlay2015physiologicalrolesand pages 7-9). When bacteria grow on poor sulfur sources such as sulfate, <em>fliY</em> transcription is induced 3- to 10-fold compared to growth on cystine (imlay2015physiologicalrolesand pages 7-9). This induction is mediated by CysB, which becomes activated when intracellular cysteine pools decline and N-acetylserine accumulates (imlay2015physiologicalrolesand pages 1-2).</p>
+<p>Notably, the regulatory architecture of the FliY-YecSC system exhibits an unusual feature: while <em>fliY</em> itself is strongly induced by CysB during sulfur limitation, the genes encoding its membrane partners (<em>yecS</em> and <em>yecC</em>) are predominantly transcribed from a separate, CysB-independent promoter upstream of the <em>dcyD</em> gene (imlay2015physiologicalrolesand pages 7-9). This differential regulation results in increased FliY protein levels during sulfur starvation while membrane transporter levels remain relatively constant. Transport kinetic studies demonstrated that under conditions of high cystine availability, the membrane complex (YecSC) rather than substrate binding becomes rate-limiting, explaining why increased FliY expression does not necessarily increase overall transport rates when cystine is abundant (imlay2015physiologicalrolesand pages 7-9).</p>
+<h3 id="coordination-with-alternative-transport-systems">Coordination with Alternative Transport Systems</h3>
+<p>Bacteria maintain two distinct cystine import systems with complementary properties. The FliY-YecSC (TcyJLN) ABC transporter handles nanomolar substrate concentrations with high affinity, while the YdjN (TcyP) proton-driven symporter operates effectively at micromolar concentrations (imlay2015physiologicalrolesand pages 1-2, imlay2015physiologicalrolesand pages 9-10). Both systems are co-induced by CysB during sulfur limitation, providing bacteria with the capacity to efficiently scavenge cystine across a wide concentration range (imlay2015physiologicalrolesand pages 1-2, imlay2015physiologicalrolesand pages 7-9). This dual-transporter strategy is phylogenetically widespread, occurring in Enterobacteriaceae and Firmicutes including <em>Bacillus subtilis</em>, suggesting strong evolutionary selection for this arrangement (imlay2015physiologicalrolesand pages 9-10).</p>
+<h3 id="gene-nomenclature-and-evolutionary-context">Gene Nomenclature and Evolutionary Context</h3>
+<p>An important clarification regarding the <em>fliY</em> gene name: despite the "fli" prefix typically associated with flagellar genes, FliY has no functional relationship to flagellar assembly or motility (imlay2015physiologicalrolesand pages 5-7). The name derives solely from the gene's chromosomal proximity to authentic flagellar genes (<em>fliA</em>, <em>fliZ</em>) in <em>E. coli</em> and related bacteria. Functional studies clearly demonstrate that FliY's primary and likely exclusive role is in cystine transport for sulfur assimilation (imlay2015physiologicalrolesand pages 5-7, imlay2015physiologicalrolesand pages 7-9). In recognition of this, researchers have proposed renaming the system as TcyJLN (Transport Cystine J, L, N), where FliY corresponds to TcyJ (imlay2015physiologicalrolesand pages 1-2).</p>
+<h2 id="structural-and-biochemical-features">Structural and Biochemical Features</h2>
+<h3 id="protein-family-assignment">Protein Family Assignment</h3>
+<p>FliY belongs to the bacterial solute-binding protein family 3 (SBP_bac_3), as indicated by its Pfam domain PF00497 (UniProt annotation). This family is characterized by a conserved fold and substrate-binding mechanism shared among periplasmic binding proteins associated with ABC transporters. Members of this family typically employ a "Venus flytrap" conformational change mechanism, where substrate binding induces closure of two protein domains around the ligand, creating a high-affinity binding site.</p>
+<h3 id="amino-acid-composition-and-functional-constraints">Amino Acid Composition and Functional Constraints</h3>
+<p>A striking biochemical feature of cystine transport proteins is their exceptionally low cysteine content. Analysis of the <em>E. coli</em> FliY-YecSC system revealed that these four proteins collectively contain only one cysteine residue (0.08%) among 1,201 total amino acids, compared to 1.7% cysteine in the overall <em>E. coli</em> proteome (imlay2015physiologicalrolesand pages 9-10). This 20-fold underrepresentation of cysteine is extreme even compared to other amino acid transporters, which average 4.8% content of their cognate substrate amino acid (imlay2015physiologicalrolesand pages 9-10).</p>
+<p>This compositional bias reflects an evolutionary adaptation to the protein's function in sulfur-starved cells: when cellular cysteine pools are depleted, proteins must be synthesizable despite limited cysteine availability (imlay2015physiologicalrolesand pages 9-10). The single exceptional cysteine residue in the <em>E. coli</em> YdjN transporter (at position 346) is functionally essential and cannot be replaced by serine or threonine without complete loss of activity, indicating it plays a critical catalytic or structural role (imlay2015physiologicalrolesand pages 9-10).</p>
+<h2 id="evidence-basis-and-inference-for-xenorhabdus-nematophila">Evidence Basis and Inference for Xenorhabdus nematophila</h2>
+<p>While the functional characterization presented above derives primarily from studies in <em>E. coli</em>, several lines of evidence support extrapolation to <em>Xenorhabdus nematophila</em>:</p>
+<ol>
+<li>
+<p><strong>High sequence conservation</strong>: The FliY-YecSC system is phylogenetically widespread across Enterobacteriaceae and shows conservation even in more distantly related Firmicutes (imlay2015physiologicalrolesand pages 9-10)</p>
+</li>
+<li>
+<p><strong>Conserved genomic context</strong>: The genomic organization of <em>fliY</em> and associated genes (<em>yecS</em>, <em>yecC</em>) is broadly conserved among bacteria (imlay2015physiologicalrolesand pages 5-7)</p>
+</li>
+<li>
+<p><strong>Consistent protein family assignment</strong>: The <em>Xenorhabdus nematophila</em> protein (D3VIU4) is correctly annotated as belonging to the same protein family (bacterial solute-binding protein 3) and possessing the same domains as characterized <em>E. coli</em> FliY</p>
+</li>
+<li>
+<p><strong>Functional requirement</strong>: As an entomopathogenic bacterium, <em>Xenorhabdus nematophila</em> faces sulfur acquisition challenges in diverse environments (insect hosts, nematode symbionts, soil), making high-affinity cystine transport systems functionally essential</p>
+</li>
+</ol>
+<h2 id="summary-table-of-key-properties">Summary Table of Key Properties</h2>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+<th>Evidence/Citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protein Function</td>
+<td>Periplasmic substrate-binding protein component of the FliY-YecSC ABC importer; captures extracellular cystine and delivers it to the membrane transporter for ATP-dependent uptake. Loss of both fliY and ydjN abolishes detectable cystine import and prevents growth on cystine as sole sulfur source.</td>
+<td>(imlay2015physiologicalrolesand pages 4-5, imlay2015physiologicalrolesand pages 5-7)</td>
+</tr>
+<tr>
+<td>Substrate Specificity</td>
+<td>Primary physiological substrate is L-cystine (oxidized cysteine). FliY-YecSC can also transport diaminopimelate (DAP), indicating broader specificity for related diamino compounds, but cystine is the key sulfur-acquisition substrate.</td>
+<td>(imlay2015physiologicalrolesand pages 1-2, imlay2015physiologicalrolesand pages 9-10)</td>
+</tr>
+<tr>
+<td>Binding Affinity (Km)</td>
+<td>Apparent half-maximal transport for FliY-YecSC is ~30 nM cystine, about 100-fold lower than YdjN (~2 µM), making FliY-YecSC the high-affinity system used when cystine is scarce.</td>
+<td>(imlay2015physiologicalrolesand pages 9-10)</td>
+</tr>
+<tr>
+<td>Transport Partners</td>
+<td>Functions with YecS and YecC as an ABC transport system: FliY is the periplasmic binding protein, YecS the ATPase-associated component, and YecC the membrane-spanning transport component. yecS mutation phenocopies loss of the FliY system.</td>
+<td>(imlay2015physiologicalrolesand pages 5-7)</td>
+</tr>
+<tr>
+<td>Cellular Localization</td>
+<td>Soluble periplasmic binding protein in Gram-negative bacteria; operates in the periplasm to bind cystine before transfer to the inner-membrane YecSC complex.</td>
+<td>(imlay2015physiologicalrolesand pages 5-7, imlay2015physiologicalrolesand pages 7-9)</td>
+</tr>
+<tr>
+<td>Protein Family</td>
+<td>Member of the bacterial solute-binding protein family associated with ABC importers; specifically the high-affinity cystine-binding component of the FliY-YecSC/TcyJLN system.</td>
+<td>(imlay2015physiologicalrolesand pages 1-2, imlay2015physiologicalrolesand pages 5-7)</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>fliY transcription is induced ~3- to 10-fold in sulfate medium versus cystine medium and is controlled by the sulfur starvation regulator CysB. Constitutively active CysB upregulates fliY even in cystine medium.</td>
+<td>(imlay2015physiologicalrolesand pages 7-9)</td>
+</tr>
+<tr>
+<td>Biological Pathway</td>
+<td>Participates in sulfur assimilation: cystine import under sulfur limitation, followed by intracellular reduction to cysteine, which feeds synthesis of methionine, glutathione, iron-sulfur clusters, and other sulfur-containing metabolites. It is especially important at nanomolar cystine concentrations.</td>
+<td>(zhou2020escherichiacolik12 pages 1-2, imlay2015physiologicalrolesand pages 1-2, imlay2015physiologicalrolesand pages 9-10)</td>
+</tr>
+<tr>
+<td>Alternative Names</td>
+<td>Proposed renaming in E. coli: FliY-YecSC as TcyJLN, where “Tcy” denotes transport of cystine. The system is also described as the FliY-YecSC cystine ABC transporter.</td>
+<td>(imlay2015physiologicalrolesand pages 1-2)</td>
+</tr>
+<tr>
+<td>Gene Name Origin</td>
+<td>The name fliY comes from its chromosomal position downstream of flagellar genes, but functional evidence shows it is not a flagellar structural/regulatory gene; its main role is cystine transport.</td>
+<td>(imlay2015physiologicalrolesand pages 5-7)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally supported properties of FliY based mainly on E. coli and related bacterial evidence, highlighting its role as a high-affinity periplasmic cystine-binding protein. It is useful for inferring the likely function of the Xenorhabdus nematophila ortholog when direct species-specific studies are lacking.</em></p>
+<h2 id="research-gaps-and-future-directions">Research Gaps and Future Directions</h2>
+<p>Despite the robust functional characterization in model organisms, several aspects specific to <em>Xenorhabdus nematophila</em> FliY warrant investigation:</p>
+<ol>
+<li>Direct biochemical characterization of substrate specificity and binding affinity in the <em>Xenorhabdus</em> protein</li>
+<li>Role of cystine/cysteine transport during the complex lifecycle transitions between nematode symbiosis and insect pathogenesis</li>
+<li>Potential interactions with <em>Xenorhabdus</em>-specific regulatory networks beyond CysB</li>
+<li>Contribution to virulence and host colonization, given the importance of sulfur metabolism in pathogenesis</li>
+</ol>
+<h2 id="conclusion">Conclusion</h2>
+<p>The fliY gene (D3VIU4) from <em>Xenorhabdus nematophila</em> encodes a periplasmic substrate-binding protein that functions as the high-affinity cystine-capture component of the FliY-YecSC (TcyJLN) ABC transporter system. Based on extensive functional studies in <em>E. coli</em> and phylogenetic conservation, this protein operates in the periplasmic space to bind L-cystine with nanomolar affinity (Km ~30 nM) and deliver it to membrane-associated ATPase and permease components for ATP-driven import. The imported cystine is reduced to cysteine, which serves as the central precursor for all cellular sulfur-containing biomolecules. Expression is induced during sulfur limitation through the CysB transcriptional regulator. Despite its misleading name (derived from chromosomal proximity to flagellar genes), FliY has no role in flagellar assembly and functions exclusively in sulfur assimilation. The protein belongs to the bacterial solute-binding protein family 3 and exhibits characteristic features including extremely low cysteine content to permit synthesis during sulfur starvation. This transport system is essential for bacterial survival under conditions of limiting sulfur availability, particularly when cystine concentrations are in the nanomolar range.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(imlay2015physiologicalrolesand pages 1-2): Karin R. Chonoles Imlay, Sergey Korshunov, and James A. Imlay. Physiological roles and adverse effects of the two cystine importers of escherichia coli. Journal of Bacteriology, 197:3629-3644, Dec 2015. URL: https://doi.org/10.1128/jb.00277-15, doi:10.1128/jb.00277-15. This article has 110 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(imlay2015physiologicalrolesand pages 5-7): Karin R. Chonoles Imlay, Sergey Korshunov, and James A. Imlay. Physiological roles and adverse effects of the two cystine importers of escherichia coli. Journal of Bacteriology, 197:3629-3644, Dec 2015. URL: https://doi.org/10.1128/jb.00277-15, doi:10.1128/jb.00277-15. This article has 110 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2020escherichiacolik12 pages 1-2): Yidan Zhou and James A. Imlay. Escherichia coli k-12 lacks a high-affinity assimilatory cysteine importer. mBio, Jun 2020. URL: https://doi.org/10.1128/mbio.01073-20, doi:10.1128/mbio.01073-20. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(imlay2015physiologicalrolesand pages 4-5): Karin R. Chonoles Imlay, Sergey Korshunov, and James A. Imlay. Physiological roles and adverse effects of the two cystine importers of escherichia coli. Journal of Bacteriology, 197:3629-3644, Dec 2015. URL: https://doi.org/10.1128/jb.00277-15, doi:10.1128/jb.00277-15. This article has 110 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(imlay2015physiologicalrolesand pages 7-9): Karin R. Chonoles Imlay, Sergey Korshunov, and James A. Imlay. Physiological roles and adverse effects of the two cystine importers of escherichia coli. Journal of Bacteriology, 197:3629-3644, Dec 2015. URL: https://doi.org/10.1128/jb.00277-15, doi:10.1128/jb.00277-15. This article has 110 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(imlay2015physiologicalrolesand pages 9-10): Karin R. Chonoles Imlay, Sergey Korshunov, and James A. Imlay. Physiological roles and adverse effects of the two cystine importers of escherichia coli. Journal of Bacteriology, 197:3629-3644, Dec 2015. URL: https://doi.org/10.1128/jb.00277-15, doi:10.1128/jb.00277-15. This article has 110 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2020escherichiacolik12 pages 2-4): Yidan Zhou and James A. Imlay. Escherichia coli k-12 lacks a high-affinity assimilatory cysteine importer. mBio, Jun 2020. URL: https://doi.org/10.1128/mbio.01073-20, doi:10.1128/mbio.01073-20. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="D3VIU4-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>imlay2015physiologicalrolesand pages 5-7</li>
+<li>imlay2015physiologicalrolesand pages 9-10</li>
+<li>imlay2015physiologicalrolesand pages 4-5</li>
+<li>imlay2015physiologicalrolesand pages 7-9</li>
+<li>imlay2015physiologicalrolesand pages 1-2</li>
+<li>https://doi.org/10.1128/jb.00277-15,</li>
+<li>https://doi.org/10.1128/mbio.01073-20,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: D3VIU4
+gene_symbol: D3VIU4
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:406817
+  label: Xenorhabdus nematophila (strain ATCC 19061 / DSM 3370 / CCUG 14189 / LMG
+    1036 / NCIMB 9965 / AN6)
+description: &gt;-
+  FliY (locus tag XNC1_0570) is a periplasmic solute-binding protein of the bacterial
+  solute-binding protein family 3 (SBP_bac_3, PF00497) in the Gram-negative entomopathogenic
+  bacterium Xenorhabdus nematophila. It functions as the substrate-capture component of
+  the FliY-YecSC (TcyJLN) ATP-binding cassette (ABC) transporter system, which imports
+  L-cystine with high affinity (Km ~30 nM in E. coli orthologs). FliY is synthesized with
+  an N-terminal signal peptide (residues 1-28) that directs its secretion into the periplasmic
+  space, where it binds extracellular L-cystine and delivers it to the inner-membrane-associated
+  YecSC complex for ATP-driven translocation into the cytoplasm. The imported cystine is
+  reduced to L-cysteine, which serves as a central hub for synthesis of methionine, glutathione,
+  iron-sulfur clusters, and other sulfur-containing biomolecules. Despite the &#34;fliY&#34; gene name
+  (which derives solely from chromosomal proximity to flagellar genes), this protein has no
+  role in flagellar assembly or motility; its function is restricted to cystine transport
+  for sulfur assimilation. The protein is 262 amino acids long and contains the conserved
+  Solute-binding protein family 3/N-terminal domain (IPR001638).
+existing_annotations:
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      FliY is a periplasmic solute-binding protein in Gram-negative bacteria. It contains
+      an N-terminal signal peptide (residues 1-28) directing export across the inner membrane
+      into the periplasm. As a component of the FliY-YecSC ABC transporter, it operates as
+      a soluble protein in the outer membrane-bounded periplasmic space, where it captures
+      L-cystine and delivers it to the inner-membrane YecSC complex. This localization is
+      well-supported by the protein&#39;s signal peptide, its membership in the bacterial
+      solute-binding protein 3 family, and the conserved architecture of Gram-negative
+      ABC import systems. The ARBA prediction is consistent with the known biology.
+    action: ACCEPT
+- term:
+    id: GO:0030313
+    label: cell envelope
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      The cell envelope annotation is derived from UniProtKB-SubCell mapping and is not
+      incorrect -- FliY does reside within the cell envelope. However, this is a very broad
+      term (GO:0030313) that encompasses the outer membrane, periplasmic space, inner membrane,
+      and cell wall. The more specific annotation to outer membrane-bounded periplasmic space
+      (GO:0030288) already captures the precise localization of FliY. Retaining this annotation
+      as non-core since it is accurate but less informative than the periplasmic space annotation.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0016597
+    label: amino acid binding
+  evidence_type: ISS
+  original_reference_id: &#34;file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md&#34;
+  qualifier: enables
+  review:
+    summary: &gt;-
+      FliY is the periplasmic substrate-binding protein of the FliY-YecSC (TcyJLN) ABC
+      transporter. Its primary molecular function is binding L-cystine with high affinity
+      in the periplasm. The amino acid binding term captures this substrate-binding role.
+      This is inferred from sequence similarity to the well-characterized E. coli FliY
+      ortholog and from membership in the bacterial solute-binding protein family 3. The
+      CDD annotation (cd13711, PBP2_Ngo0372_TcyA) further supports this functional assignment.
+    action: NEW
+    supported_by:
+    - reference_id: &#34;file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md&#34;
+      supporting_text: &gt;-
+        [Inferred from E. coli ortholog] FliY serves as the periplasmic substrate-binding
+        component of an ATP-binding cassette (ABC) transporter complex designated FliY-YecSC.
+        This system functions as a high-affinity importer of L-cystine.
+- term:
+    id: GO:0015811
+    label: L-cystine transport
+  evidence_type: ISS
+  original_reference_id: &#34;file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md&#34;
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      FliY functions as the substrate-capture component of the cystine ABC transporter
+      system. Its role in L-cystine transport is inferred from sequence similarity to
+      the E. coli FliY ortholog, which has been experimentally demonstrated to be essential
+      for cystine import via the FliY-YecSC system. The UniProt submission name (&#34;Cysteine
+      transport protein&#34;) and CDD domain hit (PBP2_Ngo0372_TcyA) are consistent with this
+      functional assignment.
+    action: NEW
+    supported_by:
+    - reference_id: &#34;file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md&#34;
+      supporting_text: &gt;-
+        [Inferred from E. coli ortholog] Genetic deletion studies definitively established
+        that FliY, together with a second cystine transporter YdjN (TcyP), constitutes one
+        of only two cystine import systems in the bacterium. Double mutants lacking both
+        fliY and ydjN are completely unable to import detectable levels of cystine.
+- term:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  evidence_type: ISS
+  original_reference_id: &#34;file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md&#34;
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      FliY is the periplasmic binding protein subunit of the FliY-YecSC ABC transporter
+      complex. This complex membership is inferred from homology to the E. coli system
+      where FliY, YecS, and YecC form the three-component ABC transporter, and from the
+      UniProt annotation as an ABC superfamily periplasmic binding protein.
+    action: NEW
+    supported_by:
+    - reference_id: &#34;file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md&#34;
+      supporting_text: &gt;-
+        [Inferred from E. coli ortholog] The FliY-YecSC system operates through the canonical
+        ABC transporter mechanism involving three protein components: FliY is the periplasmic
+        substrate-binding protein, YecS the ATPase component, and YecC the integral membrane
+        permease.
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:22125637
+  title: &#34;The entomopathogenic bacterial endosymbionts Xenorhabdus and Photorhabdus:\
+    \ convergent lifestyles from divergent genomes&#34;
+  findings:
+  - statement: &gt;-
+      This is the genome sequencing paper for Xenorhabdus nematophila strain ATCC 19061,
+      which identified the fliY gene (locus tag XNC1_0570) encoding the cysteine transport
+      protein.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome paper that is the source of the D3VIU4 protein sequence. Does not contain
+      functional characterization of FliY specifically, but provides the genomic context.
+- id: &#34;file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md&#34;
+  title: &#34;Deep research report on D3VIU4 fliY from Xenorhabdus nematophila&#34;
+  publication_type: DEEP_RESEARCH
+  findings:
+  - statement: &gt;-
+      FliY serves as the periplasmic substrate-binding component of the FliY-YecSC
+      (TcyJLN) ABC transporter complex for high-affinity L-cystine import. Studies
+      in E. coli demonstrate that the FliY-YecSC system achieves half-maximal transport
+      at approximately 30 nM cystine, about 100-fold higher affinity than the alternative
+      YdjN transporter. The protein belongs to bacterial solute-binding protein family 3
+      and operates in the periplasmic space of Gram-negative bacteria.
+core_functions:
+- description: &gt;-
+    FliY is the periplasmic substrate-binding protein component of the FliY-YecSC
+    (TcyJLN) ABC transporter complex. It captures L-cystine in the periplasm with
+    high affinity and delivers it to the membrane-associated transporter components
+    for ATP-dependent import. This supports sulfur assimilation under conditions of
+    sulfur limitation.
+  supported_by:
+  - reference_id: &#34;file:XENNA/D3VIU4/D3VIU4-deep-research-falcon.md&#34;
+    supporting_text: &gt;-
+      [Inferred from E. coli ortholog characterization] FliY serves as the periplasmic
+      substrate-binding component of an ATP-binding cassette (ABC) transporter complex
+      designated FliY-YecSC (also known as TcyJLN). This system functions as a high-affinity
+      importer of L-cystine. The FliY-YecSC system achieves half-maximal transport at
+      approximately 30 nanomolar cystine concentration.
+  molecular_function:
+    id: GO:0016597
+    label: amino acid binding
+  contributes_to_molecular_function:
+    id: GO:0015184
+    label: L-cystine transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0015811
+    label: L-cystine transport
+  locations:
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  in_complex:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mcm-4 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mcm-4</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A061AL94" target="_blank" class="term-link">
+                        A0A061AL94
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mcm-4";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A061AL94" data-a="DESCRIPTION: MCM-4 is a subunit of the minichromosome maintenan..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MCM-4 is a subunit of the minichromosome maintenance (MCM2-7) heterohexameric complex, the core replicative DNA helicase in eukaryotes. The MCM2-7 complex is loaded onto replication origins during late mitosis and G1 phase by ORC, Cdc6, and Cdt1 to form the pre-replication complex, licensing origins for a single round of DNA replication per cell cycle. Upon activation at the G1-S transition by CDK and DDK phosphorylation, the MCM2-7 complex associates with Cdc45 and GINS to form the CMG (Cdc45-MCM2-7-GINS) helicase, which unwinds duplex DNA in the 3-prime to 5-prime direction at replication forks during S phase. MCM-4, together with MCM-6 and MCM-7, forms the catalytic MCM4/6/7 core subcomplex that possesses intrinsic DNA helicase activity. MCM-4 contains an AAA+ ATPase domain and a C-terminal winged-helix domain (WHD) involved in DNA binding. Recent structural work identified Mcm4 as a key ATPase during pre-replication complex formation, with Mcm4 ATP hydrolysis triggering Cdt1 release after MCM ring closure. In C. elegans, mcm-4 is expressed in the germ line and in proliferating somatic cells; its expression tracks proliferative competence and is downregulated upon cell cycle exit. CMG helicase function is essential for embryonic cell divisions in C. elegans, and reduced CMG activity causes dramatic increases in cell cycle length. Emerging evidence in C. elegans indicates that the MCM-containing CMG complex also has non-canonical roles in anchor cell invasion and in the divergence of cell fates during asymmetric cell divisions, potentially through replication-coupled epigenetic mechanisms. UniProt accession A0A061AL94 corresponds to transcript Y39G10AR.14b, a short 74 amino acid fragment containing only the C-terminal winged-helix domain (WHD_MCM4, PF21128) of the full-length MCM-4 protein. The canonical full-length C. elegans MCM-4 (P34579) is approximately 860 amino acids.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003678" target="_blank" class="term-link">
+                                    GO:0003678
+                                </a>
+                            </span>
+                            <span class="term-label">DNA helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A061AL94" data-a="GO:0003678" data-r="GO_REF:0000024" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MCM-4 contributes to DNA helicase activity as part of the MCM4/6/7 catalytic core within the MCM2-7 heterohexameric complex. The MCM4/6/7 subcomplex possesses intrinsic 3-prime to 5-prime DNA helicase activity. MCM-4 does not have independent helicase activity; it contributes to the helicase activity of the complex. This function is well-established across eukaryotes by sequence homology, structural conservation, and biochemical studies of orthologs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No GOA annotations exist for this accession. DNA helicase activity is the core molecular function of the MCM4/6/7 subcomplex in which MCM-4 participates, supported by extensive ortholog evidence and domain analysis (WHD_MCM4, PF21128).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[From deep research] MCM-4 serves a catalytic role within the MCM2-7 replicative helicase complex. The MCM4, MCM6, and MCM7 subunits form a particularly critical MCM4/6/7 core that is essential for helicase function.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006270" target="_blank" class="term-link">
+                                    GO:0006270
+                                </a>
+                            </span>
+                            <span class="term-label">DNA replication initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A061AL94" data-a="GO:0006270" data-r="GO_REF:0000024" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MCM-4 is directly involved in DNA replication initiation as a subunit of the MCM2-7 complex, which is loaded onto replication origins during G1 to license them for replication. The MCM2-7 double hexamer is subsequently activated at the G1-S transition to form the CMG helicase that initiates DNA unwinding at origins. Mcm4 ATP hydrolysis is a key step in pre-replication complex formation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No GOA annotations exist for this accession. DNA replication initiation is a core biological process for all MCM2-7 subunits, well-established by ortholog studies and functional analysis across eukaryotes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[From deep research] Faull et al. (2025) demonstrated that normal helicase loading triggers Mcm4 ATP hydrolysis, which in turn leads to reorganization of the MCM2-7 complex and release of the licensing factor Cdt1.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006260" target="_blank" class="term-link">
+                                    GO:0006260
+                                </a>
+                            </span>
+                            <span class="term-label">DNA replication</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A061AL94" data-a="GO:0006260" data-r="GO_REF:0000024" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MCM-4 participates in DNA replication as a subunit of the replicative helicase that unwinds duplex DNA at replication forks during S phase. The CMG complex (Cdc45-MCM2-7-GINS), which includes MCM-4, is the active helicase during replication elongation. In C. elegans, reduced CMG activity causes dramatic increases in cell cycle length, confirming the essential role in replication.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No GOA annotations exist for this accession. DNA replication is the broader biological process in which MCM-4 functions, both during origin licensing and replication fork progression.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[From deep research] Memar et al. (2024) ...reducing CMG function causes dramatic increases in cell cycle length in embryonic cells... cell cycle lengths increased from an average of 22 minutes to 39 minutes at early divisions, and from 40 minutes to 144 minutes at later divisions.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A061AL94" data-a="GO:0005634" data-r="GO_REF:0000024" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MCM-4 functions in the nucleus, where the MCM2-7 complex is loaded onto chromatin at replication origins during G1 phase and subsequently operates at replication forks during S phase. In C. elegans, MCM-4::mCherry fusion proteins have been observed associated with chromosomes, consistent with nuclear chromatin-localized function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No GOA annotations exist for this accession. Nuclear localization is well-established for MCM complex subunits across eukaryotes. In C. elegans, live-cell imaging confirmed MCM-4 association with chromosomes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[From deep research] MCM-4, as part of the MCM2-7 complex, functions in the nucleus on chromatin. The complex is loaded onto chromatin at licensed replication origins during late mitosis and G1 phase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042555" target="_blank" class="term-link">
+                                    GO:0042555
+                                </a>
+                            </span>
+                            <span class="term-label">MCM complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A061AL94" data-a="GO:0042555" data-r="GO_REF:0000024" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MCM-4 is a constitutive subunit of the MCM2-7 heterohexameric complex, which is composed of MCM2, MCM3, MCM4, MCM5, MCM6, and MCM7. Within this complex, MCM-4 is part of the catalytic MCM4/6/7 core that possesses the DNA helicase activity. The MCM complex is required for initiation and regulation of DNA replication across all eukaryotes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No GOA annotations exist for this accession. MCM-4 is by definition a component of the MCM complex, as established by the protein name, domain composition, and extensive ortholog evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MCM-4 contributes to the DNA helicase activity of the MCM2-7 complex as part of the catalytic MCM4/6/7 core. The MCM2-7 heterohexamer, when activated as part of the CMG complex, unwinds duplex DNA in the 3-prime to 5-prime direction at replication forks. MCM-4 is also a key ATPase during pre-replication complex formation, with Mcm4 ATP hydrolysis triggering ring closure and Cdt1 release. MCM-4 does not possess DNA helicase activity as an isolated subunit; rather, it contributes to the helicase activity of the MCM complex and CMG complex. In C. elegans, CMG function is essential for embryonic cell divisions, and reduced CMG activity causes cell cycle lengths to increase nearly two- to four-fold.</h3>
+                <span class="vote-buttons" data-g="A0A061AL94" data-a="FUNCTION: MCM-4 contributes to the DNA helicase activity of ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003678" target="_blank" class="term-link">
+                            DNA helicase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006270" target="_blank" class="term-link">
+                                DNA replication initiation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006260" target="_blank" class="term-link">
+                                DNA replication
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042555" target="_blank" class="term-link">
+                            MCM complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">[From deep research] MCM-4 serves a catalytic role within the MCM2-7 replicative helicase complex. The MCM4, MCM6, and MCM7 subunits form a particularly critical MCM4/6/7 core that is essential for helicase function.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">[From deep research] Faull et al. (2025) demonstrated that normal helicase loading triggers Mcm4 ATP hydrolysis, which in turn leads to reorganization of the MCM2-7 complex and release of the licensing factor Cdt1.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">[From deep research] MCM-4, as part of the MCM2-7 complex, functions in the nucleus on chromatin. The complex is loaded onto chromatin at licensed replication origins during late mitosis and G1 phase.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">[From deep research] Memar et al. (2024) ...reducing CMG function causes dramatic increases in cell cycle length in embryonic cells... cell cycle lengths increased from an average of 22 minutes to 39 minutes at early divisions, and from 40 minutes to 144 minutes at later divisions.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9851916" target="_blank" class="term-link">
+                            PMID:9851916
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genome sequence of the nematode C. elegans: a platform for investigating biology</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Sequence Similarity Evidence Used in Manual Assertion</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the short 74 amino acid product of transcript Y39G10AR.14b (A0A061AL94), containing only the C-terminal winged-helix domain of MCM-4, represent a biologically functional protein or is it a non-functional alternative transcript?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A061AL94" data-a="Q: Does the short 74 amino acid product of transcript..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What specific roles does C. elegans MCM-4 play in the non-canonical functions of the pre-replication complex, such as anchor cell invasion and asymmetric cell fate determination?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A061AL94" data-a="Q: What specific roles does C. elegans MCM-4 play in ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express tagged versions of both the full-length MCM-4 (from Y39G10AR.14a) and the short WHD-only fragment (from Y39G10AR.14b) in C. elegans. Perform co-immunoprecipitation with other MCM subunits to determine whether the short fragment can be incorporated into the MCM2-7 hexamer. Assess subcellular localization by fluorescence microscopy to determine whether the WHD-only fragment localizes to chromatin.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The 74 AA WHD-only product of Y39G10AR.14b is not incorporated into functional MCM complexes and may not be biologically active.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: co-immunoprecipitation and fluorescence microscopy</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A061AL94" data-a="EXPERIMENT: Express tagged versions of both the full-length MC..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(A0A061AL94-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A061AL94" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Comprehensive Research Report: C. elegans mcm-4 Gene (UniProt: A0A061AL94)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">20 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-18T19:04:38.619021</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="A0A061AL94-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-c-elegans-mcm-4-gene-uniprot-a0a061al94">Comprehensive Research Report: C. elegans mcm-4 Gene (UniProt: A0A061AL94)</h1>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>The C. elegans mcm-4 gene encodes the MCM-4 subunit of the evolutionarily conserved minichromosome maintenance (MCM2-7) complex, which functions as the core replicative DNA helicase essential for eukaryotic DNA replication. This report synthesizes current understanding of mcm-4 function based on recent authoritative literature, with emphasis on 2023-2024 publications and C. elegans-specific studies.</p>
+<h2 id="1-gene-identity-and-protein-structure">1. Gene Identity and Protein Structure</h2>
+<p>The mcm-4 gene (gene locus: Y39G10AR.14) encodes a DNA replication licensing factor belonging to the AAA+ (ATPases Associated with diverse cellular Activities) protein superfamily (malysa2024minichromosomemaintenanceproteins pages 1-3). MCM-4 is one of six subunits (MCM2 through MCM7) that assemble into a heterohexameric ring-shaped complex essential for DNA replication (you2024assemblyactivationand pages 1-2, malysa2024minichromosomemaintenanceproteins pages 1-3). The protein contains characteristic structural domains including an N-terminal domain with a zinc-binding motif, a central AAA+ ATPase domain (MCM box) with Walker A and Walker B motifs, and a C-terminal winged-helix domain (WHD) that binds DNA (malysa2024minichromosomemaintenanceproteins pages 1-3).</p>
+<h2 id="2-primary-molecular-function-dna-replication-licensing-and-helicase-activity">2. Primary Molecular Function: DNA Replication Licensing and Helicase Activity</h2>
+<h3 id="21-core-helicase-function">2.1 Core Helicase Function</h3>
+<p>MCM-4 serves a catalytic role within the MCM2-7 replicative helicase complex. The MCM4, MCM6, and MCM7 subunits form a particularly critical "MCM4/6/7 core" that is essential for helicase function (you2024assemblyactivationand pages 2-4, malysa2024minichromosomemaintenanceproteins pages 3-4). Early biochemical studies demonstrated that the human hexameric MCM(4/6/7)₂ complex possesses intrinsic single-stranded DNA-dependent ATP hydrolysis activity and DNA helicase activity that proceeds in the 3′→5′ direction (you2024assemblyactivationand pages 2-4). The three subunits MCM4, MCM6, and MCM7 contribute distinct biochemical functions to the helicase activity of the complex (you2024assemblyactivationand pages 2-4).</p>
+<p>Structural and mutational analyses have shown that the MCM4/6/7 core is critical for regulating helicase function. When MCM4, MCM6, or MCM7 are mutated, helicase activity is disrupted (malysa2024minichromosomemaintenanceproteins pages 3-4). Notably, recent work has revealed that MCM4 exhibits both stimulatory and inhibitory regulatory effects on the active CMG (Cdc45-MCM2-7-GINS) helicase: while MCM7 mutations decrease ATPase and helicase abilities, MCM4 mutations can paradoxically increase helicase activity, highlighting MCM4's complex regulatory role (malysa2024minichromosomemaintenanceproteins pages 3-4).</p>
+<h3 id="22-atp-hydrolysis-and-mechanistic-regulation">2.2 ATP Hydrolysis and Mechanistic Regulation</h3>
+<p>Recent structural and biochemical studies from 2024-2025 have identified MCM4 as a key ATPase during pre-replication complex (pre-RC) formation. Faull et al. (2025) demonstrated that normal helicase loading triggers Mcm4 ATP hydrolysis, which in turn leads to reorganization of the MCM2-7 complex and release of the licensing factor Cdt1 (faull2025mcm27ringclosure pages 1-2). This work established that Mcm4 is the key ATPase regulating pre-RC formation, and that a stable Mcm2/Mcm5 interface is essential for productive ATP-hydrolysis-dependent remodeling of the helicase (faull2025mcm27ringclosure pages 1-2).</p>
+<p>The MCM2-7 complex has been shown to possess both DNA unwinding and DNA strand annealing activities. The annealing activity of MCM2-7 is inhibited by ATP and activated by ADP, suggesting that unwinding versus reannealing may be regulated by ATP hydrolysis state (you2024assemblyactivationand pages 2-4). Single-molecule studies of the CMG helicase have observed not only unwinding and pausing but also reverse motion consistent with annealing activities (you2024assemblyactivationand pages 2-4).</p>
+<h3 id="23-substrate-specificity-and-dna-binding">2.3 Substrate Specificity and DNA Binding</h3>
+<p>The MCM4/6/7 helicase exhibits substrate preference for specific DNA structures and sequences. A forked or bubble-like DNA structure is required for the formation of the double heterohexameric MCM4/6/7 complex (you2024assemblyactivationand pages 2-4). Importantly, thymine-rich single-stranded DNA on bubble or fork structures preferentially activates the ATPase and helicase activities of the MCM4/6/7 helicase (you2024assemblyactivationand pages 2-4). This preference for AT-rich sequences may facilitate initial DNA melting at replication origins, as A/T base pairs are more unstable than G/C base pairs and therefore more prone to unwinding (you2024assemblyactivationand pages 2-4).</p>
+<p>Recent genome-wide mapping of human MCM2-7 binding sites confirmed that MCM2-7 complexes preferentially bind AT-rich sequences, with the highest AT content located at the center of double-hexamer MCM2-7 (dhMCM2-7) binding sites, suggesting that MCM2-7 hexamers favor sequences prone to unwinding to facilitate initial DNA melting (you2024assemblyactivationand pages 2-4).</p>
+<h2 id="3-dna-replication-pathway-and-biological-context">3. DNA Replication Pathway and Biological Context</h2>
+<h3 id="31-the-pre-replication-complex-and-origin-licensing">3.1 The Pre-Replication Complex and Origin Licensing</h3>
+<p>MCM-4 functions within a highly regulated multi-step DNA replication initiation pathway. During late mitosis and early G1 phase, replication origins are "licensed" for replication by loading MCM2-7 double hexamers onto chromatin (malysa2024minichromosomemaintenanceproteins pages 3-4). This process requires the origin recognition complex (ORC), which binds to replication origins throughout the cell cycle, and the licensing factors Cdc6 and Cdt1 (song2023dnareplicationmechanisms pages 1-2, malysa2024minichromosomemaintenanceproteins pages 3-4). The ORC/Cdc6 complex recruits Cdt1/MCM2-7 to form an ORC-Cdc6-Cdt1-MCM2-7 (OCCM) intermediate (faull2025mcm27ringclosure pages 1-2). </p>
+<p>The MCM2-7 proteins are loaded around origin DNA as head-to-head double hexamers connecting via their N-terminal rings, forming an inactive dhMCM2-7 that encircles double-stranded DNA (you2024assemblyactivationand pages 4-6). This licensing step is essential to ensure that DNA replication occurs exactly once per cell cycle, a fundamental requirement for maintaining genome integrity (malysa2024minichromosomemaintenanceproteins pages 1-3, malysa2024minichromosomemaintenanceproteins pages 3-4).</p>
+<h3 id="32-origin-firing-and-cmg-helicase-activation">3.2 Origin Firing and CMG Helicase Activation</h3>
+<p>The inactive dhMCM2-7 complexes loaded during G1 are activated at the G1-S transition through the coordinated action of two serine-threonine kinases: cyclin-dependent kinase (CDK) and Cdc7/Dbf4 kinase (DDK) (you2024assemblyactivationand pages 1-2, you2024assemblyactivationand pages 4-6). Cdc7 phosphorylates MCM2-7 subunits, most notably at the N-terminal tails of MCM4, MCM6, and MCM2 (you2024assemblyactivationand pages 4-6). These phosphorylation events create binding sites for additional initiation factors and promote conformational changes in the MCM2-7 complex (you2024assemblyactivationand pages 4-6).</p>
+<p>Following phosphorylation, the initiation factors Cdc45 and the GINS complex (composed of Psf1, Psf2, Psf3, and Sld5) are recruited to MCM2-7 to form the active CMG (Cdc45-MCM2-7-GINS) helicase complex (you2024assemblyactivationand pages 1-2, malysa2024minichromosomemaintenanceproteins pages 3-4, you2024assemblyactivationand pages 4-6). Additional factors including Treslin-MTBP (Sld3-Sld7 in yeast), RecQL4/DONSON (Sld2), TopBP1 (Dpb11), and Mcm10 are also required for proper CMG assembly and activation (you2024assemblyactivationand pages 1-2, you2024assemblyactivationand pages 4-6).</p>
+<p>The CMG helicase complex represents the active replicative helicase that unwinds double-stranded DNA during S phase (you2024assemblyactivationand pages 1-2, rankin2024themcm27complex pages 1-2). At the replication fork, CMG functions as part of a larger replisome progression complex (RPC) that coordinates DNA unwinding with DNA synthesis by polymerases and other replication factors (you2024assemblyactivationand pages 4-6).</p>
+<h3 id="33-cell-cycle-regulation-and-checkpoints">3.3 Cell Cycle Regulation and Checkpoints</h3>
+<p>MCM-4 and the broader MCM2-7 complex play critical roles in coordinating DNA replication with cell cycle progression. The temporal separation of helicase loading (in G1) from helicase activation (at G1/S transition) is a fundamental mechanism ensuring that DNA replication occurs only once per cell cycle (faull2025mcm27ringclosure pages 1-2, you2024assemblyactivationand pages 1-2).</p>
+<p>In rapidly dividing C. elegans embryos, where S phase and mitosis alternate without apparent G1 or G2 gap phases, the coordination between DNA replication and chromosome dynamics is particularly critical (sonneville2015bothchromosomedecondensation pages 1-3). Studies in C. elegans have shown that DNA replication initiation triggers rapid decondensation of chromatids and that DNA replication promotes chromosome condensation during prophase, demonstrating functional linkage between the chromosome-condensation cycle and DNA replication (sonneville2015bothchromosomedecondensation pages 1-3).</p>
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>MCM-4, as part of the MCM2-7 complex, functions in the nucleus on chromatin. The complex is loaded onto chromatin at licensed replication origins during late mitosis and G1 phase, where it remains associated with origin DNA until activation at the G1-S transition (rankin2024themcm27complex pages 1-2, malysa2024minichromosomemaintenanceproteins pages 3-4). Following activation, the CMG helicase translocates along DNA at active replication forks during DNA synthesis (rankin2024themcm27complex pages 1-2).</p>
+<p>In C. elegans, live-cell imaging studies using MCM-4::mCherry fusion proteins have demonstrated prolonged association of MCM-4 with artificial chromosomes during DNA replication, consistent with its chromatin-localized function during DNA synthesis (lin2021rbap4648lin53andhat1 pages 2-2). The nuclear localization of MCM proteins is facilitated by nuclear localization sequences (NLSs) present in MCM2 and MCM3 subunits of the complex (malysa2024minichromosomemaintenanceproteins pages 1-3).</p>
+<h2 id="5-c-elegans-specific-studies-and-developmental-context">5. C. elegans-Specific Studies and Developmental Context</h2>
+<h3 id="51-cell-proliferation-and-development">5.1 Cell Proliferation and Development</h3>
+<p>In C. elegans, mcm-4 expression is tightly linked to cellular proliferative capacity. Studies by Heinze et al. (2023) examining somatic cell proliferation demonstrated that mcm-4 is among the genes encoding subunits of the pre-replication complex that are necessary to license DNA replication origins in proliferating cells (heinze2023prolongingsomaticcell pages 1-2). The expression of mcm-4 and other replication genes is upregulated in dividing vulval cells and marks cells competent for cell cycle progression (heinze2023prolongingsomaticcell pages 1-2).</p>
+<p>Conversely, down-regulation of mcm-4 expression correlates with cell cycle exit. Genome-wide temporal gene expression analysis in the related nematode C. briggsae showed that MCM family members (including Cbr-mcm-2, Cbr-mcm-3, Cbr-mcm-4, Cbr-mcm-5, and Cbr-mcm-6) are among genes downregulated in the post-reproductive period, consistent with reduced DNA replication capacity in aging animals (heinze2023prolongingsomaticcell pages 1-2).</p>
+<h3 id="52-essential-role-in-embryonic-cell-cycle">5.2 Essential Role in Embryonic Cell Cycle</h3>
+<p>Recent C. elegans studies have demonstrated the essential role of CMG helicase components in embryonic development. Work by Memar et al. (2024) examining the C. elegans CMG component PSF-2 (GINS2) showed that reducing CMG function causes dramatic increases in cell cycle length in embryonic cells (memar2024thereplicativehelicase pages 1-2, memar2024thereplicativehelicase pages 2-3). In temperature-sensitive psf-2 mutants, cell cycle lengths increased from an average of 22 minutes to 39 minutes at early divisions, and from 40 minutes to 144 minutes at later divisions - representing nearly two-fold to four-fold increases (memar2024thereplicativehelicase pages 2-3). This ultimately resulted in a block in cell division and embryonic lethality, underscoring the essential requirement for functional CMG helicase (including MCM-4) in C. elegans development (memar2024thereplicativehelicase pages 1-2, memar2024thereplicativehelicase pages 2-3).</p>
+<h3 id="53-non-replication-functions">5.3 Non-Replication Functions</h3>
+<p>Emerging evidence suggests that pre-replication complex genes, including mcm-4, may have functions beyond canonical DNA replication. Lattmann et al. (2022) identified several components of the conserved DNA pre-replication complex as positive regulators of anchor cell (AC) invasion during C. elegans development (rankin2024themcm27complex pages 1-2). Intriguingly, the pre-RC genes appear to function cell-autonomously in the G1-arrested anchor cell to promote invasion, independently of their role in licensing DNA replication origins in proliferating cells (rankin2024themcm27complex pages 1-2). While the helicase activity of the pre-RC is necessary for AC invasion, downstream-acting DNA replication initiation factors are not required, suggesting that the MCM complex or part of it may act as a transcriptional regulator facilitating the switch to an invasive phenotype (rankin2024themcm27complex pages 1-2).</p>
+<p>More recently, Memar et al. (2024) demonstrated that the CMG helicase is required for the divergence of cell fates during asymmetric cell divisions in C. elegans, particularly for transcriptional upregulation of cell fate determinant genes (memar2024thereplicativehelicase pages 1-2, memar2024thereplicativehelicase pages 2-3). They proposed that CMG's recently described histone chaperone activity causes epigenetic changes during replication in mother cells that are required for differential gene expression in daughter cells (memar2024thereplicativehelicase pages 1-2, memar2024thereplicativehelicase pages 2-3). This provides in vivo evidence for replication-coupled but DNA-synthesis-independent roles of the MCM-containing CMG complex.</p>
+<h2 id="6-dna-damage-response-and-genome-stability">6. DNA Damage Response and Genome Stability</h2>
+<p>Beyond its core replication function, MCM-4 contributes to maintaining genome stability through involvement in DNA damage response (DDR) pathways. Multiple lines of evidence indicate that MCM proteins play critical roles in DDR through physical and functional interactions with DNA repair proteins (malysa2024minichromosomemaintenanceproteins pages 4-6).</p>
+<p>MCM4 has been identified as a key player in the DNA damage response. Checkpoint kinase Chk1, which signals DNA repair, phosphorylates MCM4 to prevent DNA synthesis under conditions of DNA damage (malysa2024minichromosomemaintenanceproteins pages 4-6). Additionally, MCM4 interacts with homologous recombination repair proteins, suggesting active involvement in homologous recombination repair (HRR) (malysa2024minichromosomemaintenanceproteins pages 4-6). The N-terminal serine/threonine-rich domain (NSD) of MCM4 has been shown to regulate checkpoint signaling to prevent late origin firing in response to DNA-damaging agents (malysa2024minichromosomemaintenanceproteins pages 4-6).</p>
+<p>Studies in model organisms have demonstrated that MCM4 mutations increase sensitivity to DNA damage. Mutant MCM4 mice crossed with ATM-null mice exhibited increased tumor susceptibility, shorter tumor latency, and accumulated double-strand breaks due to collapsed or stalled replication forks (malysa2024minichromosomemaintenanceproteins pages 4-6). This phenotype was exacerbated by absence of compensatory dormant origin activation and DDR signaling (malysa2024minichromosomemaintenanceproteins pages 4-6).</p>
+<p>The abundant "excess" MCM2-7 complexes loaded on chromatin (beyond those activated for replication) - a phenomenon known as the "MCM paradox" - are thought to serve as dormant replication origins that can be activated during replication stress to ensure complete DNA replication (rankin2024themcm27complex pages 1-2). This provides robustness to the replication system and contributes to genome stability maintenance (malysa2024minichromosomemaintenanceproteins pages 1-3, rankin2024themcm27complex pages 1-2).</p>
+<h2 id="7-current-understanding-and-recent-advances-2023-2024">7. Current Understanding and Recent Advances (2023-2024)</h2>
+<p>Recent structural and biochemical advances have significantly enhanced our understanding of MCM-4 function:</p>
+<ol>
+<li>
+<p><strong>Mechanistic insights into pre-RC formation</strong>: The 2025 cryo-EM structure by Faull et al. revealed a fully-closed MCM2-7 ring configuration in the OCCM intermediate and identified Mcm4 as the key ATPase controlling pre-RC progression (faull2025mcm27ringclosure pages 1-2).</p>
+</li>
+<li>
+<p><strong>Integration with chromosome dynamics</strong>: Studies in C. elegans demonstrated that replication initiation by the CMG helicase drives chromosome decondensation, while DNA replication promotes condensin II accumulation and chromosome condensation, revealing tight functional coupling between replication and chromatin organization (sonneville2015bothchromosomedecondensation pages 1-3).</p>
+</li>
+<li>
+<p><strong>Non-canonical developmental roles</strong>: Work in C. elegans has uncovered replication-independent functions of MCM complexes in cell invasion and cell fate determination, suggesting broader regulatory roles beyond DNA synthesis (rankin2024themcm27complex pages 1-2, memar2024thereplicativehelicase pages 1-2, memar2024thereplicativehelicase pages 2-3).</p>
+</li>
+<li>
+<p><strong>Comprehensive reviews</strong>: Multiple authoritative reviews published in 2024 have synthesized decades of MCM research, providing detailed mechanistic models for MCM2-7 assembly, activation, helicase action, and roles in genome stability maintenance (you2024assemblyactivationand pages 1-2, malysa2024minichromosomemaintenanceproteins pages 1-3, rankin2024themcm27complex pages 1-2).</p>
+</li>
+</ol>
+<h2 id="8-summary-table">8. Summary Table</h2>
+<table>
+<thead>
+<tr>
+<th>Function/Process</th>
+<th>Molecular mechanism</th>
+<th>Key findings from recent literature (2023-2024)</th>
+<th>Citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DNA replication licensing</td>
+<td>C. elegans MCM-4 is the MCM4 subunit of the conserved MCM2-7 heterohexamer loaded onto origin DNA during late mitosis/G1 by ORC, CDC-6, and CDT-1 to form the pre-replication complex (pre-RC); licensing restricts replication to once per cell cycle.</td>
+<td>Recent reviews emphasize that MCM2-7 loading as inactive double hexamers is the defining licensing step in eukaryotes and is conserved across animals, including nematodes; in C. elegans developmental contexts, mcm-4 expression tracks proliferative competence, consistent with a core licensing role.</td>
+<td>(you2024assemblyactivationand pages 1-2, rankin2024themcm27complex pages 1-2, malysa2024minichromosomemaintenanceproteins pages 3-4, heinze2023prolongingsomaticcell pages 1-2)</td>
+</tr>
+<tr>
+<td>Helicase activity and DNA unwinding</td>
+<td>MCM-4 contributes to the catalytic MCM4/6/7 core of the replicative helicase; upon activation with Cdc45 and GINS, the CMG complex unwinds duplex DNA at replication forks in a 3′→5′ direction relative to the translocating strand.</td>
+<td>2024 syntheses summarize that MCM4/6/7 subcomplexes show intrinsic helicase activity and that full CMG is the active replisome helicase. In C. elegans, CMG function is essential for embryonic cell divisions, and reduced CMG activity markedly lengthens cell cycles.</td>
+<td>(you2024assemblyactivationand pages 2-4, you2024assemblyactivationand pages 4-6, memar2024thereplicativehelicase pages 1-2, memar2024thereplicativehelicase pages 2-3)</td>
+</tr>
+<tr>
+<td>ATP hydrolysis and regulation</td>
+<td>MCM-4 contains an AAA+ ATPase module; ATP binding/hydrolysis drives helicase loading-associated remodeling and active fork progression. Mcm4 ATP hydrolysis is specifically implicated in pre-RC remodeling and Cdt1 release after ring closure.</td>
+<td>A recent mechanistic study identified Mcm4 as a key ATPase in pre-RC formation, linking stable Mcm2/Mcm5 gate closure to productive ATP-hydrolysis-dependent remodeling. Reviews also note ATP-dependent switching between unwinding and annealing-related states in MCM complexes.</td>
+<td>(faull2025mcm27ringclosure pages 1-2, faull2025mcm27ringclosure pages 2-3, you2024assemblyactivationand pages 2-4)</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>The MCM4/6/7 helicase preferentially acts on forked or bubble-like DNA structures and shows preference for thymine-rich/AT-rich single-stranded regions that facilitate origin melting.</td>
+<td>Recent reviews summarize older biochemical work showing that MCM4/6/7 ATPase and helicase activities are preferentially stimulated by T-rich DNA on bubble/fork substrates, supporting the idea that MCM loading/activation favors unwinding-prone origin DNA.</td>
+<td>(you2024assemblyactivationand pages 2-4)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>MCM-4 functions in the nucleus on chromatin: first at licensed replication origins, then at active replication forks after CMG assembly.</td>
+<td>Reviews describe chromatin loading in G1 and persistence on chromatin until S-phase activation. In C. elegans embryos, MCM-4::mCherry was observed associated with artificial chromosomes, supporting chromatin-localized function during DNA replication.</td>
+<td>(rankin2024themcm27complex pages 1-2, sonneville2015bothchromosomedecondensation pages 1-3, lin2021rbap4648lin53andhat1 pages 2-2)</td>
+</tr>
+<tr>
+<td>Cell cycle regulation</td>
+<td>By licensing origins and enabling S-phase DNA synthesis, MCM-4 promotes normal cell-cycle progression; inadequate CMG/MCM function delays S phase and can block subsequent divisions.</td>
+<td>In C. elegans, developmental studies show that proliferative programs upregulate mcm-4 alongside other replication genes. Independent C. elegans work on CMG components showed that compromised helicase function increases cell-cycle length nearly two- to four-fold across embryonic divisions, underscoring the pathway in which MCM-4 acts.</td>
+<td>(heinze2023prolongingsomaticcell pages 1-2, memar2024thereplicativehelicase pages 1-2, memar2024thereplicativehelicase pages 2-3)</td>
+</tr>
+<tr>
+<td>Role in pre-replication complex formation</td>
+<td>MCM-4 participates in assembly of the head-to-head MCM2-7 double hexamer on duplex DNA, a prerequisite for later origin firing; phosphorylation-dependent transitions convert this inactive loaded form into active CMG helicases.</td>
+<td>2023-2024 work clarifies a two-step MCM ring-closing/loading process and shows that MCM2-7 loading is followed by DDK/CDK-dependent activation. Reviews specifically note phosphorylation of MCM4, MCM6, and MCM2 during origin firing.</td>
+<td>(you2024assemblyactivationand pages 4-6, malysa2024minichromosomemaintenanceproteins pages 3-4)</td>
+</tr>
+<tr>
+<td>DNA damage response / replication stress</td>
+<td>Beyond replication, MCM-4 helps maintain genome integrity during replication stress and checkpoint responses, likely through chromatin-bound MCM pools and regulation of origin firing under stress.</td>
+<td>2024 reviews identify MCM4 as a DDR-linked factor: checkpoint kinases can regulate MCM4, and MCM proteins help integrate replication with ATR/ATM-like responses. Excess chromatin-bound MCMs are proposed to support dormant origin usage and stress tolerance.</td>
+<td>(malysa2024minichromosomemaintenanceproteins pages 1-3, rankin2024themcm27complex pages 1-2, malysa2024minichromosomemaintenanceproteins pages 4-6)</td>
+</tr>
+<tr>
+<td>Additional non-replication or developmental roles in C. elegans</td>
+<td>While direct C. elegans-specific evidence for mcm-4 outside replication is limited, the broader CMG/MCM machinery has emerging replication-independent functions in gene regulation and developmental cell fate.</td>
+<td>In C. elegans, pre-RC genes can promote anchor-cell invasion independently of DNA replication, and a 2024 study found CMG required for divergence of daughter-cell fates, likely via chromatin/epigenetic effects rather than only DNA unwinding. These findings suggest plausible non-canonical contexts for MCM-4 within the same complex, though direct testing of mcm-4 specifically remains limited.</td>
+<td>(memar2024thereplicativehelicase pages 1-2, memar2024thereplicativehelicase pages 2-3, rankin2024themcm27complex pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported molecular and cellular functions of C. elegans MCM-4, integrating organism-specific findings with recent 2023-2024 mechanistic reviews of the conserved MCM2-7/CMG helicase pathway. It is useful for quickly separating well-established replication roles from emerging non-canonical functions.</em></p>
+<h2 id="conclusions">Conclusions</h2>
+<p>The C. elegans mcm-4 gene encodes an essential subunit of the MCM2-7 replicative helicase complex. MCM-4 serves critical catalytic functions within the MCM4/6/7 helicase core, exhibiting DNA helicase activity that unwinds double-stranded DNA in a 3′→5′ direction using ATP hydrolysis. The protein preferentially acts on AT-rich DNA sequences at replication origins. MCM-4 functions in the nucleus on chromatin, where it participates in DNA replication licensing during G1 phase and in active DNA unwinding at replication forks during S phase.</p>
+<p>Within C. elegans, mcm-4 is essential for embryonic cell cycle progression and somatic cell proliferation. Its expression marks proliferative competence and is downregulated as cells exit the cell cycle. Beyond canonical DNA replication, emerging evidence suggests roles for MCM-4-containing complexes in developmental processes including cell invasion and cell fate determination, potentially through replication-coupled epigenetic mechanisms.</p>
+<p>MCM-4 and the MCM2-7 complex integrate DNA replication with cell cycle checkpoints and DNA damage responses, contributing to overall genome stability. Recent structural and functional studies have revealed sophisticated regulatory mechanisms controlling MCM-4 function, including its role as a key ATPase during pre-RC formation and its coordination with chromatin dynamics.</p>
+<p>This comprehensive understanding of mcm-4 function derives from integration of organism-specific C. elegans studies with broader mechanistic insights from evolutionarily conserved replication machinery, supported by recent authoritative reviews and primary research from 2023-2024.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(malysa2024minichromosomemaintenanceproteins pages 1-3): Agnes Malysa, Xiaohong Mary Zhang, and Gerold Bepler. Minichromosome maintenance proteins: from dna replication to the dna damage response. Cells, 14:12, Dec 2024. URL: https://doi.org/10.3390/cells14010012, doi:10.3390/cells14010012. This article has 12 citations.</p>
+</li>
+<li>
+<p>(you2024assemblyactivationand pages 1-2): Zhiying You and Hisao Masai. Assembly, activation, and helicase actions of mcm2-7: transition from inactive mcm2-7 double hexamers to active replication forks. Biology, 13:629, Aug 2024. URL: https://doi.org/10.3390/biology13080629, doi:10.3390/biology13080629. This article has 9 citations.</p>
+</li>
+<li>
+<p>(you2024assemblyactivationand pages 2-4): Zhiying You and Hisao Masai. Assembly, activation, and helicase actions of mcm2-7: transition from inactive mcm2-7 double hexamers to active replication forks. Biology, 13:629, Aug 2024. URL: https://doi.org/10.3390/biology13080629, doi:10.3390/biology13080629. This article has 9 citations.</p>
+</li>
+<li>
+<p>(malysa2024minichromosomemaintenanceproteins pages 3-4): Agnes Malysa, Xiaohong Mary Zhang, and Gerold Bepler. Minichromosome maintenance proteins: from dna replication to the dna damage response. Cells, 14:12, Dec 2024. URL: https://doi.org/10.3390/cells14010012, doi:10.3390/cells14010012. This article has 12 citations.</p>
+</li>
+<li>
+<p>(faull2025mcm27ringclosure pages 1-2): Sarah V. Faull, Marta Barbon, Audrey Mossler, Zuanning Yuan, Lin Bai, L. Maximilian Reuter, Alberto Riera, Christian Winkler, Indiana Magdalou, Matthew Peach, Huilin Li, and Christian Speck. Mcm2-7 ring closure involves the mcm5 c-terminus and triggers mcm4 atp hydrolysis. Nature Communications, Jan 2025. URL: https://doi.org/10.1038/s41467-024-55479-1, doi:10.1038/s41467-024-55479-1. This article has 11 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(song2023dnareplicationmechanisms pages 1-2): Hao‐Yun Song, Rong Shen, Hamid Mahasin, Ya‐Nan Guo, and De‐Gui Wang. Dna replication: mechanisms and therapeutic interventions for diseases. MedComm, Feb 2023. URL: https://doi.org/10.1002/mco2.210, doi:10.1002/mco2.210. This article has 43 citations.</p>
+</li>
+<li>
+<p>(you2024assemblyactivationand pages 4-6): Zhiying You and Hisao Masai. Assembly, activation, and helicase actions of mcm2-7: transition from inactive mcm2-7 double hexamers to active replication forks. Biology, 13:629, Aug 2024. URL: https://doi.org/10.3390/biology13080629, doi:10.3390/biology13080629. This article has 9 citations.</p>
+</li>
+<li>
+<p>(rankin2024themcm27complex pages 1-2): Brooke D. Rankin and Susannah Rankin. The mcm2-7 complex: roles beyond dna unwinding. Biology, 13:258, Apr 2024. URL: https://doi.org/10.3390/biology13040258, doi:10.3390/biology13040258. This article has 16 citations.</p>
+</li>
+<li>
+<p>(sonneville2015bothchromosomedecondensation pages 1-3): Remi Sonneville, Gillian Craig, Karim Labib, Anton Gartner, and J. Julian Blow. Both chromosome decondensation and condensation are dependent on dna replication in c. elegans embryos. Cell Reports, 12:405-417, Jul 2015. URL: https://doi.org/10.1016/j.celrep.2015.06.046, doi:10.1016/j.celrep.2015.06.046. This article has 44 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lin2021rbap4648lin53andhat1 pages 2-2): Zhongyang Lin and K. Yuen. Rbap46/48lin-53 and hat-1 are required for initial cenp-ahcp-3 deposition and de novo holocentromere formation on artificial chromosomes in caenorhabditis elegans embryos. Nucleic Acids Research, 49:9154-9173, Apr 2021. URL: https://doi.org/10.1093/nar/gkab217, doi:10.1093/nar/gkab217. This article has 12 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(heinze2023prolongingsomaticcell pages 1-2): Svenia Heinze, Simon Berger, Stefanie Engleitner, Michael Daube, and Alex Hajnal. Prolonging somatic cell proliferation through constitutive hox gene expression in c. elegans. Nature Communications, Oct 2023. URL: https://doi.org/10.1038/s41467-023-42644-1, doi:10.1038/s41467-023-42644-1. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(memar2024thereplicativehelicase pages 1-2): Nadin Memar, Ryan Sherrard, Aditya Sethi, Carla Lloret Fernandez, Henning Schmidt, Eric J. Lambie, Richard J. Poole, Ralf Schnabel, and Barbara Conradt. The replicative helicase cmg is required for the divergence of cell fates during asymmetric cell division in vivo. Nature Communications, Oct 2024. URL: https://doi.org/10.1038/s41467-024-53715-2, doi:10.1038/s41467-024-53715-2. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(memar2024thereplicativehelicase pages 2-3): Nadin Memar, Ryan Sherrard, Aditya Sethi, Carla Lloret Fernandez, Henning Schmidt, Eric J. Lambie, Richard J. Poole, Ralf Schnabel, and Barbara Conradt. The replicative helicase cmg is required for the divergence of cell fates during asymmetric cell division in vivo. Nature Communications, Oct 2024. URL: https://doi.org/10.1038/s41467-024-53715-2, doi:10.1038/s41467-024-53715-2. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(malysa2024minichromosomemaintenanceproteins pages 4-6): Agnes Malysa, Xiaohong Mary Zhang, and Gerold Bepler. Minichromosome maintenance proteins: from dna replication to the dna damage response. Cells, 14:12, Dec 2024. URL: https://doi.org/10.3390/cells14010012, doi:10.3390/cells14010012. This article has 12 citations.</p>
+</li>
+<li>
+<p>(faull2025mcm27ringclosure pages 2-3): Sarah V. Faull, Marta Barbon, Audrey Mossler, Zuanning Yuan, Lin Bai, L. Maximilian Reuter, Alberto Riera, Christian Winkler, Indiana Magdalou, Matthew Peach, Huilin Li, and Christian Speck. Mcm2-7 ring closure involves the mcm5 c-terminus and triggers mcm4 atp hydrolysis. Nature Communications, Jan 2025. URL: https://doi.org/10.1038/s41467-024-55479-1, doi:10.1038/s41467-024-55479-1. This article has 11 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="A0A061AL94-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>malysa2024minichromosomemaintenanceproteins pages 1-3</li>
+<li>you2024assemblyactivationand pages 2-4</li>
+<li>malysa2024minichromosomemaintenanceproteins pages 3-4</li>
+<li>you2024assemblyactivationand pages 4-6</li>
+<li>sonneville2015bothchromosomedecondensation pages 1-3</li>
+<li>heinze2023prolongingsomaticcell pages 1-2</li>
+<li>memar2024thereplicativehelicase pages 2-3</li>
+<li>malysa2024minichromosomemaintenanceproteins pages 4-6</li>
+<li>you2024assemblyactivationand pages 1-2</li>
+<li>song2023dnareplicationmechanisms pages 1-2</li>
+<li>memar2024thereplicativehelicase pages 1-2</li>
+<li>https://doi.org/10.3390/cells14010012,</li>
+<li>https://doi.org/10.3390/biology13080629,</li>
+<li>https://doi.org/10.1038/s41467-024-55479-1,</li>
+<li>https://doi.org/10.1002/mco2.210,</li>
+<li>https://doi.org/10.3390/biology13040258,</li>
+<li>https://doi.org/10.1016/j.celrep.2015.06.046,</li>
+<li>https://doi.org/10.1093/nar/gkab217,</li>
+<li>https://doi.org/10.1038/s41467-023-42644-1,</li>
+<li>https://doi.org/10.1038/s41467-024-53715-2,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A061AL94
+gene_symbol: mcm-4
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  MCM-4 is a subunit of the minichromosome maintenance (MCM2-7) heterohexameric
+  complex, the core replicative DNA helicase in eukaryotes. The MCM2-7 complex is
+  loaded onto replication origins during late mitosis and G1 phase by ORC, Cdc6,
+  and Cdt1 to form the pre-replication complex, licensing origins for a single
+  round of DNA replication per cell cycle. Upon activation at the G1-S transition
+  by CDK and DDK phosphorylation, the MCM2-7 complex associates with Cdc45 and
+  GINS to form the CMG (Cdc45-MCM2-7-GINS) helicase, which unwinds duplex DNA
+  in the 3-prime to 5-prime direction at replication forks during S phase. MCM-4,
+  together with MCM-6 and MCM-7, forms the catalytic MCM4/6/7 core subcomplex
+  that possesses intrinsic DNA helicase activity. MCM-4 contains an AAA+ ATPase
+  domain and a C-terminal winged-helix domain (WHD) involved in DNA binding.
+  Recent structural work identified Mcm4 as a key ATPase during pre-replication
+  complex formation, with Mcm4 ATP hydrolysis triggering Cdt1 release after MCM
+  ring closure. In C. elegans, mcm-4 is expressed in the germ line and in
+  proliferating somatic cells; its expression tracks proliferative competence and
+  is downregulated upon cell cycle exit. CMG helicase function is essential for
+  embryonic cell divisions in C. elegans, and reduced CMG activity causes dramatic
+  increases in cell cycle length. Emerging evidence in C. elegans indicates that
+  the MCM-containing CMG complex also has non-canonical roles in anchor cell
+  invasion and in the divergence of cell fates during asymmetric cell divisions,
+  potentially through replication-coupled epigenetic mechanisms. UniProt accession
+  A0A061AL94 corresponds to transcript Y39G10AR.14b, a short 74 amino acid
+  fragment containing only the C-terminal winged-helix domain (WHD_MCM4, PF21128)
+  of the full-length MCM-4 protein. The canonical full-length C. elegans MCM-4
+  (P34579) is approximately 860 amino acids.
+existing_annotations:
+- term:
+    id: GO:0003678
+    label: DNA helicase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      MCM-4 contributes to DNA helicase activity as part of the MCM4/6/7 catalytic
+      core within the MCM2-7 heterohexameric complex. The MCM4/6/7 subcomplex
+      possesses intrinsic 3-prime to 5-prime DNA helicase activity. MCM-4 does not
+      have independent helicase activity; it contributes to the helicase activity
+      of the complex. This function is well-established across eukaryotes by
+      sequence homology, structural conservation, and biochemical studies of
+      orthologs.
+    action: NEW
+    reason: &gt;-
+      No GOA annotations exist for this accession. DNA helicase activity is the
+      core molecular function of the MCM4/6/7 subcomplex in which MCM-4
+      participates, supported by extensive ortholog evidence and domain analysis
+      (WHD_MCM4, PF21128).
+    supported_by:
+      - reference_id: file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+        supporting_text: &gt;-
+          [From deep research] MCM-4 serves a catalytic role within the MCM2-7
+          replicative helicase complex. The MCM4, MCM6, and MCM7 subunits form a
+          particularly critical MCM4/6/7 core that is essential for helicase function.
+- term:
+    id: GO:0006270
+    label: DNA replication initiation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      MCM-4 is directly involved in DNA replication initiation as a subunit of the
+      MCM2-7 complex, which is loaded onto replication origins during G1 to license
+      them for replication. The MCM2-7 double hexamer is subsequently activated at
+      the G1-S transition to form the CMG helicase that initiates DNA unwinding at
+      origins. Mcm4 ATP hydrolysis is a key step in pre-replication complex
+      formation.
+    action: NEW
+    reason: &gt;-
+      No GOA annotations exist for this accession. DNA replication initiation is a
+      core biological process for all MCM2-7 subunits, well-established by ortholog
+      studies and functional analysis across eukaryotes.
+    supported_by:
+      - reference_id: file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+        supporting_text: &gt;-
+          [From deep research] Faull et al. (2025) demonstrated that normal helicase
+          loading triggers Mcm4 ATP hydrolysis, which in turn leads to reorganization
+          of the MCM2-7 complex and release of the licensing factor Cdt1.
+- term:
+    id: GO:0006260
+    label: DNA replication
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      MCM-4 participates in DNA replication as a subunit of the replicative helicase
+      that unwinds duplex DNA at replication forks during S phase. The CMG complex
+      (Cdc45-MCM2-7-GINS), which includes MCM-4, is the active helicase during
+      replication elongation. In C. elegans, reduced CMG activity causes dramatic
+      increases in cell cycle length, confirming the essential role in replication.
+    action: NEW
+    reason: &gt;-
+      No GOA annotations exist for this accession. DNA replication is the broader
+      biological process in which MCM-4 functions, both during origin licensing
+      and replication fork progression.
+    supported_by:
+      - reference_id: file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+        supporting_text: &gt;-
+          [From deep research] Memar et al. (2024) ...reducing CMG function causes
+          dramatic increases in cell cycle length in embryonic cells... cell cycle
+          lengths increased from an average of 22 minutes to 39 minutes at early
+          divisions, and from 40 minutes to 144 minutes at later divisions.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      MCM-4 functions in the nucleus, where the MCM2-7 complex is loaded onto
+      chromatin at replication origins during G1 phase and subsequently operates at
+      replication forks during S phase. In C. elegans, MCM-4::mCherry fusion
+      proteins have been observed associated with chromosomes, consistent with
+      nuclear chromatin-localized function.
+    action: NEW
+    reason: &gt;-
+      No GOA annotations exist for this accession. Nuclear localization is
+      well-established for MCM complex subunits across eukaryotes. In C. elegans,
+      live-cell imaging confirmed MCM-4 association with chromosomes.
+    supported_by:
+      - reference_id: file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+        supporting_text: &gt;-
+          [From deep research] MCM-4, as part of the MCM2-7 complex, functions in the
+          nucleus on chromatin. The complex is loaded onto chromatin at licensed
+          replication origins during late mitosis and G1 phase.
+- term:
+    id: GO:0042555
+    label: MCM complex
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      MCM-4 is a constitutive subunit of the MCM2-7 heterohexameric complex, which
+      is composed of MCM2, MCM3, MCM4, MCM5, MCM6, and MCM7. Within this complex,
+      MCM-4 is part of the catalytic MCM4/6/7 core that possesses the DNA helicase
+      activity. The MCM complex is required for initiation and regulation of DNA
+      replication across all eukaryotes.
+    action: NEW
+    reason: &gt;-
+      No GOA annotations exist for this accession. MCM-4 is by definition a
+      component of the MCM complex, as established by the protein name, domain
+      composition, and extensive ortholog evidence.
+core_functions:
+- description: &gt;-
+    MCM-4 contributes to the DNA helicase activity of the MCM2-7 complex as part
+    of the catalytic MCM4/6/7 core. The MCM2-7 heterohexamer, when activated as
+    part of the CMG complex, unwinds duplex DNA in the 3-prime to 5-prime direction
+    at replication forks. MCM-4 is also a key ATPase during pre-replication complex
+    formation, with Mcm4 ATP hydrolysis triggering ring closure and Cdt1 release.
+    MCM-4 does not possess DNA helicase activity as an isolated subunit; rather, it
+    contributes to the helicase activity of the MCM complex and CMG complex. In
+    C. elegans, CMG function is essential for embryonic cell divisions, and reduced
+    CMG activity causes cell cycle lengths to increase nearly two- to four-fold.
+  molecular_function:
+    id: GO:0003678
+    label: DNA helicase activity
+  contributes_to_molecular_function:
+    id: GO:0003678
+    label: DNA helicase activity
+  directly_involved_in:
+  - id: GO:0006270
+    label: DNA replication initiation
+  - id: GO:0006260
+    label: DNA replication
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  in_complex:
+    id: GO:0042555
+    label: MCM complex
+  supported_by:
+    - reference_id: file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+      supporting_text: &gt;-
+        [From deep research] MCM-4 serves a catalytic role within the MCM2-7
+        replicative helicase complex. The MCM4, MCM6, and MCM7 subunits form a
+        particularly critical MCM4/6/7 core that is essential for helicase function.
+    - reference_id: file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+      supporting_text: &gt;-
+        [From deep research] Faull et al. (2025) demonstrated that normal helicase
+        loading triggers Mcm4 ATP hydrolysis, which in turn leads to reorganization
+        of the MCM2-7 complex and release of the licensing factor Cdt1.
+    - reference_id: file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+      supporting_text: &gt;-
+        [From deep research] MCM-4, as part of the MCM2-7 complex, functions in the
+        nucleus on chromatin. The complex is loaded onto chromatin at licensed
+        replication origins during late mitosis and G1 phase.
+    - reference_id: file:CAEEL/A0A061AL94/A0A061AL94-deep-research-falcon.md
+      supporting_text: &gt;-
+        [From deep research] Memar et al. (2024) ...reducing CMG function causes
+        dramatic increases in cell cycle length in embryonic cells... cell cycle
+        lengths increased from an average of 22 minutes to 39 minutes at early
+        divisions, and from 40 minutes to 144 minutes at later divisions.
+references:
+- id: PMID:9851916
+  title: &#34;Genome sequence of the nematode C. elegans: a platform for investigating biology&#34;
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the C. elegans genome sequencing paper; it is the source of the genomic
+      DNA sequence for the mcm-4 locus (Y39G10AR.14) but does not provide functional
+      characterization.
+- id: GO_REF:0000024
+  title: &#34;Sequence Similarity Evidence Used in Manual Assertion&#34;
+suggested_questions:
+- question: &gt;-
+    Does the short 74 amino acid product of transcript Y39G10AR.14b (A0A061AL94),
+    containing only the C-terminal winged-helix domain of MCM-4, represent a
+    biologically functional protein or is it a non-functional alternative transcript?
+  experts: []
+- question: &gt;-
+    What specific roles does C. elegans MCM-4 play in the non-canonical functions
+    of the pre-replication complex, such as anchor cell invasion and asymmetric
+    cell fate determination?
+  experts: []
+suggested_experiments:
+- hypothesis: &gt;-
+    The 74 AA WHD-only product of Y39G10AR.14b is not incorporated into functional
+    MCM complexes and may not be biologically active.
+  description: &gt;-
+    Express tagged versions of both the full-length MCM-4 (from Y39G10AR.14a) and
+    the short WHD-only fragment (from Y39G10AR.14b) in C. elegans. Perform
+    co-immunoprecipitation with other MCM subunits to determine whether the short
+    fragment can be incorporated into the MCM2-7 hexamer. Assess subcellular
+    localization by fluorescence microscopy to determine whether the WHD-only
+    fragment localizes to chromatin.
+  experiment_type: co-immunoprecipitation and fluorescence microscopy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

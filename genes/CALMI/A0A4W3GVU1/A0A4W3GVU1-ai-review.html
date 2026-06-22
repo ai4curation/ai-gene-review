@@ -1,0 +1,2386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>esrp1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>esrp1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A4W3GVU1" target="_blank" class="term-link">
+                        A0A4W3GVU1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Callorhinchus milii</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "esrp1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A4W3GVU1" data-a="DESCRIPTION: ESRP1 (Epithelial Splicing Regulatory Protein 1) i..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ESRP1 (Epithelial Splicing Regulatory Protein 1) is an RNA-binding protein belonging to the ESRP family within the broader heterogeneous nuclear ribonucleoprotein (hnRNP) superfamily. The protein contains three RNA recognition motif (RRM) domains that bind UGG-rich and GGU-rich RNA sequences to regulate alternative pre-mRNA splicing. ESRP1 functions primarily in the nucleus as a master regulator of an epithelial-specific splicing program, controlling exon inclusion or exclusion in a position-dependent manner across hundreds of target genes involved in cell-cell adhesion, cell polarity, tight junctions, and cytoskeletal organization. Its best-characterized target is FGFR2, where it promotes inclusion of the epithelial exon IIIb and repression of the mesenchymal exon IIIc, thereby switching receptor ligand specificity. ESRP1 also has cytoplasmic roles in post-transcriptional regulation including mRNA stability and circular RNA biogenesis. In mammals, ESRP1 is essential for craniofacial and limb development and plays a central inhibitory role in epithelial-mesenchymal transition (EMT). The Callorhinchus milii ortholog is inferred to share these conserved functions based on high RRM domain sequence identity across vertebrates and invertebrates.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A0A4W3GVU1" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ESRP1 is indeed a nucleic acid binding protein, but this term is overly broad. The protein specifically binds RNA via its three RRM domains, recognizing UGG-rich and GGU-rich sequences in pre-mRNA transcripts. The more specific term GO:0003723 (RNA binding) is already annotated and captures the actual binding specificity of this protein. Nucleic acid binding adds no additional information beyond what RNA binding already provides and obscures the RNA specificity of ESRP1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is too general. ESRP1 binds RNA, not DNA. The InterPro domains (RBD superfamily, RRM domain) that generated this annotation are RNA-binding domains, and the more precise GO:0003723 (RNA binding) is already present. An even more specific term such as GO:0003729 (mRNA binding) would better reflect ESRP1&#39;s function as a pre-mRNA splicing regulator.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003729" target="_blank" class="term-link">
+                                    mRNA binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ESRP1 functions as a sequence-specific RNA-binding protein that regulates alternative splicing</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RRM domain-containing protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A4W3GVU1" data-a="GO:0003723" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ESRP1 is an RNA-binding protein with three RRM domains that bind UGG/GGU-rich motifs in pre-mRNA. Structural studies of the qRRM2 domain show guanines inserted into aromatic pockets for sequence-specific RNA recognition. RNA binding is a core molecular function of ESRP1 and is well supported by domain architecture, structural data from orthologs, and the known mechanism of alternative splicing regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RNA binding is a central and well-established molecular function of ESRP proteins. The three RRM domains are highly conserved across vertebrates and invertebrates, and structural and biochemical evidence from mammalian orthologs confirms sequence-specific RNA binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNA-binding</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">X-ray crystal structure of the ESRP1 qRRM2 domain reveals it binds to GGU motifs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A4W3GVU1" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ESRP1 localizes to the nucleus where it functions as a pre-mRNA splicing regulator. The protein contains a putative nuclear localization sequence (pNLS). Nuclear localization is the primary site of its splicing regulatory activity. ESRP1 also exists as cytoplasmic isoforms generated by alternative splicing at exon 12, but the nucleus is the primary functional location.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is well established for ESRP1 and is where it carries out its primary function of alternative splicing regulation. The UniProt subcellular location annotation and the ARBA evidence both support nuclear localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Nucleus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Contains a putative nuclear localization sequence (pNLS)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048024" target="_blank" class="term-link">
+                                    GO:0048024
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of mRNA splicing, via spliceosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A4W3GVU1" data-a="GO:0048024" data-r="GO_REF:0000002" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ESRP1 is a well-characterized regulator of alternative pre-mRNA splicing. It does not catalyze splicing itself but modulates spliceosome recruitment and activity by binding to cis-regulatory elements (ISE/ISS) in pre-mRNA. ESRP1 controls the inclusion or exclusion of specific exons in a position-dependent manner across hundreds of target transcripts. This biological process annotation accurately captures the gene&#39;s primary biological role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ESRP1 is a splicing regulator and this process term directly reflects its core biological role. The UniProt entry lists mRNA processing and mRNA splicing as keywords, and the deep research literature extensively documents ESRP1&#39;s function in regulating alternative splicing via the spliceosome.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">mRNA splicing</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ESRP1 functions as a sequence-specific RNA-binding protein that regulates alternative splicing</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ESRP1 binds pre-mRNA transcripts via three RRM domains that recognize UGG/GGU-rich sequences, acting as a sequence-specific mRNA binding protein that regulates alternative splicing of epithelial-specific gene programs.</h3>
+                <span class="vote-buttons" data-g="A0A4W3GVU1" data-a="FUNCTION: ESRP1 binds pre-mRNA transcripts via three RRM dom..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003729" target="_blank" class="term-link">
+                            mRNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048024" target="_blank" class="term-link">
+                                regulation of mRNA splicing, via spliceosome
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">ESRP1 functions as a sequence-specific RNA-binding protein that regulates alternative splicing</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">RRM domain-containing protein</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro domains (RBD superfamily, RRM domain) correctly identify ESRP1 as an RNA-binding protein, but the nucleic acid binding term generated is too broad and should be narrowed to RNA binding or mRNA binding.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The subcellular location mapping correctly identifies ESRP1 as a nuclear protein, consistent with its role as a pre-mRNA splicing regulator.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA methods correctly assign RNA binding to ESRP1 based on the presence of RRM domains and UniRule annotations.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for esrp1 in Callorhinchus milii</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ESRP1 is an epithelial-specific RNA-binding protein that regulates alternative splicing of pre-mRNA transcripts including FGFR2, CD44, CTNND1, and ENAH.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The protein binds UGG/GGU-rich RNA motifs via three highly conserved RRM domains and employs position-dependent logic for exon inclusion or exclusion.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ESRP1 localizes primarily to the nucleus but also has cytoplasmic isoforms with roles in translation regulation and mRNA stability.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">No species-specific literature exists for ESRP1 in Callorhinchus milii; functional annotation is inferred from conserved orthologs in mammals and other vertebrates.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry A0A4W3GVU1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies the protein as an RRM domain-containing protein belonging to the ESRP family with gene name esrp1.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records nuclear subcellular location and RNA-binding keyword.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Domain databases identify three RRM domains, an ESRP1-specific RRM1 (CDD cd12736), and an ESRP1/ESRP2-shared RRM3 (CDD cd12742).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(A0A4W3GVU1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A4W3GVU1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Comprehensive Research Report: ESRP1 (Epithelial Splicing Regulatory Protein 1) in Callorhinchus milii</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">14 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-18T19:35:35.162259</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="A0A4W3GVU1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="A0A4W3GVU1-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-esrp1-epithelial-splicing-regulatory-protein-1-in-callorhinchus-milii">Comprehensive Research Report: ESRP1 (Epithelial Splicing Regulatory Protein 1) in Callorhinchus milii</h1>
+<h2 id="executive-summary-and-context">Executive Summary and Context</h2>
+<p>This report provides a comprehensive functional annotation of the gene <strong>esrp1</strong> (UniProt accession: A0A4W3GVU1) from <em>Callorhinchus milii</em> (ghost shark). <strong>Important note:</strong> No species-specific literature exists for ESRP1 in ghost shark. However, the protein belongs to the highly conserved ESRP family with well-characterized orthologs across vertebrates, enabling robust functional inference based on evolutionary conservation and extensive mammalian research (derham2023thediscoveryfunction pages 1-3, warzecha2009esrp1andesrp2 pages 3-4). This annotation draws primarily from studies in mammalian model systems where ESRP1 function has been extensively characterized.</p>
+<h2 id="protein-family-and-evolutionary-conservation">Protein Family and Evolutionary Conservation</h2>
+<p>ESRP1 is a member of the <strong>epithelial splicing regulatory protein (ESRP) family</strong> and belongs to the broader <strong>heterogeneous nuclear ribonucleoprotein (hnRNP) family</strong> of RNA-binding proteins (derham2023thediscoveryfunction pages 1-3, derham2023thediscoveryfunction pages 3-4). The ESRP family shows remarkable evolutionary conservation across metazoan species, with orthologs identified in:</p>
+<ul>
+<li><strong>Mammals</strong> (mouse <em>Esrp1</em>, human <em>ESRP1</em>)</li>
+<li><strong>Birds</strong> (chicken <em>esrp1</em>)</li>
+<li><strong>Invertebrates</strong>: <em>Drosophila melanogaster</em> (<em>fusilli</em>) and <em>Caenorhabditis elegans</em> (<em>sym-2</em>) (derham2023thediscoveryfunction pages 1-3, warzecha2009esrp1andesrp2 pages 3-4)</li>
+</ul>
+<p>This broad conservation across vertebrates and invertebrates indicates an essential and ancient role in epithelial cell biology, strongly supporting that the ghost shark ortholog performs analogous functions to its mammalian counterparts.</p>
+<h2 id="protein-structure-and-domain-organization">Protein Structure and Domain Organization</h2>
+<p>The ghost shark ESRP1 protein contains the characteristic domain architecture of the ESRP family. Based on mammalian ESRP1 structure and the UniProt annotation indicating RRM domains:</p>
+<table>
+<thead>
+<tr>
+<th>Domain/Region</th>
+<th>Location (amino acid positions if available)</th>
+<th>Function</th>
+<th>Key Features</th>
+<th>Supporting Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RRM1 (RNA recognition motif 1)</td>
+<td>Exact residue positions not provided in retrieved sources; one of three conserved RRMs</td>
+<td>Contributes to RNA binding and ESRP1 splicing activity</td>
+<td>Shares 89% sequence identity with the corresponding ESRP2 RRM; combined point mutations in RRM1 and RRM2 suppress binding to key targets including <strong>Fgfr2</strong> and <strong>Enah</strong>, indicating functional importance for target recognition</td>
+<td>(derham2023thediscoveryfunction pages 3-4)</td>
+</tr>
+<tr>
+<td>RRM2 (RNA recognition motif 2)</td>
+<td>Exact residue positions not provided; central RRM</td>
+<td>Major determinant of RNA recognition and splicing regulation</td>
+<td>Shares 68% sequence identity with the corresponding ESRP2 RRM; point mutation in ESRP2 RRM2 reduced binding to <strong>FGFR2</strong> pre-mRNA; X-ray structure of ESRP1 qRRM2 showed binding to <strong>GGU</strong> motifs, with guanines inserted into aromatic pockets</td>
+<td>(derham2023thediscoveryfunction pages 3-4, liu2024esrp1controlsbiogenesis pages 1-2)</td>
+</tr>
+<tr>
+<td>RRM3 (RNA recognition motif 3)</td>
+<td>Exact residue positions not provided; C-terminal-most RRM among the three RRMs</td>
+<td>Supports RNA binding and splicing activity</td>
+<td>Shares 76% sequence identity with the corresponding ESRP2 RRM; evidence indicates RRM2 and RRM3 are essential for recognition and/or interaction with pre-mRNA targets</td>
+<td>(derham2023thediscoveryfunction pages 3-4)</td>
+</tr>
+<tr>
+<td>Three-RRM module (overall RNA-binding core)</td>
+<td>Distributed across the ESRP1 polypeptide; exact coordinates not given</td>
+<td>Binds cis-regulatory elements in target pre-mRNAs to control exon inclusion or exclusion</td>
+<td>Highly conserved across orthologs in flies (<strong>fusilli</strong>), worms (<strong>sym-2</strong>), chicken, and mammals; ESRP proteins are epithelial-specific RNA-binding proteins with strongest conservation in the three RRMs</td>
+<td>(derham2023thediscoveryfunction pages 3-4, warzecha2009esrp1andesrp2 pages 3-4)</td>
+</tr>
+<tr>
+<td>DNAQ-like exonuclease domain</td>
+<td>N-terminal region; exact residue positions not provided</td>
+<td>Putative structural/regulatory region; specific molecular role not yet characterized</td>
+<td>Reported in both ESRP paralogs; present outside the canonical RRMs, but its precise function remains unknown in current literature</td>
+<td>(derham2023thediscoveryfunction pages 3-4)</td>
+</tr>
+<tr>
+<td>DAZAP2-like domain</td>
+<td>C-terminal region of ESRP1; exact residue positions not provided</td>
+<td>Putative paralog-specific structural/regulatory region</td>
+<td>Present in ESRP1 but not ESRP2; contrasted with a FAM70 domain in ESRP2; specific function remains uncharacterized</td>
+<td>(derham2023thediscoveryfunction pages 3-4)</td>
+</tr>
+<tr>
+<td>Putative nuclear localization sequence (pNLS)</td>
+<td>Exact residue positions not provided</td>
+<td>Promotes nuclear localization for pre-mRNA splicing function</td>
+<td>Supports existence of nuclear ESRP1 isoforms; literature also supports distinct cytoplasmic ESRP1 isoforms with non-splicing roles</td>
+<td>(derham2023thediscoveryfunction pages 3-4, peart2022theglobalproteinrna pages 1-2)</td>
+</tr>
+<tr>
+<td>Alternative splice region controlling nuclear vs cytoplasmic isoforms</td>
+<td>5' alternative splice site at the terminus of exon 12</td>
+<td>Determines production of nuclear versus cytoplasmic ESRP1 isoforms</td>
+<td>Isoform choice changes intracellular distribution; supports functional partitioning between nuclear splicing regulation and cytoplasmic post-transcriptional regulation</td>
+<td>(derham2023thediscoveryfunction pages 3-4)</td>
+</tr>
+<tr>
+<td>qRRM2 RNA-binding surface</td>
+<td>Structural feature within RRM2; residue-level coordinates not provided in retrieved text</td>
+<td>Sequence-specific recognition of ESRP1 target motifs</td>
+<td>Crystal structure revealed recognition of <strong>GGU</strong>-containing RNA; explains biochemical specificity for <strong>UGG/GGU-rich</strong> motifs used in ESRP-dependent regulation</td>
+<td>(liu2024esrp1controlsbiogenesis pages 1-2, derham2023thediscoveryfunction pages 3-4)</td>
+</tr>
+<tr>
+<td>UTR-binding/post-transcriptional interaction regions</td>
+<td>Not mapped to a specific domain in retrieved sources</td>
+<td>May mediate functions beyond splicing, including translation control, mRNA stability, or alternative polyadenylation</td>
+<td>ESRP1 binds broadly in 3' and 5' UTRs; cytoplasmic ESRP1 appears to regulate CTNND1 protein abundance, indicating additional post-transcriptional roles beyond nuclear splicing</td>
+<td>(peart2022theglobalproteinrna pages 1-2, derham2023thediscoveryfunction pages 3-4)</td>
+</tr>
+<tr>
+<td>Family-level ortholog architecture</td>
+<td>Whole protein</td>
+<td>Supports conserved epithelial splicing regulatory function across animals</td>
+<td>Orthologs identified in fly (<strong>fusilli</strong>), worm (<strong>sym-2</strong>), chicken, and mammals; the RRM architecture is especially conserved, supporting functional inference for poorly characterized vertebrate orthologs such as the ghost shark protein</td>
+<td>(derham2023thediscoveryfunction pages 3-4, warzecha2009esrp1andesrp2 pages 3-4)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the known and inferred structural organization of ESRP1, emphasizing conserved RNA-binding domains, paralog-specific regions, and localization features. It is useful for annotating the ghost shark ESRP1 ortholog because direct species-specific literature is lacking but domain-level function is strongly conserved.</em></p>
+<p><strong>Key Structural Features:</strong></p>
+<ol>
+<li>
+<p><strong>Three RNA Recognition Motifs (RRMs):</strong> These domains exhibit high sequence conservation across species - RRM1 (89% identity), RRM2 (68% identity), and RRM3 (76% identity relative to mouse Esrp1) (derham2023thediscoveryfunction pages 1-3, derham2023thediscoveryfunction pages 3-4). RRM2 and RRM3 are particularly critical for RNA binding and splicing regulation.</p>
+</li>
+<li>
+<p><strong>RNA-Binding Specificity:</strong> The X-ray crystal structure of the ESRP1 qRRM2 domain reveals it binds to <strong>GGU motifs</strong> with guanines embedded in clamp-like aromatic pockets, explaining the protein's preference for UGG-rich and GGU-rich RNA sequences (liu2024esrp1controlsbiogenesis pages 1-2, derham2023thediscoveryfunction pages 3-4).</p>
+</li>
+<li>
+<p><strong>Additional Domains:</strong> ESRP1 contains an N-terminal <strong>DNAQ-like exonuclease domain</strong> and a C-terminal <strong>DAZAP2-like domain</strong>, though their specific functions remain incompletely characterized (derham2023thediscoveryfunction pages 3-4).</p>
+</li>
+<li>
+<p><strong>Nuclear Localization:</strong> ESRP1 contains a <strong>putative nuclear localization sequence (pNLS)</strong> and exists as both nuclear and cytoplasmic isoforms generated by alternative splicing at exon 12 (derham2023thediscoveryfunction pages 3-4, derham2023thediscoveryfunction pages 4-6).</p>
+</li>
+</ol>
+<h2 id="primary-molecular-function-alternative-splicing-regulation">Primary Molecular Function: Alternative Splicing Regulation</h2>
+<h3 id="mechanism-of-action">Mechanism of Action</h3>
+<p>ESRP1 functions as a <strong>sequence-specific RNA-binding protein that regulates alternative splicing</strong> of pre-mRNA transcripts. Unlike catalytic splicing enzymes, ESRP1 does not directly catalyze splicing reactions but instead modulates spliceosome recruitment and activity through binding to specific cis-regulatory elements (warzecha2009esrp1andesrp2 pages 1-2, peart2022theglobalproteinrna pages 1-2).</p>
+<p><strong>Substrate Recognition:</strong><br />
+- <strong>Consensus binding motif:</strong> UGG-rich and GGU-rich RNA sequences (derham2023thediscoveryfunction pages 3-4, derham2023thediscoveryfunction pages 4-6)<br />
+- Binds to intronic splicing enhancer/silencer elements (ISE/ISS) and exonic regulatory regions (derham2023thediscoveryfunction pages 1-3, warzecha2010anesrp‐regulatedsplicing pages 1-2)</p>
+<h3 id="position-dependent-regulatory-logic">Position-Dependent Regulatory Logic</h3>
+<p>ESRP1 employs a sophisticated <strong>position-dependent mechanism</strong> to control exon inclusion or exclusion (derham2023thediscoveryfunction pages 3-4, derham2023thediscoveryfunction pages 4-6):</p>
+<ul>
+<li><strong>Exon inclusion:</strong> ESRP1 binding <strong>75-250 nucleotides downstream</strong> of a regulated exon (within the downstream intron) promotes exon inclusion in the mature mRNA</li>
+<li><strong>Exon exclusion:</strong> ESRP1 binding <strong>within the exon itself</strong> or <strong>within 125 nucleotides upstream</strong> (in the upstream intron) promotes exon skipping</li>
+</ul>
+<p>This positional code allows ESRP1 to exert context-dependent regulatory control across hundreds of target genes.</p>
+<h3 id="splicing-substrates-and-target-specificity">Splicing Substrates and Target Specificity</h3>
+<p>ESRP1 regulates a comprehensive epithelial-specific splicing program affecting hundreds of genes. Well-characterized targets include:</p>
+<table>
+<thead>
+<tr>
+<th>Target Gene</th>
+<th>Alternative Splicing Event Regulated</th>
+<th>Functional Consequence of ESRP1 Regulation</th>
+<th>Biological Context</th>
+<th>Citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FGFR2</strong></td>
+<td>Controls mutually exclusive choice of <strong>exon IIIb (epithelial)</strong> versus <strong>exon IIIc (mesenchymal)</strong>; ESRP1 promotes IIIb and represses IIIc by binding intronic regulatory elements including ISE/ISS-3</td>
+<td>Switches receptor ligand specificity: FGFR2-IIIb binds epithelial ligands such as <strong>FGF1, FGF3, FGF7, FGF10, FGF22</strong>, whereas FGFR2-IIIc recognizes <strong>FGF1, FGF2, FGF4, FGF6, FGF9, FGF16, FGF20</strong>; thereby helps maintain epithelial signaling identity and epithelial–mesenchymal state</td>
+<td>Canonical ESRP1 target; epithelial cell identity, EMT/MET regulation, developmental epithelial–mesenchymal signaling crosstalk</td>
+<td>(warzecha2009esrp1andesrp2 pages 1-2, derham2023thediscoveryfunction pages 1-3, derham2023thediscoveryfunction pages 3-4, horiguchi2012tgfβdrivesepithelialmesenchymal pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>CD44</strong></td>
+<td>Promotes inclusion of <strong>variable exons</strong> (CD44v isoforms) and prevents switch to <strong>CD44s</strong> during EMT by binding intronic regions flanking variable exons</td>
+<td>Maintains epithelial-associated CD44 isoform profile; blocking ESRP1 expression favors CD44s, which is linked to EMT progression, increased motility, and mesenchymal conversion</td>
+<td>EMT regulation and cancer-related epithelial plasticity</td>
+<td>(reinke2012snailrepressesthe pages 1-2, warzecha2009esrp1andesrp2 pages 1-2, derham2023thediscoveryfunction pages 4-6)</td>
+</tr>
+<tr>
+<td><strong>CTNND1 (p120-catenin)</strong></td>
+<td>ESRP1 regulates alternative splicing of <strong>CTNND1</strong> isoforms; exact exon details not specified in retrieved contexts, but CTNND1 is a validated direct ESRP program target</td>
+<td>Supports epithelial cell functions related to <strong>adherens junctions</strong> and cell–cell adhesion; loss of ESRP activity shifts CTNND1 isoform usage and contributes to mesenchymal phenotypes; ESRP1 also has splicing-independent effects on CTNND1 protein abundance</td>
+<td>Epithelial junction organization and EMT-associated remodeling</td>
+<td>(warzecha2009esrp1andesrp2 pages 1-2, peart2022theglobalproteinrna pages 1-2, derham2023thediscoveryfunction pages 4-6, horiguchi2012tgfβdrivesepithelialmesenchymal pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>ENAH (hMena)</strong></td>
+<td>ESRP1 regulates <strong>ENAH/hMena</strong> alternative splicing; precise exon numbers not specified in retrieved contexts, but ENAH is a recurrent ESRP-regulated epithelial target</td>
+<td>Promotes epithelial isoforms associated with reduced invasive/migratory behavior; ESRP loss shifts toward mesenchymal splicing patterns that favor altered actin dynamics and motility</td>
+<td>Cytoskeletal organization, epithelial morphology, EMT</td>
+<td>(warzecha2009esrp1andesrp2 pages 1-2, derham2023thediscoveryfunction pages 3-4, derham2023thediscoveryfunction pages 4-6)</td>
+</tr>
+<tr>
+<td><strong>DOCK1 / circDOCK1(2–27)</strong></td>
+<td>ESRP1 promotes back-splicing/biogenesis of <strong>circDOCK1(2–27)</strong> from <strong>exons 2–27</strong> by binding a <strong>GGU-containing repeat region in intron 1</strong> and delaying canonical splicing</td>
+<td>Represses cell motility in epithelial cells both by diverting transcripts away from linear <strong>DOCK1 mRNA</strong> production and via direct inhibitory effects of the circRNA on migration</td>
+<td>Recent noncanonical ESRP1 function in circRNA biogenesis during EMT-related cell-state regulation</td>
+<td>(liu2024esrp1controlsbiogenesis pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Multiple ESRP program genes involved in adhesion/polarity/cytoskeleton</strong></td>
+<td>ESRP1 directly binds introns and exons to regulate inclusion or skipping in a <strong>position-dependent</strong> manner: binding <strong>75–250 nt downstream</strong> tends to promote exon inclusion, while binding within the exon or proximal upstream intron tends to promote exon exclusion</td>
+<td>Coordinates an epithelial splicing program enriched for genes controlling <strong>cell–cell adhesion, polarity, tight junctions, exocyst/cytoskeletal functions, and migration</strong></td>
+<td>Global epithelial post-transcriptional program; maintenance of epithelial phenotype and suppression of EMT</td>
+<td>(peart2022theglobalproteinrna pages 1-2, derham2023thediscoveryfunction pages 3-4, warzecha2010anesrp‐regulatedsplicing pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Genes in FGFR/epithelial developmental pathways</strong></td>
+<td>Broad ESRP-dependent epithelial splicing program affecting <strong>134 genes</strong> in early microarray studies and <strong>281 cassette exons</strong> in later RNA-seq/overexpression studies</td>
+<td>Produces functionally coherent epithelial isoform networks required for tissue morphogenesis, barrier formation, and epithelial specialization</td>
+<td>Mammalian development, epidermal homeostasis, craniofacial and limb development</td>
+<td>(derham2023thediscoveryfunction pages 4-6, bebee2015thesplicingregulators pages 1-2, warzecha2010anesrp‐regulatedsplicing pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes well-characterized ESRP1 RNA targets and the functional consequences of their splicing regulation. It is useful for annotating the ghost shark ESRP1 ortholog because it links conserved RNA-binding/splicing activity to concrete epithelial biological outcomes.</em></p>
+<p><strong>Canonical Example - FGFR2 Regulation:</strong></p>
+<p>ESRP1's best-characterized function is regulation of <strong>fibroblast growth factor receptor 2 (FGFR2)</strong> alternative splicing (warzecha2009esrp1andesrp2 pages 1-2, derham2023thediscoveryfunction pages 1-3). ESRP1 promotes inclusion of <strong>exon IIIb</strong> (epithelial isoform) while repressing <strong>exon IIIc</strong> (mesenchymal isoform) by binding to the ISE/ISS-3 regulatory element in intron 8 (warzecha2009esrp1andesrp2 pages 1-2, warzecha2009esrp1andesrp2 pages 3-4). This isoform switch is functionally critical because:</p>
+<ul>
+<li><strong>FGFR2-IIIb</strong> binds epithelial-specific ligands: FGF1, FGF3, FGF7, FGF10, FGF22</li>
+<li><strong>FGFR2-IIIc</strong> binds mesenchymal-specific ligands: FGF1, FGF2, FGF4, FGF6, FGF9, FGF16, FGF20</li>
+</ul>
+<p>This differential ligand specificity establishes distinct epithelial versus mesenchymal FGF signaling programs (derham2023thediscoveryfunction pages 1-3, horiguchi2012tgfβdrivesepithelialmesenchymal pages 1-2).</p>
+<h3 id="genome-wide-splicing-program">Genome-Wide Splicing Program</h3>
+<p>High-throughput studies have identified:<br />
+- <strong>134 genes</strong> with ESRP-regulated alternative splicing in early microarray studies (derham2023thediscoveryfunction pages 4-6)<br />
+- <strong>281 cassette exon events</strong> regulated by ESRP1 in RNA-seq analyses (warzecha2010anesrp‐regulatedsplicing pages 1-2)<br />
+- Enrichment for genes involved in <strong>cell-cell adhesion, polarity, tight junctions, cytoskeletal organization, and cell migration</strong> (peart2022theglobalproteinrna pages 1-2, warzecha2010anesrp‐regulatedsplicing pages 1-2)</p>
+<h3 id="non-canonical-functions">Non-Canonical Functions</h3>
+<p>Recent evidence indicates ESRP1 functions extend beyond canonical splicing:</p>
+<ol>
+<li>
+<p><strong>Circular RNA biogenesis:</strong> ESRP1 promotes back-splicing to generate circDOCK1(2-27) by binding GGU-repeat regions in DOCK1 intron 1 and detaining splicing (liu2024esrp1controlsbiogenesis pages 1-2)</p>
+</li>
+<li>
+<p><strong>Post-transcriptional regulation:</strong> ESRP1 binds extensively to 3' and 5' UTRs, suggesting roles in mRNA stability, translation, and alternative polyadenylation (peart2022theglobalproteinrna pages 1-2, derham2023thediscoveryfunction pages 3-4)</p>
+</li>
+<li>
+<p><strong>Protein abundance control:</strong> Cytoplasmic ESRP1 regulates CTNND1 protein levels through splicing-independent mechanisms (peart2022theglobalproteinrna pages 1-2)</p>
+</li>
+</ol>
+<h2 id="subcellular-localization">Subcellular Localization</h2>
+<p>ESRP1 exhibits <strong>dual subcellular localization</strong> with functionally distinct roles in different compartments (derham2023thediscoveryfunction pages 3-4, derham2023thediscoveryfunction pages 4-6):</p>
+<h3 id="nuclear-localization">Nuclear Localization</h3>
+<ul>
+<li><strong>Primary site of splicing regulation</strong></li>
+<li>Contains a putative nuclear localization sequence (pNLS)</li>
+<li>Accesses pre-mRNA transcripts co-transcriptionally to regulate alternative splicing</li>
+<li>Functions in partnership with spliceosomal machinery</li>
+</ul>
+<h3 id="cytoplasmic-localization">Cytoplasmic Localization</h3>
+<ul>
+<li>Generated by alternative splicing at the 5' splice site of exon 12</li>
+<li>Mediates <strong>translation regulation</strong> in embryonic stem cells (derham2023thediscoveryfunction pages 3-4)</li>
+<li>May regulate <strong>mRNA stability</strong> and <strong>localization</strong></li>
+<li>Shown to control CTNND1 protein abundance independently of splicing (peart2022theglobalproteinrna pages 1-2)</li>
+</ul>
+<p>This dual localization strategy enables ESRP1 to orchestrate both nuclear (splicing) and cytoplasmic (post-transcriptional) layers of gene regulation, expanding its regulatory repertoire beyond canonical splicing control.</p>
+<h2 id="biological-processes-and-pathways">Biological Processes and Pathways</h2>
+<h3 id="epithelial-cell-identity-and-maintenance">Epithelial Cell Identity and Maintenance</h3>
+<p>ESRP1 serves as a <strong>master regulator of epithelial cell-type-specific gene expression programs</strong> (warzecha2009esrp1andesrp2 pages 1-2, bebee2015thesplicingregulators pages 1-2). It coordinates alternative splicing of genes essential for:</p>
+<ul>
+<li><strong>Cell-cell adhesion:</strong> adherens junctions, tight junctions (e.g., CTNND1/p120-catenin)</li>
+<li><strong>Cell polarity:</strong> establishment and maintenance of apical-basal polarity</li>
+<li><strong>Cytoskeletal organization:</strong> actin dynamics, cell morphology (e.g., ENAH)</li>
+<li><strong>Membrane trafficking:</strong> exocyst pathway components (warzecha2010anesrp‐regulatedsplicing pages 1-2)</li>
+</ul>
+<p>In mouse epidermis, ESRP deletion disrupts the epithelial splicing program required for establishing a proper <strong>skin barrier</strong>, a fundamental epithelial cell function (bebee2015thesplicingregulators pages 1-2).</p>
+<h3 id="epithelial-mesenchymal-transition-emt-regulation">Epithelial-Mesenchymal Transition (EMT) Regulation</h3>
+<p>ESRP1 plays a central inhibitory role in EMT, a developmental program where epithelial cells lose polarity and acquire mesenchymal characteristics (warzecha2010anesrp‐regulatedsplicing pages 1-2, derham2023thediscoveryfunction pages 4-6, horiguchi2012tgfβdrivesepithelialmesenchymal pages 1-2):</p>
+<p><strong>During EMT:</strong><br />
+- ESRP1 expression is <strong>dramatically downregulated</strong><br />
+- This downregulation is required for the epithelial-to-mesenchymal splicing switch<br />
+- Loss of ESRP1 allows mesenchymal-specific splicing patterns to predominate<br />
+- The splicing switch affects hundreds of genes, facilitating morphological and functional transformation</p>
+<p><strong>Transcriptional Regulation of ESRP1:</strong><br />
+- <strong>Snail</strong> (SNAI1) directly represses ESRP1 transcription by binding E-boxes in the ESRP1 promoter (reinke2012snailrepressesthe pages 1-2)<br />
+- <strong>ZEB1/SIP1 family proteins</strong> (δEF1) repress ESRP2 transcription during TGF-β-induced EMT, with similar effects on ESRP1 (horiguchi2012tgfβdrivesepithelialmesenchymal pages 1-2)<br />
+- This transcriptional repression is <strong>required</strong> for EMT to proceed - ectopic ESRP1 expression inhibits Snail-induced EMT (reinke2012snailrepressesthe pages 1-2)</p>
+<h3 id="developmental-roles">Developmental Roles</h3>
+<p>ESRP1 is essential for mammalian development, with loss-of-function causing severe developmental defects (bebee2015thesplicingregulators pages 1-2, derham2023thediscoveryfunction pages 4-6):</p>
+<ol>
+<li><strong>Craniofacial Development:</strong></li>
+<li>ESRP1 knockout mice develop <strong>cleft lip and palate</strong> and exhibit perinatal lethality</li>
+<li>Required for proper FGF signaling between epithelial and mesenchymal cell populations during palate formation (derham2023thediscoveryfunction pages 4-6)</li>
+<li>
+<p>Human ESRP1 loss-of-function mutations cause <strong>sensorineural hearing loss</strong> linked to defective cochlear development and auditory hair cell differentiation (derham2023thediscoveryfunction pages 4-6)</p>
+</li>
+<li>
+<p><strong>Limb Development:</strong></p>
+</li>
+<li>Required for proper limb bud formation</li>
+<li>Combined loss of ESRP1 and ESRP2 causes severe limb malformations and digit fusion</li>
+<li>
+<p>Regulates FGFR2 isoform expression critical for epithelial-mesenchymal signaling in the apical ectodermal ridge (derham2023thediscoveryfunction pages 4-6)</p>
+</li>
+<li>
+<p><strong>Organ Morphogenesis:</strong></p>
+</li>
+<li>Essential for <strong>branching morphogenesis</strong> in organs like lungs and salivary glands</li>
+<li>Combined ESRP1/2 loss prevents lung and salivary gland formation</li>
+<li>Required for establishing epithelial architecture in multiple organ systems (derham2023thediscoveryfunction pages 4-6)</li>
+</ol>
+<h3 id="fgfr-signaling-pathway-integration">FGFR Signaling Pathway Integration</h3>
+<p>ESRP1 functions as a critical node linking <strong>alternative splicing to FGF signaling pathway regulation</strong> (derham2023thediscoveryfunction pages 1-3, horiguchi2012tgfβdrivesepithelialmesenchymal pages 1-2):</p>
+<ul>
+<li>Controls FGFR2 isoform switching between IIIb (epithelial) and IIIc (mesenchymal)</li>
+<li>Creates cell-type-specific FGF signaling capacities by altering receptor-ligand compatibility</li>
+<li>Enables epithelial-mesenchymal signaling crosstalk during development through FGF feedback loops</li>
+<li>Affects downstream signaling through <strong>Ras/MAPK</strong> and <strong>PI3K/Akt</strong> pathways depending on isoform choice</li>
+</ul>
+<h3 id="co-regulatory-networks">Co-Regulatory Networks</h3>
+<p>ESRP1 operates within complex regulatory networks involving other splicing factors (derham2023thediscoveryfunction pages 3-4, derham2023thediscoveryfunction pages 4-6):</p>
+<p><strong>Cooperative Regulators:</strong><br />
+- <strong>RBFOX2:</strong> Co-regulates many targets; relationship can be cooperative or antagonistic depending on context<br />
+- <strong>RBM47:</strong> Promotes epithelial splicing patterns</p>
+<p><strong>Antagonistic Regulators:</strong><br />
+- <strong>hnRNPM:</strong> Promotes mesenchymal splicing patterns; antagonizes ESRP1 activity during EMT (derham2023thediscoveryfunction pages 4-6)<br />
+- <strong>QKI:</strong> Promotes mesenchymal splicing program</p>
+<p>This network architecture creates a finely tuned splicing regulatory system that responds to developmental and environmental cues to control epithelial-mesenchymal plasticity.</p>
+<h2 id="inference-for-callorhinchus-milii-esrp1">Inference for Callorhinchus milii ESRP1</h2>
+<p>Given the absence of species-specific literature for ghost shark ESRP1, functional annotation must rely on evolutionary inference. The high degree of conservation observed for:</p>
+<ol>
+<li><strong>RRM domain sequences</strong> (89%, 68%, 76% identity across species)</li>
+<li><strong>Ortholog presence</strong> across vertebrates and invertebrates</li>
+<li><strong>Domain architecture</strong> (RRM organization, DNAQ-like and DAZAP2-like domains)</li>
+</ol>
+<p>strongly supports that the ghost shark ESRP1 ortholog performs analogous functions to mammalian ESRP1, including:</p>
+<ul>
+<li><strong>RNA-binding specificity</strong> for UGG/GGU-rich motifs</li>
+<li><strong>Alternative splicing regulation</strong> of epithelial-specific gene programs</li>
+<li><strong>Position-dependent regulatory logic</strong> for exon inclusion/exclusion</li>
+<li><strong>Roles in epithelial cell identity</strong> and development</li>
+<li><strong>Participation in epithelial-mesenchymal plasticity</strong> (if analogous EMT-like processes exist in cartilaginous fish)</li>
+</ul>
+<p>The Callorhinchus milii esrp1 gene likely regulates alternative splicing of conserved epithelial genes such as FGFR2, CD44, and cytoskeletal/adhesion proteins, contributing to epithelial tissue specification and maintenance in this basal vertebrate lineage.</p>
+<h2 id="summary">Summary</h2>
+<p>ESRP1 is an evolutionarily conserved, epithelial-specific RNA-binding protein that serves as a master regulator of alternative splicing. Through sequence-specific binding to UGG/GGU-rich motifs via its RRM domains, ESRP1 orchestrates a comprehensive splicing program affecting hundreds of genes involved in epithelial cell identity, cell adhesion, polarity, and cytoskeletal organization. The protein functions primarily in the nucleus to regulate pre-mRNA splicing in a position-dependent manner, but also has cytoplasmic roles in translation and mRNA stability. ESRP1 is essential for mammalian development, particularly craniofacial and limb formation, and plays a central inhibitory role in epithelial-mesenchymal transition by maintaining epithelial-specific splicing patterns. Its regulation of FGFR2 isoform switching exemplifies how alternative splicing integrates with growth factor signaling to establish cell-type-specific properties. While no ghost shark-specific studies exist, the remarkable evolutionary conservation of ESRP1 structure and function across vertebrates strongly supports analogous roles in Callorhinchus milii epithelial tissues.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(derham2023thediscoveryfunction pages 1-3): Jessica M. Derham and Auinash Kalsotra. The discovery, function, and regulation of epithelial splicing regulatory proteins (esrp) 1 and 2. Biochemical Society transactions, 51:1097-1109, Jun 2023. URL: https://doi.org/10.1042/bst20221124, doi:10.1042/bst20221124. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(warzecha2009esrp1andesrp2 pages 3-4): Claude C. Warzecha, Trey K. Sato, Behnam Nabet, John B. Hogenesch, and Russ P. Carstens. Esrp1 and esrp2 are epithelial cell-type-specific regulators of fgfr2 splicing. Molecular cell, 33 5:591-601, Mar 2009. URL: https://doi.org/10.1016/j.molcel.2009.01.025, doi:10.1016/j.molcel.2009.01.025. This article has 674 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(derham2023thediscoveryfunction pages 3-4): Jessica M. Derham and Auinash Kalsotra. The discovery, function, and regulation of epithelial splicing regulatory proteins (esrp) 1 and 2. Biochemical Society transactions, 51:1097-1109, Jun 2023. URL: https://doi.org/10.1042/bst20221124, doi:10.1042/bst20221124. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2024esrp1controlsbiogenesis pages 1-2): Dawei Liu, B Kate Dredge, Andrew G Bert, Katherine A Pillman, John Toubia, Wenting Guo, Boris J A Dyakov, Melodie M Migault, Vanessa M Conn, Simon J Conn, Philip A Gregory, Anne-Claude Gingras, Dinshaw Patel, Baixing Wu, and Gregory J Goodall. Esrp1 controls biogenesis and function of a large abundant multiexon circrna. Nucleic Acids Research, 52:1387-1403, Nov 2024. URL: https://doi.org/10.1093/nar/gkad1138, doi:10.1093/nar/gkad1138. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(peart2022theglobalproteinrna pages 1-2): Natoya J. Peart, Jae Yeon Hwang, Mathieu Quesnel-Vallières, Matthew J. Sears, Yuequin Yang, Peter Stoilov, Yoseph Barash, Juw Won Park, Kristen W. Lynch, and Russ P. Carstens. The global protein-rna interaction map of esrp1 defines a post-transcriptional program that is essential for epithelial cell function. Oct 2022. URL: https://doi.org/10.1016/j.isci.2022.105205, doi:10.1016/j.isci.2022.105205. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(derham2023thediscoveryfunction pages 4-6): Jessica M. Derham and Auinash Kalsotra. The discovery, function, and regulation of epithelial splicing regulatory proteins (esrp) 1 and 2. Biochemical Society transactions, 51:1097-1109, Jun 2023. URL: https://doi.org/10.1042/bst20221124, doi:10.1042/bst20221124. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(warzecha2009esrp1andesrp2 pages 1-2): Claude C. Warzecha, Trey K. Sato, Behnam Nabet, John B. Hogenesch, and Russ P. Carstens. Esrp1 and esrp2 are epithelial cell-type-specific regulators of fgfr2 splicing. Molecular cell, 33 5:591-601, Mar 2009. URL: https://doi.org/10.1016/j.molcel.2009.01.025, doi:10.1016/j.molcel.2009.01.025. This article has 674 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(warzecha2010anesrp‐regulatedsplicing pages 1-2): Claude C Warzecha, Peng Jiang, Karine Amirikian, Kimberly A Dittmar, Hezhe Lu, Shihao Shen, Wei Guo, Yi Xing, and Russ P Carstens. An esrp‐regulated splicing programme is abrogated during the epithelial–mesenchymal transition. The EMBO Journal, 29:3286-3300, Oct 2010. URL: https://doi.org/10.1038/emboj.2010.195, doi:10.1038/emboj.2010.195. This article has 450 citations.</p>
+</li>
+<li>
+<p>(horiguchi2012tgfβdrivesepithelialmesenchymal pages 1-2): Kana Horiguchi, Kotaro Sakamoto, D. Koinuma, Kentaro Semba, A. Inoue, S. Inoue, H. Fujii, A. Yamaguchi, Keiji Miyazawa, K. Miyazono, M. Saitoh, and M. Saitoh. Tgf-β drives epithelial-mesenchymal transition through δef1-mediated downregulation of esrp. Oncogene, 31:3190-3201, Oct 2012. URL: https://doi.org/10.1038/onc.2011.493, doi:10.1038/onc.2011.493. This article has 274 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(reinke2012snailrepressesthe pages 1-2): Lauren M. Reinke, Yilin Xu, and Chonghui Cheng. Snail represses the splicing regulator epithelial splicing regulatory protein 1 to promote epithelial-mesenchymal transition. Journal of Biological Chemistry, 287:36435-36442, Oct 2012. URL: https://doi.org/10.1074/jbc.m112.397125, doi:10.1074/jbc.m112.397125. This article has 129 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bebee2015thesplicingregulators pages 1-2): Thomas W Bebee, Juw Won Park, Katherine I Sheridan, Claude C Warzecha, Benjamin W Cieply, Alex M Rohacek, Yi Xing, and Russ P Carstens. The splicing regulators esrp1 and esrp2 direct an epithelial splicing program essential for mammalian development. eLife, Sep 2015. URL: https://doi.org/10.7554/elife.08954, doi:10.7554/elife.08954. This article has 173 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="A0A4W3GVU1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="A0A4W3GVU1-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>derham2023thediscoveryfunction pages 3-4</li>
+<li>derham2023thediscoveryfunction pages 4-6</li>
+<li>peart2022theglobalproteinrna pages 1-2</li>
+<li>bebee2015thesplicingregulators pages 1-2</li>
+<li>reinke2012snailrepressesthe pages 1-2</li>
+<li>derham2023thediscoveryfunction pages 1-3</li>
+<li>https://doi.org/10.1042/bst20221124,</li>
+<li>https://doi.org/10.1016/j.molcel.2009.01.025,</li>
+<li>https://doi.org/10.1093/nar/gkad1138,</li>
+<li>https://doi.org/10.1016/j.isci.2022.105205,</li>
+<li>https://doi.org/10.1038/emboj.2010.195,</li>
+<li>https://doi.org/10.1038/onc.2011.493,</li>
+<li>https://doi.org/10.1074/jbc.m112.397125,</li>
+<li>https://doi.org/10.7554/elife.08954,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A4W3GVU1
+gene_symbol: esrp1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7868
+  label: Callorhinchus milii
+description: &gt;-
+  ESRP1 (Epithelial Splicing Regulatory Protein 1) is an RNA-binding protein belonging
+  to the ESRP family within the broader heterogeneous nuclear ribonucleoprotein (hnRNP)
+  superfamily. The protein contains three RNA recognition motif (RRM) domains that bind
+  UGG-rich and GGU-rich RNA sequences to regulate alternative pre-mRNA splicing. ESRP1
+  functions primarily in the nucleus as a master regulator of an epithelial-specific
+  splicing program, controlling exon inclusion or exclusion in a position-dependent manner
+  across hundreds of target genes involved in cell-cell adhesion, cell polarity, tight
+  junctions, and cytoskeletal organization. Its best-characterized target is FGFR2, where
+  it promotes inclusion of the epithelial exon IIIb and repression of the mesenchymal exon
+  IIIc, thereby switching receptor ligand specificity. ESRP1 also has cytoplasmic roles in
+  post-transcriptional regulation including mRNA stability and circular RNA biogenesis.
+  In mammals, ESRP1 is essential for craniofacial and limb development and plays a central
+  inhibitory role in epithelial-mesenchymal transition (EMT). The Callorhinchus milii
+  ortholog is inferred to share these conserved functions based on high RRM domain sequence
+  identity across vertebrates and invertebrates.
+existing_annotations:
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ESRP1 is indeed a nucleic acid binding protein, but this term is overly broad.
+      The protein specifically binds RNA via its three RRM domains, recognizing UGG-rich
+      and GGU-rich sequences in pre-mRNA transcripts. The more specific term GO:0003723
+      (RNA binding) is already annotated and captures the actual binding specificity of
+      this protein. Nucleic acid binding adds no additional information beyond what RNA
+      binding already provides and obscures the RNA specificity of ESRP1.
+    action: MODIFY
+    reason: &gt;-
+      The term is too general. ESRP1 binds RNA, not DNA. The InterPro domains (RBD
+      superfamily, RRM domain) that generated this annotation are RNA-binding domains,
+      and the more precise GO:0003723 (RNA binding) is already present. An even more
+      specific term such as GO:0003729 (mRNA binding) would better reflect ESRP1&#39;s
+      function as a pre-mRNA splicing regulator.
+    proposed_replacement_terms:
+      - id: GO:0003729
+        label: mRNA binding
+    supported_by:
+      - reference_id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+        supporting_text: &#34;ESRP1 functions as a sequence-specific RNA-binding protein that regulates alternative splicing&#34;
+      - reference_id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+        supporting_text: &#34;RRM domain-containing protein&#34;
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ESRP1 is an RNA-binding protein with three RRM domains that bind UGG/GGU-rich
+      motifs in pre-mRNA. Structural studies of the qRRM2 domain show guanines inserted
+      into aromatic pockets for sequence-specific RNA recognition. RNA binding is a core
+      molecular function of ESRP1 and is well supported by domain architecture, structural
+      data from orthologs, and the known mechanism of alternative splicing regulation.
+    action: ACCEPT
+    reason: &gt;-
+      RNA binding is a central and well-established molecular function of ESRP proteins.
+      The three RRM domains are highly conserved across vertebrates and invertebrates,
+      and structural and biochemical evidence from mammalian orthologs confirms
+      sequence-specific RNA binding.
+    supported_by:
+      - reference_id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+        supporting_text: &#34;RNA-binding&#34;
+      - reference_id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+        supporting_text: &#34;X-ray crystal structure of the ESRP1 qRRM2 domain reveals it binds to GGU motifs&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ESRP1 localizes to the nucleus where it functions as a pre-mRNA splicing regulator.
+      The protein contains a putative nuclear localization sequence (pNLS). Nuclear
+      localization is the primary site of its splicing regulatory activity. ESRP1 also
+      exists as cytoplasmic isoforms generated by alternative splicing at exon 12, but the
+      nucleus is the primary functional location.
+    action: ACCEPT
+    reason: &gt;-
+      Nuclear localization is well established for ESRP1 and is where it carries out
+      its primary function of alternative splicing regulation. The UniProt subcellular
+      location annotation and the ARBA evidence both support nuclear localization.
+    supported_by:
+      - reference_id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+        supporting_text: &#34;Nucleus&#34;
+      - reference_id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+        supporting_text: &#34;Contains a putative nuclear localization sequence (pNLS)&#34;
+- term:
+    id: GO:0048024
+    label: regulation of mRNA splicing, via spliceosome
+  evidence_type: IEA
+  qualifier: involved_in
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      ESRP1 is a well-characterized regulator of alternative pre-mRNA splicing. It does not
+      catalyze splicing itself but modulates spliceosome recruitment and activity by binding
+      to cis-regulatory elements (ISE/ISS) in pre-mRNA. ESRP1 controls the inclusion or
+      exclusion of specific exons in a position-dependent manner across hundreds of target
+      transcripts. This biological process annotation accurately captures the gene&#39;s primary
+      biological role.
+    action: NEW
+    reason: &gt;-
+      ESRP1 is a splicing regulator and this process term directly reflects its core
+      biological role. The UniProt entry lists mRNA processing and mRNA splicing as
+      keywords, and the deep research literature extensively documents ESRP1&#39;s function
+      in regulating alternative splicing via the spliceosome.
+    supported_by:
+      - reference_id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+        supporting_text: &#34;mRNA splicing&#34;
+      - reference_id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+        supporting_text: &#34;ESRP1 functions as a sequence-specific RNA-binding protein that regulates alternative splicing&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: &gt;-
+        InterPro domains (RBD superfamily, RRM domain) correctly identify ESRP1 as an
+        RNA-binding protein, but the nucleic acid binding term generated is too broad
+        and should be narrowed to RNA binding or mRNA binding.
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings:
+    - statement: &gt;-
+        The subcellular location mapping correctly identifies ESRP1 as a nuclear protein,
+        consistent with its role as a pre-mRNA splicing regulator.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: &gt;-
+        Combined IEA methods correctly assign RNA binding to ESRP1 based on the presence
+        of RRM domains and UniRule annotations.
+- id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+  title: Deep research summary for esrp1 in Callorhinchus milii
+  findings:
+    - statement: &gt;-
+        ESRP1 is an epithelial-specific RNA-binding protein that regulates alternative
+        splicing of pre-mRNA transcripts including FGFR2, CD44, CTNND1, and ENAH.
+    - statement: &gt;-
+        The protein binds UGG/GGU-rich RNA motifs via three highly conserved RRM domains
+        and employs position-dependent logic for exon inclusion or exclusion.
+    - statement: &gt;-
+        ESRP1 localizes primarily to the nucleus but also has cytoplasmic isoforms with
+        roles in translation regulation and mRNA stability.
+    - statement: &gt;-
+        No species-specific literature exists for ESRP1 in Callorhinchus milii;
+        functional annotation is inferred from conserved orthologs in mammals and other
+        vertebrates.
+- id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+  title: UniProt entry A0A4W3GVU1
+  findings:
+    - statement: &gt;-
+        Identifies the protein as an RRM domain-containing protein belonging to the ESRP
+        family with gene name esrp1.
+    - statement: &gt;-
+        UniProt records nuclear subcellular location and RNA-binding keyword.
+    - statement: &gt;-
+        Domain databases identify three RRM domains, an ESRP1-specific RRM1 (CDD cd12736),
+        and an ESRP1/ESRP2-shared RRM3 (CDD cd12742).
+core_functions:
+- description: &gt;-
+    ESRP1 binds pre-mRNA transcripts via three RRM domains that recognize UGG/GGU-rich
+    sequences, acting as a sequence-specific mRNA binding protein that regulates
+    alternative splicing of epithelial-specific gene programs.
+  molecular_function:
+    id: GO:0003729
+    label: mRNA binding
+  directly_involved_in:
+    - id: GO:0048024
+      label: regulation of mRNA splicing, via spliceosome
+  locations:
+    - id: GO:0005634
+      label: nucleus
+  supported_by:
+    - reference_id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-deep-research-falcon.md
+      supporting_text: &#34;ESRP1 functions as a sequence-specific RNA-binding protein that regulates alternative splicing&#34;
+    - reference_id: file:CALMI/A0A4W3GVU1/A0A4W3GVU1-uniprot.txt
+      supporting_text: &#34;RRM domain-containing protein&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
