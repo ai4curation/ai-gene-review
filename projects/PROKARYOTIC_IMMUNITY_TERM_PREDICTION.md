@@ -40,33 +40,7 @@ There are three different problems mixed together if we do not separate the laye
 Those should not live as ad hoc conditionals inside one particular predictor or one particular
 database parser.
 
-This project creates an extraction-ready translation layer in `src/ai_gene_review/defense_go/` that
-owns the second and third layers.
-
-## Design
-
-The current term-prediction layer consists of:
-
-- `src/ai_gene_review/defense_go/models.py`
-  Typed models for defense families, incoming family predictions, and GO mapping suggestions
-- `src/ai_gene_review/defense_go/registry.yaml`
-  Versioned source-of-truth registry for stable family IDs, aliases, GO mappings, and review notes
-- `src/ai_gene_review/defense_go/registry.py`
-  Loader and resolver for the registry
-- `tests/test_defense_go.py`
-  Focused tests for alias resolution, automatic mappings, unmapped families, and registry safety
-
-The API is intentionally narrow:
-
-- an upstream tool emits a family label plus optional confidence
-- the translation layer resolves that to a stable family record
-- it returns either:
-  - automatic GO suggestions, or
-  - review-only notes saying why automatic mapping is not yet allowed
-
-Today, the intended upstream source is the prokaryotic immunity predictor branch. Later, the same
-layer could absorb outputs from DefenseFinder, PADLOC, CasFinder, or additional learned models
-without changing the downstream GO policy interface.
+This project creates an extraction-ready translation layer that owns the second and third layers.
 
 ## Initial Stable Family IDs
 
@@ -116,6 +90,27 @@ The intended integration path is:
 Keeping those steps separate makes the project biology-first while still leaving room to support
 multiple upstream predictors and databases later.
 
+## Implementation
+
+The translation layer lives in `src/ai_gene_review/defense_go/`. The API is intentionally narrow:
+an upstream tool emits a family label plus optional confidence; the layer resolves it to a stable
+family record and returns either automatic GO suggestions or review-only notes saying why automatic
+mapping is not yet allowed. Today the intended upstream source is the prokaryotic immunity predictor
+branch, but the same layer could later absorb DefenseFinder, PADLOC, CasFinder, or learned models
+without changing the downstream GO policy interface.
+
+| File | Role |
+|------|------|
+| `src/ai_gene_review/defense_go/models.py` | Typed models for defense families, family predictions, GO mapping suggestions |
+| `src/ai_gene_review/defense_go/registry.yaml` | Versioned source-of-truth registry: stable family IDs, aliases, GO mappings, review notes |
+| `src/ai_gene_review/defense_go/registry.py` | Loader and resolver for the registry |
+| `tests/test_defense_go.py` | Tests for alias resolution, automatic mappings, unmapped families, registry safety |
+
+```bash
+uv run ruff check src/ai_gene_review/defense_go tests/test_defense_go.py
+uv run pytest tests/test_defense_go.py
+```
+
 ## Status
 
 Completed in this unit:
@@ -131,8 +126,3 @@ Deferred:
 - export of wrapper output into `PredictionReview` YAML
 - expansion of the registry to more defense families and GO policies
 - support for evidence-code policy and provenance payloads
-
-## Validation
-
-- `uv run ruff check src/ai_gene_review/defense_go tests/test_defense_go.py`
-- `uv run pytest tests/test_defense_go.py`

@@ -30,25 +30,9 @@ For each gene, the workflow generates at least 2 deep research reports (from dif
 - UniProt species code: human
 - Genes without IBA annotations are priority targets
 
-## Workflow
-
-```bash
-just fetch-gene human GENE
-just deep-research human GENE --provider falcon
-just deep-research human GENE --provider cyberian
-# Review and complete ai-review.yaml
-just validate human GENE
-```
-
 ## Completed Reviews
 
 **165 genes with COMPLETE status** (as of 2026-01-25)
-
-To list all completed PAINT genes:
-```bash
-comm -12 <(cut -d',' -f3 projects/PAINT/human-no-IBA-simple.csv | sort) \
-         <(grep -l "status: COMPLETE" genes/human/*/*.yaml | xargs dirname | xargs -I{} basename {} | sort)
-```
 
 ### Highlighted Reviews (Notable Findings)
 
@@ -77,9 +61,26 @@ The project has scaled to industrial batch processing:
 - Parallel architecture for continuous pipeline
 - Can process 100+ genes per hour with deep research automation
 
-## Supplementary Files
+## Reproducibility
 
-See `projects/PAINT/` folder:
+Per-gene workflow:
+
+```bash
+just fetch-gene human GENE
+just deep-research human GENE --provider falcon
+just deep-research human GENE --provider cyberian
+# Review and complete ai-review.yaml
+just validate human GENE
+```
+
+List all completed PAINT genes:
+
+```bash
+comm -12 <(cut -d',' -f3 projects/PAINT/human-no-IBA-simple.csv | sort) \
+         <(grep -l "status: COMPLETE" genes/human/*/*.yaml | xargs dirname | xargs -I{} basename {} | sort)
+```
+
+Supplementary files in `projects/PAINT/`:
 - `human-no-IBA-simple.csv` - Gene list (species, uniprot_id, gene_symbol)
 - `human-no-IBA.tsv` - Full annotation data
 
