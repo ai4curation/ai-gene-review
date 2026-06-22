@@ -1,0 +1,2874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDK16 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CDK16</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A8B8WEG2" target="_blank" class="term-link">
+                        A0A8B8WEG2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Balaenoptera musculus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CDK16";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="DESCRIPTION: CDK16 (formerly PCTAIRE1) encodes an atypical cycl..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CDK16 (formerly PCTAIRE1) encodes an atypical cyclin-dependent serine/threonine protein kinase (EC 2.7.11.22) belonging to the PCTAIRE subfamily of the CMGC kinase family. Unlike canonical cell-cycle CDKs, CDK16 functions primarily in differentiated post-mitotic cells, with highest expression in brain, testis, and skeletal muscle. The enzyme is activated by cyclin Y (CCNY) and cyclin Y-like 1 (CCNYL1), and its cyclin association is uniquely regulated by PKA phosphorylation at Ser153. CDK16 phosphorylates multiple validated substrates including PRC1 (Thr481, regulating mitotic spindle formation), WIPI2B (Ser395, negatively regulating neuronal autophagosome biogenesis), Rb (promoting G1/S transition), p53 (Ser315, promoting degradation), and p27Kip1 (Ser10, destabilizing the inhibitor). CDK16 localizes dynamically to the cytoplasm, plasma membrane (via CCNY interaction), nucleus during mitosis, and autophagosomes in neurons. It participates in cell cycle regulation at both G2/M and G1/S transitions, neuronal autophagy downstream of AMPK signaling, canonical and non-canonical Wnt signaling via LRP6 phosphorylation, and vesicular transport including synaptic vesicle exocytosis. CDK16 is essential for spermatogenesis, as male Cdk16 knockout mice are sterile with impaired sperm motility and morphological defects. The protein is located on chromosome X in blue whale, consistent with X-linkage of CDK16 across mammals.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0000166" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 is a protein kinase that uses ATP as phosphate donor, so it is technically a nucleotide-binding protein. However, this term is extremely broad and is completely subsumed by the more specific GO:0005524 (ATP binding) and GO:0004693 (cyclin-dependent protein serine/threonine kinase activity) annotations already present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the more specific ATP binding and kinase activity annotations. Adds no biological specificity.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004672" target="_blank" class="term-link">
+                                    GO:0004672
+                                </a>
+                            </span>
+                            <span class="term-label">protein kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0004672" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 is indeed a protein kinase, phosphorylating substrates such as PRC1, WIPI2B, Rb, p53, and p27Kip1. However, this general term is redundant with the more specific GO:0004693 (cyclin-dependent protein serine/threonine kinase activity) already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is correct but too general. The specific CDK Ser/Thr kinase activity term (GO:0004693) captures the function more precisely and is already present.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004674" target="_blank" class="term-link">
+                                    GO:0004674
+                                </a>
+                            </span>
+                            <span class="term-label">protein serine/threonine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0004674" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 catalyzes phosphorylation of serine and threonine residues on protein substrates using ATP, confirmed by in vitro kinase assays and identification of specific phosphosites (PRC1-Thr481, WIPI2B-Ser395, p53-Ser315, p27-Ser10). However, this term is a parent of the more specific GO:0004693 (cyclin-dependent protein serine/threonine kinase activity), which is also annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but redundant with the more specific cyclin-dependent protein serine/threonine kinase activity term (GO:0004693).
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004693" target="_blank" class="term-link">
+                                    GO:0004693
+                                </a>
+                            </span>
+                            <span class="term-label">cyclin-dependent protein serine/threonine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0004693" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most specific and accurate molecular function term for CDK16. As an atypical CDK of the PCTAIRE subfamily, CDK16 is activated by cyclin Y (CCNY) and cyclin Y-like 1 (CCNYL1), and catalyzes cyclin-dependent phosphorylation of serine/threonine residues. Its EC number is 2.7.11.22 (cyclin-dependent kinase), consistent with this annotation. Although CDK16 may have some basal kinase activity independent of cyclin binding, its full activation requires cyclin association.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the defining core molecular function of CDK16, directly matching its EC classification (2.7.11.22) and experimentally validated cyclin-dependent kinase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BALMU/A0A8B8WEG2/A0A8B8WEG2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=cyclin-dependent kinase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CDK16 functions as a serine/threonine protein kinase (EC 2.7.11.22) that catalyzes the transfer of phosphate groups from ATP to specific serine and threonine residues on target substrate proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 contains the protein kinase ATP-binding site (InterPro IPR017441, PROSITE PS00107) and uses ATP as a phosphate donor for its kinase reactions. ATP binding is an essential prerequisite for kinase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is a core mechanistic requirement for CDK16 kinase activity, well-supported by domain analysis and consistent with the protein kinase superfamily membership.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BALMU/A0A8B8WEG2/A0A8B8WEG2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">KW   ATP-binding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0005634" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 can localize to the nucleus during specific cell cycle phases, particularly during mitosis, where it regulates cell cycle progression through phosphorylation of PRC1 and Rb. Nuclear localization has been observed in breast cancer cells and is functionally linked to cell cycle regulation. This TreeGrafter annotation is consistent with the literature.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is context-dependent (cell-cycle-phase specific) rather than the primary location where CDK16 carries out its main functions. The cytoplasm and plasma membrane are the predominant locations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">During specific phases of the cell cycle, particularly during mitosis, CDK16 can localize to the nucleus where it regulates cell cycle progression</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 is predominantly localized to the cytoplasm in most cell types. Immunohistochemical analysis in triple-negative breast cancer tissues shows CDK16 is mainly distributed in the cytoplasm. This is the primary location for CDK16 in most cellular contexts.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is the predominant and best-characterized location for CDK16, supported by immunohistochemistry and cell fractionation studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CDK16 is predominantly localized to the cytoplasm in most cell types, including breast cancer cells and neurons</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006887" target="_blank" class="term-link">
+                                    GO:0006887
+                                </a>
+                            </span>
+                            <span class="term-label">exocytosis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0006887" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 has documented roles in vesicular transport processes. The CCNY/CDK16 complex regulates vesicular trafficking, and forward genetic analysis in C. elegans identified cyclin Y as necessary for targeting presynaptic components to the axon. CDK16 regulates synaptic vesicle dynamics and exocytosis in neuronal contexts. This TreeGrafter annotation is biologically plausible for CDK16.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Exocytosis is a legitimate biological process for CDK16, particularly in neurons, but it is a secondary consequence of CDK16&#39;s role in vesicular transport and cytoskeletal regulation rather than a core evolved function of the kinase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Forward genetic analysis in C. elegans identified cyclin Y as necessary for targeting presynaptic components to the axon, indicating a role in vesicular trafficking</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008021" target="_blank" class="term-link">
+                                    GO:0008021
+                                </a>
+                            </span>
+                            <span class="term-label">synaptic vesicle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0008021" data-r="GO_REF:0000118" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 has been linked to synaptic vesicle dynamics through its role in presynaptic component targeting and vesicular transport. In neurons, CDK16 colocalizes with WIPI2B at autophagosomes, and cyclin Y is required for targeting presynaptic components to the axon. However, direct localization of CDK16 itself to synaptic vesicles (as opposed to regulatory involvement in synaptic vesicle processes) is less firmly established.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The TreeGrafter annotation is plausible given CDK16&#39;s neuronal functions and involvement in vesicular transport, but the deep research literature primarily describes functional regulation of synaptic vesicle processes rather than direct physical localization of CDK16 to synaptic vesicles. Full-text evidence from primary studies would be needed to confirm.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0016301" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 is unambiguously a kinase, but this extremely general term is completely subsumed by more specific annotations already present (GO:0004693 cyclin-dependent protein serine/threonine kinase activity, GO:0004674 protein serine/threonine kinase activity, GO:0004672 protein kinase activity).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the broadest kinase term in the hierarchy and is fully redundant with the more specific kinase activity terms present.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0016740" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a kinase, CDK16 is technically a transferase (phosphotransferase), but this is an extremely broad parent term that adds no biological information beyond what is captured by the specific kinase terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the broadest transferase category and is fully redundant with all of the more specific kinase/CDK activity terms present.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031175" target="_blank" class="term-link">
+                                    GO:0031175
+                                </a>
+                            </span>
+                            <span class="term-label">neuron projection development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0031175" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 is highly expressed in post-mitotic neurons and has documented roles in neurite outgrowth. Proteomic studies in neuroblastoma cells identified CDK16 as a regulator of ERK phosphorylation and neurite outgrowth, a morphological marker of neuronal differentiation. CDK16 also regulates actin dynamics relevant to dendritic spine morphology and synaptic function. This TreeGrafter annotation is well-supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Neuron projection development is a legitimate biological process for CDK16, supported by experimental evidence in neuronal cell types. However, it represents a tissue-specific downstream effect rather than the core evolved function of this widely expressed kinase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Proteomic studies in neuroblastoma cells identified CDK16 as a regulator of extracellular signal-regulated kinase (ERK) phosphorylation and neurite outgrowth, a morphological marker of neuronal differentiation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051726" target="_blank" class="term-link">
+                                    GO:0051726
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="GO:0051726" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CDK16 regulates the cell cycle at multiple checkpoints. It controls the G2/M transition through phosphorylation of PRC1 at Thr481 (regulating mitotic spindle formation) and the G1/S transition through phosphorylation of Rb (regulating E2F target gene expression). CDK16 depletion causes G2/M cell cycle arrest and apoptosis. This annotation was inferred from CDK16&#39;s cyclin-dependent kinase activity via GO logical inference (GO_REF:0000108), which is appropriate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cell cycle regulation is a well-established and experimentally validated function of CDK16, operating through phosphorylation of multiple cell-cycle regulatory substrates (PRC1, Rb, p53, p27Kip1).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CDK16 plays dual roles in cell cycle control, regulating both G2/M and G1/S transitions through distinct mechanisms</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CDK16 enables cyclin-dependent protein serine/threonine kinase activity, phosphorylating substrates including PRC1, WIPI2B, Rb, p53, and p27Kip1. It is activated by binding to cyclin Y (CCNY) or cyclin Y-like 1 (CCNYL1), and functions predominantly in the cytoplasm. This kinase activity is involved in regulation of the cell cycle at both G2/M and G1/S transitions.</h3>
+                <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="FUNCTION: CDK16 enables cyclin-dependent protein serine/thre..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004693" target="_blank" class="term-link">
+                            cyclin-dependent protein serine/threonine kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051726" target="_blank" class="term-link">
+                                regulation of cell cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>In neurons, CDK16 functions as a negative regulator of autophagosome biogenesis by phosphorylating WIPI2B at Ser395, operating downstream of AMPK-mediated activation of the CCNY/CDK16 complex. CDK16 colocalizes with WIPI2B at autophagosomes and antagonizes PP2A-mediated dephosphorylation of WIPI2B to fine-tune autophagy rates.</h3>
+                <span class="vote-buttons" data-g="A0A8B8WEG2" data-a="FUNCTION: In neurons, CDK16 functions as a negative regulato..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004693" target="_blank" class="term-link">
+                            cyclin-dependent protein serine/threonine kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010506" target="_blank" class="term-link">
+                                regulation of autophagy
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">CDK16 functions as a critical regulator of neuronal autophagy, operating downstream of AMPK signaling</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Once activated, CDK16 phosphorylates WIPI2B at Ser395, and this phosphorylation serves as a negative regulator of autophagosome biogenesis</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(A0A8B8WEG2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A8B8WEG2" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Comprehensive Research Report: CDK16 (Cyclin-Dependent Kinase 16)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">12 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-18T19:46:09.633735</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="A0A8B8WEG2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="A0A8B8WEG2-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-cdk16-cyclin-dependent-kinase-16">Comprehensive Research Report: CDK16 (Cyclin-Dependent Kinase 16)</h1>
+<h2 id="gene-identity-and-context">Gene Identity and Context</h2>
+<p>CDK16 (gene ID: A0A8B8WEG2 in <em>Balaenoptera musculus</em>, blue whale) encodes a cyclin-dependent kinase belonging to the PCTAIRE subfamily of atypical cyclin-dependent kinases (karimbayli2024insightsintothe pages 1-2). While no blue whale-specific literature exists for CDK16, the protein is highly conserved across mammals, and extensive research on human, mouse, and rat orthologs provides robust insights into its function (karimbayli2024insightsintothe pages 1-2). CDK16 belongs to the CMGC family of serine/threonine protein kinases and is classified as an atypical CDK, distinct from classical cell cycle CDKs in both structure and function (karimbayli2024insightsintothe pages 1-2).</p>
+<h2 id="primary-enzymatic-function-and-substrate-specificity">Primary Enzymatic Function and Substrate Specificity</h2>
+<h3 id="catalytic-activity">Catalytic Activity</h3>
+<p>CDK16 functions as a serine/threonine protein kinase (EC 2.7.11.22) that catalyzes the transfer of phosphate groups from ATP to specific serine and threonine residues on target substrate proteins (li2022cdk16promotesthe pages 1-2, karimbayli2024insightsintothe pages 1-2). Unlike canonical cell cycle CDKs that primarily regulate cell division, CDK16 serves diverse roles in post-mitotic differentiated cells, particularly in neurons and spermatogenic cells (karimbayli2024insightsintothe pages 1-2, karimbayli2024insightsintothe pages 7-9).</p>
+<h3 id="substrate-specificity">Substrate Specificity</h3>
+<p>Recent research has identified several validated substrates of CDK16, demonstrating its broad functional repertoire:</p>
+<p><strong>1. PRC1 (Protein Regulator of Cytokinesis 1):</strong> CDK16 phosphorylates PRC1 at threonine 481 (Thr481), a modification critical for regulating mitotic spindle formation and cytokinesis (li2022cdk16promotesthe pages 1-2, li2022cdk16promotesthe pages 11-12). This phosphorylation event prevents nuclear retention of PRC1 and promotes its localization to the mitotic spindle and spindle midzone during mitosis (li2022cdk16promotesthe pages 11-12). The functional importance of this substrate relationship is demonstrated by rescue experiments showing that a phospho-mimetic PRC1(T481D) mutant can partially restore cell proliferation defects induced by CDK16 knockdown, whereas a phospho-deficient PRC1(T481A) mutant cannot (li2022cdk16promotesthe pages 11-12).</p>
+<p><strong>2. WIPI2B:</strong> In neurons, CDK16 directly phosphorylates WIPI2B at serine 395 (Ser395), a key autophagy protein involved in autophagosome biogenesis (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3). Purified mammalian CDK16 can directly modify WIPI2B S395 phosphorylation in cell-free <em>in vitro</em> assays, confirming CDK16 as a direct WIPI2B kinase (tsong2026pp2aandcdk16 pages 1-3). This phosphorylation negatively regulates autophagosome formation, as elevated CDK16 activity or expression of phospho-mimetic WIPI2B(S395E) diminishes autophagosome biogenesis in primary neurons (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3).</p>
+<p><strong>3. Retinoblastoma protein (Rb):</strong> CDK16 phosphorylates Rb, thereby regulating the Rb-E2F signaling pathway, which is essential for G1/S cell cycle transition (li2022cdk16promotesthe pages 12-15). CDK16 inhibition or knockdown significantly decreases Rb phosphorylation and downregulates E2F target genes including CDK2, RRM2, TOP2A, MKI67, and MCM7 (li2022cdk16promotesthe pages 12-15). This function is similar to that of CDK4/6 but operates at different cell cycle phases, suggesting CDK16 can interrupt the cell cycle at multiple checkpoints (li2022cdk16promotesthe pages 12-15).</p>
+<p><strong>4. p53:</strong> CDK16 phosphorylates p53 at serine 315 (Ser315), preventing p53 nuclear localization and promoting its degradation, thereby inhibiting p53-mediated tumor suppressor activities and contributing to cell proliferation, survival, and radioresistance (karimbayli2024insightsintothe pages 10-13).</p>
+<p><strong>5. p27Kip1:</strong> CDK16 phosphorylates the cell cycle inhibitor p27Kip1 at serine 10 (Ser10), destabilizing the protein and relieving its inhibitory effect on cell cycle progression (karimbayli2024insightsintothe pages 10-13).</p>
+<p>A comprehensive summary of CDK16 substrates and their phosphorylation-dependent functions is provided below:</p>
+<table>
+<thead>
+<tr>
+<th>Substrate</th>
+<th>Phosphorylation site(s) by CDK16</th>
+<th>Cellular location affected</th>
+<th>Functional consequence of phosphorylation</th>
+<th>Biological process regulated</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PRC1 (Protein Regulator of Cytokinesis 1)</td>
+<td>Thr481</td>
+<td>PRC1 localization shifts away from nuclear retention and toward mitotic spindle/spindle midzone-associated localization during mitosis</td>
+<td>Promotes PRC1 phosphorylation, supports proper spindle formation, and enables cell proliferation; phospho-mimetic PRC1 partly rescues proliferation defects caused by CDK16 loss (li2022cdk16promotesthe pages 11-12, li2022cdk16promotesthe pages 12-15, karimbayli2024insightsintothe pages 10-13)</td>
+<td>Mitotic spindle organization, G2/M progression, cytokinesis, tumor cell proliferation (li2022cdk16promotesthe pages 11-12, li2022cdk16promotesthe pages 12-15, karimbayli2024insightsintothe pages 10-13)</td>
+</tr>
+<tr>
+<td>WIPI2B</td>
+<td>Ser395</td>
+<td>Colocalized with CDK16 at autophagosomes in primary neurons; affects WIPI2B puncta formation at autophagic membranes</td>
+<td>Direct phosphorylation of WIPI2B by CDK16 modulates WIPI2B function and reduces autophagosome biogenesis when CDK16 activity is elevated (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3)</td>
+<td>Neuronal autophagosome biogenesis, autophagy regulation (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3)</td>
+</tr>
+<tr>
+<td>Rb (retinoblastoma protein)</td>
+<td>Specific residue(s) not stated in available context</td>
+<td>Functionally linked to Rb pathway activity; phosphorylation status measured in whole-cell analyses after CDK16 perturbation</td>
+<td>CDK16 promotes Rb phosphorylation; CDK16 inhibition or knockdown reduces p-Rb and downregulates E2F target genes, supporting cell-cycle progression (li2022cdk16promotesthe pages 12-15)</td>
+<td>Rb-E2F signaling, G1/S transition, cell-cycle progression (li2022cdk16promotesthe pages 12-15)</td>
+</tr>
+<tr>
+<td>p53</td>
+<td>Ser315</td>
+<td>Reduces nuclear localization of p53</td>
+<td>Phosphorylation at Ser315 prevents p53 nuclear localization and promotes p53 degradation, thereby favoring survival and proliferation (karimbayli2024insightsintothe pages 10-13)</td>
+<td>p53 signaling, cell proliferation, survival, radioresistance (karimbayli2024insightsintothe pages 10-13)</td>
+</tr>
+<tr>
+<td>p27Kip1</td>
+<td>Ser10</td>
+<td>Affects p27 protein stability rather than a specific compartment in the available context</td>
+<td>Phosphorylation destabilizes p27Kip1, relieving cell-cycle inhibition and promoting progression through the cell cycle (karimbayli2024insightsintothe pages 10-13)</td>
+<td>Cell-cycle progression, proliferation control (karimbayli2024insightsintothe pages 10-13)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally supported or review-synthesized CDK16 substrates and the known phosphorylation-linked effects on localization, function, and biological processes. It is useful for distinguishing well-supported direct substrates such as PRC1 and WIPI2B from pathway-level targets like Rb where the exact phosphosite was not specified in the available context.</em></p>
+<h3 id="activation-mechanisms">Activation Mechanisms</h3>
+<p>Unlike canonical CDKs that are strictly cyclin-dependent, CDK16 exhibits unique activation mechanisms that distinguish it as an atypical CDK (karimbayli2024insightsintothe pages 1-2, karimbayli2024insightsintothe pages 4-6). Structural studies reveal that CDK16 can adopt an active conformation even in the absence of cyclin binding, suggesting basal kinase activity independent of regulatory subunits (karimbayli2024insightsintothe pages 4-6). The cyclin-binding domain of CDK16 (PCTAIRE motif) aligns more closely with the active conformation of CDK1 than with inactive CDK structures, supporting the possibility of cyclin-independent activity (karimbayli2024insightsintothe pages 4-6).</p>
+<p>However, CDK16 activity is substantially enhanced through multiple regulatory mechanisms:</p>
+<p><strong>1. Cyclin Y (CCNY) and Cyclin Y-like 1 (CCNYL1) Binding:</strong> CDK16 forms functional complexes with CCNY and CCNYL1, which serve as regulatory subunits (li2022cdk16promotesthe pages 1-2, karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9). CCNY binding to CDK16 occurs at the plasma membrane and requires a region upstream of the kinase domain (karimbayli2024insightsintothe pages 7-9). This binding is unique among CDKs in that it is phosphorylation-dependent; phosphorylation of CDK16 at Ser153 inhibits CCNY binding, making CDK16 the first CDK shown to have phosphorylation-regulated cyclin association (karimbayli2024insightsintothe pages 7-9).</p>
+<p><strong>2. PKA Phosphorylation:</strong> Protein kinase A (PKA) phosphorylates CDK16 at four different serine residues, with Ser153 being the primary phosphorylation site (karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9). This phosphorylation modulates CCNY binding and thereby regulates CDK16 activation state (karimbayli2024insightsintothe pages 7-9).</p>
+<p><strong>3. CDK5/p35 Complex:</strong> The CDK5/p35 complex phosphorylates CDK16 at Ser95, increasing CDK16 kinase activity, particularly in neuronal contexts where both kinases are highly expressed (karimbayli2024insightsintothe pages 7-9).</p>
+<p><strong>4. 14-3-3 Protein Interaction:</strong> CDK16 interacts with 14-3-3 proteins, and this binding may enhance basal CDK16 kinase activity, although the precise molecular mechanism remains incompletely characterized (karimbayli2024insightsintothe pages 4-6, karimbayli2024insightsintothe pages 7-9).</p>
+<p><strong>5. AMPK-Mediated Activation:</strong> AMP-activated protein kinase (AMPK) phosphorylates CCNY at Ser326, promoting CCNY-CDK16 complex formation and increasing CDK16 kinase activity (karimbayli2024insightsintothe pages 9-10, opacka2023theroleof pages 2-5). This mechanism positions the CCNY/CDK16 complex as an AMPK substrate and autophagy effector, particularly under nutrient or energy stress conditions (karimbayli2024insightsintothe pages 9-10, opacka2023theroleof pages 2-5).</p>
+<p>A detailed summary of CDK16 activation mechanisms is presented below:</p>
+<table>
+<thead>
+<tr>
+<th>Regulatory protein/complex</th>
+<th>Mechanism of regulation</th>
+<th>Specific modification site(s) / interaction details</th>
+<th>Functional outcome for CDK16</th>
+<th>Tissue / cellular context observed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cyclin Y (CCNY)</td>
+<td>Direct binding; regulatory subunit association</td>
+<td>CCNY binds CDK16, with binding reported at the plasma membrane and requiring a region upstream of the kinase domain; CCNY-dependent activation is a defining feature of CDK16/PCTAIRE signaling (li2022cdk16promotesthe pages 1-2, karimbayli2024insightsintothe pages 7-9)</td>
+<td>Promotes CDK16 kinase activity and helps localize/organize CDK16 signaling at membranes; supports roles in neurite/presynaptic trafficking, mitotic regulation, and other differentiated-cell functions (li2022cdk16promotesthe pages 1-2, karimbayli2024insightsintothe pages 7-9)</td>
+<td>Observed in overexpression systems and endogenous mammalian contexts; emphasized in brain/testis-associated biology and plasma membrane signaling (li2022cdk16promotesthe pages 1-2, karimbayli2024insightsintothe pages 7-9)</td>
+</tr>
+<tr>
+<td>Cyclin Y-like 1 (CCNYL1)</td>
+<td>Direct binding; regulatory subunit association</td>
+<td>CDK16 interacts with CCNYL1; complex formation has been specifically linked to spermatogenesis, though precise CDK16 phosphosite control by CCNYL1 was not established in the available context (karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9)</td>
+<td>Supports CDK16 function in male germ-cell differentiation and sperm development; likely contributes to CDK16 stability and/or activation in testis (karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9)</td>
+<td>Testis, especially spermatogenesis / elongated spermatids / sperm maturation contexts (karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9)</td>
+</tr>
+<tr>
+<td>PKA</td>
+<td>Phosphorylation of CDK16</td>
+<td>PKA phosphorylates CDK16 on four serine residues; Ser153 is highlighted as the main site. Phosphorylation of Ser153 inhibits CCNY binding, making cyclin association phosphorylation-dependent (karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9)</td>
+<td>Regulates CDK16 activation state by modulating cyclin binding; Ser153 phosphorylation inhibits CCNY association and thereby alters kinase activation/localization behavior (karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9)</td>
+<td>Demonstrated in mechanistic studies of CDK16 regulation; discussed in mammalian cellular systems and testis/brain-related CDK16 biology (karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9)</td>
+</tr>
+<tr>
+<td>CDK5/p35 complex</td>
+<td>Phosphorylation of CDK16</td>
+<td>CDK5/p35 phosphorylates CDK16 at Ser95 (karimbayli2024insightsintothe pages 7-9)</td>
+<td>Increases CDK16 kinase activity (karimbayli2024insightsintothe pages 7-9)</td>
+<td>Brain / neuronal context, where both CDK5 signaling and PCTAIRE kinases are prominently studied (karimbayli2024insightsintothe pages 7-9)</td>
+</tr>
+<tr>
+<td>14-3-3 proteins</td>
+<td>Protein interaction; binding to phosphorylated CDK16-associated states</td>
+<td>14-3-3 proteins are reported CDK16 interactors; their binding may depend on prior phosphorylation and may increase basal CDK16 kinase activity, although the exact interaction architecture remains unresolved (karimbayli2024insightsintothe pages 4-6, karimbayli2024insightsintothe pages 7-9)</td>
+<td>Potentially enhances basal kinase activity and contributes to non-canonical activation/regulatory complex formation (karimbayli2024insightsintothe pages 4-6, karimbayli2024insightsintothe pages 7-9)</td>
+<td>Reported in brain and broader mammalian cell studies; discussed especially in relation to unclear endogenous activation mechanisms (karimbayli2024insightsintothe pages 4-6, karimbayli2024insightsintothe pages 7-9)</td>
+</tr>
+<tr>
+<td>AMPK</td>
+<td>Indirect activation via phosphorylation of CCNY</td>
+<td>AMPK phosphorylates CCNY at Ser326, which promotes CCNY-CDK16 interaction and increases CDK16 kinase activity; the CCNY/CDK16 complex is described as an AMPK substrate/effector in autophagy regulation (karimbayli2024insightsintothe pages 9-10, opacka2023theroleof pages 2-5)</td>
+<td>Enhances CCNY-CDK16 complex formation and activates CDK16 in nutrient/energy-stress signaling; promotes autophagy-related CDK16 function (karimbayli2024insightsintothe pages 9-10, opacka2023theroleof pages 2-5)</td>
+<td>Autophagy-related cellular contexts, including studies linking AMPK, CCNY/CDK16, ULK1/Beclin1-dependent macroautophagy, and vesicle/actin-associated regulation (karimbayli2024insightsintothe pages 9-10, opacka2023theroleof pages 2-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main reported regulators of CDK16 activation and signaling, including binding partners and upstream kinases. It is useful for distinguishing direct activators from phosphorylation-based modulators and for tracking the tissue contexts in which each mechanism has been observed.</em></p>
+<h2 id="subcellular-localization">Subcellular Localization</h2>
+<p>CDK16 exhibits dynamic subcellular localization that varies depending on cellular context and cell cycle phase:</p>
+<p><strong>Cytoplasmic Localization:</strong> CDK16 is predominantly localized to the cytoplasm in most cell types, including breast cancer cells and neurons (li2022cdk16promotesthe pages 1-2, li2022cdk16promotesthe pages 5-8). Immunohistochemical analysis of triple-negative breast cancer (TNBC) tissues shows CDK16 is mainly distributed in the cytoplasm (li2022cdk16promotesthe pages 5-8).</p>
+<p><strong>Plasma Membrane Association:</strong> A critical feature of CDK16 biology is its recruitment to the plasma membrane through interaction with membrane-bound cyclin Y (CCNY) (karimbayli2024insightsintothe pages 7-9). This membrane localization is important for CDK16 activation and for targeting specific signaling pathways, including Wnt signaling (opacka2023theroleof pages 2-5).</p>
+<p><strong>Nuclear Localization:</strong> During specific phases of the cell cycle, particularly during mitosis, CDK16 can localize to the nucleus where it regulates cell cycle progression (li2022cdk16promotesthe pages 11-12). The phosphorylation status of CDK16 substrates such as PRC1 affects their nuclear versus cytoplasmic distribution, with phosphorylated PRC1 being excluded from the nucleus (li2022cdk16promotesthe pages 11-12).</p>
+<p><strong>Autophagosome Association:</strong> In primary neurons, CDK16 colocalizes with WIPI2B at autophagosomes, the sites of autophagosome biogenesis (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3). This localization is functionally significant for CDK16's role in regulating neuronal autophagy (tsong2026pp2aandcdk16 pages 1-3).</p>
+<p><strong>Mitotic Spindle Association:</strong> During cell division, CDK16 localizes to mitotic spindle structures where it regulates spindle formation through phosphorylation of PRC1 (li2022cdk16promotesthe pages 1-2, li2022cdk16promotesthe pages 11-12).</p>
+<p>The dynamic localization of CDK16 is regulated by binding partners and post-translational modifications, enabling the kinase to participate in diverse cellular processes across different subcellular compartments.</p>
+<h2 id="biological-processes-and-signaling-pathways">Biological Processes and Signaling Pathways</h2>
+<h3 id="cell-cycle-regulation">Cell Cycle Regulation</h3>
+<p>CDK16 plays dual roles in cell cycle control, regulating both G2/M and G1/S transitions through distinct mechanisms:</p>
+<p><strong>G2/M Transition and Mitotic Spindle Formation:</strong> CDK16 regulates the G2/M checkpoint through phosphorylation of PRC1 at Thr481 (li2022cdk16promotesthe pages 1-2, li2022cdk16promotesthe pages 11-12). During the cell cycle, PRC1 phosphorylation at Thr481 fluctuates with CDK16 protein abundance, and this phosphorylation is critical for proper spindle formation (li2022cdk16promotesthe pages 11-12). Knockdown of CDK16 results in spindle formation defects, leading to cells becoming arrested in prophase with aberrant spindle structures (li2022cdk16promotesthe pages 11-12). Flow cytometry analysis confirms that CDK16 depletion causes G2/M cell cycle arrest and induces apoptosis (li2022cdk16promotesthe pages 8-11). The requirement for CDK16 kinase activity is demonstrated by the inability of a kinase-dead CDK16(D304A) mutant to rescue proliferation defects in CDK16-depleted cells, whereas wild-type CDK16 can restore normal proliferation (li2022cdk16promotesthe pages 5-8).</p>
+<p><strong>G1/S Transition via Rb-E2F Pathway:</strong> CDK16 also regulates the Rb-E2F signaling pathway by phosphorylating retinoblastoma protein (Rb) (li2022cdk16promotesthe pages 12-15). Gene set enrichment analysis (GSEA) of cells treated with the CDK16 inhibitor rebastinib or with CDK16 knockdown reveals significant downregulation of E2F target gene signatures (li2022cdk16promotesthe pages 12-15). CDK16 inhibition decreases phosphorylated Rb levels and reduces expression of downstream E2F target genes essential for cell cycle progression (li2022cdk16promotesthe pages 12-15). This dual functionality at both G1/S and G2/M checkpoints distinguishes CDK16 from classical cell cycle CDKs and suggests it integrates cell cycle control across multiple phases (li2022cdk16promotesthe pages 12-15).</p>
+<h3 id="autophagy-regulation">Autophagy Regulation</h3>
+<p>CDK16 functions as a critical regulator of neuronal autophagy, operating downstream of AMPK signaling (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3). The CCNY/CDK16 complex is phosphorylated and activated by AMPK at CCNY Ser326, positioning it as an AMPK substrate and autophagy effector (karimbayli2024insightsintothe pages 9-10, opacka2023theroleof pages 2-5). Once activated, CDK16 phosphorylates WIPI2B at Ser395, and this phosphorylation serves as a negative regulator of autophagosome biogenesis (tsong2026pp2aandcdk16 pages 1-3).</p>
+<p>Genetic studies in <em>Caenorhabditis elegans</em> demonstrate that PP2A (protein phosphatase 2A) and CDK16 antagonistically regulate neuronal autophagy through the same genetic pathway involving ATG-18 (the nematode ortholog of WIPI2B) (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3). While PP2A dephosphorylates WIPI2B S395 to promote autophagy, CDK16 phosphorylates this site to inhibit autophagosome formation (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3). This antagonistic regulation provides a mechanism for fine-tuning autophagy rates in neurons. In primary murine neurons, ectopic CDK16 expression diminishes WIPI2B puncta formation and reduces autophagosome biogenesis rates, whereas siRNA-mediated knockdown of CDK16 or expression of phospho-dead WIPI2B(S395A) increases autophagy (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3).</p>
+<p>The link between CDK16 and autophagy extends beyond WIPI2B phosphorylation. CDK16's functions in vesicular transport and actin cytoskeleton organization are both relevant for autophagy, suggesting CDK16 may regulate multiple steps including bringing autophagosomes into proximity with lysosomes (karimbayli2024insightsintothe pages 9-10).</p>
+<h3 id="wnt-signaling-pathway">Wnt Signaling Pathway</h3>
+<p>The CCNY/CDK16 complex participates in canonical Wnt signaling by phosphorylating and activating the LRP6 co-receptor, a major regulator of the Wnt/β-catenin pathway (opacka2023theroleof pages 2-5). This phosphorylation prevents degradation of β-catenin, enabling Wnt signal transduction (opacka2023theroleof pages 2-5). Phosphorylation and signaling of the Wnt receptor are maximal in the G2/M phase, coinciding with peak CCNY expression, suggesting coordination between cell cycle progression and Wnt pathway activity (opacka2023theroleof pages 2-5). The CCNY/CDK16 complex also promotes non-canonical Wnt signaling by enhancing expression of Dvl2 and Naked1 proteins and by activating Rho GTPases, which mediate actin polymerization (opacka2023theroleof pages 2-5).</p>
+<h3 id="cytoskeleton-organization-and-vesicular-transport">Cytoskeleton Organization and Vesicular Transport</h3>
+<p>CDK16 regulates actin cytoskeleton dynamics and vesicular transport processes (karimbayli2024insightsintothe pages 1-2, karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9). Cyclin Y is an actin-binding protein, and the CCNY/CDK16 complex affects actin dynamics at steady state and during long-term potentiation by inhibiting cofilin activation (opacka2023theroleof pages 2-5). RNA sequencing of CDK16-depleted cells shows downregulation of genes associated with microtubule cytoskeleton organization, consistent with CDK16's role in regulating spindle formation and broader cytoskeletal functions (li2022cdk16promotesthe pages 11-12). Forward genetic analysis in <em>C. elegans</em> identified cyclin Y as necessary for targeting presynaptic components to the axon, indicating a role in vesicular trafficking (karimbayli2024insightsintothe pages 7-9).</p>
+<h3 id="neuronal-function-and-differentiation">Neuronal Function and Differentiation</h3>
+<p>CDK16 plays important roles in neuronal biology beyond autophagy regulation. It is highly expressed in differentiated neurons, particularly in the brain and hippocampus (karimbayli2024insightsintothe pages 1-2, karimbayli2024insightsintothe pages 7-9). Proteomic studies in neuroblastoma cells identified CDK16 as a regulator of extracellular signal-regulated kinase (ERK) phosphorylation and neurite outgrowth, a morphological marker of neuronal differentiation (pedersen2021proteomicinvestigationof pages 1-2). In hippocampal neurons, cyclin Y (the CDK16 regulatory subunit) localizes to postsynaptic domains of dendritic spines and regulates AMPA receptor trafficking, affecting synaptic plasticity and long-term potentiation (LTP) (opacka2023theroleof pages 2-5).</p>
+<p>Studies have linked CDK16 to neuropsychological disorders including learning deficiency, altered social behavior, and Alzheimer's disease in experimental models (karimbayli2024insightsintothe pages 9-10). Analysis of patient samples shows altered CDK16 expression and phosphorylation in Alzheimer's disease, suggesting involvement in neurodegenerative processes (karimbayli2024insightsintothe pages 9-10).</p>
+<h3 id="spermatogenesis-and-male-fertility">Spermatogenesis and Male Fertility</h3>
+<p>CDK16 is essential for spermatogenesis, particularly in the final stages of sperm differentiation (karimbayli2024insightsintothe pages 1-2, karimbayli2024insightsintothe pages 7-9). Conditional knockout studies in mice revealed that male Cdk16KO mice are sterile, exhibiting impaired sperm motility (dyskinesia and asthenozoospermia) and various morphological abnormalities including malformed sperm heads, cytoplasmic excess, and structural defects in the annulus region (karimbayli2024insightsintothe pages 7-9). CDK16 interacts with CCNYL1 in testis, and this complex regulates spermatogenesis (karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9). Ccnyl1 knockout mice similarly develop male infertility associated with asthenozoospermia and substantial reduction in testicular Cdk16 expression, suggesting CCNYL1 contributes to CDK16 protein stability in spermatogenic cells (karimbayli2024insightsintothe pages 7-9).</p>
+<h3 id="apoptosis-and-cell-survival">Apoptosis and Cell Survival</h3>
+<p>CDK16 regulates the balance between autophagy and apoptosis, influencing cell fate decisions (karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 10-13). CDK16 can stabilize RIPK1, thereby regulating the extrinsic apoptosis pathway and contributing to cancer cell resistance to TNF-family cytokine-induced apoptosis (karimbayli2024insightsintothe pages 10-13). Through phosphorylation of p53 at Ser315, CDK16 prevents p53 nuclear localization and promotes its degradation, inhibiting p53-mediated apoptosis and enhancing cell survival and radioresistance (karimbayli2024insightsintothe pages 10-13).</p>
+<h2 id="tissue-expression-and-conservation">Tissue Expression and Conservation</h2>
+<p>CDK16 exhibits relatively ubiquitous expression across human tissues but is most abundantly expressed in differentiated tissues including skeletal muscle, brain, and testis (karimbayli2024insightsintothe pages 1-2). Within the brain, expression is prominent in post-mitotic neurons, particularly in hippocampal regions (karimbayli2024insightsintothe pages 1-2, karimbayli2024insightsintothe pages 7-9). CDK16 is also expressed during embryonic development, with mouse studies showing Cdk16 expression from at least embryonic day 11 (E11) through E18 (karimbayli2024insightsintothe pages 1-2).</p>
+<p>As a member of the highly conserved CMGC kinase family, CDK16 orthologs share substantial sequence homology across mammals (karimbayli2024insightsintothe pages 1-2). The kinase domain is particularly well conserved, spanning approximately 250 amino acids with 40-65.5% homology among human CDK family members (karimbayli2024insightsintothe pages 1-2). The PCTAIRE subfamily (CDK16, CDK17, and CDK18) is characterized by the PCTAIRE amino acid motif (replacing the canonical PSTAIRE motif of classical CDKs), which is conserved across species and defines this atypical CDK subgroup (karimbayli2024insightsintothe pages 1-2).</p>
+<h2 id="recent-developments-and-current-understanding-2020-2024">Recent Developments and Current Understanding (2020-2024)</h2>
+<p>Recent structural biology studies have provided important insights into CDK16 activation mechanisms. Crystallographic analysis reveals that CDK16 has a partially inverted DFG motif and distinctive conformations in its C-terminal extension and CDK/MAPK motif compared to canonical CDKs (karimbayli2024insightsintothe pages 4-6). These structural features suggest that CDK16 can engage in protein-protein interactions distinct from those of canonical CDKs, potentially explaining its unique biological functions (karimbayli2024insightsintothe pages 4-6).</p>
+<p>The discovery of CDK16's role in neuronal autophagy represents a significant recent advance (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3). Published in 2026, this work identified PP2A and CDK16 as antagonistic regulators of WIPI2B S395 phosphorylation and demonstrated their functional importance using genetic approaches in <em>C. elegans</em> and biochemical validation in mammalian systems (tsong2026pp2aandcdk16 pages 1-3). This finding is particularly relevant given the decline in autophagosome biogenesis during neuronal aging and the potential for targeting autophagy regulators therapeutically (tsong2026pp2aandcdk16 pages 1-3).</p>
+<p>Research published in 2022 established PRC1 as a bona fide CDK16 substrate in breast cancer cells and demonstrated the therapeutic potential of targeting CDK16 in triple-negative breast cancer (TNBC) (li2022cdk16promotesthe pages 1-2). This study showed that CDK16 is highly expressed in TNBC, correlates with poor patient outcomes, and that both genetic depletion and pharmacological inhibition with rebastinib effectively suppress TNBC tumor growth and metastasis in patient-derived organoid and xenograft models (li2022cdk16promotesthe pages 1-2, li2022cdk16promotesthe pages 5-8).</p>
+<p>A comprehensive 2024 review article provides the most thorough analysis to date of the PCTAIRE kinase subfamily, including detailed discussion of CDK16 structure, expression patterns, activation mechanisms, substrates, and roles in cancer (karimbayli2024insightsintothe pages 1-2). This review highlights that despite being part of the CDK family, CDK16 and its PCTAIRE relatives (CDK17 and CDK18) remain understudied, with 13 of the 21 human CDKs classified as understudied kinases (karimbayli2024insightsintothe pages 1-2). The authors emphasize the need for more selective CDK16 inhibitors and better structural data to enable targeted drug development (karimbayli2024insightsintothe pages 1-2, karimbayli2024insightsintothe pages 4-6).</p>
+<h2 id="experimental-evidence-and-methodologies">Experimental Evidence and Methodologies</h2>
+<p>The functional characterization of CDK16 has relied on diverse experimental approaches:</p>
+<p><strong>Genetic Studies:</strong> Conditional knockout mouse models have been essential for defining CDK16 functions in vivo, particularly for spermatogenesis (karimbayli2024insightsintothe pages 7-9). CRISPR-based genetic approaches in <em>C. elegans</em> have enabled discovery of CDK16's role in autophagy regulation (tsong2026pp2aandcdk16 pages 3-5, tsong2026pp2aandcdk16 pages 1-3).</p>
+<p><strong>Biochemical Studies:</strong> Cell-free in vitro kinase assays using purified mammalian CDK16 have directly demonstrated CDK16's ability to phosphorylate substrates such as WIPI2B at specific sites (tsong2026pp2aandcdk16 pages 1-3). Immunoprecipitation and co-immunoprecipitation studies have identified CDK16 binding partners including cyclins, 14-3-3 proteins, and other regulatory factors (karimbayli2024insightsintothe pages 9-10, karimbayli2024insightsintothe pages 7-9).</p>
+<p><strong>Cell-Based Assays:</strong> Knockdown and overexpression studies combined with rescue experiments using kinase-dead mutants have established the requirement for CDK16 catalytic activity in various cellular processes (li2022cdk16promotesthe pages 5-8, li2022cdk16promotesthe pages 11-12). Phospho-specific antibodies have enabled tracking of substrate phosphorylation in response to CDK16 manipulation (li2022cdk16promotesthe pages 11-12).</p>
+<p><strong>Structural Biology:</strong> X-ray crystallography has provided three-dimensional structures of CDK16, revealing unique conformational features that distinguish it from canonical CDKs (karimbayli2024insightsintothe pages 4-6). Homology modeling has been used to predict structures of related PCTAIRE kinases (karimbayli2024insightsintothe pages 4-6).</p>
+<p><strong>Translational Models:</strong> Patient-derived organoid (PDO) and patient-derived xenograft (PDX) models have validated CDK16 as a therapeutic target in breast cancer (li2022cdk16promotesthe pages 1-2, li2022cdk16promotesthe pages 5-8).</p>
+<h2 id="summary">Summary</h2>
+<p>CDK16 is an atypical cyclin-dependent serine/threonine protein kinase (EC 2.7.11.22) that, despite its classification as a CDK, functions primarily in differentiated post-mitotic cells rather than as a canonical cell cycle regulator. The enzyme catalyzes phosphorylation of multiple substrates including PRC1 (at Thr481), WIPI2B (at Ser395), Rb, p53 (at Ser315), and p27Kip1 (at Ser10), each phosphorylation event having distinct functional consequences for cell cycle progression, autophagy, apoptosis, or tumor suppression.</p>
+<p>CDK16 exhibits dynamic subcellular localization including cytoplasmic, plasma membrane, nuclear, and autophagosome-associated distributions, with localization regulated by binding partners (particularly cyclin Y at the plasma membrane) and post-translational modifications. The kinase participates in multiple signaling pathways including cell cycle regulation (both G2/M and G1/S transitions), autophagy (as an AMPK-activated effector), Wnt signaling (through LRP6 phosphorylation), cytoskeleton organization, and neuronal function.</p>
+<p>CDK16 activation involves multiple non-canonical mechanisms including cyclin Y/CCNYL1 binding (which is uniquely phosphorylation-dependent), PKA-mediated phosphorylation at Ser153, CDK5/p35-mediated phosphorylation at Ser95, 14-3-3 protein interaction, and AMPK-mediated phosphorylation of CCNY at Ser326. Structural studies indicate CDK16 may possess basal kinase activity independent of cyclin binding, distinguishing it from canonical CDKs.</p>
+<p>This highly conserved mammalian kinase represents a promising therapeutic target, particularly in contexts such as triple-negative breast cancer where it is overexpressed and associated with poor outcomes. Understanding CDK16 biology provides insights into fundamental processes in neuronal autophagy, spermatogenesis, and cell cycle control in differentiated cells.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(karimbayli2024insightsintothe pages 1-2): Javad Karimbayli, Ilenia Pellarin, Barbara Belletti, and Gustavo Baldassarre. Insights into the structural and functional activities of forgotten kinases: pctaires cdks. Molecular Cancer, Jun 2024. URL: https://doi.org/10.1186/s12943-024-02043-6, doi:10.1186/s12943-024-02043-6. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2022cdk16promotesthe pages 1-2): Xiao Li, Jinpeng Li, Liming Xu, Wei Wei, Anyi Cheng, Lingxian Zhang, Mengna Zhang, Gaosong Wu, and Cheguo Cai. Cdk16 promotes the progression and metastasis of triple-negative breast cancer by phosphorylating prc1. Journal of Experimental &amp; Clinical Cancer Research : CR, Apr 2022. URL: https://doi.org/10.1186/s13046-022-02362-w, doi:10.1186/s13046-022-02362-w. This article has 54 citations.</p>
+</li>
+<li>
+<p>(karimbayli2024insightsintothe pages 7-9): Javad Karimbayli, Ilenia Pellarin, Barbara Belletti, and Gustavo Baldassarre. Insights into the structural and functional activities of forgotten kinases: pctaires cdks. Molecular Cancer, Jun 2024. URL: https://doi.org/10.1186/s12943-024-02043-6, doi:10.1186/s12943-024-02043-6. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2022cdk16promotesthe pages 11-12): Xiao Li, Jinpeng Li, Liming Xu, Wei Wei, Anyi Cheng, Lingxian Zhang, Mengna Zhang, Gaosong Wu, and Cheguo Cai. Cdk16 promotes the progression and metastasis of triple-negative breast cancer by phosphorylating prc1. Journal of Experimental &amp; Clinical Cancer Research : CR, Apr 2022. URL: https://doi.org/10.1186/s13046-022-02362-w, doi:10.1186/s13046-022-02362-w. This article has 54 citations.</p>
+</li>
+<li>
+<p>(tsong2026pp2aandcdk16 pages 3-5): Heather Tsong, M. Neal Waxham, and Andrea K. H. Stavoe. Pp2a and cdk16 antagonistically regulate wipi2b phosphorylation and neuronal autophagosome biogenesis. bioRxiv, Feb 2026. URL: https://doi.org/10.64898/2026.02.12.705597, doi:10.64898/2026.02.12.705597. This article has 0 citations.</p>
+</li>
+<li>
+<p>(tsong2026pp2aandcdk16 pages 1-3): Heather Tsong, M. Neal Waxham, and Andrea K. H. Stavoe. Pp2a and cdk16 antagonistically regulate wipi2b phosphorylation and neuronal autophagosome biogenesis. bioRxiv, Feb 2026. URL: https://doi.org/10.64898/2026.02.12.705597, doi:10.64898/2026.02.12.705597. This article has 0 citations.</p>
+</li>
+<li>
+<p>(li2022cdk16promotesthe pages 12-15): Xiao Li, Jinpeng Li, Liming Xu, Wei Wei, Anyi Cheng, Lingxian Zhang, Mengna Zhang, Gaosong Wu, and Cheguo Cai. Cdk16 promotes the progression and metastasis of triple-negative breast cancer by phosphorylating prc1. Journal of Experimental &amp; Clinical Cancer Research : CR, Apr 2022. URL: https://doi.org/10.1186/s13046-022-02362-w, doi:10.1186/s13046-022-02362-w. This article has 54 citations.</p>
+</li>
+<li>
+<p>(karimbayli2024insightsintothe pages 10-13): Javad Karimbayli, Ilenia Pellarin, Barbara Belletti, and Gustavo Baldassarre. Insights into the structural and functional activities of forgotten kinases: pctaires cdks. Molecular Cancer, Jun 2024. URL: https://doi.org/10.1186/s12943-024-02043-6, doi:10.1186/s12943-024-02043-6. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(karimbayli2024insightsintothe pages 4-6): Javad Karimbayli, Ilenia Pellarin, Barbara Belletti, and Gustavo Baldassarre. Insights into the structural and functional activities of forgotten kinases: pctaires cdks. Molecular Cancer, Jun 2024. URL: https://doi.org/10.1186/s12943-024-02043-6, doi:10.1186/s12943-024-02043-6. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(karimbayli2024insightsintothe pages 9-10): Javad Karimbayli, Ilenia Pellarin, Barbara Belletti, and Gustavo Baldassarre. Insights into the structural and functional activities of forgotten kinases: pctaires cdks. Molecular Cancer, Jun 2024. URL: https://doi.org/10.1186/s12943-024-02043-6, doi:10.1186/s12943-024-02043-6. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(opacka2023theroleof pages 2-5): Aleksandra Opacka, Agnieszka Żuryń, Adrian Krajewski, and Klaudia Mikołajczyk. The role of cyclin y in normal and pathological cells. Cell Cycle, 22:859-869, Dec 2023. URL: https://doi.org/10.1080/15384101.2022.2162668, doi:10.1080/15384101.2022.2162668. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2022cdk16promotesthe pages 5-8): Xiao Li, Jinpeng Li, Liming Xu, Wei Wei, Anyi Cheng, Lingxian Zhang, Mengna Zhang, Gaosong Wu, and Cheguo Cai. Cdk16 promotes the progression and metastasis of triple-negative breast cancer by phosphorylating prc1. Journal of Experimental &amp; Clinical Cancer Research : CR, Apr 2022. URL: https://doi.org/10.1186/s13046-022-02362-w, doi:10.1186/s13046-022-02362-w. This article has 54 citations.</p>
+</li>
+<li>
+<p>(li2022cdk16promotesthe pages 8-11): Xiao Li, Jinpeng Li, Liming Xu, Wei Wei, Anyi Cheng, Lingxian Zhang, Mengna Zhang, Gaosong Wu, and Cheguo Cai. Cdk16 promotes the progression and metastasis of triple-negative breast cancer by phosphorylating prc1. Journal of Experimental &amp; Clinical Cancer Research : CR, Apr 2022. URL: https://doi.org/10.1186/s13046-022-02362-w, doi:10.1186/s13046-022-02362-w. This article has 54 citations.</p>
+</li>
+<li>
+<p>(pedersen2021proteomicinvestigationof pages 1-2): Anna-Kathrine Pedersen, Anamarija Pfeiffer, Gopal Karemore, Vyacheslav Akimov, Dorte B. Bekker-Jensen, Blagoy Blagoev, Chiara Francavilla, and Jesper V. Olsen. Proteomic investigation of cbl and cbl-b in neuroblastoma cell differentiation highlights roles for shp-2 and cdk16. iScience, 24:102321, Apr 2021. URL: https://doi.org/10.1016/j.isci.2021.102321, doi:10.1016/j.isci.2021.102321. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="A0A8B8WEG2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="A0A8B8WEG2-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>karimbayli2024insightsintothe pages 1-2</li>
+<li>karimbayli2024insightsintothe pages 10-13</li>
+<li>karimbayli2024insightsintothe pages 4-6</li>
+<li>karimbayli2024insightsintothe pages 7-9</li>
+<li>opacka2023theroleof pages 2-5</li>
+<li>karimbayli2024insightsintothe pages 9-10</li>
+<li>pedersen2021proteomicinvestigationof pages 1-2</li>
+<li>https://doi.org/10.1186/s12943-024-02043-6,</li>
+<li>https://doi.org/10.1186/s13046-022-02362-w,</li>
+<li>https://doi.org/10.64898/2026.02.12.705597,</li>
+<li>https://doi.org/10.1080/15384101.2022.2162668,</li>
+<li>https://doi.org/10.1016/j.isci.2021.102321,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A8B8WEG2
+gene_symbol: CDK16
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9771
+  label: Balaenoptera musculus
+description: &gt;-
+  CDK16 (formerly PCTAIRE1) encodes an atypical cyclin-dependent serine/threonine
+  protein kinase (EC 2.7.11.22) belonging to the PCTAIRE subfamily of the CMGC
+  kinase family. Unlike canonical cell-cycle CDKs, CDK16 functions primarily in
+  differentiated post-mitotic cells, with highest expression in brain, testis,
+  and skeletal muscle. The enzyme is activated by cyclin Y (CCNY) and cyclin
+  Y-like 1 (CCNYL1), and its cyclin association is uniquely regulated by PKA
+  phosphorylation at Ser153. CDK16 phosphorylates multiple validated substrates
+  including PRC1 (Thr481, regulating mitotic spindle formation), WIPI2B (Ser395,
+  negatively regulating neuronal autophagosome biogenesis), Rb (promoting G1/S
+  transition), p53 (Ser315, promoting degradation), and p27Kip1 (Ser10,
+  destabilizing the inhibitor). CDK16 localizes dynamically to the cytoplasm,
+  plasma membrane (via CCNY interaction), nucleus during mitosis, and
+  autophagosomes in neurons. It participates in cell cycle regulation at both
+  G2/M and G1/S transitions, neuronal autophagy downstream of AMPK signaling,
+  canonical and non-canonical Wnt signaling via LRP6 phosphorylation, and
+  vesicular transport including synaptic vesicle exocytosis. CDK16 is essential
+  for spermatogenesis, as male Cdk16 knockout mice are sterile with impaired
+  sperm motility and morphological defects. The protein is located on chromosome
+  X in blue whale, consistent with X-linkage of CDK16 across mammals.
+existing_annotations:
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      CDK16 is a protein kinase that uses ATP as phosphate donor, so it is
+      technically a nucleotide-binding protein. However, this term is
+      extremely broad and is completely subsumed by the more specific
+      GO:0005524 (ATP binding) and GO:0004693 (cyclin-dependent protein
+      serine/threonine kinase activity) annotations already present.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Redundant with the more specific ATP binding and kinase activity
+      annotations. Adds no biological specificity.
+- term:
+    id: GO:0004672
+    label: protein kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      CDK16 is indeed a protein kinase, phosphorylating substrates such as
+      PRC1, WIPI2B, Rb, p53, and p27Kip1. However, this general term is
+      redundant with the more specific GO:0004693 (cyclin-dependent protein
+      serine/threonine kinase activity) already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The term is correct but too general. The specific CDK Ser/Thr kinase
+      activity term (GO:0004693) captures the function more precisely and
+      is already present.
+- term:
+    id: GO:0004674
+    label: protein serine/threonine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      CDK16 catalyzes phosphorylation of serine and threonine residues on
+      protein substrates using ATP, confirmed by in vitro kinase assays
+      and identification of specific phosphosites (PRC1-Thr481,
+      WIPI2B-Ser395, p53-Ser315, p27-Ser10). However, this term is a
+      parent of the more specific GO:0004693 (cyclin-dependent protein
+      serine/threonine kinase activity), which is also annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Correct but redundant with the more specific cyclin-dependent
+      protein serine/threonine kinase activity term (GO:0004693).
+- term:
+    id: GO:0004693
+    label: cyclin-dependent protein serine/threonine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is the most specific and accurate molecular function term for
+      CDK16. As an atypical CDK of the PCTAIRE subfamily, CDK16 is
+      activated by cyclin Y (CCNY) and cyclin Y-like 1 (CCNYL1), and
+      catalyzes cyclin-dependent phosphorylation of serine/threonine
+      residues. Its EC number is 2.7.11.22 (cyclin-dependent kinase),
+      consistent with this annotation. Although CDK16 may have some
+      basal kinase activity independent of cyclin binding, its full
+      activation requires cyclin association.
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining core molecular function of CDK16, directly
+      matching its EC classification (2.7.11.22) and experimentally
+      validated cyclin-dependent kinase activity.
+    supported_by:
+    - reference_id: file:BALMU/A0A8B8WEG2/A0A8B8WEG2-uniprot.txt
+      supporting_text: &#34;RecName: Full=cyclin-dependent kinase&#34;
+    - reference_id: file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+      supporting_text: &#34;CDK16 functions as a serine/threonine protein kinase (EC 2.7.11.22) that catalyzes the transfer of phosphate groups from ATP to specific serine and threonine residues on target substrate proteins&#34;
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      CDK16 contains the protein kinase ATP-binding site (InterPro
+      IPR017441, PROSITE PS00107) and uses ATP as a phosphate donor for
+      its kinase reactions. ATP binding is an essential prerequisite for
+      kinase activity.
+    action: ACCEPT
+    reason: &gt;-
+      ATP binding is a core mechanistic requirement for CDK16 kinase
+      activity, well-supported by domain analysis and consistent with
+      the protein kinase superfamily membership.
+    supported_by:
+    - reference_id: file:BALMU/A0A8B8WEG2/A0A8B8WEG2-uniprot.txt
+      supporting_text: &#34;KW   ATP-binding&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      CDK16 can localize to the nucleus during specific cell cycle phases,
+      particularly during mitosis, where it regulates cell cycle progression
+      through phosphorylation of PRC1 and Rb. Nuclear localization has been
+      observed in breast cancer cells and is functionally linked to cell
+      cycle regulation. This TreeGrafter annotation is consistent with
+      the literature.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Nuclear localization is context-dependent (cell-cycle-phase specific)
+      rather than the primary location where CDK16 carries out its main
+      functions. The cytoplasm and plasma membrane are the predominant
+      locations.
+    supported_by:
+    - reference_id: file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+      supporting_text: &#34;During specific phases of the cell cycle, particularly during mitosis, CDK16 can localize to the nucleus where it regulates cell cycle progression&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      CDK16 is predominantly localized to the cytoplasm in most cell
+      types. Immunohistochemical analysis in triple-negative breast cancer
+      tissues shows CDK16 is mainly distributed in the cytoplasm. This
+      is the primary location for CDK16 in most cellular contexts.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is the predominant and best-characterized
+      location for CDK16, supported by immunohistochemistry and cell
+      fractionation studies.
+    supported_by:
+    - reference_id: file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+      supporting_text: &#34;CDK16 is predominantly localized to the cytoplasm in most cell types, including breast cancer cells and neurons&#34;
+- term:
+    id: GO:0006887
+    label: exocytosis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      CDK16 has documented roles in vesicular transport processes. The
+      CCNY/CDK16 complex regulates vesicular trafficking, and forward
+      genetic analysis in C. elegans identified cyclin Y as necessary
+      for targeting presynaptic components to the axon. CDK16 regulates
+      synaptic vesicle dynamics and exocytosis in neuronal contexts.
+      This TreeGrafter annotation is biologically plausible for CDK16.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Exocytosis is a legitimate biological process for CDK16, particularly
+      in neurons, but it is a secondary consequence of CDK16&#39;s role in
+      vesicular transport and cytoskeletal regulation rather than a core
+      evolved function of the kinase.
+    supported_by:
+    - reference_id: file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+      supporting_text: &#34;Forward genetic analysis in C. elegans identified cyclin Y as necessary for targeting presynaptic components to the axon, indicating a role in vesicular trafficking&#34;
+- term:
+    id: GO:0008021
+    label: synaptic vesicle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      CDK16 has been linked to synaptic vesicle dynamics through its
+      role in presynaptic component targeting and vesicular transport.
+      In neurons, CDK16 colocalizes with WIPI2B at autophagosomes, and
+      cyclin Y is required for targeting presynaptic components to the
+      axon. However, direct localization of CDK16 itself to synaptic
+      vesicles (as opposed to regulatory involvement in synaptic vesicle
+      processes) is less firmly established.
+    action: UNDECIDED
+    reason: &gt;-
+      The TreeGrafter annotation is plausible given CDK16&#39;s neuronal
+      functions and involvement in vesicular transport, but the deep
+      research literature primarily describes functional regulation of
+      synaptic vesicle processes rather than direct physical localization
+      of CDK16 to synaptic vesicles. Full-text evidence from primary
+      studies would be needed to confirm.
+- term:
+    id: GO:0016301
+    label: kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      CDK16 is unambiguously a kinase, but this extremely general term
+      is completely subsumed by more specific annotations already present
+      (GO:0004693 cyclin-dependent protein serine/threonine kinase
+      activity, GO:0004674 protein serine/threonine kinase activity,
+      GO:0004672 protein kinase activity).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is the broadest kinase term in the hierarchy and is fully
+      redundant with the more specific kinase activity terms present.
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      As a kinase, CDK16 is technically a transferase (phosphotransferase),
+      but this is an extremely broad parent term that adds no biological
+      information beyond what is captured by the specific kinase terms.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is the broadest transferase category and is fully redundant
+      with all of the more specific kinase/CDK activity terms present.
+- term:
+    id: GO:0031175
+    label: neuron projection development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      CDK16 is highly expressed in post-mitotic neurons and has documented
+      roles in neurite outgrowth. Proteomic studies in neuroblastoma cells
+      identified CDK16 as a regulator of ERK phosphorylation and neurite
+      outgrowth, a morphological marker of neuronal differentiation.
+      CDK16 also regulates actin dynamics relevant to dendritic spine
+      morphology and synaptic function. This TreeGrafter annotation is
+      well-supported.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Neuron projection development is a legitimate biological process
+      for CDK16, supported by experimental evidence in neuronal cell
+      types. However, it represents a tissue-specific downstream effect
+      rather than the core evolved function of this widely expressed
+      kinase.
+    supported_by:
+    - reference_id: file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+      supporting_text: &#34;Proteomic studies in neuroblastoma cells identified CDK16 as a regulator of extracellular signal-regulated kinase (ERK) phosphorylation and neurite outgrowth, a morphological marker of neuronal differentiation&#34;
+- term:
+    id: GO:0051726
+    label: regulation of cell cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      CDK16 regulates the cell cycle at multiple checkpoints. It controls
+      the G2/M transition through phosphorylation of PRC1 at Thr481
+      (regulating mitotic spindle formation) and the G1/S transition
+      through phosphorylation of Rb (regulating E2F target gene
+      expression). CDK16 depletion causes G2/M cell cycle arrest and
+      apoptosis. This annotation was inferred from CDK16&#39;s cyclin-dependent
+      kinase activity via GO logical inference (GO_REF:0000108), which
+      is appropriate.
+    action: ACCEPT
+    reason: &gt;-
+      Cell cycle regulation is a well-established and experimentally
+      validated function of CDK16, operating through phosphorylation of
+      multiple cell-cycle regulatory substrates (PRC1, Rb, p53, p27Kip1).
+    supported_by:
+    - reference_id: file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+      supporting_text: &#34;CDK16 plays dual roles in cell cycle control, regulating both G2/M and G1/S transitions through distinct mechanisms&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+core_functions:
+- description: &gt;-
+    CDK16 enables cyclin-dependent protein serine/threonine kinase activity,
+    phosphorylating substrates including PRC1, WIPI2B, Rb, p53, and p27Kip1.
+    It is activated by binding to cyclin Y (CCNY) or cyclin Y-like 1 (CCNYL1),
+    and functions predominantly in the cytoplasm. This kinase activity is
+    involved in regulation of the cell cycle at both G2/M and G1/S transitions.
+  molecular_function:
+    id: GO:0004693
+    label: cyclin-dependent protein serine/threonine kinase activity
+  directly_involved_in:
+  - id: GO:0051726
+    label: regulation of cell cycle
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+- description: &gt;-
+    In neurons, CDK16 functions as a negative regulator of autophagosome
+    biogenesis by phosphorylating WIPI2B at Ser395, operating downstream
+    of AMPK-mediated activation of the CCNY/CDK16 complex. CDK16 colocalizes
+    with WIPI2B at autophagosomes and antagonizes PP2A-mediated
+    dephosphorylation of WIPI2B to fine-tune autophagy rates.
+  molecular_function:
+    id: GO:0004693
+    label: cyclin-dependent protein serine/threonine kinase activity
+  directly_involved_in:
+  - id: GO:0010506
+    label: regulation of autophagy
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+    supporting_text: &#34;CDK16 functions as a critical regulator of neuronal autophagy, operating downstream of AMPK signaling&#34;
+  - reference_id: file:BALMU/A0A8B8WEG2/A0A8B8WEG2-deep-research-falcon.md
+    supporting_text: &#34;Once activated, CDK16 phosphorylates WIPI2B at Ser395, and this phosphorylation serves as a negative regulator of autophagosome biogenesis&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

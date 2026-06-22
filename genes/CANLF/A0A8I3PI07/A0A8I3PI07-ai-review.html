@@ -1,0 +1,2862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNNM4 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CNNM4</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A8I3PI07" target="_blank" class="term-link">
+                        A0A8I3PI07
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Canis lupus familiaris</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CNNM4";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A8I3PI07" data-a="DESCRIPTION: CNNM4 (Cyclin and CBS Domain Divalent Metal Cation..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CNNM4 (Cyclin and CBS Domain Divalent Metal Cation Transport Mediator 4) is a multi-pass transmembrane protein belonging to the ancient conserved domain protein (ACDP) family. The 796-amino-acid protein contains a signal peptide, an N-terminal immunoglobulin-like domain, a CNNM transmembrane domain with four transmembrane helices, a cystathionine-beta-synthase (CBS) domain pair that binds Mg2+-ATP, and a C-terminal cyclic nucleotide binding homology (CNBH) domain. CNNM4 functions as a magnesium efflux transporter at the basolateral membrane of epithelial cells, mediating Mg2+ extrusion from cells. In mammals, CNNM4 is expressed in intestinal epithelial cells where it is critical for magnesium homeostasis. The protein has also been reported to have sodium ion transmembrane transporter activity. Mutations in the human ortholog cause Jalili syndrome, characterized by cone-rod dystrophy and amelogenesis imperfecta. CNNM4 forms oligomeric complexes and its transport activity is regulated by intracellular Mg2+-ATP binding to the CBS domain pair.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation placing CNNM4 as active in the plasma membrane, based on ortholog data from mouse and human CNNM family members as well as C. elegans and Drosophila orthologs. CNNM4 is a multi-pass transmembrane protein with four transmembrane helices in the CNNM domain (residues 178-358). The UniProt record confirms cell membrane localization. Human CNNM4 localizes to the basolateral plasma membrane of intestinal epithelial cells.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is well established for CNNM4 orthologs. The protein has a signal peptide and four transmembrane helices, consistent with an integral plasma membrane protein. The IBA annotation is supported by multiple ortholog sources including mouse and human CNNM4.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010960" target="_blank" class="term-link">
+                                    GO:0010960
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0010960" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation for involvement in magnesium ion homeostasis, based on orthologs including mouse Cnnm4 and human CNNM4. CNNM4 is a magnesium efflux transporter, and its role in Mg2+ homeostasis is well established. Loss-of-function mutations in human CNNM4 cause Jalili syndrome with hypomagnesemia as a feature, demonstrating the protein&#39;s critical role in systemic magnesium homeostasis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Magnesium ion homeostasis is a core biological process for CNNM4. The protein directly mediates Mg2+ efflux, and its dysfunction leads to magnesium imbalance. This annotation is well supported by ortholog data.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015081" target="_blank" class="term-link">
+                                    GO:0015081
+                                </a>
+                            </span>
+                            <span class="term-label">sodium ion transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0015081" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation for sodium ion transmembrane transporter activity based on mouse Cnnm4 ortholog data. Some studies have suggested that CNNM family members can mediate Na+ transport or that Mg2+ extrusion by CNNM proteins is coupled to Na+ influx. However, the primary and best-characterized transport activity of CNNM4 is magnesium transport. The sodium transport activity may reflect a coupled or secondary activity rather than an independent transport function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The sodium ion transport activity of CNNM4 is less well established than its magnesium transport function. While some evidence supports Na+-coupled Mg2+ transport by CNNM family members, the mechanistic details remain debated and the sodium transport may be secondary to the primary Mg2+ efflux function. Without access to the primary experimental literature on this specific activity, marking as UNDECIDED is appropriate.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015095" target="_blank" class="term-link">
+                                    GO:0015095
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0015095" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation for magnesium ion transmembrane transporter activity based on mouse Cnnm4 ortholog data. This is the primary characterized molecular function of CNNM4. The protein mediates Mg2+ efflux across the plasma membrane, and this activity is essential for intestinal magnesium absorption in mammals.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Magnesium ion transmembrane transporter activity is the core molecular function of CNNM4. This is well supported by experimental evidence in orthologs showing that CNNM4 mediates cellular Mg2+ extrusion. The IBA annotation correctly captures the primary function of this protein.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015693" target="_blank" class="term-link">
+                                    GO:0015693
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0015693" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation for involvement in magnesium ion transport, based on mouse Cnnm4 ortholog data. CNNM4 directly mediates Mg2+ efflux, so involvement in magnesium ion transport is a direct consequence of its transporter activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Magnesium ion transport is a core biological process for CNNM4, directly reflecting its molecular function as a Mg2+ transporter. Well supported by ortholog evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined IEA annotation for plasma membrane localization based on human ortholog Q6P4Q7 (CNNM4) via Ensembl, UniProt SubCell mapping, and PANTHER. Consistent with the IBA annotation above and the protein&#39;s domain architecture (signal peptide plus four transmembrane helices).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is well established for CNNM4. This IEA annotation is consistent with the IBA annotation and the protein&#39;s structural features as a multi-pass transmembrane protein with a signal peptide.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010960" target="_blank" class="term-link">
+                                    GO:0010960
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0010960" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined IEA annotation for magnesium ion homeostasis based on InterPro ACDP family (IPR045095) and PANTHER. This is consistent with the IBA annotation for the same term and reflects the well-established role of CNNM4 in Mg2+ homeostasis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the IBA annotation and the known biology of CNNM4 as a magnesium efflux transporter critical for Mg2+ homeostasis. The InterPro ACDP family classification correctly predicts this function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015693" target="_blank" class="term-link">
+                                    GO:0015693
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0015693" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-generated annotation for magnesium ion transport. Consistent with the IBA annotation for the same term and the core function of CNNM4 as a magnesium transporter.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This TreeGrafter annotation is consistent with the IBA annotation and accurately reflects the core biological process of CNNM4. Magnesium ion transport is the primary physiological function of this protein.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0016020" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniRule-based annotation for membrane localization. This is an extremely broad cellular component term. CNNM4 is indeed an integral membrane protein with four transmembrane helices, but more specific CC terms (plasma membrane, basolateral plasma membrane) are already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While very broad, this annotation is not incorrect. CNNM4 is an integral membrane protein. More specific CC terms are already present (GO:0005886 plasma membrane, GO:0016323 basolateral plasma membrane).
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0022857" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined IEA annotation for transmembrane transporter activity based on PANTHER and UniRule. This is a broad parent term of the more specific magnesium and sodium ion transmembrane transporter activities. CNNM4 is a transmembrane transporter, so this is accurate but uninformative given the more specific MF annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid but very general molecular function term. The more specific GO:0015095 (magnesium ion transmembrane transporter activity) better captures the core function. This broad term adds no information beyond what the specific terms already provide.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035725" target="_blank" class="term-link">
+                                    GO:0035725
+                                </a>
+                            </span>
+                            <span class="term-label">sodium ion transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0035725" data-r="GO_REF:0000108" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Logical inference (IC) annotation for sodium ion transmembrane transport, derived from the sodium ion transmembrane transporter activity annotation (GO:0015081). This is a downstream inference -- if the protein enables sodium ion transmembrane transporter activity, it is logically involved in sodium ion transmembrane transport.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is logically derived from GO:0015081 (sodium ion transmembrane transporter activity). Since the sodium transporter activity annotation itself is UNDECIDED due to limited evidence for CNNM4 sodium transport, this derived annotation inherits the same uncertainty.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0055085" data-r="GO_REF:0000108" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Logical inference annotation for transmembrane transport, derived from the transmembrane transporter activity annotation (GO:0022857). This is a very broad biological process term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid but extremely general annotation logically derived from the transmembrane transporter activity MF annotation. The more specific magnesium ion transport annotation better captures the core process.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903830" target="_blank" class="term-link">
+                                    GO:1903830
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:1903830" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Logical inference annotation for magnesium ion transmembrane transport, derived from the magnesium ion transmembrane transporter activity annotation (GO:0015095). This is the specific biological process corresponding to the core molecular function of CNNM4.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is logically derived from GO:0015095 (magnesium ion transmembrane transporter activity) which is well supported. Magnesium ion transmembrane transport is a core biological process for CNNM4 and this inference is correct.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015081" target="_blank" class="term-link">
+                                    GO:0015081
+                                </a>
+                            </span>
+                            <span class="term-label">sodium ion transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0015081" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined IEA annotation for sodium ion transmembrane transporter activity based on mouse ortholog Q69ZF7 (Cnnm4) via Ensembl and PANTHER. This is a duplicate source for the same function annotated by IBA. As with the IBA annotation, the sodium transport activity of CNNM4 is less well established than its magnesium transport function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same uncertainty as the IBA annotation for this term. The sodium transport activity of CNNM4 remains debated and may reflect a coupled mechanism rather than an independent transport function. Without deep research literature access, marking as UNDECIDED is appropriate.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015095" target="_blank" class="term-link">
+                                    GO:0015095
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0015095" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined IEA annotation for magnesium ion transmembrane transporter activity based on mouse ortholog Q69ZF7 (Cnnm4) via Ensembl and PANTHER. This is a duplicate source for the same function annotated by IBA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the IBA annotation and the well-established core function of CNNM4 as a magnesium efflux transporter.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016323" target="_blank" class="term-link">
+                                    GO:0016323
+                                </a>
+                            </span>
+                            <span class="term-label">basolateral plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0016323" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara ortholog transfer annotation for basolateral plasma membrane localization, based on mouse ortholog Q69ZF7 (Cnnm4). Human and mouse CNNM4 localizes specifically to the basolateral plasma membrane of intestinal epithelial cells, where it mediates Mg2+ efflux into the interstitial space. This is the most specific and informative CC annotation for CNNM4.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Basolateral plasma membrane localization is well established for mammalian CNNM4. The protein mediates vectorial Mg2+ transport from the apical to basolateral side of intestinal epithelial cells, and its basolateral localization is essential for this function. This is the most informative cellular component annotation and represents the primary site of CNNM4 activity.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030003" target="_blank" class="term-link">
+                                    GO:0030003
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular monoatomic cation homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0030003" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara annotation for intracellular monoatomic cation homeostasis, based on human ortholog Q6P4Q7. CNNM4 mediates Mg2+ efflux and thereby contributes to intracellular cation homeostasis. This is a broader parent term of magnesium ion homeostasis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid but broad biological process annotation. CNNM4 contributes to intracellular cation homeostasis primarily through its Mg2+ efflux activity. The more specific GO:0010960 (magnesium ion homeostasis) better captures the core function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                                    GO:0032991
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8I3PI07" data-a="GO:0032991" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara annotation indicating CNNM4 is part of a protein-containing complex, based on human ortholog Q6P4Q7. CNNM family members are known to form oligomeric complexes (likely dimers or trimers) and to interact with phosphatases of regenerating liver (PRL/PTP4A) family members. However, the term protein-containing complex is extremely broad and uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While CNNM4 does form oligomeric complexes and interacts with PRL phosphatases, the term protein-containing complex is too broad to be informative. A more specific complex term would be needed to capture the meaningful biology. Keeping as non-core rather than removing since the protein does indeed participate in complexes.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CNNM4 is a magnesium efflux transporter that mediates Mg2+ extrusion across the basolateral plasma membrane of epithelial cells. The protein contains a CNNM transmembrane domain with four transmembrane helices that forms the transport pathway, and a cytoplasmic CBS domain pair that binds Mg2+-ATP to regulate transport activity. CNNM4 localizes to the basolateral membrane where it functions in transcellular magnesium absorption, particularly in intestinal epithelium. Loss of function causes Jalili syndrome (cone-rod dystrophy with amelogenesis imperfecta) in humans, highlighting its essential role in magnesium homeostasis for eye and tooth development. CNNM4 forms oligomeric complexes and interacts with PRL (PTP4A) family phosphatases which regulate its activity.</h3>
+                <span class="vote-buttons" data-g="A0A8I3PI07" data-a="FUNCTION: CNNM4 is a magnesium efflux transporter that media..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015095" target="_blank" class="term-link">
+                            magnesium ion transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903830" target="_blank" class="term-link">
+                                magnesium ion transmembrane transport
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010960" target="_blank" class="term-link">
+                                magnesium ion homeostasis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016323" target="_blank" class="term-link">
+                                basolateral plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(A0A8I3PI07-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A8I3PI07" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">19 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-18T20:07:44.769193</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="A0A8I3PI07-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Warning: no contexts were retrieved, so this answer is not grounded in evidence but is instead a direct response from the agent model.</p>
+<p>I apologize, but I encountered persistent technical issues with the evidence gathering system throughout this research session that prevented me from extracting citeable evidence from the full text of papers. While I successfully retrieved 45 relevant publications through literature searches and created a comprehensive summary table, the system requires citations from the gather_evidence tool to accept an answer.</p>
+<p>Based on the UniProt annotation provided and the paper titles/abstracts retrieved, CNNM4 (A0A8I3PI07) in Canis lupus familiaris is a metal transporter belonging to the ACDP family with CBS domains. The mammalian literature consistently identifies CNNM4 as a magnesium transporter involved in epithelial magnesium homeostasis, with roles in intestinal absorption, enamel formation, and retinal function. The protein localizes to basolateral membranes and mediates magnesium efflux.</p>
+<p>However, without functional evidence gathering citations, I cannot provide the comprehensive, well-cited research report requested. The technical limitations prevented completion of this task despite extensive literature retrieval efforts.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>CNNM4 summary</th>
+<th>Key details / examples</th>
+<th>Sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene/protein identity</td>
+<td>CNNM4 is a conserved member of the CNNM/CorB (ACDP) family of divalent cation transport mediators</td>
+<td>Matches the UniProt description for the dog ortholog: ACDP family protein with CBS-domain architecture and CNNM/CorB-type transmembrane transporter features; mammalian literature consistently treats CNNM4 as the CNNM4 magnesium transporter ortholog</td>
+<td>Yamazaki et al., 2013, https://doi.org/10.1371/journal.pgen.1003983; Chen et al., 2021, https://doi.org/10.1038/s41467-021-24282-7; Franken et al., 2022, https://doi.org/10.1007/s00018-022-04442-8</td>
+</tr>
+<tr>
+<td>Protein structure / domains</td>
+<td>Integral membrane protein with DUF21/CNNM transmembrane region and cytosolic CBS-pair (Bateman) domains; belongs to CorB/CNNM structural lineage</td>
+<td>UniProt annotation lists ACDP/CNNM-related domains plus CBS domains; structural work on archaeal CorB, the prokaryotic homolog, supports a transmembrane Mg2+-handling module coupled to cytosolic CBS domains that sense Mg-ATP and regulate conformation</td>
+<td>Chen et al., 2021, https://doi.org/10.1038/s41467-021-24282-7; Franken et al., 2022, https://doi.org/10.1007/s00018-022-04442-8</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>Magnesium transport mediator, best supported as a Mg2+ efflux protein in epithelia</td>
+<td>Mouse and cell studies identified CNNM4 as the basolateral Mg2+ extrusion system required for transcellular Mg2+ transport across epithelia; recent physiological reviews still describe CNNM4 as a likely/potential Na+/Mg2+ exchanger mediating Mg2+ efflux in colon</td>
+<td>Yamazaki et al., 2013, https://doi.org/10.1371/journal.pgen.1003983; Kröse &amp; de Baaij, 2024, https://doi.org/10.1093/ndt/gfae134</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>Primary substrate is Mg2+</td>
+<td>CNNM4 is repeatedly discussed in the Mg2+ transport literature as a magnesium transporter; disease and knockout phenotypes are explained by altered magnesium handling rather than transport of another defined physiological substrate</td>
+<td>Yamazaki et al., 2013, https://doi.org/10.1371/journal.pgen.1003983; Franken et al., 2022, https://doi.org/10.1007/s00018-022-04442-8; Kröse &amp; de Baaij, 2024, https://doi.org/10.1093/ndt/gfae134</td>
+</tr>
+<tr>
+<td>Transport mechanism</td>
+<td>Most direct epithelial evidence supports basolateral Mg2+ extrusion, likely coupled to extracellular Na+; broader CNNM mechanism remains actively debated</td>
+<td>Yamazaki et al. reported imaging evidence that CNNM4 extrudes intracellular Mg2+ in exchange for extracellular Na+; later reviews note that CNNM proteins remain mechanistically debated, but structural/functional data from CorB homologs support direct Mg2+ transport capacity; CNNMs may also influence TRPM7-dependent divalent cation influx in parallel</td>
+<td>Yamazaki et al., 2013, https://doi.org/10.1371/journal.pgen.1003983; Schäffers et al., 2018, https://doi.org/10.1152/ajprenal.00634.2017; Chen et al., 2021, https://doi.org/10.1038/s41467-021-24282-7; Bai et al., 2021, https://doi.org/10.1371/journal.pbio.3001496</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>Basolateral plasma membrane of polarized epithelial cells</td>
+<td>Strong localization in intestinal epithelia and ameloblasts at the basolateral membrane explains its role in exporting Mg2+ from epithelial cells toward blood/interstitium during transcellular transport</td>
+<td>Yamazaki et al., 2013, https://doi.org/10.1371/journal.pgen.1003983</td>
+</tr>
+<tr>
+<td>Tissue expression / physiological sites</td>
+<td>Best-established in intestine/colon and ameloblasts; less evidence for kidney than CNNM2</td>
+<td>CNNM4 is strongly expressed in intestinal epithelia and contributes to intestinal Mg absorption; knockout mice showed intestinal malabsorption and hypomagnesemia. CNNM4 is also present in ameloblasts, linking Mg homeostasis to enamel maturation. Reviews distinguish CNNM4 from CNNM2, which is more renal</td>
+<td>Yamazaki et al., 2013, https://doi.org/10.1371/journal.pgen.1003983; Kröse &amp; de Baaij, 2024, https://doi.org/10.1093/ndt/gfae134; de Baaij, 2023, https://doi.org/10.1152/ajprenal.00298.2022</td>
+</tr>
+<tr>
+<td>Biological role in organismal Mg homeostasis</td>
+<td>Supports transcellular intestinal Mg absorption by mediating basolateral Mg exit from absorptive epithelia</td>
+<td>Loss of CNNM4 causes hypomagnesemia in mice due to intestinal malabsorption; this places CNNM4 downstream of apical Mg entry pathways such as TRPM6/7 and upstream of Mg delivery to the internal milieu</td>
+<td>Yamazaki et al., 2013, https://doi.org/10.1371/journal.pgen.1003983; Kröse &amp; de Baaij, 2024, https://doi.org/10.1093/ndt/gfae134</td>
+</tr>
+<tr>
+<td>Regulation by cytosolic ligands / domains</td>
+<td>CBS-pair domains act as regulatory modules that bind Mg-ATP and alter conformation</td>
+<td>Structural and comparative studies indicate CNNM/CorB CBS domains are not passive motifs: they bind Mg-ATP and are linked to conformational changes relevant to transport regulation</td>
+<td>Chen et al., 2021, https://doi.org/10.1038/s41467-021-24282-7; Bai et al., 2021, https://doi.org/10.1371/journal.pbio.3001496</td>
+</tr>
+<tr>
+<td>Protein interaction network</td>
+<td>CNNM4 participates in the emerging PRL–CNNM–TRPM regulatory network</td>
+<td>CNNM proteins bind phosphatases of regenerating liver (PRLs) through the CBS domains; PRL binding is widely interpreted as inhibiting CNNM Mg2+ efflux activity. CNNMs also interact with TRPM7 and can stimulate TRPM7-dependent divalent cation entry, indicating CNNM4 may coordinate efflux and influx arms of Mg homeostasis rather than acting in isolation</td>
+<td>Bai et al., 2021, https://doi.org/10.1371/journal.pbio.3001496; Hardy et al., 2023, https://doi.org/10.1073/pnas.2221083120; Funato et al., 2024, https://doi.org/10.1038/s41598-024-76269-1; Jolly &amp; Blackburn, 2025, https://doi.org/10.3390/ijms26041528</td>
+</tr>
+<tr>
+<td>Signaling pathways / downstream biology</td>
+<td>Linked to TRPM7 signaling, cellular bioenergetics, adipocyte thermogenesis, macrophage polarization, and mTORC2 activation</td>
+<td>In adipocytes, cold-induced ADRB3–PKA–CREB signaling upregulates CNNM4, promoting Mg secretion; extracellular Mg then promotes M2 macrophage polarization through mTORC2 signaling. More broadly, Mg homeostasis proteins including CNNMs intersect with PRL/TRPM7-dependent metabolic signaling</td>
+<td>Hardy et al., 2023, https://doi.org/10.1073/pnas.2221083120; Zhang et al., 2024, https://doi.org/10.1002/advs.202401140; Jolly &amp; Blackburn, 2025, https://doi.org/10.3390/ijms26041528</td>
+</tr>
+<tr>
+<td>Disease associations</td>
+<td>Jalili syndrome; hypomagnesemia/intestinal malabsorption in experimental models; emerging links to cancer and metabolic disease</td>
+<td>Human CNNM4 mutations cause Jalili syndrome, characterized by cone-rod dystrophy and amelogenesis imperfecta. In mice, Cnnm4 loss causes hypomagnesemia and enamel defects. Recent literature also implicates altered CNNM4 expression in obesity-related thermogenic dysfunction and in cancers such as cholangiocarcinoma</td>
+<td>Parry et al., 2009, https://doi.org/10.1016/j.ajhg.2009.01.009; Yamazaki et al., 2013, https://doi.org/10.1371/journal.pgen.1003983; Prasov et al., 2020, https://doi.org/10.1002/ajmg.a.61484; Zhang et al., 2024, https://doi.org/10.1002/advs.202401140; Mercado-Gómez et al., 2026, https://doi.org/10.1136/gutjnl-2024-333255</td>
+</tr>
+<tr>
+<td>Phenotypic evidence from models</td>
+<td>Knockout/deficiency phenotypes strongly support physiological relevance</td>
+<td>Cnnm4-knockout mice develop hypomagnesemia due to impaired intestinal Mg absorption and show defective amelogenesis, while disease-associated missense variants abolish Mg extrusion activity in assays</td>
+<td>Yamazaki et al., 2013, https://doi.org/10.1371/journal.pgen.1003983</td>
+</tr>
+<tr>
+<td>Recent developments (2023–2025)</td>
+<td>Field has shifted from “is CNNM4 a transporter?” to “how does CNNM4 integrate transport with signaling and disease?”</td>
+<td>2023 renal Mg review frames CNNM-family function within unresolved basolateral Mg extrusion; 2024 magnesium biology review positions CNNM4 as a colon Na+/Mg2+ exchanger candidate; 2024 adipocyte study shows regulated Mg secretion with immune/metabolic consequences; 2024 PRL–CNNM screening paper highlights therapeutic targeting of the PRL–CNNM interaction; 2025 PACT review integrates PRL, ARL, CNNM, and TRPM proteins into a unified Mg homeostasis network</td>
+<td>de Baaij, 2023, https://doi.org/10.1152/ajprenal.00298.2022; Kröse &amp; de Baaij, 2024, https://doi.org/10.1093/ndt/gfae134; Zhang et al., 2024, https://doi.org/10.1002/advs.202401140; Funato et al., 2024, https://doi.org/10.1038/s41598-024-76269-1; Jolly &amp; Blackburn, 2025, https://doi.org/10.3390/ijms26041528</td>
+</tr>
+<tr>
+<td>Relevance to dog CNNM4 (A0A8I3PI07)</td>
+<td>Direct canine functional studies were not identified, so annotation is inferred from strong mammalian orthology</td>
+<td>Because the dog protein carries the expected CNNM/ACDP and CBS-domain architecture and CNNM4 function is well conserved across mammals, the most defensible annotation is that canine CNNM4 is a basolateral Mg2+ transport mediator important for epithelial Mg handling, likely in intestine and enamel/retina-associated tissues</td>
+<td>UniProt record provided by user; mammalian orthology supported by Yamazaki et al., 2013, https://doi.org/10.1371/journal.pgen.1003983; Franken et al., 2022, https://doi.org/10.1007/s00018-022-04442-8</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main structural, functional, localization, pathway, disease, and recent literature findings relevant to CNNM4. It is designed to support functional annotation of the canine CNNM4 ortholog by grounding inference in experimentally studied mammalian and family-level evidence.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="A0A8I3PI07-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://doi.org/10.1371/journal.pgen.1003983;</li>
+<li>https://doi.org/10.1038/s41467-021-24282-7;</li>
+<li>https://doi.org/10.1007/s00018-022-04442-8</li>
+<li>https://doi.org/10.1093/ndt/gfae134</li>
+<li>https://doi.org/10.1007/s00018-022-04442-8;</li>
+<li>https://doi.org/10.1152/ajprenal.00634.2017;</li>
+<li>https://doi.org/10.1371/journal.pbio.3001496</li>
+<li>https://doi.org/10.1371/journal.pgen.1003983</li>
+<li>https://doi.org/10.1093/ndt/gfae134;</li>
+<li>https://doi.org/10.1152/ajprenal.00298.2022</li>
+<li>https://doi.org/10.1371/journal.pbio.3001496;</li>
+<li>https://doi.org/10.1073/pnas.2221083120;</li>
+<li>https://doi.org/10.1038/s41598-024-76269-1;</li>
+<li>https://doi.org/10.3390/ijms26041528</li>
+<li>https://doi.org/10.1002/advs.202401140;</li>
+<li>https://doi.org/10.1016/j.ajhg.2009.01.009;</li>
+<li>https://doi.org/10.1002/ajmg.a.61484;</li>
+<li>https://doi.org/10.1136/gutjnl-2024-333255</li>
+<li>https://doi.org/10.1152/ajprenal.00298.2022;</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A8I3PI07
+gene_symbol: CNNM4
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9615
+  label: Canis lupus familiaris
+description: &gt;-
+  CNNM4 (Cyclin and CBS Domain Divalent Metal Cation Transport Mediator 4) is a
+  multi-pass transmembrane protein belonging to the ancient conserved domain protein
+  (ACDP) family. The 796-amino-acid protein contains a signal peptide, an N-terminal
+  immunoglobulin-like domain, a CNNM transmembrane domain with four transmembrane
+  helices, a cystathionine-beta-synthase (CBS) domain pair that binds Mg2+-ATP, and
+  a C-terminal cyclic nucleotide binding homology (CNBH) domain. CNNM4 functions
+  as a magnesium efflux transporter at the basolateral membrane of epithelial cells,
+  mediating Mg2+ extrusion from cells. In mammals, CNNM4 is expressed in intestinal
+  epithelial cells where it is critical for magnesium homeostasis. The protein has
+  also been reported to have sodium ion transmembrane transporter activity. Mutations
+  in the human ortholog cause Jalili syndrome, characterized by cone-rod dystrophy
+  and amelogenesis imperfecta. CNNM4 forms oligomeric complexes and its transport
+  activity is regulated by intracellular Mg2+-ATP binding to the CBS domain pair.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic annotation placing CNNM4 as active in the plasma membrane, based
+      on ortholog data from mouse and human CNNM family members as well as C. elegans
+      and Drosophila orthologs. CNNM4 is a multi-pass transmembrane protein with four
+      transmembrane helices in the CNNM domain (residues 178-358). The UniProt record
+      confirms cell membrane localization. Human CNNM4 localizes to the basolateral
+      plasma membrane of intestinal epithelial cells.
+    action: ACCEPT
+    reason: &gt;-
+      Plasma membrane localization is well established for CNNM4 orthologs. The protein
+      has a signal peptide and four transmembrane helices, consistent with an integral
+      plasma membrane protein. The IBA annotation is supported by multiple ortholog
+      sources including mouse and human CNNM4.
+- term:
+    id: GO:0010960
+    label: magnesium ion homeostasis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic annotation for involvement in magnesium ion homeostasis, based on
+      orthologs including mouse Cnnm4 and human CNNM4. CNNM4 is a magnesium efflux
+      transporter, and its role in Mg2+ homeostasis is well established. Loss-of-function
+      mutations in human CNNM4 cause Jalili syndrome with hypomagnesemia as a feature,
+      demonstrating the protein&#39;s critical role in systemic magnesium homeostasis.
+    action: ACCEPT
+    reason: &gt;-
+      Magnesium ion homeostasis is a core biological process for CNNM4. The protein
+      directly mediates Mg2+ efflux, and its dysfunction leads to magnesium imbalance.
+      This annotation is well supported by ortholog data.
+- term:
+    id: GO:0015081
+    label: sodium ion transmembrane transporter activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic annotation for sodium ion transmembrane transporter activity based
+      on mouse Cnnm4 ortholog data. Some studies have suggested that CNNM family members
+      can mediate Na+ transport or that Mg2+ extrusion by CNNM proteins is coupled to
+      Na+ influx. However, the primary and best-characterized transport activity of CNNM4
+      is magnesium transport. The sodium transport activity may reflect a coupled or
+      secondary activity rather than an independent transport function.
+    action: UNDECIDED
+    reason: &gt;-
+      The sodium ion transport activity of CNNM4 is less well established than its
+      magnesium transport function. While some evidence supports Na+-coupled Mg2+ transport
+      by CNNM family members, the mechanistic details remain debated and the sodium
+      transport may be secondary to the primary Mg2+ efflux function. Without access
+      to the primary experimental literature on this specific activity, marking as
+      UNDECIDED is appropriate.
+- term:
+    id: GO:0015095
+    label: magnesium ion transmembrane transporter activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic annotation for magnesium ion transmembrane transporter activity based
+      on mouse Cnnm4 ortholog data. This is the primary characterized molecular function
+      of CNNM4. The protein mediates Mg2+ efflux across the plasma membrane, and this
+      activity is essential for intestinal magnesium absorption in mammals.
+    action: ACCEPT
+    reason: &gt;-
+      Magnesium ion transmembrane transporter activity is the core molecular function
+      of CNNM4. This is well supported by experimental evidence in orthologs showing
+      that CNNM4 mediates cellular Mg2+ extrusion. The IBA annotation correctly captures
+      the primary function of this protein.
+- term:
+    id: GO:0015693
+    label: magnesium ion transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic annotation for involvement in magnesium ion transport, based on mouse
+      Cnnm4 ortholog data. CNNM4 directly mediates Mg2+ efflux, so involvement in
+      magnesium ion transport is a direct consequence of its transporter activity.
+    action: ACCEPT
+    reason: &gt;-
+      Magnesium ion transport is a core biological process for CNNM4, directly reflecting
+      its molecular function as a Mg2+ transporter. Well supported by ortholog evidence.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Combined IEA annotation for plasma membrane localization based on human ortholog
+      Q6P4Q7 (CNNM4) via Ensembl, UniProt SubCell mapping, and PANTHER. Consistent
+      with the IBA annotation above and the protein&#39;s domain architecture (signal peptide
+      plus four transmembrane helices).
+    action: ACCEPT
+    reason: &gt;-
+      Plasma membrane localization is well established for CNNM4. This IEA annotation
+      is consistent with the IBA annotation and the protein&#39;s structural features as a
+      multi-pass transmembrane protein with a signal peptide.
+- term:
+    id: GO:0010960
+    label: magnesium ion homeostasis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Combined IEA annotation for magnesium ion homeostasis based on InterPro ACDP
+      family (IPR045095) and PANTHER. This is consistent with the IBA annotation for
+      the same term and reflects the well-established role of CNNM4 in Mg2+ homeostasis.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the IBA annotation and the known biology of CNNM4 as a magnesium
+      efflux transporter critical for Mg2+ homeostasis. The InterPro ACDP family
+      classification correctly predicts this function.
+- term:
+    id: GO:0015693
+    label: magnesium ion transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TreeGrafter-generated annotation for magnesium ion transport. Consistent with the
+      IBA annotation for the same term and the core function of CNNM4 as a magnesium
+      transporter.
+    action: ACCEPT
+    reason: &gt;-
+      This TreeGrafter annotation is consistent with the IBA annotation and accurately
+      reflects the core biological process of CNNM4. Magnesium ion transport is the
+      primary physiological function of this protein.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniRule-based annotation for membrane localization. This is an extremely broad
+      cellular component term. CNNM4 is indeed an integral membrane protein with four
+      transmembrane helices, but more specific CC terms (plasma membrane, basolateral
+      plasma membrane) are already annotated.
+    action: ACCEPT
+    reason: &gt;-
+      While very broad, this annotation is not incorrect. CNNM4 is an integral membrane
+      protein. More specific CC terms are already present (GO:0005886 plasma membrane,
+      GO:0016323 basolateral plasma membrane).
+- term:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Combined IEA annotation for transmembrane transporter activity based on PANTHER
+      and UniRule. This is a broad parent term of the more specific magnesium and sodium
+      ion transmembrane transporter activities. CNNM4 is a transmembrane transporter,
+      so this is accurate but uninformative given the more specific MF annotations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a valid but very general molecular function term. The more specific
+      GO:0015095 (magnesium ion transmembrane transporter activity) better captures
+      the core function. This broad term adds no information beyond what the specific
+      terms already provide.
+- term:
+    id: GO:0035725
+    label: sodium ion transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Logical inference (IC) annotation for sodium ion transmembrane transport, derived
+      from the sodium ion transmembrane transporter activity annotation (GO:0015081).
+      This is a downstream inference -- if the protein enables sodium ion transmembrane
+      transporter activity, it is logically involved in sodium ion transmembrane transport.
+    action: UNDECIDED
+    reason: &gt;-
+      This annotation is logically derived from GO:0015081 (sodium ion transmembrane
+      transporter activity). Since the sodium transporter activity annotation itself
+      is UNDECIDED due to limited evidence for CNNM4 sodium transport, this derived
+      annotation inherits the same uncertainty.
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Logical inference annotation for transmembrane transport, derived from the
+      transmembrane transporter activity annotation (GO:0022857). This is a very broad
+      biological process term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a valid but extremely general annotation logically derived from the
+      transmembrane transporter activity MF annotation. The more specific magnesium
+      ion transport annotation better captures the core process.
+- term:
+    id: GO:1903830
+    label: magnesium ion transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Logical inference annotation for magnesium ion transmembrane transport, derived
+      from the magnesium ion transmembrane transporter activity annotation (GO:0015095).
+      This is the specific biological process corresponding to the core molecular function
+      of CNNM4.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is logically derived from GO:0015095 (magnesium ion transmembrane
+      transporter activity) which is well supported. Magnesium ion transmembrane transport
+      is a core biological process for CNNM4 and this inference is correct.
+- term:
+    id: GO:0015081
+    label: sodium ion transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Combined IEA annotation for sodium ion transmembrane transporter activity based
+      on mouse ortholog Q69ZF7 (Cnnm4) via Ensembl and PANTHER. This is a duplicate
+      source for the same function annotated by IBA. As with the IBA annotation, the
+      sodium transport activity of CNNM4 is less well established than its magnesium
+      transport function.
+    action: UNDECIDED
+    reason: &gt;-
+      Same uncertainty as the IBA annotation for this term. The sodium transport activity
+      of CNNM4 remains debated and may reflect a coupled mechanism rather than an
+      independent transport function. Without deep research literature access, marking
+      as UNDECIDED is appropriate.
+- term:
+    id: GO:0015095
+    label: magnesium ion transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Combined IEA annotation for magnesium ion transmembrane transporter activity based
+      on mouse ortholog Q69ZF7 (Cnnm4) via Ensembl and PANTHER. This is a duplicate
+      source for the same function annotated by IBA.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the IBA annotation and the well-established core function of CNNM4
+      as a magnesium efflux transporter.
+- term:
+    id: GO:0016323
+    label: basolateral plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Ensembl Compara ortholog transfer annotation for basolateral plasma membrane
+      localization, based on mouse ortholog Q69ZF7 (Cnnm4). Human and mouse CNNM4
+      localizes specifically to the basolateral plasma membrane of intestinal epithelial
+      cells, where it mediates Mg2+ efflux into the interstitial space. This is the
+      most specific and informative CC annotation for CNNM4.
+    action: ACCEPT
+    reason: &gt;-
+      Basolateral plasma membrane localization is well established for mammalian CNNM4.
+      The protein mediates vectorial Mg2+ transport from the apical to basolateral side
+      of intestinal epithelial cells, and its basolateral localization is essential for
+      this function. This is the most informative cellular component annotation and
+      represents the primary site of CNNM4 activity.
+- term:
+    id: GO:0030003
+    label: intracellular monoatomic cation homeostasis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl Compara annotation for intracellular monoatomic cation homeostasis, based
+      on human ortholog Q6P4Q7. CNNM4 mediates Mg2+ efflux and thereby contributes to
+      intracellular cation homeostasis. This is a broader parent term of magnesium ion
+      homeostasis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a valid but broad biological process annotation. CNNM4 contributes to
+      intracellular cation homeostasis primarily through its Mg2+ efflux activity. The
+      more specific GO:0010960 (magnesium ion homeostasis) better captures the core
+      function.
+- term:
+    id: GO:0032991
+    label: protein-containing complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Ensembl Compara annotation indicating CNNM4 is part of a protein-containing
+      complex, based on human ortholog Q6P4Q7. CNNM family members are known to form
+      oligomeric complexes (likely dimers or trimers) and to interact with phosphatases
+      of regenerating liver (PRL/PTP4A) family members. However, the term
+      protein-containing complex is extremely broad and uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While CNNM4 does form oligomeric complexes and interacts with PRL phosphatases,
+      the term protein-containing complex is too broad to be informative. A more specific
+      complex term would be needed to capture the meaningful biology. Keeping as non-core
+      rather than removing since the protein does indeed participate in complexes.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+core_functions:
+  - description: &gt;-
+      CNNM4 is a magnesium efflux transporter that mediates Mg2+ extrusion across the
+      basolateral plasma membrane of epithelial cells. The protein contains a CNNM
+      transmembrane domain with four transmembrane helices that forms the transport
+      pathway, and a cytoplasmic CBS domain pair that binds Mg2+-ATP to regulate transport
+      activity. CNNM4 localizes to the basolateral membrane where it functions in
+      transcellular magnesium absorption, particularly in intestinal epithelium. Loss
+      of function causes Jalili syndrome (cone-rod dystrophy with amelogenesis imperfecta)
+      in humans, highlighting its essential role in magnesium homeostasis for eye and
+      tooth development. CNNM4 forms oligomeric complexes and interacts with PRL (PTP4A)
+      family phosphatases which regulate its activity.
+    molecular_function:
+      id: GO:0015095
+      label: magnesium ion transmembrane transporter activity
+    directly_involved_in:
+      - id: GO:1903830
+        label: magnesium ion transmembrane transport
+      - id: GO:0010960
+        label: magnesium ion homeostasis
+    locations:
+      - id: GO:0016323
+        label: basolateral plasma membrane
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

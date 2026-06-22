@@ -1,0 +1,2291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tbc1d14 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tbc1d14</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A8C5FPT8" target="_blank" class="term-link">
+                        A0A8C5FPT8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Gadus morhua</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tbc1d14";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="DESCRIPTION: TBC1D14 is a Rab-GAP TBC domain-containing protein..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TBC1D14 is a Rab-GAP TBC domain-containing protein that functions primarily as a RAB11-binding scaffolding protein rather than as a canonical GTPase-activating protein. Despite possessing the conserved TBC (Tre2-Bub2-Cdc16) domain, studies of mammalian orthologs demonstrate that TBC1D14 does not exhibit GAP activity toward RAB11 but instead acts as a RAB11 effector. The protein recruits the TRAPPIII tethering complex via a TRAPP-binding region, facilitating RAB1 activation and coordinating membrane exchange between RAB11-positive recycling endosomes and the early Golgi/ERGIC compartment. Through this scaffolding function, TBC1D14 regulates ATG9 trafficking and negatively regulates macroautophagy by controlling the delivery of recycling endosome-derived membranes to autophagosome formation sites. The protein localizes to recycling endosomes, the Golgi complex, and tubulo-vesicular transport intermediates. The Atlantic cod protein contains the conserved Rab-GAP TBC domain (aa 388-596) and a coiled-coil region, and is predicted to share these functions based on high sequence conservation across vertebrates.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005096" target="_blank" class="term-link">
+                                    GO:0005096
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="GO:0005096" data-r="GO_REF:0000118" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation assigns GTPase activator (GAP) activity based on the presence of the TBC domain (TreeGrafter inference). While the TBC domain is indeed a hallmark of Rab-GAP proteins, detailed studies of mammalian TBC1D14 orthologs (Lamb et al. 2016, EMBO J) show that TBC1D14 does NOT exhibit GAP activity toward its binding partner RAB11 and instead functions as a RAB11 effector/scaffold. The TBC domain may retain GAP activity toward an unidentified Rab substrate, or may have evolved a purely structural role. The IEA annotation based on domain presence alone is therefore potentially misleading, though not definitively wrong since GAP activity toward other Rab GTPases cannot be excluded.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The deep research clearly establishes that mammalian TBC1D14 does not function as a GAP for RAB11, its primary binding partner. However, GAP activity toward other Rab substrates has not been tested and cannot be excluded. The TreeGrafter inference from the TBC domain is a reasonable default but may be misleading. Without experimental data for the cod protein, the correct disposition is uncertain.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005773" target="_blank" class="term-link">
+                                    GO:0005773
+                                </a>
+                            </span>
+                            <span class="term-label">vacuole</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="GO:0005773" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This ARBA annotation places TBC1D14 in the vacuole. In mammalian cells, TBC1D14 localizes to recycling endosomes and the Golgi complex; vacuolar localization has not been reported for TBC1D14 orthologs. The vacuole term (GO:0005773) in animal cells typically refers to lysosome-related compartments. Since fish cells are more similar to mammalian cells than to yeast in this regard, and there is no evidence placing TBC1D14 at the vacuole/lysosome, this appears to be an over-annotation likely arising from broad ARBA rule matching rather than specific functional evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No evidence from mammalian ortholog studies supports vacuolar localization for TBC1D14. The protein localizes to recycling endosomes and Golgi, not to vacuoles/lysosomes. This ARBA IEA annotation appears to be an over-generalization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016192" target="_blank" class="term-link">
+                                    GO:0016192
+                                </a>
+                            </span>
+                            <span class="term-label">vesicle-mediated transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="GO:0016192" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This ARBA annotation assigns involvement in vesicle-mediated transport. This is well supported by ortholog studies: TBC1D14 functions at the interface of recycling endosome and Golgi trafficking, coordinates TRAPPIII-mediated RAB1 activation for membrane exchange, and regulates ATG9 vesicle cycling. The term is appropriate but broad -- TBC1D14 is specifically involved in endosomal-to-Golgi membrane trafficking and ATG9 vesicle cycling rather than vesicle-mediated transport in general.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Vesicle-mediated transport is well established for TBC1D14 through its role in coordinating membrane exchange between recycling endosomes and the Golgi, and in maintaining the ATG9 vesicle cycling pool. The term is somewhat broad but accurate.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019899" target="_blank" class="term-link">
+                                    GO:0019899
+                                </a>
+                            </span>
+                            <span class="term-label">enzyme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="GO:0019899" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This ARBA annotation assigns enzyme binding activity. TBC1D14 does bind enzymes -- it interacts with ULK1 (the autophagy-initiating kinase) and with small GTPases (RAB11, which has GTPase activity). However, enzyme binding (GO:0019899) is an uninformative term per GO curation guidelines, similar to protein binding. More specific terms such as small GTPase binding (GO:0031267, already annotated) better capture the actual binding interactions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While TBC1D14 does bind enzymes (RAB11 GTPase, ULK1 kinase), this is already captured more informatively by the small GTPase binding annotation. The generic enzyme binding term adds no biological insight.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                                    GO:0031267
+                                </a>
+                            </span>
+                            <span class="term-label">small GTPase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="GO:0031267" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TreeGrafter annotation assigns small GTPase binding, which is well supported by ortholog studies. TBC1D14 binds to the active (GTP-bound) form of RAB11, a small GTPase of the Rab family, and this interaction is central to its function in recruiting TBC1D14 to recycling endosome membranes. TBC1D14 also colocalizes with RAB1B at the Golgi. Small GTPase binding is arguably the most accurate molecular function term for TBC1D14 given that it functions as a RAB11 effector rather than a GAP.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RAB11 binding is the best-characterized molecular function of TBC1D14. The protein binds GTP-RAB11 as an effector and also associates with RAB1B. Small GTPase binding accurately captures this core activity.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031410" target="_blank" class="term-link">
+                                    GO:0031410
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="GO:0031410" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This ARBA annotation places TBC1D14 at cytoplasmic vesicles. This is consistent with ortholog data showing localization to recycling endosomes (which are a subtype of cytoplasmic vesicle) and to tubulo-vesicular transport intermediates between recycling endosomes and the Golgi. The term is accurate but could be more specific -- recycling endosome (GO:0055037) would be the most informative localization term based on mammalian data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TBC1D14 localizes to recycling endosomes, which are cytoplasmic vesicles. The annotation is correct; recycling endosome (GO:0055037) is a child of cytoplasmic vesicle (GO:0031410), so this annotation is accurate if not maximally specific.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TBC1D14 binds the GTP-bound (active) form of RAB11, functioning as a RAB11 effector rather than a GTPase-activating protein. This interaction recruits TBC1D14 to RAB11-positive recycling endosome membranes. Despite containing the conserved TBC domain typically associated with Rab-GAP activity, TBC1D14 does not catalyze GTP hydrolysis on RAB11 and instead serves as a scaffold that coordinates membrane trafficking events at the recycling endosome-Golgi interface.</h3>
+                <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="FUNCTION: TBC1D14 binds the GTP-bound (active) form of RAB11..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                            small GTPase binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016192" target="_blank" class="term-link">
+                                vesicle-mediated transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031410" target="_blank" class="term-link">
+                                cytoplasmic vesicle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does cod TBC1D14 retain any GAP activity toward Rab GTPases other than RAB11? Mammalian TBC1D14 does not act as a GAP for RAB11 but other Rab substrates have not been systematically tested.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="Q: Does cod TBC1D14 retain any GAP activity toward Ra..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the TRAPPIII interaction conserved in teleost fish? The TRAPP-binding region (aa 120-223 in mammalian TBC1D14) mediates the key scaffolding function, but conservation of this interaction in cod has not been verified.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="Q: Is the TRAPPIII interaction conserved in teleost f..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation or pulldown experiments with recombinant cod TBC1D14 and cod RAB11 to confirm the Rab effector interaction is conserved in teleost fish.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Cod TBC1D14 binds active RAB11 as a Rab effector, similar to the mammalian ortholog.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="EXPERIMENT: Co-immunoprecipitation or pulldown experiments wit..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro GAP assay testing cod TBC1D14 TBC domain against a panel of Rab GTPases to determine if it has GAP activity toward any Rab family member.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The TBC domain of cod TBC1D14 may retain GAP activity toward specific Rab substrates despite lacking activity toward RAB11.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A8C5FPT8" data-a="EXPERIMENT: In vitro GAP assay testing cod TBC1D14 TBC domain ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(A0A8C5FPT8-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A8C5FPT8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Comprehensive Research Report: TBC1D14 Gene (tbc1d14) in Gadus morhua (Atlantic Cod)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">7 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-18T18:13:23.076232</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="A0A8C5FPT8-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-tbc1d14-gene-tbc1d14-in-gadus-morhua-atlantic-cod">Comprehensive Research Report: TBC1D14 Gene (tbc1d14) in Gadus morhua (Atlantic Cod)</h1>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>The Atlantic cod gene <strong>tbc1d14</strong> (UniProt accession A0A8C5FPT8) encodes a <strong>Rab-GAP TBC domain-containing protein</strong>. While no direct experimental literature on this specific cod gene was identified in the current literature search, the protein's function can be reliably inferred from extensive studies of conserved TBC1D14 orthologs in mammalian systems, particularly human and mouse models. The Atlantic cod protein contains the characteristic <strong>Rab-GAP TBC domain</strong> (InterPro IPR000195, IPR035969, IPR050302; Pfam PF00566), establishing its membership in the TBC (Tre2-Bub2-Cdc16) family of Rab GTPase regulators (lamb2016tbc1d14regulatesautophagy pages 1-2, popovic2012rabgtpaseactivatingproteins pages 1-2).</p>
+<h2 id="1-protein-family-and-domain-architecture">1. Protein Family and Domain Architecture</h2>
+<h3 id="11-tbc-domain-family-context">1.1 TBC Domain Family Context</h3>
+<p>TBC1D14 belongs to the TBC domain-containing protein family, a large family of proteins characterized by the presence of a conserved TBC domain (lamb2016tbc1d14regulatesautophagy pages 1-2, lamb2016tbc1d14regulatesautophagy pages 2-3). The TBC domain is approximately 200 amino acids in length and typically functions as a GTPase-activating protein (GAP) domain for Rab small GTPases (popovic2012rabgtpaseactivatingproteins pages 1-2). In general, TBC domain-containing proteins regulate Rab GTPases through a <strong>dual-finger catalytic mechanism</strong>, wherein conserved arginine (R-finger) and glutamine (Q-finger) residues within the TBC domain coordinate with the Rab-bound GTP molecule to accelerate GTP hydrolysis (chen2017crystalstructureof pages 1-2, popovic2012rabgtpaseactivatingproteins pages 1-2).</p>
+<h3 id="12-domain-organization-of-tbc1d14">1.2 Domain Organization of TBC1D14</h3>
+<p>The TBC1D14 protein exhibits a modular domain architecture (lamb2016tbc1d14regulatesautophagy pages 3-5):</p>
+<ul>
+<li><strong>C-terminal TBC domain</strong>: Located at approximately amino acids 411-611 (within the larger C-terminal region spanning aa 224-669), this domain defines the protein as a member of the Rab-GAP family (lamb2016tbc1d14regulatesautophagy pages 3-5)</li>
+<li><strong>TRAPP-binding region (TBR)</strong>: A critical 103-amino acid N-terminal region (aa 120-223) that is both necessary and sufficient for interaction with the TRAPP (trafficking protein particle) complex (lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 2-3)</li>
+<li><strong>ULK1-binding region</strong>: Distinct from the TBR, this region (aa 224-330) mediates interaction with ULK1 (unc-51 like autophagy activating kinase 1), linking TBC1D14 to autophagy regulation (lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 2-3)</li>
+</ul>
+<p>This modular organization allows TBC1D14 to serve as a scaffold protein that coordinates multiple protein-protein interactions involved in membrane trafficking and autophagy.</p>
+<h2 id="2-primary-molecular-function">2. Primary Molecular Function</h2>
+<h3 id="21-unusual-functional-properties-rab11-binding-without-gap-activity">2.1 Unusual Functional Properties: RAB11 Binding Without GAP Activity</h3>
+<p>Despite containing a TBC domain typically associated with Rab-GAP activity, <strong>TBC1D14 does not function as a canonical GAP for RAB11</strong>. Instead, experimental evidence demonstrates that TBC1D14 <strong>binds to RAB11 and functions as a RAB11 effector</strong> rather than catalyzing GTP hydrolysis on RAB11 (lamb2016tbc1d14regulatesautophagy pages 2-3, lamb2016tbc1d14regulatesautophagy pages 14-17). This represents an important functional distinction: while TBC1D14 possesses the structural hallmarks of a Rab-GAP, it has evolved to serve primarily as a <strong>scaffolding and regulatory protein</strong> rather than an enzyme that directly inactivates Rab proteins (lamb2016tbc1d14regulatesautophagy pages 2-3).</p>
+<p>The mechanism by which TBC1D14 interacts with RAB11 involves binding to the GTP-bound (active) form of RAB11, which recruits TBC1D14 to RAB11-positive recycling endosome membranes (lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 2-3). This RAB11-TBC1D14 interaction is required for the formation of specific membrane trafficking intermediates.</p>
+<h3 id="22-recruitment-and-regulation-of-the-trappiii-complex">2.2 Recruitment and Regulation of the TRAPPIII Complex</h3>
+<p>A central molecular function of TBC1D14 is its ability to <strong>recruit the TRAPPIII tethering complex</strong> to specific cellular membranes (lamb2016tbc1d14regulatesautophagy pages 1-2, lamb2016tbc1d14regulatesautophagy pages 2-3). The interaction occurs through the N-terminal TRAPP-binding region (aa 120-223) of TBC1D14, which specifically binds to <strong>TRAPPC8</strong>, the mammalian ortholog of the yeast Trs85 subunit (lamb2016tbc1d14regulatesautophagy pages 7-10, lamb2016tbc1d14regulatesautophagy pages 12-14). TRAPPC8 is considered an autophagy-specific subunit that distinguishes the TRAPPIII complex from other TRAPP complexes (lamb2016tbc1d14regulatesautophagy pages 12-14).</p>
+<p>Through its interaction with TRAPPC8, TBC1D14 mediates binding to the core TRAPP subunits, including <strong>TRAPPC4</strong> and <strong>TRAPPC12</strong>, forming a functional TRAPPIII-like complex in mammalian cells (lamb2016tbc1d14regulatesautophagy pages 2-3, lamb2016tbc1d14regulatesautophagy pages 7-10). This represents the first clear evidence at the endogenous protein level for a mammalian TRAPPIII complex analogous to the yeast TRAPPIII involved in autophagy (lamb2016tbc1d14regulatesautophagy pages 12-14).</p>
+<h3 id="23-indirect-regulation-of-rab1-activation">2.3 Indirect Regulation of RAB1 Activation</h3>
+<p>While TBC1D14 does not directly act as a GEF (guanine nucleotide exchange factor), it plays a critical role in <strong>facilitating RAB1 activation</strong> by positioning and recruiting the TRAPPIII complex, which serves as the GEF for RAB1 (lamb2016tbc1d14regulatesautophagy pages 10-12, lamb2016tbc1d14regulatesautophagy pages 7-10). Specifically:</p>
+<ul>
+<li>TBC1D14 is <strong>necessary but not sufficient</strong> for normal RAB1 activation (lamb2016tbc1d14regulatesautophagy pages 10-12)</li>
+<li>Depletion of TBC1D14 reduces the amount of active (GTP-bound) RAB1B, as measured by decreased binding to the RAB1 effector golgin-84 (lamb2016tbc1d14regulatesautophagy pages 10-12)</li>
+<li>The TRAPP complex, recruited by TBC1D14, catalyzes GDP-to-GTP exchange on RAB1, thereby activating it for downstream functions in membrane trafficking (lamb2016tbc1d14regulatesautophagy pages 7-10, lamb2016tbc1d14regulatesautophagy pages 12-14)</li>
+</ul>
+<p>This mechanism positions TBC1D14 as a <strong>spatial regulator</strong> that determines where and when RAB1 activation occurs, rather than as a direct enzymatic activator.</p>
+<h2 id="3-subcellular-localization">3. Subcellular Localization</h2>
+<h3 id="31-multiple-membrane-compartments">3.1 Multiple Membrane Compartments</h3>
+<p>TBC1D14 exhibits a complex subcellular distribution, localizing to several distinct membrane compartments:</p>
+<h4 id="311-recycling-endosomes">3.1.1 Recycling Endosomes</h4>
+<p>TBC1D14 localizes to <strong>RAB11-positive recycling endosomes</strong>, both in peripheral regions of the cell and in the juxtanuclear endocytic recycling compartment (ERC) (lamb2016tbc1d14regulatesautophagy pages 2-3, lamb2016tbc1d14regulatesautophagy pages 12-14). When overexpressed, TBC1D14 induces the formation of <strong>tubulated transferrin-positive recycling endosome structures</strong>, which can be visualized by loading cells with fluorescent transferrin (lamb2016tbc1d14regulatesautophagy pages 5-7, lamb2016tbc1d14regulatesautophagy pages 2-3). These tubulated structures are highly enriched in RAB11 and serve as a model system for studying TBC1D14 function in membrane trafficking.</p>
+<h4 id="312-golgi-complex-and-early-secretory-pathway">3.1.2 Golgi Complex and Early Secretory Pathway</h4>
+<p>Endogenous TBC1D14 also localizes to the <strong>Golgi stack</strong>, where it partially colocalizes with the cis-Golgi marker GM130, the small GTPase RAB1B, and TRAPP complex subunits such as TRAPPC4 (lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 2-3). This Golgi localization positions TBC1D14 at a key intersection between the endocytic recycling pathway and the early secretory/biosynthetic pathway.</p>
+<p>Notably, overexpression of TBC1D14 or its TRAPP-binding region causes <strong>fragmentation of the Golgi complex</strong>, disrupting the normal juxtanuclear organization of GM130-positive cisternae (lamb2016tbc1d14regulatesautophagy pages 5-7, lamb2016tbc1d14regulatesautophagy pages 7-10). This phenotype underscores the importance of TBC1D14 dosage and localization for maintaining Golgi integrity.</p>
+<h4 id="313-tubulo-vesicular-transport-intermediates">3.1.3 Tubulo-Vesicular Transport Intermediates</h4>
+<p>A particularly important finding is that TBC1D14-positive membranes can simultaneously harbor <strong>RAB11A, RAB1B, and TRAPPC4</strong>, indicating that TBC1D14 localizes to <strong>transport intermediates</strong> that bridge RAB11-positive recycling endosomes and RAB1-positive early Golgi/ERGIC (ER-Golgi intermediate compartment) membranes (lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 2-3, lamb2016tbc1d14regulatesautophagy pages 14-17). These hybrid compartments are thought to represent sites where membrane identity transitions occur—specifically, where RAB11-positive membranes are converted to RAB1-positive membranes through a process coordinated by TBC1D14 and the TRAPPIII complex (lamb2016tbc1d14regulatesautophagy pages 14-17).</p>
+<h2 id="4-biological-processes-and-signaling-pathways">4. Biological Processes and Signaling Pathways</h2>
+<h3 id="41-autophagy-regulation">4.1 Autophagy Regulation</h3>
+<p>TBC1D14 functions as a <strong>negative regulator of macroautophagy</strong> (hereafter referred to as autophagy), a cellular self-degradation pathway essential for clearing damaged organelles, protein aggregates, and other cytoplasmic materials (lamb2016tbc1d14regulatesautophagy pages 1-2, lamb2016tbc1d14regulatesautophagy pages 2-3). The protein exerts this regulatory function through multiple mechanisms:</p>
+<h4 id="411-control-of-membrane-delivery-to-autophagosomes">4.1.1 Control of Membrane Delivery to Autophagosomes</h4>
+<p>TBC1D14 regulates the contribution of membranes from <strong>RAB11-positive recycling endosomes</strong> to forming autophagosomes (lamb2016tbc1d14regulatesautophagy pages 1-2, lamb2016tbc1d14regulatesautophagy pages 2-3). Recycling endosomes have been identified as an important membrane source for autophagosome biogenesis, and TBC1D14 modulates this membrane supply. When TBC1D14 is overexpressed, it inhibits autophagy by disrupting the normal delivery of recycling endosome-derived membranes to autophagosome formation sites (lamb2016tbc1d14regulatesautophagy pages 2-3).</p>
+<h4 id="412-inhibition-of-early-autophagy-events">4.1.2 Inhibition of Early Autophagy Events</h4>
+<p>Overexpression of TBC1D14 or its TRAPP-binding region impairs the formation of early autophagy structures, including:</p>
+<ul>
+<li><strong>Omegasomes</strong>: PtdIns(3)P-enriched membrane domains marked by DFCP1 (double FYVE domain-containing protein 1), which serve as platforms for autophagosome nucleation (lamb2016tbc1d14regulatesautophagy pages 7-10)</li>
+<li><strong>WIPI2 puncta</strong>: Structures marked by WIPI2 (WD repeat domain phosphoinositide-interacting protein 2), an early autophagy marker that binds PtdIns(3)P (lamb2016tbc1d14regulatesautophagy pages 5-7, lamb2016tbc1d14regulatesautophagy pages 7-10)</li>
+<li><strong>LC3-positive autophagosomes</strong>: Reduction in LC3 lipidation and LC3 puncta formation, indicative of decreased autophagosome biogenesis (lamb2016tbc1d14regulatesautophagy pages 5-7, lamb2016tbc1d14regulatesautophagy pages 7-10)</li>
+</ul>
+<p>These effects demonstrate that TBC1D14 acts at an <strong>early step</strong> in the autophagy pathway, influencing the initial nucleation and expansion of the autophagosomal membrane rather than later maturation or fusion steps.</p>
+<h3 id="42-atg9-trafficking">4.2 ATG9 Trafficking</h3>
+<p>A particularly important and specific function of TBC1D14 is its role in regulating the trafficking of <strong>ATG9</strong> (autophagy-related protein 9), the only multi-spanning transmembrane protein among the core autophagy machinery (lamb2016tbc1d14regulatesautophagy pages 1-2, lamb2016tbc1d14regulatesautophagy pages 12-14).</p>
+<h4 id="421-maintenance-of-the-atg9-cycling-pool">4.2.1 Maintenance of the ATG9 Cycling Pool</h4>
+<p>ATG9 normally cycles between the Golgi complex, recycling endosomes, and a specialized "ATG9 compartment" (lamb2016tbc1d14regulatesautophagy pages 12-14). This cycling is essential for delivering ATG9-containing vesicles to sites of autophagosome formation. TBC1D14, together with the TRAPPIII complex and RAB1, is required to maintain the proper <strong>cycling pool of ATG9</strong> (lamb2016tbc1d14regulatesautophagy pages 14-17, lamb2016tbc1d14regulatesautophagy pages 12-14).</p>
+<p>When TBC1D14 function is disrupted—either by overexpressing a dominant-negative TRAPP-binding region or by depleting TRAPPC8—the normal juxtanuclear accumulation of ATG9 is lost, and ATG9 becomes dispersed throughout the cell (lamb2016tbc1d14regulatesautophagy pages 12-14). This dispersion indicates that TBC1D14/TRAPPIII/RAB1 function is required for maintaining ATG9 at specific membrane compartments.</p>
+<h4 id="422-ulk1-independent-atg9-regulation">4.2.2 ULK1-Independent ATG9 Regulation</h4>
+<p>Remarkably, the effect of TBC1D14 and TRAPPIII on ATG9 trafficking is <strong>independent of ULK1</strong>, the primary autophagy-initiating kinase (lamb2016tbc1d14regulatesautophagy pages 12-14). While ULK1 is required for starvation-induced redistribution of ATG9 to peripheral compartments, the constitutive maintenance of ATG9 at the Golgi in fed cells depends on TBC1D14, TRAPPIII, and RAB1 (lamb2016tbc1d14regulatesautophagy pages 12-14). This indicates that TBC1D14 regulates a <strong>constitutive trafficking step</strong> that operates even in the absence of autophagy induction, maintaining a ready pool of ATG9 that can be rapidly mobilized when autophagy is activated.</p>
+<h4 id="423-association-of-trapp-with-atg9-positive-membranes">4.2.3 Association of TRAPP with ATG9-Positive Membranes</h4>
+<p>Immunoisolation experiments have shown that <strong>TRAPPC8 and TRAPPC4</strong> co-isolate with ATG9-positive membranes, both under fed and starved conditions (lamb2016tbc1d14regulatesautophagy pages 12-14). This physical association supports the model that TBC1D14 and the TRAPPIII complex directly regulate ATG9-containing vesicles, likely by promoting their trafficking between different membrane compartments.</p>
+<h3 id="43-secretory-pathway-and-golgi-organization">4.3 Secretory Pathway and Golgi Organization</h3>
+<p>Beyond its role in autophagy, TBC1D14 also participates in regulating the <strong>secretory pathway</strong> and maintaining <strong>Golgi integrity</strong> (lamb2016tbc1d14regulatesautophagy pages 5-7, lamb2016tbc1d14regulatesautophagy pages 7-10):</p>
+<ul>
+<li><strong>Constitutive secretion</strong>: Overexpression of the TBC1D14 TRAPP-binding region impairs constitutive secretion, as measured by reduced secretion of a GFP-tagged reporter construct in a cell-based secretion assay (lamb2016tbc1d14regulatesautophagy pages 5-7)</li>
+<li><strong>Golgi structure</strong>: Depletion of TRAPPC8 or disruption of TBC1D14-TRAPP interactions leads to fragmentation of the Golgi complex, disrupting the normal stacked, juxtanuclear organization of Golgi cisternae (lamb2016tbc1d14regulatesautophagy pages 7-10, lamb2016tbc1d14regulatesautophagy pages 12-14)</li>
+<li><strong>ER-Golgi trafficking</strong>: TBC1D14, through its regulation of RAB1 and TRAPP function, influences trafficking between the endoplasmic reticulum (ER) and the Golgi, as well as intra-Golgi transport (lamb2016tbc1d14regulatesautophagy pages 14-17)</li>
+</ul>
+<p>These findings indicate that TBC1D14 has pleiotropic effects on multiple membrane trafficking pathways, consistent with its localization to both endocytic recycling and early secretory compartments.</p>
+<h3 id="44-coordinated-model-of-tbc1d14-function">4.4 Coordinated Model of TBC1D14 Function</h3>
+<p>Integrating these findings, a comprehensive model emerges (lamb2016tbc1d14regulatesautophagy pages 14-17):</p>
+<ol>
+<li><strong>At recycling endosomes</strong>: RAB11-GTP recruits TBC1D14 to the membrane</li>
+<li><strong>At transport intermediates</strong>: TBC1D14 recruits the TRAPPIII complex (via TRAPPC8), which acts as a GEF to activate RAB1</li>
+<li><strong>Membrane identity transition</strong>: This process facilitates the conversion of RAB11-positive recycling endosome membranes to RAB1-positive early Golgi/ERGIC membranes</li>
+<li><strong>ATG9 cycling</strong>: This trafficking step is essential for maintaining the cycling pool of ATG9, allowing ATG9 to traffic from recycling endosomes through the Golgi and back to the specialized ATG9 compartment</li>
+<li><strong>Autophagy support</strong>: By maintaining proper ATG9 trafficking, TBC1D14 indirectly supports autophagosome formation, as ATG9-containing vesicles are required for the early stages of autophagosome biogenesis</li>
+</ol>
+<p>This model positions TBC1D14 as a <strong>molecular coordinator</strong> that links endocytic recycling, early secretory trafficking, and autophagy-related membrane dynamics.</p>
+<h2 id="5-mechanistic-insights-and-structural-considerations">5. Mechanistic Insights and Structural Considerations</h2>
+<h3 id="51-tbc-domain-structure-and-function">5.1 TBC Domain Structure and Function</h3>
+<p>Although TBC1D14 itself lacks demonstrated GAP activity toward RAB11, understanding the general mechanism of TBC domain-mediated Rab inactivation provides important context (chen2017crystalstructureof pages 1-2, popovic2012rabgtpaseactivatingproteins pages 1-2):</p>
+<ul>
+<li>TBC domains typically employ a <strong>dual-finger mechanism</strong> for GAP activity</li>
+<li>The <strong>R-finger</strong> (arginine finger within an IxxDxxR motif) and <strong>Q-finger</strong> (glutamine finger within a YxQ motif) are conserved catalytic residues</li>
+<li>These residues coordinate with the Rab-bound GTP molecule, stabilizing the transition state and accelerating GTP hydrolysis</li>
+<li>In related TBC proteins such as TBC1D15, mutation of the catalytic arginine and glutamine residues to alanine or lysine abolishes GAP activity (chen2017crystalstructureof pages 1-2)</li>
+</ul>
+<p>The fact that TBC1D14 does not exhibit GAP activity toward RAB11 despite containing a TBC domain suggests that either (1) the catalytic residues in TBC1D14's TBC domain are not optimally positioned or configured for RAB11, or (2) TBC1D14 may act as a GAP for a different, as-yet-unidentified Rab substrate. Alternatively, the TBC domain of TBC1D14 may have evolved to serve primarily a <strong>structural role</strong> in protein scaffolding rather than an enzymatic role.</p>
+<h3 id="52-trappiii-complex-architecture">5.2 TRAPPIII Complex Architecture</h3>
+<p>The interaction between TBC1D14 and the TRAPPIII complex involves multiple subunits (lamb2016tbc1d14regulatesautophagy pages 2-3, lamb2016tbc1d14regulatesautophagy pages 7-10):</p>
+<ul>
+<li><strong>TRAPPC8</strong> serves as the primary binding partner and is essential for TBC1D14 to associate with the rest of the TRAPP complex</li>
+<li><strong>Core TRAPP subunits</strong> (TRAPPC4, TRAPPC3, TRAPPC12) form the catalytic core that acts as a GEF for RAB1</li>
+<li>The assembled complex has been estimated at approximately <strong>600 kDa</strong> by size exclusion chromatography, consistent with a large multi-subunit assembly (lamb2016tbc1d14regulatesautophagy pages 7-10)</li>
+</ul>
+<p>This architecture allows TBC1D14 to serve as a <strong>spatial regulator</strong> that recruits TRAPPIII GEF activity to specific membrane compartments defined by RAB11.</p>
+<h2 id="6-evidence-limitations-and-inference-for-atlantic-cod">6. Evidence Limitations and Inference for Atlantic Cod</h2>
+<h3 id="61-absence-of-species-specific-data">6.1 Absence of Species-Specific Data</h3>
+<p>No experimental studies specifically examining the Atlantic cod tbc1d14 gene or protein were identified in the current literature search. This absence of species-specific data is a critical limitation that must be acknowledged. All functional assignments for the Atlantic cod protein are therefore <strong>inferred from conserved features</strong> and homology to well-studied mammalian orthologs.</p>
+<h3 id="62-conserved-domain-as-basis-for-inference">6.2 Conserved Domain as Basis for Inference</h3>
+<p>The UniProt annotation for Atlantic cod TBC1D14 (A0A8C5FPT8) identifies the presence of a <strong>Rab-GAP TBC domain</strong> (IPR000195, IPR035969, IPR050302; Pfam PF00566). This domain annotation is based on sequence homology and is highly reliable for establishing membership in the TBC protein family. However, the specific substrate specificity, binding partners, and cellular functions in cod cells remain experimentally unvalidated.</p>
+<h3 id="63-likely-conserved-functions-in-cod">6.3 Likely Conserved Functions in Cod</h3>
+<p>Given the high evolutionary conservation of membrane trafficking machinery across vertebrates, it is reasonable to infer that Atlantic cod TBC1D14 likely participates in:</p>
+<ul>
+<li><strong>Membrane trafficking regulation</strong> at recycling endosome and Golgi interfaces</li>
+<li><strong>Autophagy-related processes</strong>, potentially including ATG9 trafficking</li>
+<li><strong>Interactions with conserved trafficking machinery</strong> such as RAB GTPases and tethering complexes</li>
+</ul>
+<p>However, cod-specific functional nuances—such as potential roles in fish-specific physiological processes (e.g., adaptation to aquatic environments, temperature-dependent metabolism)—cannot be predicted from mammalian data alone.</p>
+<h2 id="7-comparison-with-related-tbc-proteins">7. Comparison with Related TBC Proteins</h2>
+<p>To provide additional functional context, it is useful to briefly compare TBC1D14 with closely related TBC family members:</p>
+<h3 id="71-tbc1d12">7.1 TBC1D12</h3>
+<p>TBC1D12 is another RAB11-binding TBC protein identified in a systematic screen for recycling endosome-localized TBC proteins (oguchi2017tbc1d12isa pages 1-2). Like TBC1D14, TBC1D12:<br />
+- Colocalizes with transferrin receptor on recycling endosomes<br />
+- Interacts with active RAB11 through a middle region of the protein (not the TBC domain)<br />
+- Does <strong>not</strong> display RAB11-GAP activity in vitro<br />
+- Modulates neurite outgrowth in PC12 cells, a specialized RAB11-dependent cellular process</p>
+<p>This parallel reinforces the concept that not all TBC domain-containing proteins function as canonical Rab-GAPs; some, including TBC1D14 and TBC1D12, have evolved to serve as <strong>RAB11 effectors</strong> with scaffolding and regulatory functions (oguchi2017tbc1d12isa pages 1-2).</p>
+<h3 id="72-tbc1d9b">7.2 TBC1D9B</h3>
+<p>TBC1D9B is a bona fide RAB11-GAP that, unlike TBC1D14, does exhibit GAP activity toward RAB11A (gallo2014tbc1d9bfunctionsas pages 1-2). TBC1D9B:<br />
+- Binds RAB11A, RAB11B, and RAB4A via its TBC domain in a nucleotide-dependent manner<br />
+- Accelerates GTP hydrolysis specifically on RAB11A (and RAB8A under limiting Mg²⁺ conditions)<br />
+- Regulates basolateral-to-apical transcytosis in polarized epithelial cells</p>
+<p>The contrast between TBC1D9B (a true RAB11-GAP) and TBC1D14 (a RAB11 effector) highlights the functional diversity within the TBC protein family.</p>
+<h2 id="8-summary-table-of-key-findings">8. Summary Table of Key Findings</h2>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>TBC1D14 feature</th>
+<th>Specific details</th>
+<th>Functional implication</th>
+<th>Key evidence/citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene/protein identity</td>
+<td>Atlantic cod target from UniProt</td>
+<td>UniProt A0A8C5FPT8 is annotated as <strong>Rab-GAP TBC domain-containing protein</strong>, gene <strong>tbc1d14</strong>, from <strong>Gadus morhua</strong>; direct species-specific literature was not found in the retrieved corpus, so functional interpretation relies on conserved TBC1D14 studies from other vertebrates plus the conserved Rab-GAP TBC domain annotation</td>
+<td>Supports cautious homology-based functional inference rather than direct cod-specific experimental assignment</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 1-2, popovic2012rabgtpaseactivatingproteins pages 1-2)</td>
+</tr>
+<tr>
+<td>Domain organization</td>
+<td>C-terminal TBC domain</td>
+<td>TBC1D14 has a <strong>typical TBC-domain protein architecture</strong> with the <strong>TBC domain at the C-terminus</strong>; one construct spanning <strong>aa 224–669</strong> includes the C-terminal region and the <strong>putative TBC domain from aa 411–611</strong></td>
+<td>Establishes membership in the TBC Rab-regulator family and suggests potential Rab-related regulatory capacity</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 3-5)</td>
+</tr>
+<tr>
+<td>Domain organization</td>
+<td>TRAPP-binding region (TBR)</td>
+<td>A <strong>103 aa N-terminal region, aa 120–223</strong>, is <strong>sufficient for TRAPP interaction</strong> and is termed the <strong>TRAPP-binding region (TBR)</strong></td>
+<td>Provides the physical basis for recruitment of TRAPP/TRAPPIII machinery by TBC1D14</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 7-10)</td>
+</tr>
+<tr>
+<td>Domain organization</td>
+<td>ULK1-binding region</td>
+<td>The <strong>ULK1-interacting region</strong> is distinct from the TBR and lies within <strong>aa 224–330</strong></td>
+<td>Indicates modular organization: separate surfaces for autophagy kinase interaction and TRAPP binding</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 3-5)</td>
+</tr>
+<tr>
+<td>Catalytic/mechanistic context</td>
+<td>TBC family catalytic mechanism</td>
+<td>TBC Rab-GAP proteins generally regulate Rab GTPases via a <strong>dual-finger mechanism</strong> using conserved catalytic residues in the TBC domain; structurally related TBC proteins require catalytic <strong>arginine/Q-finger glutamine</strong> residues for GAP activity</td>
+<td>Provides the mechanistic baseline for interpreting the conserved cod TBC domain, while not proving TBC1D14 itself is an active Rab GAP toward Rab11</td>
+<td>(chen2017crystalstructureof pages 1-2, popovic2012rabgtpaseactivatingproteins pages 1-2)</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>RAB11 binding rather than Rab11 GAP activity</td>
+<td>TBC1D14 <strong>binds RAB11</strong> and behaves as a <strong>RAB11 effector</strong>; the literature summarized in the retrieved texts states that TBC1D14 <strong>does not appear to act as a GAP for RAB11</strong></td>
+<td>Suggests its primary role is scaffolding/coordination of membrane traffic rather than direct inactivation of Rab11</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 2-3, lamb2016tbc1d14regulatesautophagy pages 14-17)</td>
+</tr>
+<tr>
+<td>Protein interactors</td>
+<td>TRAPP core and associated subunits</td>
+<td>TBC1D14 co-immunoprecipitates with <strong>TRAPPC4</strong>, <strong>TRAPPC12</strong>, and via TRAPPC3 pulldown is associated with endogenous TBC1D14; BioID and knockdown data indicate <strong>TRAPPC8</strong> is the most proximal subunit mediating the interaction</td>
+<td>Defines TBC1D14 as a recruiter/partner of a mammalian <strong>TRAPPIII-like complex</strong></td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 2-3, lamb2016tbc1d14regulatesautophagy pages 7-10)</td>
+</tr>
+<tr>
+<td>Protein interactors</td>
+<td>TRAPPC8</td>
+<td><strong>TRAPPC8</strong> is required for TBC1D14/TBR to bind the core TRAPP complex and is identified as the likely mammalian ortholog of yeast <strong>Trs85</strong>, the autophagy-specific TRAPPIII subunit</td>
+<td>Places TBC1D14 in a Rab1-regulatory, autophagy-relevant tethering pathway</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 7-10, lamb2016tbc1d14regulatesautophagy pages 12-14)</td>
+</tr>
+<tr>
+<td>Protein interactors</td>
+<td>RAB11A/B</td>
+<td>TBC1D14-induced tubules are <strong>RAB11-positive</strong>; prior work cited in the paper established that endogenous RAB11 is required for tubule formation, and RAB11 recruits TBC1D14 to recycling endosome membranes</td>
+<td>Supports a model in which TBC1D14 is a RAB11-dependent membrane trafficking factor at recycling endosomes</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 2-3)</td>
+</tr>
+<tr>
+<td>Protein interactors</td>
+<td>RAB1B</td>
+<td>Endogenous <strong>RAB1B</strong> partially colocalizes with TBC1D14 at the Golgi; a subset of TBC1D14-induced tubules simultaneously harbors <strong>RAB11A and RAB1B</strong></td>
+<td>Supports a Rab conversion/hand-off model linking RAB11-positive recycling endosomes to RAB1-positive early Golgi/ERGIC traffic</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 2-3, lamb2016tbc1d14regulatesautophagy pages 14-17)</td>
+</tr>
+<tr>
+<td>Protein interactors</td>
+<td>ULK1</td>
+<td>TBC1D14 overexpression was previously linked to a <strong>RAB11- and ULK1-positive recycling endosome</strong> compartment; ULK1-binding region is distinct from the TRAPP-binding region</td>
+<td>Connects TBC1D14 to early autophagy signaling and membrane supply pathways</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 5-7, lamb2016tbc1d14regulatesautophagy pages 2-3)</td>
+</tr>
+<tr>
+<td>Protein interactors</td>
+<td>ATG9 / ATG9-positive membranes</td>
+<td>ATG9-positive membranes co-isolate with <strong>TRAPPC8</strong> and <strong>TRAPPC4</strong>; TBC1D14/TRAPP activity is required for proper <strong>ATG9</strong> localization and cycling</td>
+<td>Links TBC1D14 indirectly and functionally to the ATG9 membrane cycle essential for autophagosome biogenesis</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 12-14, lamb2016tbc1d14regulatesautophagy pages 14-17)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>Recycling endosomes</td>
+<td>TBC1D14 overexpression generates a <strong>tubulated transferrin-positive recycling endosome</strong> compartment; endogenous TBC1D14 also localizes to peripheral recycling endosome structures</td>
+<td>Indicates action on endocytic recycling membranes, particularly <strong>RAB11-positive</strong> compartments</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 2-3, lamb2016tbc1d14regulatesautophagy pages 12-14)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>Golgi / early Golgi</td>
+<td>Endogenous TBC1D14 localizes to the <strong>Golgi stack</strong> and partially colocalizes with <strong>TRAPPC4</strong> and <strong>RAB1B</strong>; overexpression fragments the <strong>GM130-positive cis-Golgi</strong></td>
+<td>Positions TBC1D14 at the interface of autophagy-related trafficking and Golgi organization/secretory traffic</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 5-7, lamb2016tbc1d14regulatesautophagy pages 12-14)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>Transport intermediate between RE and RAB1 compartments</td>
+<td>TBC1D14-positive tubules can harbor <strong>RAB11A, RAB1B, and TRAPPC4</strong> simultaneously, consistent with a <strong>tubulo-vesicular intermediate</strong> between recycling endosomes and early Golgi/ERGIC membranes</td>
+<td>Suggests TBC1D14 coordinates membrane exchange between endocytic recycling and early secretory systems</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 2-3, lamb2016tbc1d14regulatesautophagy pages 14-17)</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>Recruitment of TRAPP/TRAPPIII</td>
+<td>TBC1D14 binds TRAPP via its <strong>aa 120–223 TBR</strong>, and <strong>TRAPPC8</strong> mediates this interaction; TBC1D14 overexpression mislocalizes TRAPP to tubulated recycling endosomes</td>
+<td>Core scaffolding/adaptor role: recruits tethering/GEF machinery to specific membranes</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 7-10)</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>Promotion of RAB1 activation indirectly through TRAPP</td>
+<td>TRAPP is the <strong>GEF for RAB1</strong>, and TBC1D14 is <strong>required but not sufficient</strong> for normal RAB1 activation; depletion of TBC1D14 reduces RAB1B binding to the effector golgin-84</td>
+<td>TBC1D14 helps position/enable TRAPPIII-mediated <strong>RAB1 activation</strong> rather than directly catalyzing RAB1 nucleotide exchange itself</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 10-12, lamb2016tbc1d14regulatesautophagy pages 7-10)</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>Coordination of membrane traffic for autophagosome formation</td>
+<td>Overexpression of TBC1D14 or its TBR inhibits <strong>LC3 lipidation</strong>, reduces <strong>LC3 puncta</strong>, and also reduces early autophagy markers <strong>WIPI2</strong> and <strong>DFCP1</strong></td>
+<td>Establishes TBC1D14 as a regulator of an <strong>early step</strong> in autophagosome biogenesis</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 5-7, lamb2016tbc1d14regulatesautophagy pages 7-10)</td>
+</tr>
+<tr>
+<td>Biological process</td>
+<td>Autophagy regulation</td>
+<td>TBC1D14 is described as a <strong>negative regulator of autophagy</strong> that controls membrane delivery from <strong>RAB11-positive recycling endosomes</strong> to forming autophagosomes</td>
+<td>Principal characterized biological role in the literature</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 1-2, lamb2016tbc1d14regulatesautophagy pages 2-3)</td>
+</tr>
+<tr>
+<td>Biological process</td>
+<td>ATG9 trafficking</td>
+<td>TBC1D14 and TRAPPIII regulate <strong>ATG9 trafficking independently of ULK1</strong>; disruption of TBC1D14/TRAPP/RAB1 function disperses juxtanuclear ATG9 and alters the cycling ATG9 pool</td>
+<td>Explains how TBC1D14 influences autophagy mechanistically: by maintaining the membrane itinerary of the only transmembrane core ATG protein</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 1-2, lamb2016tbc1d14regulatesautophagy pages 12-14)</td>
+</tr>
+<tr>
+<td>Biological process</td>
+<td>Secretory pathway and Golgi integrity</td>
+<td>TBR overexpression impairs <strong>constitutive secretion</strong> and fragments the Golgi; <strong>TRAPPC8 depletion</strong> phenocopies Golgi and secretory defects</td>
+<td>Indicates TBC1D14 also regulates <strong>ER-Golgi/early secretory traffic</strong> beyond autophagy</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 5-7, lamb2016tbc1d14regulatesautophagy pages 7-10)</td>
+</tr>
+<tr>
+<td>Biological process</td>
+<td>RE-to-Golgi membrane exchange</td>
+<td>The authors propose a constitutive trafficking step from <strong>peripheral recycling endosomes to the early Golgi</strong> that maintains an ATG9 cycling pool needed for autophagy initiation</td>
+<td>Integrates endocytic recycling and early secretory trafficking into a unified TBC1D14 function</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 1-2, lamb2016tbc1d14regulatesautophagy pages 14-17)</td>
+</tr>
+<tr>
+<td>Cod-specific inference</td>
+<td>Most likely conserved functional interpretation for Gadus morhua tbc1d14</td>
+<td>Because cod-specific experiments were not retrieved, the safest annotation is that Atlantic cod Tbc1d14 is likely an <strong>intracellular membrane-trafficking regulator</strong> associated with the <strong>Rab-GAP TBC domain family</strong>, probably functioning at <strong>recycling endosome/Golgi interfaces</strong> and in <strong>autophagy-related ATG9 trafficking</strong>, but direct substrate specificity and cod-specific localization remain unvalidated</td>
+<td>Provides a bounded, evidence-based annotation for A0A8C5FPT8 without overclaiming species-specific function</td>
+<td>(lamb2016tbc1d14regulatesautophagy pages 3-5, lamb2016tbc1d14regulatesautophagy pages 1-2, lamb2016tbc1d14regulatesautophagy pages 14-17)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported characteristics of TBC1D14 relevant to annotating Atlantic cod tbc1d14, including domains, interactors, localization, functions, and pathways. It is especially useful because direct Gadus morhua literature was not retrieved, so annotation depends on careful transfer from conserved vertebrate evidence.</em></p>
+<h2 id="9-conclusions-and-functional-annotation-for-atlantic-cod-tbc1d14">9. Conclusions and Functional Annotation for Atlantic Cod TBC1D14</h2>
+<p>Based on the comprehensive analysis of conserved TBC1D14 function in mammalian systems and the presence of a conserved Rab-GAP TBC domain in the Atlantic cod protein, the following functional annotation is proposed:</p>
+<p><strong>Atlantic cod TBC1D14</strong> (UniProt A0A8C5FPT8) is a <strong>membrane trafficking regulator</strong> belonging to the TBC domain-containing protein family. The protein likely functions as a <strong>RAB11-binding scaffolding protein</strong> that coordinates membrane exchange between recycling endosomes and early Golgi/ERGIC compartments. Key predicted functions include:</p>
+<ol>
+<li><strong>Recruitment of TRAPPIII tethering/GEF complex</strong> via an N-terminal TRAPP-binding region</li>
+<li><strong>Regulation of ATG9 trafficking</strong> to maintain a cycling pool of ATG9 vesicles required for autophagosome formation</li>
+<li><strong>Negative regulation of autophagy</strong> by modulating membrane delivery from recycling endosomes to autophagosomes</li>
+<li><strong>Coordination of endocytic recycling and secretory pathway</strong> functions</li>
+</ol>
+<p>The protein is predicted to localize to <strong>recycling endosomes, Golgi complex, and tubulo-vesicular transport intermediates</strong> where it acts as a <strong>molecular bridge</strong> linking RAB11-positive and RAB1-positive membrane compartments.</p>
+<p><strong>Important caveats</strong>: (1) No species-specific experimental data for Atlantic cod were identified; (2) specific substrate specificity of the TBC domain in cod is unknown; (3) potential fish-specific functions cannot be predicted from mammalian data; (4) direct GAP activity toward any Rab GTPase has not been demonstrated for TBC1D14 in any species studied to date.</p>
+<p>This annotation should be considered a <strong>high-confidence inference based on domain conservation and extensive mammalian functional data</strong>, but experimental validation in Atlantic cod cells or tissues would be required to confirm these predicted functions.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(lamb2016tbc1d14regulatesautophagy pages 1-2): Christopher A Lamb, Stefanie Nühlen, Delphine Judith, David Frith, Ambrosius P Snijders, Christian Behrends, and Sharon A Tooze. Tbc1d14 regulates autophagy via the trapp complex and atg9 traffic. The EMBO Journal, 35:281-301, Dec 2016. URL: https://doi.org/10.15252/embj.201592695, doi:10.15252/embj.201592695. This article has 213 citations.</p>
+</li>
+<li>
+<p>(popovic2012rabgtpaseactivatingproteins pages 1-2): Doris Popovic, Masato Akutsu, Ivana Novak, J. Wade Harper, Christian Behrends, and Ivan Dikic. Rab gtpase-activating proteins in autophagy: regulation of endocytic and autophagy pathways by direct binding to human atg8 modifiers. Molecular and Cellular Biology, 32:1733-1744, May 2012. URL: https://doi.org/10.1128/mcb.06717-11, doi:10.1128/mcb.06717-11. This article has 219 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lamb2016tbc1d14regulatesautophagy pages 2-3): Christopher A Lamb, Stefanie Nühlen, Delphine Judith, David Frith, Ambrosius P Snijders, Christian Behrends, and Sharon A Tooze. Tbc1d14 regulates autophagy via the trapp complex and atg9 traffic. The EMBO Journal, 35:281-301, Dec 2016. URL: https://doi.org/10.15252/embj.201592695, doi:10.15252/embj.201592695. This article has 213 citations.</p>
+</li>
+<li>
+<p>(chen2017crystalstructureof pages 1-2): Yan‐Na Chen, Xin Gu, X. Edward Zhou, Weidong Wang, Dandan Cheng, Yinghua Ge, Fei Ye, H. Eric Xu, and Zhengbing Lv. Crystal structure of tbc1d15 gtpase‐activating protein (gap) domain and its activity on rab gtpases. Protein Science, 26:834-846, Apr 2017. URL: https://doi.org/10.1002/pro.3132, doi:10.1002/pro.3132. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lamb2016tbc1d14regulatesautophagy pages 3-5): Christopher A Lamb, Stefanie Nühlen, Delphine Judith, David Frith, Ambrosius P Snijders, Christian Behrends, and Sharon A Tooze. Tbc1d14 regulates autophagy via the trapp complex and atg9 traffic. The EMBO Journal, 35:281-301, Dec 2016. URL: https://doi.org/10.15252/embj.201592695, doi:10.15252/embj.201592695. This article has 213 citations.</p>
+</li>
+<li>
+<p>(lamb2016tbc1d14regulatesautophagy pages 14-17): Christopher A Lamb, Stefanie Nühlen, Delphine Judith, David Frith, Ambrosius P Snijders, Christian Behrends, and Sharon A Tooze. Tbc1d14 regulates autophagy via the trapp complex and atg9 traffic. The EMBO Journal, 35:281-301, Dec 2016. URL: https://doi.org/10.15252/embj.201592695, doi:10.15252/embj.201592695. This article has 213 citations.</p>
+</li>
+<li>
+<p>(lamb2016tbc1d14regulatesautophagy pages 7-10): Christopher A Lamb, Stefanie Nühlen, Delphine Judith, David Frith, Ambrosius P Snijders, Christian Behrends, and Sharon A Tooze. Tbc1d14 regulates autophagy via the trapp complex and atg9 traffic. The EMBO Journal, 35:281-301, Dec 2016. URL: https://doi.org/10.15252/embj.201592695, doi:10.15252/embj.201592695. This article has 213 citations.</p>
+</li>
+<li>
+<p>(lamb2016tbc1d14regulatesautophagy pages 12-14): Christopher A Lamb, Stefanie Nühlen, Delphine Judith, David Frith, Ambrosius P Snijders, Christian Behrends, and Sharon A Tooze. Tbc1d14 regulates autophagy via the trapp complex and atg9 traffic. The EMBO Journal, 35:281-301, Dec 2016. URL: https://doi.org/10.15252/embj.201592695, doi:10.15252/embj.201592695. This article has 213 citations.</p>
+</li>
+<li>
+<p>(lamb2016tbc1d14regulatesautophagy pages 10-12): Christopher A Lamb, Stefanie Nühlen, Delphine Judith, David Frith, Ambrosius P Snijders, Christian Behrends, and Sharon A Tooze. Tbc1d14 regulates autophagy via the trapp complex and atg9 traffic. The EMBO Journal, 35:281-301, Dec 2016. URL: https://doi.org/10.15252/embj.201592695, doi:10.15252/embj.201592695. This article has 213 citations.</p>
+</li>
+<li>
+<p>(lamb2016tbc1d14regulatesautophagy pages 5-7): Christopher A Lamb, Stefanie Nühlen, Delphine Judith, David Frith, Ambrosius P Snijders, Christian Behrends, and Sharon A Tooze. Tbc1d14 regulates autophagy via the trapp complex and atg9 traffic. The EMBO Journal, 35:281-301, Dec 2016. URL: https://doi.org/10.15252/embj.201592695, doi:10.15252/embj.201592695. This article has 213 citations.</p>
+</li>
+<li>
+<p>(oguchi2017tbc1d12isa pages 1-2): Mai E. Oguchi, Kenta Noguchi, and Mitsunori Fukuda. Tbc1d12 is a novel rab11-binding protein that modulates neurite outgrowth of pc12 cells. PLoS ONE, 12:e0174883, Apr 2017. URL: https://doi.org/10.1371/journal.pone.0174883, doi:10.1371/journal.pone.0174883. This article has 29 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gallo2014tbc1d9bfunctionsas pages 1-2): Luciana I. Gallo, Yong Liao, Wily G. Ruiz, Dennis R. Clayton, Min Li, Yong-Jian Liu, Yu Jiang, Mitsunori Fukuda, Gerard Apodaca, and Xiao-Ming Yin. Tbc1d9b functions as a gtpase-activating protein for rab11a in polarized mdck cells. Molecular Biology of the Cell, 25:3779-3797, Nov 2014. URL: https://doi.org/10.1091/mbc.e13-10-0604, doi:10.1091/mbc.e13-10-0604. This article has 53 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="A0A8C5FPT8-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>popovic2012rabgtpaseactivatingproteins pages 1-2</li>
+<li>chen2017crystalstructureof pages 1-2</li>
+<li>https://doi.org/10.15252/embj.201592695,</li>
+<li>https://doi.org/10.1128/mcb.06717-11,</li>
+<li>https://doi.org/10.1002/pro.3132,</li>
+<li>https://doi.org/10.1371/journal.pone.0174883,</li>
+<li>https://doi.org/10.1091/mbc.e13-10-0604,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A8C5FPT8
+gene_symbol: tbc1d14
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:8049
+  label: Gadus morhua
+description: &gt;-
+  TBC1D14 is a Rab-GAP TBC domain-containing protein that functions primarily as a
+  RAB11-binding scaffolding protein rather than as a canonical GTPase-activating protein.
+  Despite possessing the conserved TBC (Tre2-Bub2-Cdc16) domain, studies of mammalian
+  orthologs demonstrate that TBC1D14 does not exhibit GAP activity toward RAB11 but instead
+  acts as a RAB11 effector. The protein recruits the TRAPPIII tethering complex via a
+  TRAPP-binding region, facilitating RAB1 activation and coordinating membrane exchange
+  between RAB11-positive recycling endosomes and the early Golgi/ERGIC compartment. Through
+  this scaffolding function, TBC1D14 regulates ATG9 trafficking and negatively regulates
+  macroautophagy by controlling the delivery of recycling endosome-derived membranes to
+  autophagosome formation sites. The protein localizes to recycling endosomes, the Golgi
+  complex, and tubulo-vesicular transport intermediates. The Atlantic cod protein contains
+  the conserved Rab-GAP TBC domain (aa 388-596) and a coiled-coil region, and is predicted
+  to share these functions based on high sequence conservation across vertebrates.
+existing_annotations:
+# ================== GTPase activator activity ==================
+- term:
+    id: GO:0005096
+    label: GTPase activator activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This annotation assigns GTPase activator (GAP) activity based on the presence of the
+      TBC domain (TreeGrafter inference). While the TBC domain is indeed a hallmark of
+      Rab-GAP proteins, detailed studies of mammalian TBC1D14 orthologs (Lamb et al. 2016,
+      EMBO J) show that TBC1D14 does NOT exhibit GAP activity toward its binding partner
+      RAB11 and instead functions as a RAB11 effector/scaffold. The TBC domain may retain
+      GAP activity toward an unidentified Rab substrate, or may have evolved a purely
+      structural role. The IEA annotation based on domain presence alone is therefore
+      potentially misleading, though not definitively wrong since GAP activity toward other
+      Rab GTPases cannot be excluded.
+    action: UNDECIDED
+    reason: &gt;-
+      The deep research clearly establishes that mammalian TBC1D14 does not function as a
+      GAP for RAB11, its primary binding partner. However, GAP activity toward other Rab
+      substrates has not been tested and cannot be excluded. The TreeGrafter inference from
+      the TBC domain is a reasonable default but may be misleading. Without experimental
+      data for the cod protein, the correct disposition is uncertain.
+
+# ================== Vacuole ==================
+- term:
+    id: GO:0005773
+    label: vacuole
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      This ARBA annotation places TBC1D14 in the vacuole. In mammalian cells, TBC1D14
+      localizes to recycling endosomes and the Golgi complex; vacuolar localization has not
+      been reported for TBC1D14 orthologs. The vacuole term (GO:0005773) in animal cells
+      typically refers to lysosome-related compartments. Since fish cells are more similar to
+      mammalian cells than to yeast in this regard, and there is no evidence placing TBC1D14
+      at the vacuole/lysosome, this appears to be an over-annotation likely arising from
+      broad ARBA rule matching rather than specific functional evidence.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      No evidence from mammalian ortholog studies supports vacuolar localization for TBC1D14.
+      The protein localizes to recycling endosomes and Golgi, not to vacuoles/lysosomes.
+      This ARBA IEA annotation appears to be an over-generalization.
+
+# ================== Vesicle-mediated transport ==================
+- term:
+    id: GO:0016192
+    label: vesicle-mediated transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This ARBA annotation assigns involvement in vesicle-mediated transport. This is well
+      supported by ortholog studies: TBC1D14 functions at the interface of recycling
+      endosome and Golgi trafficking, coordinates TRAPPIII-mediated RAB1 activation for
+      membrane exchange, and regulates ATG9 vesicle cycling. The term is appropriate but
+      broad -- TBC1D14 is specifically involved in endosomal-to-Golgi membrane trafficking
+      and ATG9 vesicle cycling rather than vesicle-mediated transport in general.
+    action: ACCEPT
+    reason: &gt;-
+      Vesicle-mediated transport is well established for TBC1D14 through its role in
+      coordinating membrane exchange between recycling endosomes and the Golgi, and in
+      maintaining the ATG9 vesicle cycling pool. The term is somewhat broad but accurate.
+
+# ================== Enzyme binding ==================
+- term:
+    id: GO:0019899
+    label: enzyme binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This ARBA annotation assigns enzyme binding activity. TBC1D14 does bind enzymes --
+      it interacts with ULK1 (the autophagy-initiating kinase) and with small GTPases
+      (RAB11, which has GTPase activity). However, enzyme binding (GO:0019899) is an
+      uninformative term per GO curation guidelines, similar to protein binding. More
+      specific terms such as small GTPase binding (GO:0031267, already annotated) better
+      capture the actual binding interactions.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While TBC1D14 does bind enzymes (RAB11 GTPase, ULK1 kinase), this is already captured
+      more informatively by the small GTPase binding annotation. The generic enzyme binding
+      term adds no biological insight.
+
+# ================== Small GTPase binding ==================
+- term:
+    id: GO:0031267
+    label: small GTPase binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This TreeGrafter annotation assigns small GTPase binding, which is well supported by
+      ortholog studies. TBC1D14 binds to the active (GTP-bound) form of RAB11, a small
+      GTPase of the Rab family, and this interaction is central to its function in
+      recruiting TBC1D14 to recycling endosome membranes. TBC1D14 also colocalizes with
+      RAB1B at the Golgi. Small GTPase binding is arguably the most accurate molecular
+      function term for TBC1D14 given that it functions as a RAB11 effector rather than a
+      GAP.
+    action: ACCEPT
+    reason: &gt;-
+      RAB11 binding is the best-characterized molecular function of TBC1D14. The protein
+      binds GTP-RAB11 as an effector and also associates with RAB1B. Small GTPase binding
+      accurately captures this core activity.
+
+# ================== Cytoplasmic vesicle ==================
+- term:
+    id: GO:0031410
+    label: cytoplasmic vesicle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      This ARBA annotation places TBC1D14 at cytoplasmic vesicles. This is consistent with
+      ortholog data showing localization to recycling endosomes (which are a subtype of
+      cytoplasmic vesicle) and to tubulo-vesicular transport intermediates between recycling
+      endosomes and the Golgi. The term is accurate but could be more specific -- recycling
+      endosome (GO:0055037) would be the most informative localization term based on
+      mammalian data.
+    action: ACCEPT
+    reason: &gt;-
+      TBC1D14 localizes to recycling endosomes, which are cytoplasmic vesicles. The
+      annotation is correct; recycling endosome (GO:0055037) is a child of cytoplasmic
+      vesicle (GO:0031410), so this annotation is accurate if not maximally specific.
+
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+
+core_functions:
+- molecular_function:
+    id: GO:0031267
+    label: small GTPase binding
+  description: &gt;-
+    TBC1D14 binds the GTP-bound (active) form of RAB11, functioning as a RAB11 effector
+    rather than a GTPase-activating protein. This interaction recruits TBC1D14 to
+    RAB11-positive recycling endosome membranes. Despite containing the conserved TBC
+    domain typically associated with Rab-GAP activity, TBC1D14 does not catalyze GTP
+    hydrolysis on RAB11 and instead serves as a scaffold that coordinates membrane
+    trafficking events at the recycling endosome-Golgi interface.
+  directly_involved_in:
+    - id: GO:0016192
+      label: vesicle-mediated transport
+  locations:
+    - id: GO:0031410
+      label: cytoplasmic vesicle
+
+suggested_questions:
+- question: &gt;-
+    Does cod TBC1D14 retain any GAP activity toward Rab GTPases other than RAB11?
+    Mammalian TBC1D14 does not act as a GAP for RAB11 but other Rab substrates have
+    not been systematically tested.
+  experts: []
+- question: &gt;-
+    Is the TRAPPIII interaction conserved in teleost fish? The TRAPP-binding region
+    (aa 120-223 in mammalian TBC1D14) mediates the key scaffolding function, but
+    conservation of this interaction in cod has not been verified.
+  experts: []
+
+suggested_experiments:
+- description: &gt;-
+    Co-immunoprecipitation or pulldown experiments with recombinant cod TBC1D14 and
+    cod RAB11 to confirm the Rab effector interaction is conserved in teleost fish.
+  hypothesis: Cod TBC1D14 binds active RAB11 as a Rab effector, similar to the mammalian ortholog.
+- description: &gt;-
+    In vitro GAP assay testing cod TBC1D14 TBC domain against a panel of Rab GTPases
+    to determine if it has GAP activity toward any Rab family member.
+  hypothesis: &gt;-
+    The TBC domain of cod TBC1D14 may retain GAP activity toward specific Rab
+    substrates despite lacking activity toward RAB11.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
