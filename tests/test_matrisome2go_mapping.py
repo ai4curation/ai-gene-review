@@ -27,6 +27,13 @@ OAK_CONFIG = REPO / "conf/oak_config.yaml"
 CORE_FAMILIES = {"Collagens", "ECM Glycoproteins", "Proteoglycans"}
 ASSOCIATED_FAMILIES = {"ECM-affiliated Proteins", "ECM Regulators", "Secreted Factors"}
 
+# The masterlist CSVs are not committed (project is parked; see projects/MATRISOME/README.md).
+# Tests that need them are skipped unless the data has been regenerated locally.
+needs_masterlist = pytest.mark.skipif(
+    not (DATA / "matrisome_human.csv").exists(),
+    reason="matrisome masterlist CSVs not present (regenerate per projects/MATRISOME/data/README.md)",
+)
+
 
 def _load(path: Path) -> dict:
     return yaml.safe_load(path.read_text())
@@ -112,6 +119,7 @@ def test_load_family_go_mappings():
     assert fam["ECM Glycoproteins"] == ("GO:0031012", "extracellular matrix")
 
 
+@needs_masterlist
 def test_load_matrisome_is_species_partitioned():
     """The masterlist loader keeps a per-species lookup; human SPOCK1 resolves to a core proteoglycan."""
     mod = _report_module()
@@ -132,6 +140,7 @@ def test_subsumption_classifier():
     assert mod.classify_candidate("GO:0031012", {"GO:0005604"}, None) == "new"
 
 
+@needs_masterlist
 def test_compute_finds_core_gap_and_skips_associated_and_nonmetazoan(tmp_path):
     """End-to-end on a tiny fixture: core gap -> candidate; associated and bacterial genes -> skipped."""
     mod = _report_module()
