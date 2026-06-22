@@ -756,13 +756,15 @@ def annotation_independent_literature_refs(annotation: Mapping[str, Any]) -> lis
 def function_support_hypothesis(gene_symbol: str, term: Mapping[str, Any]) -> str:
     """Neutral gene-function hypothesis derived from a GO term.
 
-    The support-finding *objective* (find independent evidence, expect false
-    positives, quote verbatim snippets) lives in the template, so the hypothesis
-    itself is a plain claim a curator can adjudicate.
+    Kept concise and biology-forward: retrieval providers (e.g. asta) use the
+    rendered prompt as a literal, length-limited search query, so filler and
+    ontology meta-vocabulary degrade recall. The support-finding *objective*
+    (find independent evidence, expect false positives, quote verbatim snippets)
+    lives in the template, not here.
     """
     label = term_label(term)
     if label:
-        return f"{gene_symbol} has the molecular function or biological role described by {label}."
+        return f"{gene_symbol} has {label}."
     return f"A specific molecular function or biological role should be assigned to {gene_symbol}."
 
 

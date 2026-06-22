@@ -188,10 +188,7 @@ def test_iba_support_records_default_only_unsupported(tmp_path: Path) -> None:
     # IBA is a thin wrapper that produces neutral function-support records.
     assert record.focus_type == "function_support"
     assert record.source_selector == "existing_annotations[1]"
-    assert record.hypothesis_text == (
-        "IBAT has the molecular function or biological role described by "
-        "cytoplasm (GO:0005737)."
-    )
+    assert record.hypothesis_text == "IBAT has cytoplasm (GO:0005737)."
 
 
 def test_iba_support_records_include_supported(tmp_path: Path) -> None:
@@ -297,7 +294,9 @@ def test_function_support_from_term_id(tmp_path: Path) -> None:
     )
     record = ghr.function_support_record_from_args(args)
     assert record.slug == "function-support-go-0003700"
-    assert "DNA-binding transcription factor activity (GO:0003700)" in record.hypothesis_text
+    assert record.hypothesis_text == (
+        "IBAT has DNA-binding transcription factor activity (GO:0003700)."
+    )
 
 
 def test_function_support_requires_exactly_one_selector(tmp_path: Path) -> None:

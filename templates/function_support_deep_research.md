@@ -1,10 +1,27 @@
-# AIGR Function-Support Deep Research
+# Literature evidence for {gene_symbol} ({taxon_label}): {hypothesis_text}
 
-You are searching for **independent literature support for a single
-gene-function hypothesis**. The hypothesis below is a plain claim that a gene
-product has a particular molecular function, biological role, or cellular
-location. Your job is to find primary (or well-justified orthologous) evidence
-that **confirms or refutes** that claim for this specific gene.
+Gene/protein: {gene_symbol}. Organism: {taxon_label} ({taxon_id}).
+Claim to support or refute with independent experimental literature: {hypothesis_text}
+Key context:
+{term_context}
+
+Retrieve primary experimental papers that directly test this claim for
+{gene_symbol} (or a well-supported ortholog): assays, mutant phenotypes,
+localisation, interactions, or structures.
+
+<!--
+The lines above are deliberately first so length-limited retrieval providers
+(e.g. asta, which truncates the query to ~500 characters) search on the gene
+and its biology rather than on the curation boilerplate below.
+-->
+
+## How to use this prompt
+
+You are searching for **independent literature support for the single
+gene-function hypothesis stated above**. The hypothesis is a plain claim that a
+gene product has a particular molecular function, biological role, or cellular
+location. Find primary (or well-justified orthologous) evidence that **confirms
+or refutes** that claim for this specific gene.
 
 This is a recall-oriented search: surface every plausible piece of supporting
 evidence, but make each candidate **independently checkable** so a downstream
@@ -17,27 +34,12 @@ A common use of this template is confirming annotations that currently rest only
 on phylogenetic inference (evidence code IBA, propagated from PANTHER
 `GO_REF:0000033`), but it applies to any gene-function hypothesis.
 
-## Target Gene
-
-- **Organism code:** {organism}
-- **Taxon:** {taxon_label} ({taxon_id})
-- **Gene directory:** {gene}
-- **Gene symbol:** {gene_symbol}
-
 ## Focus
 
 - **Focus type:** {focus_type}
 - **Hypothesis slug:** {hypothesis_slug}
 - **Source file:** {source_file}
 - **Source selector:** {source_selector}
-
-## Gene-Function Hypothesis
-
-{hypothesis_text}
-
-## Hypothesis Context
-
-{term_context}
 
 ## Reference Context
 
