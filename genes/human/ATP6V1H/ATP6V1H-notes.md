@@ -69,3 +69,30 @@ Multiple NAS annotations to vacuolar acidification, endosomal lumen acidificatio
 ## Summary
 
 ATP6V1H is both a regulatory subunit of the V1 complex (directly modulating ATPase activity in free V1 versus assembled holoenzyme contexts) and a structural adaptor connecting the V-ATPase complex to the AP-2 endocytic machinery via armadillo repeat-mediated AP2M1 binding. The endocytic adaptor function is a legitimate core function of subunit H, distinct from generic V-ATPase proton pumping, and is exploited by HIV/SIV Nef.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1H/ATP6V1H-deep-research-falcon.md`,
+21 citations). It corroborates the regulatory-subunit-H core above and adds
+assembly-regulation and disease detail; no change to annotation calls.
+
+- **Core confirmed / sharpened.** H is a single-copy V1 subunit at the **V1–V0
+  interface**, forming the **bottom collar** with subunit C and the V0 a-subunit
+  N-terminal domain, and contacting the EG peripheral stalk. It couples V1 ATP
+  hydrolysis to V0 proton pumping and **stabilizes rotational state 1**;
+  structural/regulatory, not catalytic. Consistent with the known inhibition of
+  futile ATP hydrolysis by free V1 (H-dependent). No change to calls.
+- **Assembly regulation (proteostasis-relevant).** V-ATPase assembly involving H
+  is modulated by the **DMXL1/RAVE** complex and by **ATG16L1**, and by reversible
+  V1–V0 disassembly — regulatory inputs for the PN regulation branch.
+- **TFEB–ATP6V1H axis (Wang 2024).** TFEB-dependent *Atp6v1h* expression is required
+  for lysosomal acidification and microglial activation; its disruption worsens tau
+  pathology — positioning H in the TFEB–V-ATPase–lysosome feedback loop (non-core,
+  disease context).
+- **Bone/metabolic disease.** *Atp6v1h* deficiency reduces V-ATPase function and
+  causes bone loss via a Fos-Jun-Src-Integrin/osteoclast pathway (Zhao 2024);
+  reduced ATP6V1H expression is associated with type-2-diabetes progression
+  (Molina 2011). Non-core disease context. (H is also NBP1/Nef-binding protein.)
+
+Net: no change to calls — H is the single-copy regulatory V1 subunit at the V1–V0
+collar, coupling ATP hydrolysis to proton pumping and gating V-ATPase assembly.

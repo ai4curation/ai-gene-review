@@ -41,3 +41,49 @@
 - Secondary (PMID:23178685): nuclear-receptor (ERα) co-regulation via LSD1, acting as a corepressor in that study. Real interaction (IntAct NbExp=5) but mechanistic role not firmly established; keep as non-core.
 - Ubiquitin-ligase / proteasomal-degradation IEA terms rest only on cullin-domain homology and should be treated as over-annotations absent any direct evidence that CACUL1 is a functional CRL scaffold.
 - "protein binding" rows are uninformative -> over-annotated; ESR1 binding could be MODIFY-able to nuclear receptor binding but per guidelines marking bare protein binding as over-annotated is the safer call here (specific informative MF for the CDK2 interaction is already separately captured as protein kinase binding).
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/CACUL1/CACUL1-deep-research-falcon.md`,
+6 citations). Unlike the prior review, it surfaces several functional papers **not
+previously considered here**, and they materially affect two assessments above.
+NOTE: these PMIDs/DOIs come from the Falcon report and should be verified against
+PubMed and the cached publications before any YAML change.
+
+**1. Direct evidence CACUL1 engages a Cul3-RING ligase — revisit the
+"ubiquitin-ligase IEA = over-annotation" call.** Kigoshi et al. 2015
+(*CACUL1/CAC1 regulates the Nrf2 antioxidant response*) report co-IP of CACUL1
+with **Keap1, Cul3 and Rbx1**, and show CACUL1 **attenuates Nrf2 ubiquitination**
+(Nrf2 t½ ~15→30 min by CHX chase) **without** disrupting the Cul3-Keap1-Nrf2
+complex — i.e. it acts as a **negative regulator of the ligase's activity** toward
+Nrf2, and CACUL1 is itself oxidative-stress-induced (ARE genes NQO1/HO-1). This is
+**experimental** support for `GO:0031625 ubiquitin protein ligase binding` (it
+binds Cul3/Rbx1/Keap1), which the prior review had flagged as a domain-only
+over-annotation. It does NOT make CACUL1 a CRL scaffold, and for the
+catabolic-process term the accurate framing is **negative regulation of**
+ubiquitin-dependent (Nrf2) catabolism, not participation. → Recommend MODIFYing
+the assessment: keep/again-support ubiquitin-protein-ligase binding with this
+experimental basis; represent the process role as negative regulation of Nrf2
+ubiquitination rather than over-annotation.
+
+**2. Nuclear-receptor corepressor role is broader/better-supported than the ERα
+datum alone.** Jang et al. 2017 show CACUL1 is a **SIRT1-binding protein** and
+**PPARγ corepressor**: via its CoRNR box it recruits SIRT1 and antagonizes LSD1 at
+PPARγ targets (aP2/FABP4), lowering H3K9ac and raising H3K9me3, and **inhibiting
+adipogenesis** (3T3-L1, human ADSCs; RNA-seq of 644 genes enriched for
+PPARγ/lipid metabolism). With the ERα corepressor data (PMID:23178685) and
+reported AR/RARα interactions, this supports a genuine **nuclear-receptor
+corepressor** molecular function (SIRT1/LSD1-coupled) — stronger than "bare protein
+binding". → Candidate informative MF beyond `GO:0005515`.
+
+**3. Cancer context (non-core).** Colorectal-cancer 5-FU chemoresistance via
+P-gp/MRP-1 (Chen 2019); androgen-receptor-deficient prostate-cancer proliferation
+program (Liu 2019); NSF-CDC5L-CACUL1 oncogenic axis in HCC (Zhu 2023). Consistent
+with the CDK2/proliferation core but disease-specific; keep non-core.
+
+**Net:** the CDK2-associated cell-cycle/proliferation core (PMID:19829063) stands,
+but the deep research **upgrades** two previously-skeptical calls: the
+ubiquitin-protein-ligase-binding term now has experimental backing (Cul3-Keap1-Rbx1;
+Kigoshi 2015), and a SIRT1/LSD1-coupled nuclear-receptor-corepressor MF is now
+well-supported (Jang 2017). These should be re-adjudicated in the YAML after PMID
+verification.

@@ -49,3 +49,26 @@ The F subunit directly interacts with subunit D (ATP6V1D) as shown by IntAct (Nb
 - The extracellular exosome (HDA) annotations are from proteomics surveys; subunit F has no known function outside the V-ATPase complex.
 - There is no dedicated disease association for ATP6V1F specifically (unlike ATP6V1E1 which causes ARCL2C), though V-ATPase dysfunction in general causes multiple disorders.
 - The ATPase-coupled ion transmembrane transporter activity (GO:0042625, NAS from PMID:8581736) and proton transmembrane transporter activity (GO:0015078, NAS from PMID:8581736) annotations are from the original cloning paper and are appropriate for a V-ATPase subunit contributing to overall complex activity.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1F/ATP6V1F-deep-research-falcon.md`,
+25 citations). It corroborates the central-rotor core above with no new
+F-specific function or disease; no change to annotation calls.
+
+- **Core confirmed.** F is the **smallest V1 subunit** and forms the **DF central
+  stalk** with subunit D, mechanically coupling A3B3 ATP hydrolysis to c-ring
+  rotation/proton translocation (Wang 2020 cryo-EM). Its central-stalk position
+  makes it essential for maintaining the V1–V0 interaction in the holoenzyme.
+- **Reversible-assembly relevance.** On glucose/amino-acid starvation V1
+  (including F) reversibly dissociates from V0; dissociated V1 lacks ATPase
+  activity and V0 cannot leak protons — preventing futile hydrolysis. Regulatory
+  context (not an F-specific MF).
+- **Conservation.** F orthologs (yeast↔mammal) are structurally conserved despite
+  sequence divergence, consistent with an ancient core mechanical-coupling role.
+- **Disease.** No ATP6V1F-specific Mendelian disease documented; the section is
+  generic V-ATPase (cancer, neurodegeneration, osteopetrosis via a3/d2, dRTA).
+  Non-core context.
+
+Net: no change to calls — F is the small central-rotor (DF) V1 subunit coupling
+ATP hydrolysis to proton translocation.

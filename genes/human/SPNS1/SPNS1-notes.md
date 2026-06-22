@@ -2,10 +2,12 @@
 
 ## Curation scope
 
-Falcon deep research was attempted with `just deep-research-falcon human SPNS1`, but the
-provider timed out after 600 seconds and did not generate `SPNS1-deep-research-falcon.md`.
-This review therefore relies on cached publications, UniProt/GOA-derived files, PN project
-mappings, and these manual curation notes.
+Falcon deep research has now completed successfully and is saved as
+`SPNS1-deep-research-falcon.md` (15 citations; see the synthesis section below).
+This review draws on that report together with cached publications,
+UniProt/GOA-derived files, PN project mappings, and these manual curation notes.
+(An earlier attempt had timed out before the `deep_research_unified` template/ID
+bugs were fixed.)
 
 ## Core function
 
@@ -68,3 +70,61 @@ direction. A more precise GO term such as "lysosomal lysophospholipid export" or
 - Mark `protein binding` as over-annotated. The BCL2/BCL2L1 interaction was
   reported in the early HSpin1 cell-death study [PMID:12815463], but GO:0005515
   is not informative for SPNS1's core molecular function.
+
+## Falcon deep research synthesis (2026-06-21)
+
+The Falcon deep research report (`file:human/SPNS1/SPNS1-deep-research-falcon.md`)
+corroborates the lysosomal lysophospholipid-salvage model above and adds three
+strands of newer evidence not previously captured in these notes. Citations
+below use the DOIs given in the Falcon report; PMIDs already verified for the
+core papers are reused from the sections above.
+
+**Structural / mechanistic detail (Chen et al. 2025, PMID:39739806;
+doi:10.1073/pnas.2409596121).** The 3.2 Å cryo-EM structure captures SPNS1 in an
+outward/lumen-facing state with LPC bound in a lateral opening between TM5 and
+TM8 (substrate residues Y203, G200, L201, I204 on TM5 and S322, G326, L327, C330
+on TM8; G200L/G326L/Y203A abolish transport). Proton coupling is mediated by a
+hydrophilic network rather than a single residue: D94 is central, with E87, S97,
+R300 and S442 forming a salt-bridge/H-bond network (D94A abolishes, D94N partly
+rescues; R300A nearly abolishes). Chimeric transfer of E87/S97 into the
+pH-independent paralog SPNS2 confers pH dependence, and the reciprocal SPNS1
+E87Q/S97A makes SPNS1 active at neutral pH — strong evidence that this network is
+the proton sensor. The TM5/TM8 lateral-entry geometry parallels the plasma-
+membrane Na+-dependent LPC transporter Mfsd2a (convergent handling of
+amphipathic lysolipids), reinforcing that SPNS1 is a lysosomal **proton-coupled**
+exporter, not a Na+-symporter (supports keeping GO:0051978
+`lysophospholipid:sodium symporter activity` as mechanistically incorrect).
+
+**Mouse-genetic confirmation of substrate range and physiology (Ha et al. 2024,
+JCI Insight, doi:10.1172/jci.insight.175462).** Spns1 knockout causes lysosomal
+accumulation of LPC, LPE, lysoplasmalogens, LPG, LPI and **sphingosine** (the
+sphingosine buildup rivals NPC1-deficient models), with localization to LAMP1+/
+Rab7+ late endosomes-lysosomes (not Rab5+ early endosomes). Global KO is
+embryonic-lethal (~E12.5–E13.5) with brain/eye defects; liver-specific KO causes
+inflammation/injury accompanied by reduced Akt phosphorylation and lower ATF4.
+This places SPNS1 loss upstream of PI3K/AKT–ATF4 dysregulation and broadens the
+transported-cargo set beyond LPC/LPE, while noting sphingosine export remains
+indirectly (not yet directly) demonstrated.
+
+**New developmental roles.** (i) In zebrafish, endocardial lysosomal SPNS1
+activity drives cardiac valve morphogenesis via **Notch1 signaling**; endocardial
+re-expression of SPNS1 *or* Notch1 rescues valve defects (Chávez et al. 2024,
+iScience, doi:10.1016/j.isci.2024.111406). (ii) Nervous-system–specific Spns1
+loss causes **dysmyelination and white-matter dysplasia** with oligodendrocyte
+loss and epilepsy (Ichimura et al. 2024, doi:10.1101/2024.05.29.596535,
+preprint). These are tissue-specific developmental consequences of the lysosomal
+lipid-salvage defect and are best treated as **non-core** (downstream of the core
+transporter function) rather than as primary molecular-function annotations.
+
+**Upstream/coupled lipid handling.** The report notes lysosomal PLA2G15 generates
+the LPC/LPE that SPNS1 exports, exported LPC is re-acylated by ER LPCATs (Lands'
+cycle), and accumulated lyso-ether-phospholipids inhibit NPC1-mediated cholesterol
+egress — the mechanistic link between SPNS1 loss and the lysosomal cholesterol
+accumulation reported by He et al. 2025 (PMID:40608416).
+
+**Net effect on the review:** no change to the core molecular-function call
+(proton-coupled lysosomal lysophospholipid exporter / phospholipid salvage). The
+new material strengthens (a) rejection of the Na+-symporter MF, (b) the case for a
+proton-coupled lysophospholipid-export NTR, and (c) the framing of the
+neurodevelopmental, cardiac, and hepatic phenotypes as non-core downstream
+consequences.

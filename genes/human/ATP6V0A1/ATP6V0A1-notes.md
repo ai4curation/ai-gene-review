@@ -2,12 +2,12 @@
 
 ## 2026-06-03 - Proteostasis PN review
 
-Deep research status: `just deep-research-falcon human ATP6V0A1 --fallback perplexity-lite`
-was run for this review. Falcon timed out after 600 seconds, and the configured
-`perplexity-lite` fallback failed with a Perplexity API quota 401. No provider
-deep-research file was created. I proceeded from fetched UniProt, GOA, cached
-publications, Reactome records, Panther family data, and the PN projection
-reports.
+Deep research status: Falcon deep research has now completed successfully
+(`ATP6V0A1-deep-research-falcon.md`, 27 citations); see the synthesis section at
+the end of this file. The original PN-batch attempt timed out before the
+`deep_research_unified` tool bugs were fixed. This review uses that report
+together with fetched UniProt, GOA, cached publications, Reactome records,
+Panther family data, and the PN projection reports.
 
 Core biology: ATP6V0A1 encodes the a1 subunit of the V0 membrane sector of
 V-ATPase. UniProt describes it as a "Subunit of the V0 complex of
@@ -67,3 +67,39 @@ Curation decisions:
   function [PMID:12649290, "An in vitro bead-bound PFK-1 pull-down assay showed
   that this interaction was also true for the ubiquitously expressed a1
   subunit."].
+
+## Falcon deep research synthesis (2026-06-21)
+
+The Falcon report (`file:human/ATP6V0A1/ATP6V0A1-deep-research-falcon.md`)
+corroborates the core a1-subunit / lysosomal-acidification biology above and adds
+mechanistic and pathway detail.
+
+**Mechanistic MF detail — a1 is the proton-conducting subunit, not just a
+structural component.** Unlike the ATP6AP1/ATP6AP2 accessory subunits, ATP6V0A1
+directly builds the proton pathway: its C-terminal membrane domain (aCT, 8 TM
+helices, two near-horizontal) forms the **cytoplasmic and luminal hemichannels**,
+and the **essential arginine R740/R741** deprotonates the c-ring glutamates
+(E139 on c / E98 on c'') as the rotor turns, releasing H+ to the lumen (~10 H+
+per 3 ATP). R741Q is a recurrent loss-of-acidification disease variant
+(embryonic-lethal when homozygous in mouse), which pins the proton-translocation
+activity to this residue (Indrawinata 2023; Aoto 2021 PMID:33833240; Bott 2021
+PMID:34909687). This supports annotating ATP6V0A1 with the proton-transmembrane-
+transporter / V0 proton-pore activity rather than only "complex component".
+
+**N-terminal cytosolic domain (aNT) as the V1-V0 coupling/regulatory hub.** The
+dumbbell-shaped aNT bridges V1 (subunits E, G, C, H) and V0, couples ATP
+hydrolysis to rotation, and carries isoform-specific trafficking sequences
+(Tuli 2023) — the structural basis for a1-isoform-specific organelle targeting.
+
+**New non-core role — cholesterol absorption / immune evasion (Huang 2024).** In
+colorectal cancer, ATP6V0A1 drives RABGEF1-dependent endosome maturation and
+exogenous cholesterol absorption → ER cholesterol → 24-hydroxycholesterol → LXR
+→ TGF-β1 → suppression of memory CD8+ T cells. A genuine but disease/context-
+specific downstream consequence of endosomal acidification; keep **non-core**.
+
+**Corroborated (no change to calls):** acidification of lysosomes/endosomes/TGN/
+secretory & synaptic vesicles; powering H+-coupled neurotransmitter loading
+(VGLUT/VMAT/VGAT) and secondary active transport; mTORC1 nutrient sensing;
+autophagy/PQC; and the neurological disease spectrum (DEE, progressive myoclonus
+epilepsy, neurodevelopmental phenotypes). Net: core call unchanged (V0 a1 subunit
+mediating organellar/lysosomal acidification), with sharper mechanistic support.

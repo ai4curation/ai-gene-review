@@ -41,3 +41,31 @@
 - ACCEPT: proton transmembrane transport (IBA, IGI), V0 domain membership (IBA, ISS, IEA GO:0033179), rotational ATPase activity (IBA contributes_to; IGI), membrane (NAS/IEA), vacuolar acidification (ISS).
 - KEEP_AS_NON_CORE: lysosomal membrane, endosome membrane, phagocytic vesicle membrane, clathrin-coated vesicle membrane, synaptic vesicle membrane (compartment annotations).
 - MARK_AS_OVER_ANNOTATED: regulation of macroautophagy (NAS from non-specific ref); ATPase-coupled ion transmembrane transporter activity (generic, superseded by GO:0046961).
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V0E2/ATP6V0E2-deep-research-falcon.md`,
+26 citations). It corroborates the e2-subunit biology above and adds one
+e2-specific functional study; no change to annotation calls.
+
+- **e2 is an integral structural V0 subunit** (with f and the subunit-a
+  C-terminal domain it surrounds the c-ring); it does not hydrolyze ATP or carry
+  the proton-transport glutamates. Conserved and present in all functional
+  complexes → essential structural/regulatory role (Abbas 2020; Wang 2020). This
+  matches the IGI-based GO:0046961/GO:1902600 annotations from yeast
+  complementation already cited.
+- **e2-specific functional evidence (Sun et al. 2020).** In human colon cancer
+  cells, the TKI **anlotinib upregulates ATP6V0E2 via TFEB**, activating lysosomal
+  function and autophagosome–lysosome fusion; knockdown of TFEB *or* ATP6V0E2
+  attenuates this, and the effect is mTOR-dependent and cytoprotective. This is
+  direct evidence that e2 is functionally important for V-ATPase-dependent
+  lysosomal acidification/autophagy — a (cancer-context, **non-core**) corroboration
+  of the core acidification function rather than a new MF.
+- **General regulatory context (not e2-specific MF):** reversible V1/V0
+  dissociation under glucose/stress, and PIP-lipid (PI(4)P, PI(3,5)P2) regulation
+  of a-subunit isoform localization. Useful background; not e2 annotations.
+- **Tissue distribution** (heart/brain/kidney, inner ear, etc.) as already noted;
+  consistent with e2 being the restricted paralog vs ubiquitous e1.
+
+Net: no change to calls — e2 is the tissue-restricted paralog of the small,
+essential V0 structural subunit e, supporting organellar acidification.
