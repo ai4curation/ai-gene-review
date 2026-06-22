@@ -349,11 +349,60 @@ propagation — rather than re-judging gene by gene.</p>
   the ancestral PANTHER node, the seed genes, and the subfamilies of our gene<br />
   and its seeds (from the cached <code>interpro/panther/&lt;FAM&gt;/</code> tables); flags<br />
   cross-subfamily and localization propagations and joins our curation action.</li>
-<li><code>iba_propagation.tsv</code> — the resulting per-IBA table (regenerate with the script).</li>
-<li><code>REVIEW.md</code> — the written review and findings.</li>
+<li><code>iba_propagation.tsv</code> — the resulting per-IBA table (regenerate with the script).<br />
+  Carries inline node-level (PAINT) columns joined from <code>IBD.gaf</code>:<br />
+<code>node_seed_count</code> (the authoritative canonical seed count curated at the source<br />
+  node, vs. the few <code>n_seeds</code> echoed into the leaf), <code>node_evidence</code><br />
+  (IBD/IRD/IKR), and <code>node_loss</code>. New flags: <code>SINGLE_NODE_SEED</code> (≤1 canonical<br />
+  seed — weak support), <code>NODE_LOSS</code> (an IRD/IKR loss at the source node), and<br />
+<code>NODE_NOT_IN_IBD</code>.</li>
+<li><code>extract_node_annotations.py</code> — pulls the <strong>PTN node-level (PAINT) annotations</strong><br />
+  themselves from PANTHER's <code>IBD.gaf</code> (the IBD/IRD/IKR — plus a few IBA-on-node —<br />
+  layer that is the <em>source</em> of every IBA). For each ancestral node our genes<br />
+  derive from, it lists the full<br />
+  node annotation set with the canonical seed counts, marks loss (IRD/IKR <code>NOT</code>)<br />
+  annotations, and flags node annotations that did <strong>not</strong> propagate to our gene<br />
+  (<code>propagated=false</code> → candidate missing annotation or lineage loss).</li>
+<li><code>node_annotations.tsv</code> — the resulting per-node-annotation table.</li>
+<li><code>extract_function_losses.py</code> — flags families where a <strong>subfamily lost a<br />
+  function</strong>: pairs every PAINT loss (any <code>NOT</code> annotation — usually IRD/IKR,<br />
+  occasionally <code>NOT|IBD</code>) with its ancestral gain node<br />
+  (IBD), checks the loss is within a cached family's PTN node set, and attributes<br />
+  it to the family <strong>subfamilies</strong> whose members descend from the loss node<br />
+  (resolved from the leaf GAF + member tables). This is the strongest<br />
+  within-family neo-/sub-functionalization signal and a direct curation guard:<br />
+  do not propagate the ancestral function to members under the loss node.</li>
+<li><code>family_function_losses.tsv</code> — per-(family, lost-GO) findings with<br />
+<code>ancestral_node</code>, <code>loss_node</code>, <code>gain_confirmed</code>, and the affected<br />
+<code>subfamilies</code>. (<code>n_members_affected=0</code> means the loss is in an unsampled<br />
+  subfamily — the gain→loss pair is still confirmed.)</li>
+<li><code>prepare_loss_analysis.py</code> — turns one loss finding into a ready-to-run input<br />
+  bundle for a bioinformatics agent to <strong>reconstruct the key-residue rationale</strong><br />
+  (PANTHER never publishes which residues an IKR was based on — see the IKR note<br />
+  below). Emits YAML with <code>seed_uniprot</code> (where the function + its key residues<br />
+  are characterized), <code>loss_clade</code> (members predicted to have lost it), and<br />
+<code>retaining_clade</code> (members that kept it). The agent fetches these sequences,<br />
+  aligns them, and compares the functional columns. Example:</li>
 </ul>
+<p><code>bash
+  uv run python projects/PANTHER_IBA_REVIEW/prepare_loss_analysis.py \
+      --family PTHR10443 --loss-node PTN000047776 --go GO:0016805</code></p>
+<p>Note: <code>loss_clade</code>/<code>retaining_clade</code> are resolved from the <em>reviewed</em> member<br />
+  tables + leaf GAF, so a finding with <code>n_members_affected=0</code> yields an empty<br />
+<code>loss_clade</code> (the loss is in an unsampled subfamily); seeds are still provided.<br />
+  Of the 296 IKR findings, 49 have ≥1 attributed reviewed member and are<br />
+  immediately actionable.<br />
+- <code>REVIEW.md</code> — the written review and findings.</p>
 <p>Regenerate:</p>
 <div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PANTHER_IBA_REVIEW/extract_function_losses.py
+</code></pre></div>
+
+<p>The node-level source files (<code>IBD.gaf</code>, leaf GAF) are downloaded on demand into<br />
+a gitignored <code>.cache/panther/</code> and are not committed. Per-family node slices can<br />
+be materialised under <code>interpro/panther/&lt;FAM&gt;/&lt;FAM&gt;-paint.tsv</code> with:</p>
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>fetch-panther-paint<span class="w"> </span>PTHR10177
 </code></pre></div>
 
 <p>Scope: the 151 IBAs in the 40 reviewed genes (38 PANTHER families, all cached<br />

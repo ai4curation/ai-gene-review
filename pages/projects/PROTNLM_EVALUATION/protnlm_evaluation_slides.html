@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluating ProtNLM2 Predictions Against Curated GO Annotations - AI Gene Review Projects</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-primary: #3498db;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .breadcrumb {
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #374151;
+        }
+
+        h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Gene symbol links */
+        .content a[href*="/genes/"] {
+            background-color: #dbeafe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        .content a[href*="/genes/"]:hover {
+            background-color: #bfdbfe;
+        }
+
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.25rem;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.875em;
+        }
+
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--color-primary);
+            margin-left: 0;
+            padding-left: 1.5rem;
+            color: #4b5563;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-light);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        tr:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Mermaid diagrams */
+        .mermaid {
+            text-align: center;
+            margin: 2rem 0;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Warnings section */
+        .warnings {
+            background-color: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .warnings h3 {
+            color: #92400e;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .warnings ul {
+            margin-bottom: 0;
+            color: #78350f;
+        }
+
+        /* Task lists (checkboxes) */
+        li input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Project meta: maturity + tag badges */
+        .project-meta { margin-bottom: 0.5rem; }
+        .project-meta .badge { margin: 0 0.25rem 0.25rem 0; }
+        .m-SCOPING     { background: #fef3c7; color: #92400e; }
+        .m-IN_PROGRESS { background: #dbeafe; color: #1e40af; }
+        .m-MATURE      { background: #dcfce7; color: #166534; }
+        .m-COMPLETE    { background: #d1fae5; color: #065f46; }
+        .m-ARCHIVED    { background: #f3f4f6; color: #6b7280; }
+        .badge.tag { text-transform: none; }
+        .t-FLAGSHIP       { background: #fae8ff; color: #86198f; }
+        .t-BIOLOGY_DOMAIN { background: #e0f2fe; color: #075985; }
+        .t-PIPELINE       { background: #ede9fe; color: #5b21b6; }
+        .t-OBSOLETION     { background: #fee2e2; color: #991b1b; }
+
+        /* Manual reviews */
+        .manual-reviews {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .manual-reviews h3 { margin-top: 0; margin-bottom: 0.75rem; font-size: 1rem; }
+        .manual-reviews .review { padding: 0.5rem 0; }
+        .manual-reviews .review + .review { border-top: 1px dashed var(--border-color); }
+        .manual-reviews .review-head { margin-bottom: 0.25rem; }
+        .manual-reviews .review-head .badge { margin-right: 0.5rem; }
+        .manual-reviews .review-head .who { font-weight: 600; }
+        .manual-reviews .review-head .when { color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem; }
+        .manual-reviews .review-notes { margin: 0.25rem 0; }
+        .manual-reviews .review-todos { margin: 0.25rem 0 0.5rem; }
+        .badge.r-READY             { background: #dcfce7; color: #166534; }
+        .badge.r-CHANGES_REQUESTED { background: #fee2e2; color: #991b1b; }
+
+        /* Content wrapper */
+        .content {
+            margin-bottom: 2rem;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        footer small {
+            display: block;
+        }
+    </style>
+    <!-- Mermaid.js for diagram rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#3498db',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#2c3e50',
+                lineColor: '#333',
+                secondaryColor: '#ecf0f1',
+                tertiaryColor: '#f39c12'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</head>
+<body>
+    <nav class="breadcrumb">
+        <a href="../index.html">Home</a> &raquo;
+        <a href="index.html">Projects</a> &raquo;
+        Evaluating ProtNLM2 Predictions Against Curated GO Annotations
+    </nav>
+
+    <header class="header">
+        <h1>Evaluating ProtNLM2 Predictions Against Curated GO Annotations</h1>
+        
+        
+        
+    </header>
+
+    
+
+    
+
+    <div class="content">
+        <h1 id="evaluating-protnlm2-predictions-against-curated-go-annotations">Evaluating ProtNLM2 Predictions Against Curated GO Annotations</h1>
+<p><strong>Analysis of 28,553 proteins across 440 species (pre-release dataset)</strong></p>
+<p>Using ontology closure-based comparison against GOA</p>
+<hr />
+<h2 id="what-is-protnlm2">What is ProtNLM2?</h2>
+<p>Google's protein language model that predicts protein names, GO terms, subcellular locations, and function comments.</p>
+<p><img alt="center w:700" src="slides_figures/prediction_types_bar.png" /></p>
+<p>28,553 entries. Every protein gets a name; ~24% also get GO terms, ~48% get subcellular locations, ~19% get function comments. 30% get only a name.</p>
+<hr />
+<h2 id="protnlm2-architecture-uniprot-docs">ProtNLM2 architecture (<a href="https://www.uniprot.org/help/ProtNLM">UniProt docs</a>)</h2>
+<p><strong>T5 seq2seq model</strong> trained on 240M proteins (UniProt 2023_04, Swiss-Prot + TrEMBL). Inputs: amino acid sequence, organism TaxID, AlphaFold secondary structure. Ensemble of multiple models.</p>
+<p><strong>Post-processing: the Evidencer</strong> --- a corroboration pipeline (not part of the model):<br />
+1. <strong>Exclusion filter</strong>: GO taxon constraints, nomenclature violations, malformed IDs → rejected<br />
+2. <strong>String match</strong> (56%): predicted text matches existing annotations or cross-referenced DBs (InterPro, GO, EC)<br />
+3. <strong>phmmer</strong> (40%): sequence similarity to proteins with matching annotations (bit score &gt; 25)<br />
+4. <strong>TM-align</strong> (4%): structural similarity via AlphaFold models (TM-score &gt; 0.5)</p>
+<p><strong>Key insight:</strong> <code>model_score</code> is the LM's own confidence (threshold: 0.05), independent of evidence strength (r = −0.01 with phmmer score).</p>
+<p><strong>Dataset note:</strong> our XML (28,553 entries) is a pre-release; the <a href="https://ftp.ebi.ac.uk/pub/contrib/UniProt/ProtNLM2/List_of_UniProt_accessions_that_have_ProtNLM2_annotations.tsv">public pilot</a> has 26,856 (1,697 removed by quality filtering).</p>
+<hr />
+<h2 id="dataset-composition">Dataset composition</h2>
+<div class="columns">
+<div>
+
+![w:480](slides_figures/swissprot_trembl_overview.png)
+
+96% TrEMBL, 4% Swiss-Prot. But Swiss-Prot does not mean well-characterized.
+
+Species distribution is unusual --- dominated by agricultural species (wheat, peanut, horse) rather than model organisms. Likely reflects popular TrEMBL submissions.
+
+</div>
+<div>
+
+![w:480](slides_figures/top20_species_by_group.png)
+
+</div>
+</div>
+
+<hr />
+<h2 id="swiss-prot-fraction-varies-dramatically-by-species">Swiss-Prot fraction varies dramatically by species</h2>
+<p><img alt="center w:700" src="slides_figures/swissprot_by_species.png" /></p>
+<hr />
+<h2 id="taxonomic-composition-and-prediction-richness">Taxonomic composition and prediction richness</h2>
+<div class="columns">
+<div>
+
+![w:480](slides_figures/entries_by_taxon_group.png)
+
+</div>
+<div>
+
+![w:480](slides_figures/prediction_types_by_taxon.png)
+
+</div>
+</div>
+
+<p>Land plants dominate by entry count. Prediction richness (% with GO terms) varies across groups.</p>
+<hr />
+<h2 id="model-scores-and-evidence-methods">Model scores and evidence methods</h2>
+<div class="columns">
+<div>
+
+![w:480](slides_figures/model_score_distribution.png)
+
+</div>
+<div>
+
+![w:480](slides_figures/evidence_methods.png)
+
+</div>
+</div>
+
+<p>Right-skewed scores with spike near 1.0. String match is the dominant evidence type (56%), phmmer 40%, tmalign 4%.</p>
+<hr />
+<h2 id="evaluation-approach-closure-based-comparison">Evaluation approach: closure-based comparison</h2>
+<p>Compare ProtNLM2 GO predictions against curated GOA using <strong><code>isa_partof_closure</code></strong> in DuckDB.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>EXACT</strong></td>
+<td>Same GO term exists in GOA for this protein</td>
+</tr>
+<tr>
+<td><strong>LESS_SPECIFIC</strong></td>
+<td>Predicted term is a strict ancestor of a GOA term (redundant)</td>
+</tr>
+<tr>
+<td><strong>MORE_SPECIFIC</strong></td>
+<td>Predicted term is a strict descendant (potentially novel)</td>
+</tr>
+<tr>
+<td><strong>NO_OVERLAP</strong></td>
+<td>Different ontology branch --- novel or incorrect</td>
+</tr>
+<tr>
+<td><strong>NOT_IN_GCRP</strong></td>
+<td>Protein not in Gene Centric Reference Proteome --- cannot evaluate</td>
+</tr>
+</tbody>
+</table>
+<p>Seven species: <strong>Human</strong>, <strong>Mouse</strong>, <strong>Arabidopsis</strong>, <strong>Wheat</strong>, <strong>S. coelicolor</strong>, <strong>X. laevis</strong>, <strong>X. tropicalis</strong></p>
+<hr />
+<h2 id="cross-species-comparison-protnlm2-vs-all-goa">Cross-species comparison: ProtNLM2 vs all GOA</h2>
+<p><img alt="center w:900" src="slides_figures/protnlm_vs_goa_cross_species.png" /></p>
+<p>LESS_SPECIFIC dominates for all species. MORE_SPECIFIC and NO_OVERLAP are concentrated in plants (thinner GOA coverage).</p>
+<hr />
+<h2 id="protnlm2-vs-automated-pipelines-interpro2go-iba">ProtNLM2 vs automated pipelines (InterPro2GO, IBA)</h2>
+<p><img alt="center w:950" src="slides_figures/protnlm_vs_goa_by_source.png" /></p>
+<p>Compared to InterPro2GO or IBA alone, more predictions appear as MORE_SPECIFIC or NO_OVERLAP. But are these genuine gains?</p>
+<hr />
+<h2 id="systematic-review-6-patterns-explain-all-novel-predictions">Systematic review: 6 patterns explain all "novel" predictions</h2>
+<p>Every MORE_SPECIFIC and NO_OVERLAP prediction falls into one of these:</p>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>~Count</th>
+<th>Genuinely novel?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Trivial deepening</strong> (zinc &gt; metal, DNA &gt; nucleic acid)</td>
+<td>~20</td>
+<td>No --- simple rules</td>
+</tr>
+<tr>
+<td><strong>Phmmer transfer</strong> (copy from top hit)</td>
+<td>~15</td>
+<td>Maybe --- depends on orthology</td>
+</tr>
+<tr>
+<td><strong>Cross-aspect gap</strong> (MF kinase vs BP phosphorylation)</td>
+<td>~15</td>
+<td>No --- evaluation artifact</td>
+</tr>
+<tr>
+<td><strong>Uninformative CC</strong> (cytoplasm, membrane)</td>
+<td>~5</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Cross-kingdom error</strong> (neuron terms on a plant)</td>
+<td>1 (6 preds)</td>
+<td>No --- actively wrong</td>
+</tr>
+<tr>
+<td><strong>Multidomain false positive</strong> (LRR hit to <a href="../../../genes/human/LRRK2/LRRK2-ai-review.html">LRRK2</a> kinase)</td>
+<td>~2</td>
+<td>No --- wrong domain</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="case-study-1-trivially-correct-a0a3b6gk97-wheat">Case study 1: Trivially correct (<a href="../../../genes/WHEAT/A0A3B6GK97/A0A3B6GK97-ai-review.html">A0A3B6GK97</a>, wheat)</h2>
+<p>ProtNLM2 predicts <code>lipid catabolic process</code> &gt; GOA's <code>lipid metabolic process</code></p>
+<p>Protein has IBA: <strong>glycerophospholipase activity</strong> + <strong>monoacylglycerol lipase activity</strong>. Lipases are catabolic enzymes by definition.</p>
+<p><strong>Guilt-by-association in wheat GOA:</strong><br />
+- 89 proteins with glycerophospholipase + lipid metabolic process<br />
+- <strong>84 (94%)</strong> also have lipid catabolic process<br />
+- Simple rule: lipase activity -&gt; add lipid catabolic process</p>
+<p>ProtNLM2 is doing bookkeeping, not discovering biology.</p>
+<hr />
+<h2 id="case-study-2-phmmer-transfer-a0a3b6rkv1-wheat-jmjc">Case study 2: Phmmer transfer (<a href="../../../genes/WHEAT/A0A3B6RKV1/A0A3B6RKV1-ai-review.html">A0A3B6RKV1</a>, wheat JmjC)</h2>
+<p>ProtNLM2 predicts 5 specific plant biology terms (gibberellin signaling, photomorphogenesis, seed germination, epigenetic regulation, red light response).</p>
+<p><strong>All 5 trace to one phmmer hit:</strong> Q67XX3 = <em>Arabidopsis</em> <strong>JMJ22</strong> (score 689.2)</p>
+<p>JMJ22 has all 5 terms with experimental evidence (IMP, IGI, IDA, IEP). ProtNLM2 simply copies the top hit's annotations.</p>
+<p>This is ISS/ISO-style annotation transfer. The "added value" over IBA is that ProtNLM2 transfers BP annotations that PAINT's more conservative approach chose not to propagate.</p>
+<hr />
+<h2 id="case-study-3-false-positive-f4jlb7-arabidopsis-ric7">Case study 3: False positive (<a href="../../../genes/ARATH/F4JLB7/F4JLB7-ai-review.html">F4JLB7</a>, Arabidopsis RIC7)</h2>
+<p>ProtNLM2 predicts <code>kinase activity</code> + <code>phosphorylation</code> (score 0.23)</p>
+<ul>
+<li>phmmer hit: <strong><a href="../../../genes/human/LRRK2/LRRK2-ai-review.html">LRRK2</a></strong> (mouse), score <strong>33</strong> --- barely above noise</li>
+<li><a href="../../../genes/human/LRRK2/LRRK2-ai-review.html">LRRK2</a> is a 2,527 aa multidomain protein: LRR + ROC + COR + <strong>kinase</strong></li>
+<li>RIC7 (<a href="../../../genes/ARATH/F4JLB7/F4JLB7-ai-review.html">F4JLB7</a>) only has LRR repeats --- a ROP GTPase effector, <strong>not a kinase</strong></li>
+<li>ProtNLM2 also matched the wrong PANTHER family</li>
+</ul>
+<p><strong>Classic multi-domain problem:</strong> annotation leaks from one domain of a multidomain hit to a protein that only shares a different domain. Score is low (0.23) but prediction is still reported.</p>
+<hr />
+<h2 id="case-study-4-cross-kingdom-error-f6lax4-wheat-tog">Case study 4: Cross-kingdom error (<a href="../../../genes/WHEAT/F6LAX4/F6LAX4-ai-review.html">F6LAX4</a>, wheat TOG)</h2>
+<p>phmmer hit: A0A7S3G569 (<em>Palpitomonas bilix</em>, a protist), score 420</p>
+<p>ProtNLM2 predicts for a <strong>wheat</strong> protein:<br />
+- <code>neuron projection</code> --- <strong>plants do not have neurons</strong><br />
+- <code>neuronal cell body</code> --- <strong>plants do not have neurons</strong><br />
+- <code>protein antigen binding</code> --- adaptive immunity, not applicable to plants</p>
+<p>TOG domains are conserved (tubulin binding), but the protist hit carries animal neuron annotations. No organism-awareness filter in the pipeline.</p>
+<hr />
+<h2 id="case-study-5-ontology-gaps-q9kz33-s-coelicolor">Case study 5: Ontology gaps (<a href="../../../genes/STRCO/Q9KZ33/Q9KZ33-ai-review.html">Q9KZ33</a>, S. coelicolor)</h2>
+<p>IBA: <code>sigma factor activity</code>. ProtNLM2: <code>transcription initiation</code>.</p>
+<p>Biologically tightly coupled but classified as NO_OVERLAP because:<br />
+- sigma factor activity -&gt; <code>regulation of transcription initiation</code> (MF ancestry)<br />
+- transcription initiation -&gt; <code>DNA-templated transcription</code> (BP ancestry)<br />
+- No is_a/part_of path between "regulation of X" and "X"</p>
+<p>This is a real limitation of closure-based evaluation --- not a ProtNLM2 insight.</p>
+<hr />
+<h2 id="summary-of-findings">Summary of findings</h2>
+<ol>
+<li>
+<p><strong>Mostly recapitulates existing annotations</strong> --- EXACT + LESS_SPECIFIC dominate</p>
+</li>
+<li>
+<p><strong>MORE_SPECIFIC predictions are often trivially derivable</strong> from GBA, curatorial rules, or logical axioms</p>
+</li>
+<li>
+<p><strong>Phmmer transfer</strong> is the main mechanism --- same as ISS/ISO, just more aggressive than PAINT/IBA</p>
+</li>
+<li>
+<p><strong>Real errors exist:</strong> cross-kingdom transfer (neuron-in-wheat) and multidomain false positives (LRR-to-kinase)</p>
+</li>
+<li>
+<p><strong>NO_OVERLAP is inflated</strong> by cross-aspect ontology gaps and uninformative CC predictions</p>
+</li>
+<li>
+<p><strong>model_score provides some calibration</strong> (false positives tend to score low) but wrong predictions still get reported</p>
+</li>
+</ol>
+<p><em>Note: semantic similarity metrics (Resnik, Lin) as used in CAFA are not a good alternative --- they reward predictions that are ontologically close but biologically opposite (e.g. positive vs negative regulation).</em></p>
+<hr />
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li>Expand to more species (currently 4 of 440)</li>
+<li><strong>Systematic GBA analysis:</strong> for all MORE_SPECIFIC predictions, compute co-annotation rate to distinguish trivially derivable from genuinely novel</li>
+<li>Consider broader relationship types (<code>enables</code>, <code>regulates</code>) for cross-aspect evaluation</li>
+<li>Compare against <strong>experimental evidence codes</strong> specifically (IDA, IMP, IGI)</li>
+<li>Cross-reference with <strong>AIGR expert reviews</strong> for the 8 overlapping proteins</li>
+</ul>
+<hr />
+<!-- _class: lead -->
+
+<h1 id="questions">Questions?</h1>
+<p><strong>Notebook:</strong> <code>projects/PROTNLM_EVALUATION/protnlm_summary.ipynb</code><br />
+<strong>Data:</strong> 28,553 entries parsed from ProtNLM2 XML export<br />
+<strong>Tools:</strong> DuckDB + GO ontology closures for hierarchical comparison</p>
+    </div>
+
+    <footer>
+        <small>Generated from protnlm_evaluation_slides.md</small>
+        <small>AI Gene Review Project</small>
+    </footer>
+</body>
+</html>

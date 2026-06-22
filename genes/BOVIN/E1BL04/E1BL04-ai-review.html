@@ -1,0 +1,2883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E1BL04 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>E1BL04</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/E1BL04" target="_blank" class="term-link">
+                        E1BL04
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bos taurus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "E1BL04";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="E1BL04" data-a="DESCRIPTION: XIRP2 (Xin actin-binding repeat-containing protein..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>XIRP2 (Xin actin-binding repeat-containing protein 2, also known as CMYA3/cardiomyopathy-associated protein 3) is a large (3561 aa) actin-binding protein of the Xin family. It contains 26 Xin repeats that mediate F-actin binding and is expressed in striated muscle, particularly in cardiomyocytes at intercalated discs and in skeletal muscle at myotendinous junctions. XIRP2 localizes to the Z disc, cell-cell junctions, and focal adhesions, where it interacts with alpha-actinin and actin filaments to maintain sarcomeric integrity and regulate actin cytoskeleton organization. The protein plays roles in cardiac development and muscle maintenance, and variants in human XIRP2 have been associated with cardiomyopathy and sudden cardiac death.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001725" target="_blank" class="term-link">
+                                    GO:0001725
+                                </a>
+                            </span>
+                            <span class="term-label">stress fiber</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0001725" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> XIRP2 colocalizes with stress fibers based on phylogenetic inference from human (A4UGR9) and mouse (Q702N8) orthologs. Human XIRP2 has been shown to colocalize with stress fibers in non-muscle cell overexpression assays, consistent with its actin-binding activity mediated by Xin repeats. The qualifier colocalizes_with is appropriate as XIRP2 is not an integral component of stress fibers but rather associates with them.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Stress fiber colocalization is likely observed in experimental overexpression contexts rather than being a primary physiological localization for this muscle-specific protein. The core localizations are the Z disc and intercalated disc in cardiac and skeletal muscle.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005925" target="_blank" class="term-link">
+                                    GO:0005925
+                                </a>
+                            </span>
+                            <span class="term-label">focal adhesion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0005925" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> XIRP2 colocalizes with focal adhesions based on phylogenetic inference from human and mouse orthologs. In muscle cells, the analogous structures to focal adhesions are costameres and myotendinous junctions, where XIRP2 has been reported to localize. The colocalizes_with qualifier is appropriate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Focal adhesion colocalization is consistent with XIRP2 biology but represents a non-muscle cell context or the muscle-equivalent structure. The core localization is at the Z disc and intercalated disc.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007015" target="_blank" class="term-link">
+                                    GO:0007015
+                                </a>
+                            </span>
+                            <span class="term-label">actin filament organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0007015" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> XIRP2 is involved in actin filament organization based on phylogenetic inference from mouse Xirp2 (Q702N8). This is consistent with the protein&#39;s multiple Xin repeats that bind F-actin and its known role in maintaining sarcomeric actin architecture. Mouse Xirp2 knockout studies demonstrate disrupted actin organization in the heart.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Actin filament organization is a well-supported core biological process for XIRP2, given its domain architecture (26 Xin repeats binding F-actin) and the phenotypic consequences of loss-of-function in mouse.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051015" target="_blank" class="term-link">
+                                    GO:0051015
+                                </a>
+                            </span>
+                            <span class="term-label">actin filament binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0051015" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> XIRP2 binds actin filaments through its 26 Xin repeats, as supported by phylogenetic inference from both human (A4UGR9) and mouse (Q702N8) orthologs. The Xin repeat domain is a well-characterized actin-binding module, and the bovine protein contains the same domain architecture (18 Pfam Xin domains, 26 PROSITE Xin repeats). This is the most specific and informative molecular function annotation for the protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Actin filament binding is the core molecular function of XIRP2, directly mediated by its characteristic Xin repeat domains. This is more specific than the generic actin binding term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BOVIN/E1BL04/E1BL04-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xin repeats bind F-actin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003779" target="_blank" class="term-link">
+                                    GO:0003779
+                                </a>
+                            </span>
+                            <span class="term-label">actin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0003779" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Actin binding is assigned via combined automated methods (InterPro IPR012510 Xin repeat and IPR030072 XIRP1/XIRP2 family). This is a parent term of the more specific GO:0051015 (actin filament binding) which is also annotated via IBA. Both are technically correct, but the more specific term is preferred.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0003779 (actin binding) is subsumed by the more specific GO:0051015 (actin filament binding) already present in the annotation set. The Xin repeats specifically bind F-actin (filamentous actin), making the filament-specific term more informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BOVIN/E1BL04/E1BL04-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xin repeats bind F-actin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030036" target="_blank" class="term-link">
+                                    GO:0030036
+                                </a>
+                            </span>
+                            <span class="term-label">actin cytoskeleton organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0030036" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Actin cytoskeleton organization is assigned via InterPro domain mapping (IPR012510, IPR030072). This is a parent term of the more specific GO:0007015 (actin filament organization) already annotated via IBA. Both are correct, but the more specific term is preferred.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0030036 is a broader parent of GO:0007015 (actin filament organization) which is already annotated. The more specific term better captures XIRP2&#39;s role in organizing actin filaments within the sarcomere.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030054" target="_blank" class="term-link">
+                                    GO:0030054
+                                </a>
+                            </span>
+                            <span class="term-label">cell junction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0030054" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell junction localization is assigned via InterPro (IPR012510). XIRP2 localizes to intercalated discs in cardiomyocytes, which are specialized cell junctions. The term is correct but very general; the more specific GO:0005911 (cell-cell junction) is also annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0030054 is a broad parent term. The more specific GO:0005911 (cell-cell junction) already present in the annotation set, and even more specific terms such as intercalated disc (GO:0014704) would better capture the known localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070161" target="_blank" class="term-link">
+                                    GO:0070161
+                                </a>
+                            </span>
+                            <span class="term-label">anchoring junction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0070161" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Anchoring junction localization is assigned from UniProt subcellular location vocabulary mapping. The UniProt entry lists cell junction as the subcellular location. Intercalated discs contain adherens junctions (a type of anchoring junction), so this is biologically consistent with XIRP2 localization at intercalated discs and myotendinous junctions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is consistent with XIRP2 biology. Intercalated discs contain adherens junctions (anchoring junctions), and XIRP2 is found at these structures. However, this is a broad localization term and not as informative as Z disc or intercalated disc.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001725" target="_blank" class="term-link">
+                                    GO:0001725
+                                </a>
+                            </span>
+                            <span class="term-label">stress fiber</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0001725" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the IBA annotation above, transferred from human XIRP2 (A4UGR9) via Ensembl Compara orthology. The same biological reasoning applies: stress fiber colocalization is observed but not the primary physiological localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA annotation for the same term and qualifier. Stress fiber colocalization is not a core localization for this muscle-specific protein.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005911" target="_blank" class="term-link">
+                                    GO:0005911
+                                </a>
+                            </span>
+                            <span class="term-label">cell-cell junction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0005911" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell-cell junction localization is transferred from mouse Xirp2 (Q4U4S6) via Ensembl Compara. XIRP2 localizes to intercalated discs, which are specialized cell-cell junctions in cardiac muscle. This is a reasonable annotation, though intercalated disc (GO:0014704) would be more precise.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> XIRP2 is well-established at intercalated discs, which are specialized cell-cell junctions. This annotation correctly captures an important aspect of XIRP2 localization in cardiac tissue.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005925" target="_blank" class="term-link">
+                                    GO:0005925
+                                </a>
+                            </span>
+                            <span class="term-label">focal adhesion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0005925" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the IBA annotation above, transferred from human XIRP2 (A4UGR9) via Ensembl Compara. Same reasoning applies as for the IBA version.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA annotation for the same term and qualifier. Focal adhesion colocalization represents a non-muscle context or the muscle-equivalent costamere.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030018" target="_blank" class="term-link">
+                                    GO:0030018
+                                </a>
+                            </span>
+                            <span class="term-label">Z disc</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0030018" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Z disc localization is transferred from mouse Xirp2 (Q4U4S6) via Ensembl Compara. XIRP2 is well-established as a Z disc component in striated muscle, where it interacts with alpha-actinin and maintains sarcomeric structure. This is one of the most important and well-characterized localizations for XIRP2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Z disc localization is a core aspect of XIRP2 biology. The protein interacts with alpha-actinin at the Z disc and is essential for sarcomeric integrity in both cardiac and skeletal muscle.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051015" target="_blank" class="term-link">
+                                    GO:0051015
+                                </a>
+                            </span>
+                            <span class="term-label">actin filament binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0051015" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the IBA annotation above, transferred from human XIRP2 (A4UGR9) via Ensembl Compara. Same reasoning applies: actin filament binding is the core molecular function mediated by Xin repeats.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Actin filament binding is the defining molecular function of XIRP2. This Ensembl Compara annotation reinforces the IBA annotation from the same source ortholog.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BOVIN/E1BL04/E1BL04-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xin repeats bind F-actin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051393" target="_blank" class="term-link">
+                                    GO:0051393
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-actinin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0051393" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Alpha-actinin binding is transferred from mouse Xirp2 (Q4U4S6) via Ensembl Compara. XIRP2 has been shown to interact with alpha-actinin at the Z disc in mouse cardiomyocytes, which is important for its role in sarcomeric integrity. This interaction is distinct from and complementary to its actin filament binding activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Alpha-actinin binding is a well-characterized molecular function of XIRP2 that is important for its localization to the Z disc and its role in sarcomeric maintenance.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110053" target="_blank" class="term-link">
+                                    GO:0110053
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of actin filament organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:0110053" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Regulation of actin filament organization is transferred from mouse Xirp2 (Q4U4S6) via Ensembl Compara. This is consistent with XIRP2&#39;s role in maintaining sarcomeric actin architecture, though it is somewhat redundant with GO:0007015 (actin filament organization) already annotated via IBA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While XIRP2 does regulate actin filament organization, the direct involvement in actin filament organization (GO:0007015) is a more fundamental annotation. The regulatory aspect is secondary to the structural role.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903829" target="_blank" class="term-link">
+                                    GO:1903829
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of protein localization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="E1BL04" data-a="GO:1903829" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Positive regulation of protein localization is transferred from mouse Xirp2 (Q4U4S6) via Ensembl Compara. This is a very broad term. XIRP2 may promote the localization of specific proteins (such as alpha-actinin or other sarcomeric components) to the Z disc, but the term lacks specificity about which proteins or which localization context.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is too broad to be informative. Without specifying which protein&#39;s localization is being regulated, this annotation provides limited biological insight. A more specific term would be preferred if the regulated protein can be identified.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>XIRP2 binds F-actin filaments through its multiple Xin repeat domains (26 repeats), providing the molecular basis for its structural role at the Z disc and intercalated disc in striated muscle.</h3>
+                <span class="vote-buttons" data-g="E1BL04" data-a="FUNCTION: XIRP2 binds F-actin filaments through its multiple..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051015" target="_blank" class="term-link">
+                            actin filament binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007015" target="_blank" class="term-link">
+                                actin filament organization
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030018" target="_blank" class="term-link">
+                                Z disc
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BOVIN/E1BL04/E1BL04-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Xin repeats bind F-actin</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>XIRP2 binds alpha-actinin at the Z disc, contributing to the structural integrity of the sarcomere and proper organization of the actin cytoskeleton in cardiac and skeletal muscle.</h3>
+                <span class="vote-buttons" data-g="E1BL04" data-a="FUNCTION: XIRP2 binds alpha-actinin at the Z disc, contribut..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051393" target="_blank" class="term-link">
+                            alpha-actinin binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030018" target="_blank" class="term-link">
+                                Z disc
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BOVIN/E1BL04/E1BL04-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Belongs to the Xin family</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro correctly identifies the Xin repeat domain (IPR012510) and the XIRP1/XIRP2 family (IPR030072), supporting actin binding and cell junction localization assignments.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IBA annotations transferred from human XIRP2 (A4UGR9) and mouse Xirp2 (Q702N8) are well-supported by phylogenetic conservation of the Xin repeat domain architecture and consistent functional characterization across mammalian orthologs.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular location mapping correctly assigns cell junction and anchoring junction localization, consistent with XIRP2&#39;s known presence at intercalated discs and myotendinous junctions.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ensembl Compara transfers from human XIRP2 (A4UGR9) and mouse Xirp2 (Q4U4S6) provide the most informative annotations, including Z disc localization, alpha-actinin binding, and regulation of actin filament organization.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA methods assign the general actin binding term, which is subsumed by the more specific actin filament binding term from IBA/Ensembl Compara.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:BOVIN/E1BL04/E1BL04-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry E1BL04</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies E1BL04 as XIRP2 with 26 PROSITE Xin repeats and 18 Pfam Xin domains, belonging to the Xin family. The protein is 3561 amino acids and localizes to cell junctions.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression data from Bgee shows the gene is expressed in rectus femoris and 30 other cell types/tissues, consistent with striated muscle expression.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does bovine XIRP2 localize to the intercalated disc in cattle cardiomyocytes, as established for the human and mouse orthologs?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E1BL04" data-a="Q: Does bovine XIRP2 localize to the intercalated dis..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there cattle-specific variants in XIRP2 associated with bovine cardiomyopathy or sudden death, analogous to human XIRP2 variants linked to sudden cardiac death?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E1BL04" data-a="Q: Are there cattle-specific variants in XIRP2 associ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does XIRP2 interact with other Z disc or intercalated disc components (e.g., beta-catenin, N-cadherin, p120-catenin) in bovine cardiac tissue?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E1BL04" data-a="Q: Does XIRP2 interact with other Z disc or intercala..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform immunofluorescence microscopy on bovine cardiac tissue sections using antibodies against XIRP2 and co-staining with alpha-actinin (Z disc marker) and N-cadherin (intercalated disc marker).</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Bovine XIRP2 localizes to Z discs and intercalated discs in cattle cardiomyocytes, consistent with its mammalian orthologs.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: immunofluorescence microscopy</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E1BL04" data-a="EXPERIMENT: Perform immunofluorescence microscopy on bovine ca..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express recombinant bovine XIRP2 Xin repeat fragments and assay F-actin binding by cosedimentation or fluorescence anisotropy.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The Xin repeat domains of bovine XIRP2 are sufficient for F-actin binding.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: protein-protein interaction assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E1BL04" data-a="EXPERIMENT: Express recombinant bovine XIRP2 Xin repeat fragme..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(E1BL04-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="E1BL04" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    
+                    
+                    <span class="report-meta-text">2026-06-18T20:08:45.856017</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Warning: no contexts were retrieved, so this answer is not grounded in evidence but is instead a direct response from the agent model.</p>
+<p>System error.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: E1BL04
+gene_symbol: E1BL04
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9913
+  label: Bos taurus
+description: &gt;-
+  XIRP2 (Xin actin-binding repeat-containing protein 2, also known as CMYA3/cardiomyopathy-associated
+  protein 3) is a large (3561 aa) actin-binding protein of the Xin family. It contains 26 Xin repeats
+  that mediate F-actin binding and is expressed in striated muscle, particularly in cardiomyocytes at
+  intercalated discs and in skeletal muscle at myotendinous junctions. XIRP2 localizes to the Z disc,
+  cell-cell junctions, and focal adhesions, where it interacts with alpha-actinin and actin filaments to
+  maintain sarcomeric integrity and regulate actin cytoskeleton organization. The protein plays roles in
+  cardiac development and muscle maintenance, and variants in human XIRP2 have been associated with
+  cardiomyopathy and sudden cardiac death.
+existing_annotations:
+- term:
+    id: GO:0001725
+    label: stress fiber
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: colocalizes_with
+  review:
+    summary: &gt;-
+      XIRP2 colocalizes with stress fibers based on phylogenetic inference from human (A4UGR9) and
+      mouse (Q702N8) orthologs. Human XIRP2 has been shown to colocalize with stress fibers in
+      non-muscle cell overexpression assays, consistent with its actin-binding activity mediated by
+      Xin repeats. The qualifier colocalizes_with is appropriate as XIRP2 is not an integral
+      component of stress fibers but rather associates with them.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Stress fiber colocalization is likely observed in experimental overexpression contexts rather
+      than being a primary physiological localization for this muscle-specific protein. The core
+      localizations are the Z disc and intercalated disc in cardiac and skeletal muscle.
+- term:
+    id: GO:0005925
+    label: focal adhesion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: colocalizes_with
+  review:
+    summary: &gt;-
+      XIRP2 colocalizes with focal adhesions based on phylogenetic inference from human and mouse
+      orthologs. In muscle cells, the analogous structures to focal adhesions are costameres and
+      myotendinous junctions, where XIRP2 has been reported to localize. The colocalizes_with
+      qualifier is appropriate.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Focal adhesion colocalization is consistent with XIRP2 biology but represents a non-muscle
+      cell context or the muscle-equivalent structure. The core localization is at the Z disc and
+      intercalated disc.
+- term:
+    id: GO:0007015
+    label: actin filament organization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      XIRP2 is involved in actin filament organization based on phylogenetic inference from
+      mouse Xirp2 (Q702N8). This is consistent with the protein&#39;s multiple Xin repeats that bind
+      F-actin and its known role in maintaining sarcomeric actin architecture. Mouse Xirp2 knockout
+      studies demonstrate disrupted actin organization in the heart.
+    action: ACCEPT
+    reason: &gt;-
+      Actin filament organization is a well-supported core biological process for XIRP2, given its
+      domain architecture (26 Xin repeats binding F-actin) and the phenotypic consequences of
+      loss-of-function in mouse.
+- term:
+    id: GO:0051015
+    label: actin filament binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      XIRP2 binds actin filaments through its 26 Xin repeats, as supported by phylogenetic inference
+      from both human (A4UGR9) and mouse (Q702N8) orthologs. The Xin repeat domain is a well-characterized
+      actin-binding module, and the bovine protein contains the same domain architecture (18 Pfam Xin
+      domains, 26 PROSITE Xin repeats). This is the most specific and informative molecular function
+      annotation for the protein.
+    action: ACCEPT
+    reason: &gt;-
+      Actin filament binding is the core molecular function of XIRP2, directly mediated by its
+      characteristic Xin repeat domains. This is more specific than the generic actin binding term.
+    supported_by:
+      - reference_id: file:BOVIN/E1BL04/E1BL04-uniprot.txt
+        supporting_text: &#34;Xin repeats bind F-actin&#34;
+- term:
+    id: GO:0003779
+    label: actin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Actin binding is assigned via combined automated methods (InterPro IPR012510 Xin repeat and
+      IPR030072 XIRP1/XIRP2 family). This is a parent term of the more specific GO:0051015 (actin
+      filament binding) which is also annotated via IBA. Both are technically correct, but the more
+      specific term is preferred.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0003779 (actin binding) is subsumed by the more specific GO:0051015 (actin filament binding)
+      already present in the annotation set. The Xin repeats specifically bind F-actin (filamentous
+      actin), making the filament-specific term more informative.
+    supported_by:
+      - reference_id: file:BOVIN/E1BL04/E1BL04-uniprot.txt
+        supporting_text: &#34;Xin repeats bind F-actin&#34;
+- term:
+    id: GO:0030036
+    label: actin cytoskeleton organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Actin cytoskeleton organization is assigned via InterPro domain mapping (IPR012510, IPR030072).
+      This is a parent term of the more specific GO:0007015 (actin filament organization) already
+      annotated via IBA. Both are correct, but the more specific term is preferred.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0030036 is a broader parent of GO:0007015 (actin filament organization) which is already
+      annotated. The more specific term better captures XIRP2&#39;s role in organizing actin filaments
+      within the sarcomere.
+- term:
+    id: GO:0030054
+    label: cell junction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cell junction localization is assigned via InterPro (IPR012510). XIRP2 localizes to intercalated
+      discs in cardiomyocytes, which are specialized cell junctions. The term is correct but very
+      general; the more specific GO:0005911 (cell-cell junction) is also annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0030054 is a broad parent term. The more specific GO:0005911 (cell-cell junction) already
+      present in the annotation set, and even more specific terms such as intercalated disc
+      (GO:0014704) would better capture the known localization.
+- term:
+    id: GO:0070161
+    label: anchoring junction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Anchoring junction localization is assigned from UniProt subcellular location vocabulary mapping.
+      The UniProt entry lists cell junction as the subcellular location. Intercalated discs contain
+      adherens junctions (a type of anchoring junction), so this is biologically consistent with XIRP2
+      localization at intercalated discs and myotendinous junctions.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is consistent with XIRP2 biology. Intercalated discs contain adherens junctions
+      (anchoring junctions), and XIRP2 is found at these structures. However, this is a broad
+      localization term and not as informative as Z disc or intercalated disc.
+- term:
+    id: GO:0001725
+    label: stress fiber
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: colocalizes_with
+  review:
+    summary: &gt;-
+      Duplicate of the IBA annotation above, transferred from human XIRP2 (A4UGR9) via Ensembl
+      Compara orthology. The same biological reasoning applies: stress fiber colocalization is
+      observed but not the primary physiological localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Redundant with the IBA annotation for the same term and qualifier. Stress fiber colocalization
+      is not a core localization for this muscle-specific protein.
+- term:
+    id: GO:0005911
+    label: cell-cell junction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cell-cell junction localization is transferred from mouse Xirp2 (Q4U4S6) via Ensembl Compara.
+      XIRP2 localizes to intercalated discs, which are specialized cell-cell junctions in cardiac
+      muscle. This is a reasonable annotation, though intercalated disc (GO:0014704) would be more
+      precise.
+    action: ACCEPT
+    reason: &gt;-
+      XIRP2 is well-established at intercalated discs, which are specialized cell-cell junctions.
+      This annotation correctly captures an important aspect of XIRP2 localization in cardiac tissue.
+- term:
+    id: GO:0005925
+    label: focal adhesion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: colocalizes_with
+  review:
+    summary: &gt;-
+      Duplicate of the IBA annotation above, transferred from human XIRP2 (A4UGR9) via Ensembl
+      Compara. Same reasoning applies as for the IBA version.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Redundant with the IBA annotation for the same term and qualifier. Focal adhesion
+      colocalization represents a non-muscle context or the muscle-equivalent costamere.
+- term:
+    id: GO:0030018
+    label: Z disc
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Z disc localization is transferred from mouse Xirp2 (Q4U4S6) via Ensembl Compara. XIRP2 is
+      well-established as a Z disc component in striated muscle, where it interacts with alpha-actinin
+      and maintains sarcomeric structure. This is one of the most important and well-characterized
+      localizations for XIRP2.
+    action: ACCEPT
+    reason: &gt;-
+      Z disc localization is a core aspect of XIRP2 biology. The protein interacts with alpha-actinin
+      at the Z disc and is essential for sarcomeric integrity in both cardiac and skeletal muscle.
+- term:
+    id: GO:0051015
+    label: actin filament binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Duplicate of the IBA annotation above, transferred from human XIRP2 (A4UGR9) via Ensembl
+      Compara. Same reasoning applies: actin filament binding is the core molecular function
+      mediated by Xin repeats.
+    action: ACCEPT
+    reason: &gt;-
+      Actin filament binding is the defining molecular function of XIRP2. This Ensembl Compara
+      annotation reinforces the IBA annotation from the same source ortholog.
+    supported_by:
+      - reference_id: file:BOVIN/E1BL04/E1BL04-uniprot.txt
+        supporting_text: &#34;Xin repeats bind F-actin&#34;
+- term:
+    id: GO:0051393
+    label: alpha-actinin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Alpha-actinin binding is transferred from mouse Xirp2 (Q4U4S6) via Ensembl Compara.
+      XIRP2 has been shown to interact with alpha-actinin at the Z disc in mouse cardiomyocytes,
+      which is important for its role in sarcomeric integrity. This interaction is distinct from
+      and complementary to its actin filament binding activity.
+    action: ACCEPT
+    reason: &gt;-
+      Alpha-actinin binding is a well-characterized molecular function of XIRP2 that is important
+      for its localization to the Z disc and its role in sarcomeric maintenance.
+- term:
+    id: GO:0110053
+    label: regulation of actin filament organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Regulation of actin filament organization is transferred from mouse Xirp2 (Q4U4S6) via
+      Ensembl Compara. This is consistent with XIRP2&#39;s role in maintaining sarcomeric actin
+      architecture, though it is somewhat redundant with GO:0007015 (actin filament organization)
+      already annotated via IBA.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While XIRP2 does regulate actin filament organization, the direct involvement in actin
+      filament organization (GO:0007015) is a more fundamental annotation. The regulatory aspect
+      is secondary to the structural role.
+- term:
+    id: GO:1903829
+    label: positive regulation of protein localization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Positive regulation of protein localization is transferred from mouse Xirp2 (Q4U4S6) via
+      Ensembl Compara. This is a very broad term. XIRP2 may promote the localization of specific
+      proteins (such as alpha-actinin or other sarcomeric components) to the Z disc, but the term
+      lacks specificity about which proteins or which localization context.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The term is too broad to be informative. Without specifying which protein&#39;s localization
+      is being regulated, this annotation provides limited biological insight. A more specific
+      term would be preferred if the regulated protein can be identified.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: &gt;-
+        InterPro correctly identifies the Xin repeat domain (IPR012510) and the XIRP1/XIRP2 family
+        (IPR030072), supporting actin binding and cell junction localization assignments.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: &gt;-
+        IBA annotations transferred from human XIRP2 (A4UGR9) and mouse Xirp2 (Q702N8) are
+        well-supported by phylogenetic conservation of the Xin repeat domain architecture and
+        consistent functional characterization across mammalian orthologs.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+    - statement: &gt;-
+        UniProt subcellular location mapping correctly assigns cell junction and anchoring junction
+        localization, consistent with XIRP2&#39;s known presence at intercalated discs and myotendinous
+        junctions.
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to orthologs
+    using Ensembl Compara
+  findings:
+    - statement: &gt;-
+        Ensembl Compara transfers from human XIRP2 (A4UGR9) and mouse Xirp2 (Q4U4S6) provide
+        the most informative annotations, including Z disc localization, alpha-actinin binding,
+        and regulation of actin filament organization.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: &gt;-
+        Combined IEA methods assign the general actin binding term, which is subsumed by the
+        more specific actin filament binding term from IBA/Ensembl Compara.
+- id: file:BOVIN/E1BL04/E1BL04-uniprot.txt
+  title: UniProt entry E1BL04
+  findings:
+    - statement: &gt;-
+        UniProt identifies E1BL04 as XIRP2 with 26 PROSITE Xin repeats and 18 Pfam Xin domains,
+        belonging to the Xin family. The protein is 3561 amino acids and localizes to cell junctions.
+    - statement: &gt;-
+        Expression data from Bgee shows the gene is expressed in rectus femoris and 30 other
+        cell types/tissues, consistent with striated muscle expression.
+core_functions:
+- description: &gt;-
+    XIRP2 binds F-actin filaments through its multiple Xin repeat domains (26 repeats),
+    providing the molecular basis for its structural role at the Z disc and intercalated disc
+    in striated muscle.
+  molecular_function:
+    id: GO:0051015
+    label: actin filament binding
+  locations:
+    - id: GO:0030018
+      label: Z disc
+  directly_involved_in:
+    - id: GO:0007015
+      label: actin filament organization
+  supported_by:
+    - reference_id: file:BOVIN/E1BL04/E1BL04-uniprot.txt
+      supporting_text: &#34;Xin repeats bind F-actin&#34;
+- description: &gt;-
+    XIRP2 binds alpha-actinin at the Z disc, contributing to the structural integrity of
+    the sarcomere and proper organization of the actin cytoskeleton in cardiac and skeletal
+    muscle.
+  molecular_function:
+    id: GO:0051393
+    label: alpha-actinin binding
+  locations:
+    - id: GO:0030018
+      label: Z disc
+  supported_by:
+    - reference_id: file:BOVIN/E1BL04/E1BL04-uniprot.txt
+      supporting_text: &#34;Belongs to the Xin family&#34;
+suggested_questions:
+  - question: &gt;-
+      Does bovine XIRP2 localize to the intercalated disc in cattle cardiomyocytes, as established
+      for the human and mouse orthologs?
+  - question: &gt;-
+      Are there cattle-specific variants in XIRP2 associated with bovine cardiomyopathy or sudden
+      death, analogous to human XIRP2 variants linked to sudden cardiac death?
+  - question: &gt;-
+      Does XIRP2 interact with other Z disc or intercalated disc components (e.g., beta-catenin,
+      N-cadherin, p120-catenin) in bovine cardiac tissue?
+suggested_experiments:
+  - hypothesis: &gt;-
+      Bovine XIRP2 localizes to Z discs and intercalated discs in cattle cardiomyocytes, consistent
+      with its mammalian orthologs.
+    description: &gt;-
+      Perform immunofluorescence microscopy on bovine cardiac tissue sections using antibodies against
+      XIRP2 and co-staining with alpha-actinin (Z disc marker) and N-cadherin (intercalated disc marker).
+    experiment_type: immunofluorescence microscopy
+  - hypothesis: &gt;-
+      The Xin repeat domains of bovine XIRP2 are sufficient for F-actin binding.
+    description: &gt;-
+      Express recombinant bovine XIRP2 Xin repeat fragments and assay F-actin binding by cosedimentation
+      or fluorescence anisotropy.
+    experiment_type: protein-protein interaction assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
