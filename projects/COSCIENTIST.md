@@ -11,6 +11,9 @@ species: [human, ECOLI, MYCTU, METJA, SCHPO, worm]
 bioinformatician to test specific gene-function hypotheses that the literature
 cannot settle — and wiring the verdicts back into curated GO reviews.**
 
+📊 **Slides:** [COSCIENTIST-slides](COSCIENTIST/slides/COSCIENTIST-slides.md)
+(Marp; regenerate the PDF with `just gen-project-slides COSCIENTIST`).
+
 ## Motivation
 
 Most AI assistance in curation is literature synthesis: read the papers, summarize,
