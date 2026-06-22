@@ -112,6 +112,16 @@ validate-interpro-mappings:
 	uv run python projects/INTERPRO/sssom_to_terms.py projects/INTERPRO/interpro2go.sssom.yaml -o projects/INTERPRO/interpro2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/INTERPRO/interpro2go.terms.yaml -s src/ai_gene_review/schema/interpro_go_mapping.yaml -t InterProGOMappingSet --labels -c conf/oak_config.yaml
 
+# Validate the matrisome-family->GO SSSOM mapping and term-check its GO ids/labels.
+validate-matrisome-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/MATRISOME/*.sssom.yaml
+	uv run python projects/MATRISOME/sssom_to_terms.py projects/MATRISOME/matrisome2go.sssom.yaml -o projects/MATRISOME/matrisome2go.terms.yaml
+	uv run linkml-term-validator validate-data projects/MATRISOME/matrisome2go.terms.yaml -s src/ai_gene_review/schema/matrisome_go_mapping.yaml -t MatrisomeGOMappingSet --labels -c conf/oak_config.yaml
+
+# Find candidate MISSING ECM annotations: core-matrisome genes whose GOA lacks the expected ECM CC term.
+matrisome-missing:
+	uv run python projects/MATRISOME/missing_annotation_report.py --sssom projects/MATRISOME/matrisome2go.sssom.yaml --matrisome-data projects/MATRISOME/data --genes-dir genes --out-md projects/MATRISOME/MISSING_ANNOTATIONS.md --out-tsv projects/MATRISOME/data/candidate_missing_annotations.tsv
+
 # Apply the ARO->GO mapping: chain UniProt -> ARO (via DR CARD lines) -> GO across all genes.
 aro2go-pipeline: validate-mappings
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml 'genes/**/*-uniprot.txt'
