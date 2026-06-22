@@ -9,6 +9,8 @@ genes: [A0A061AL94, A0A1S3BTE3, A0A1S3Y076, A0A2G9RZF1, A0A2I0M3K7, A0A2I4G8T1, 
 
 Evaluation of Google's ProtNLM2 GO term predictions against expert-curated AIGR gene reviews and existing GOA annotations, using the ARGO-ProtNLM-50 benchmark (50 proteins, 14 taxonomic groups, 75 GO predictions).
 
+**[Interactive prediction evaluation table](../protnlm-eval.html)** — filterable/sortable HTML view of all 50 proteins and 77 prediction assessments.
+
 ## Key findings
 
 1. **ProtNLM2 is strongest for uncharacterized proteins**: 12/23 (52%) of NOT_IN_GOA predictions were correct and novel — identifying genuine functions like DNA binding for a KilA-N domain protein (A2FPI7), ECM organization for OLFML2A (A0A8C9H4D2), and nuclear localization for MCM-4 (A0A061AL94).

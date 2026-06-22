@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESR-ECOLI-DET-Mini: DeepECTF Prediction Evaluation</title>
+    <style>
+        :root {
+            --color-cor: #16a34a;
+            --color-cnn: #65a30d;
+            --color-lsp: #ca8a04;
+            --color-unc: #6b7280;
+            --color-pli: #dc2626;
+            --color-npi: #ef4444;
+            --color-rep: #f97316;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: #fff;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); margin-bottom: 1.5rem; }
+
+        .summary-bar {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .summary-stat { text-align: center; }
+        .summary-stat .value { font-size: 1.5rem; font-weight: 700; }
+        .summary-stat .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .assessment-dist {
+            display: flex;
+            height: 28px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .assessment-dist .seg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            min-width: 0;
+            transition: flex 0.3s;
+        }
+        .seg-COR { background: var(--color-cor); }
+        .seg-CNN { background: var(--color-cnn); }
+        .seg-LSP { background: var(--color-lsp); }
+        .seg-UNC { background: var(--color-unc); }
+        .seg-PLI { background: var(--color-pli); }
+        .seg-NPI { background: var(--color-npi); }
+        .seg-REP { background: var(--color-rep); }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            font-size: 0.8rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .controls input[type="text"] {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 250px;
+        }
+        .controls select {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th {
+            background: var(--bg-light);
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        th:hover { background: #eef2ff; }
+        th .sort-arrow { font-size: 0.65rem; margin-left: 0.3rem; color: var(--text-muted); }
+        td {
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        tr:hover { background: #fafbff; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .badge-COR { background: var(--color-cor); }
+        .badge-CNN { background: var(--color-cnn); }
+        .badge-LSP { background: var(--color-lsp); }
+        .badge-UNC { background: var(--color-unc); }
+        .badge-PLI { background: var(--color-pli); }
+        .badge-NPI { background: var(--color-npi); }
+        .badge-REP { background: var(--color-rep); }
+
+        .badge-error {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .term-type {
+            display: inline-block;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .gene-link { color: #2563eb; text-decoration: none; }
+        .gene-link:hover { text-decoration: underline; }
+
+        .summary-cell { max-width: 400px; }
+        .summary-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+            font-size: 0.8rem;
+            color: #374151;
+        }
+        tr.expanded .summary-text {
+            -webkit-line-clamp: unset;
+            overflow: visible;
+        }
+
+        .no-predictions {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .protein-row td { background: #f8fafc; font-weight: 500; }
+
+        footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<h1>ESR-ECOLI-DET-Mini: DeepECTF Prediction Evaluation</h1>
+<p class="subtitle">7 E. coli genes — recapitulation of de Crécy-Lagard et al. 2025 expert review</p>
+
+<div class="summary-bar">
+    <div class="summary-stat">
+        <div class="value">7</div>
+        <div class="label">Proteins</div>
+    </div>
+    <div class="summary-stat">
+        <div class="value">7</div>
+        <div class="label">Predictions</div>
+    </div>
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-unc);">2</div>
+        <div class="label">UNC</div>
+    </div>
+    
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-pli);">1</div>
+        <div class="label">PLI</div>
+    </div>
+    
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-npi);">3</div>
+        <div class="label">NPI</div>
+    </div>
+    
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-rep);">1</div>
+        <div class="label">REP</div>
+    </div>
+    
+    
+    <div class="summary-stat">
+        <div class="value">0.3</div>
+        <div class="label">Mean CS</div>
+    </div>
+</div>
+
+
+<div class="assessment-dist">
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="seg seg-UNC" style="flex: 2;" title="UNC: 2">
+        UNC (2)
+    </div>
+    
+    
+    
+    <div class="seg seg-PLI" style="flex: 1;" title="PLI: 1">
+        PLI (1)
+    </div>
+    
+    
+    
+    <div class="seg seg-NPI" style="flex: 3;" title="NPI: 3">
+        NPI (3)
+    </div>
+    
+    
+    
+    <div class="seg seg-REP" style="flex: 1;" title="REP: 1">
+        REP (1)
+    </div>
+    
+    
+</div>
+
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-cor)"></div>COR — Correct novel</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-cnn)"></div>CNN — Correct, not novel</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-lsp)"></div>LSP — Less precise</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-unc)"></div>UNC — Uncertain</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-pli)"></div>PLI — Paralog incorrect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-npi)"></div>NPI — Nonparalog incorrect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-rep)"></div>REP — Frequency bias</div>
+</div>
+
+<div class="controls">
+    <input type="text" id="search" placeholder="Filter by protein, term, or text…" oninput="filterTable()">
+    <select id="assessmentFilter" onchange="filterTable()">
+        <option value="">All assessments</option>
+        
+        <option value="COR">COR</option>
+        
+        <option value="CNN">CNN</option>
+        
+        <option value="LSP">LSP</option>
+        
+        <option value="UNC">UNC</option>
+        
+        <option value="PLI">PLI</option>
+        
+        <option value="NPI">NPI</option>
+        
+        <option value="REP">REP</option>
+        
+    </select>
+    <select id="typeFilter" onchange="filterTable()">
+        <option value="">All term types</option>
+        
+        <option value="EC">EC</option>
+        
+    </select>
+    <label style="font-size:0.85rem;">
+        <input type="checkbox" id="hideNoPred" onchange="filterTable()"> Hide no-prediction rows
+    </label>
+</div>
+
+<table id="evalTable">
+<thead>
+<tr>
+    <th onclick="sortTable(0)">Protein <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(1)">Organism <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(2)">Predicted Term <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(3)">Type <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(4)">Assessment <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(5)">CS <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(6)">Error <span class="sort-arrow">▼</span></th>
+    <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+
+
+
+<tr data-assessment="REP" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        P26266
+        <br><small style="color:var(--text-muted)">fepE</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:2.7.13.3</strong><br>
+        histidine kinase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-REP">REP</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">FepE is a Wzz-family polysaccharide co-polymerase (Pfam PF02706; COG3765; crystal structure determined) anchored in the inner membrane by two TM helices with a large periplasmic domain and only an ~18-residue cytoplasmic tail. It has none of the conserved modules of a two-component histidine kinase (DHp/HisKA + HATPase_c/GHKL), no Walker/ATP-binding motif, and no reported phosphotransfer activity; its established function is non-catalytic O-antigen chain-length regulation. EC 2.7.13.3 is therefore structurally impossible for this protein. Because histidine kinase is among the most abundant enzyme classes in bacterial genomes and a known default label for uncharacterized membrane proteins, the prediction is best categorized as a frequency-biased repetition rather than a specific paralog/homology error. Assessed independently from the UniProt record, the crystal-structure literature (Kalynych 2012) and the Wzz functional literature (Murray 2003).</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="PLI" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        P0AFR4
+        <br><small style="color:var(--text-muted)">yciO</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:2.7.7.87</strong><br>
+        L-threonylcarbamoyladenylate synthase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">YciO belongs to the Sua5/TsaC(YrdC) family and the model assigned it the family&#39;s signature reaction (TC-AMP synthesis, the first committed step of t6A). That dedicated activity belongs to the TsaC/YrdC subfamily, not to its paralog YciO. Independent evidence: (1) a pairwise alignment shows YciO keeps the YrdC fold (~29% identity) but the conserved catalytic Asn of the Sua5/TsaC S-x-N motif is replaced (TsaC STSANL -&gt; YciO STSLML), i.e. the active site is degenerate; (2) t6A is essential and tsaC/yrdC is essential despite YciO being present, so YciO cannot supply TC-AMP-synthase function in vivo; (3) the in vitro activity reported by Kim et al. 2023 (0.0705 U/mg) is weak, and UniProt records that YciO also hydrolyses ATP to AMP, consistent with promiscuous, non-productive turnover. The prediction is therefore a paralog over-annotation; YciO&#39;s true in vivo function remains unresolved. Assessed independently from the UniProt record, the DeepECTF paper&#39;s own numbers, the YciO/TsaC structures, and an in-house sequence/active-site comparison; the de Crecy-Lagard evaluation literature was not used.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        P76419
+        <br><small style="color:var(--text-muted)">yegV</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:2.7.1.92</strong><br>
+        dehydro-2-deoxygluconokinase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The PfkB/ribokinase-like family assignment makes &#34;an ATP-dependent sugar kinase&#34; (EC 2.7.1.-) a sound general call, and the first three EC digits are consistent with the domain. However, the specific substrate (EC 2.7.1.92, 5-dehydro-2-deoxy-D-gluconate) is a fine-grained discrimination among many PfkB paralogs that the allowed evidence cannot support: YegV is entirely uncharacterized (no substrate, products, kinetics, or complex structure), so the prediction can be neither validated nor refuted. Two contextual points make the specific assignment unlikely rather than impossible: (i) the predicted substrate belongs to myo-inositol catabolism, a pathway absent from E. coli K-12 (no iol genes); and (ii) YegV&#39;s operon (yegTUV) is repressed by the ADP-glucose-sensing regulator GgaR and is linked to glycogen, implying a different storage-carbon substrate. Because YegV&#39;s true substrate is unknown and PfkB kinases can be promiscuous, the most defensible call is uncertain. Assessed independently from the UniProt family annotation, the yegTUV operon literature, and EC/pathway context; the de Crecy-Lagard evaluation literature was not used.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        P52037
+        <br><small style="color:var(--text-muted)">ygfF</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:1.1.1.47</strong><br>
+        glucose 1-dehydrogenase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Unlike a weak/promiscuous hit, YgfF&#39;s predicted activity is robustly demonstrated in vitro (305.55 U/mg, comparable to dedicated bacterial glucose dehydrogenases), and YgfF has an intact SDR catalytic apparatus (Tyr156, NAD-binding motif), so the biochemical prediction is correct at the activity level. However, the allowed evidence cannot establish that glucose 1-dehydrogenase is YgfF&#39;s biological function: (i) E. coli K-12 has no cytoplasmic NAD-glucose-dehydrogenase pathway (glucose enters via the PTS); (ii) SDR enzymes are notoriously promiscuous, so a high in vitro rate on glucose does not prove glucose is the physiological substrate; and (iii) Kim et al. note YgfF&#39;s nearest training homolog is a 3-oxoacyl-ACP reductase (EC 1.1.1.100, FabG-like), suggesting a ketoreductase rather than sugar-oxidase role. Because the activity is real but its in vivo relevance is unresolved (and the true substrate unknown), the prediction is judged uncertain rather than confidently correct or incorrect. This contrasts with YciO, where the activity is weak and the active site degenerate (a clearer over-annotation). Assessed independently from the UniProt record, the DeepECTF paper&#39;s own data, and SDR/EC pathway reasoning; the de Crecy-Lagard evaluation literature was not used.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        P0AFJ1
+        <br><small style="color:var(--text-muted)">yjdM</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:3.11.1.2</strong><br>
+        phosphonoacetate hydrolase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">IN_VITRO_NOT_IN_VIVO</span></td>
+    <td class="summary-cell"><div class="summary-text">Three independent lines of evidence refute phosphonoacetate hydrolase as YjdM&#39;s function. (1) Fold/homology: YjdM is a small zinc-ribbon protein (YjdM family, Zn_Ribbon_YjdM domain; CxxC knuckles at C6/C9 and C23/C26) with no homology to the alkaline-phosphatase-superfamily phosphonoacetate hydrolases; a zinc ribbon is not a C-P bond hydrolase, and the DeepECTF paper itself notes YjdM&#39;s nearest training homolog is a DNA-directed RNA polymerase (EC 2.7.7.6), a zinc-ribbon-containing protein. (2) Genetics: phnA (yjdM) was shown to have no role in phosphonate metabolism, with all required genes in the phnC-phnP operon, and E. coli K-12 uses the C-P lyase rather than a phosphonoacetate hydrolase. (3) Naming: the historical &#34;phnA&#34; name of yjdM collides with the unrelated Pseudomonas phosphonoacetate hydrolase PhnA, a likely source of the mis-assignment. The reported in vitro activity (139.85 U/mg by a colorimetric phosphate-release assay) therefore does not represent an in vivo biological function. Assessed independently from the UniProt record, the DeepECTF paper&#39;s own data, and the classic E. coli phosphonate-genetics literature; the de Crecy-Lagard evaluation literature was not used.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        P39368
+        <br><small style="color:var(--text-muted)">yjhQ</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:2.3.1.189</strong><br>
+        mycothiol synthase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PATHWAY_CONTEXT_IGNORED</span></td>
+    <td class="summary-cell"><div class="summary-text">YjhQ is a GNAT-family N-acetyltransferase (Pfam Acetyltransf_1; GNAT domain; EC 2.3.1.-), so an N-acetyltransferase call is defensible, but the specific product (mycothiol synthase, MshD, EC 2.3.1.189) is biologically impossible in this organism: mycothiol is the characteristic low-molecular-weight thiol of Actinobacteria, and its biosynthetic pathway (MshA glycosyltransferase, MshB deacetylase, MshC ligase, MshD acetyltransferase) is entirely absent from E. coli, which uses glutathione instead. With no desacetylmycothiol substrate produced in E. coli, the predicted reaction cannot occur in vivo. The model over-propagated the GNAT acetyltransferase signal to a specific actinobacterial substrate while ignoring pathway context. Moreover, YjhQ&#39;s actual characterized function is as the antitoxin of the YjhX(TopAI)-YjhQ toxin-antitoxin system, unrelated to thiol metabolism. Assessed independently from the UniProt/GNAT annotation, the TA-system literature, and comparative-pathway reasoning (mycothiol absent from E. coli); the de Crecy-Lagard evaluation literature was not used.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="EC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        P46857
+        <br><small style="color:var(--text-muted)">yrhB</small>
+    </td>
+    <td><small>Escherichia coli K-12</small></td>
+    <td>
+        <strong>EC:4.1.2.50</strong><br>
+        6-carboxytetrahydropterin synthase
+    </td>
+    <td><span class="term-type">EC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PATHWAY_CONTEXT_IGNORED</span></td>
+    <td class="summary-cell"><div class="summary-text">YrhB has no structural or evolutionary basis for this activity. Its only recognizable feature is an Imm35 (bacteriocin-immunity) domain (Pfam PF15567); it is not homologous to 6-carboxytetrahydropterin synthase and lacks the 6-pyruvoyltetrahydropterin-synthase (PTPS) tunnel fold that defines this enzyme. In E. coli the 6-carboxytetrahydropterin synthase step of queuosine biosynthesis is carried out by the dedicated, non-homologous enzyme QueD (ygcM, b2765), so the activity is already accounted for and would not be expected from an unrelated 94-residue protein. The model ignored this metabolic context and assigned a redundant enzymatic function to a protein that has no pterin-synthase fold; YrhB itself remains functionally uncharacterized. Assessed independently from the UniProt record/Imm35 domain, the queuosine pathway gene assignments in E. coli, and fold/family reasoning; the de Crecy-Lagard evaluation literature was not used.</div></td>
+</tr>
+
+
+
+</tbody>
+</table>
+
+<footer>
+    Generated from 7 prediction review YAML files.
+    Assessment categories per de Crécy-Lagard et al. 2025 (PMID:40703034).
+</footer>
+
+<script>
+function filterTable() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const assessment = document.getElementById('assessmentFilter').value;
+    const termType = document.getElementById('typeFilter').value;
+    const hideNoPred = document.getElementById('hideNoPred').checked;
+    const rows = document.querySelectorAll('#evalTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowAssessment = row.dataset.assessment;
+        const rowType = row.dataset.type;
+        const isNoPred = row.dataset.nopred === '1';
+        let show = true;
+        if (search && !text.includes(search)) show = false;
+        if (assessment && rowAssessment !== assessment) show = false;
+        if (termType && rowType !== termType) show = false;
+        if (hideNoPred && isNoPred) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+let sortCol = -1, sortAsc = true;
+function sortTable(col) {
+    if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = true; }
+    const tbody = document.querySelector('#evalTable tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort((a, b) => {
+        const aVal = (a.children[col] || {}).textContent || '';
+        const bVal = (b.children[col] || {}).textContent || '';
+        const cmp = aVal.localeCompare(bVal, undefined, {numeric: true});
+        return sortAsc ? cmp : -cmp;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+
+</body>
+</html>

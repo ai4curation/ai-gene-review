@@ -24,6 +24,11 @@ Systematic evaluation of BioReason-Pro functional summaries and reasoning traces
 
 **Expert Synthetic Review recap:** [`recapitulation-experiment/claude-expt-1/`](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/) is **ESR-ECOLI-DET-Mini**, a 7-gene quick-check recap of the de Crécy-Lagard expert review of DeepECTransformer predictions. Dataset ID: [`10.5281/zenodo.20751016`](https://doi.org/10.5281/zenodo.20751016). Use `ESR-ECOLI-DET-Mini` as the canonical benchmark name; `ESR-ECOLI-DET-7` is a count-explicit alias. A future full `ESR-ECOLI-DET` benchmark should be extracted from the complete de Crécy-Lagard paper.
 
+**Interactive prediction evaluation tables:**
+- [BioReason-Pro SFT evaluation](BIOREASON_COMPARISON/sft-eval.html) — ARGO95, 198 genes, ~11k GO term predictions
+- [GO-GPT leaf evaluation](BIOREASON_COMPARISON/gogpt-eval.html) — ARGO139, 139 genes, ~6.3k GO term predictions
+- [DeepECTF evaluation (ESR-ECOLI-DET-Mini)](BIOREASON_COMPARISON/deepectf-eval.html) — 7 E. coli genes
+
 ## Methods
 
 We downloaded the reports for selected genes from https://app.bioreason.net/ (there is no API yet so this cannot be done in bulk). We assigned an AI agent to review this, and compare them with both existing pipelines (e.g. interpro2go), and also with the complete AI gene review.
