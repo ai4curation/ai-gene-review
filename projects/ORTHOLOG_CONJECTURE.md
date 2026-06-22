@@ -9,6 +9,9 @@ tags: [PIPELINE]
 ## Overview
 The ortholog conjecture (OC) posits that orthologs (genes separated by speciation) tend to retain more similar functions than paralogs (genes separated by duplication) at the same evolutionary distance. This assumption underpins many automated functional annotations and cross-species inference pipelines. The OC remains debated because different data types, bias controls, and evaluation metrics can yield opposite conclusions.
 
+## Slides
+- [Slides](ORTHOLOG_CONJECTURE/slides/ORTHOLOG_CONJECTURE-slides.html) (Marp source: [ORTHOLOG_CONJECTURE-slides.md](ORTHOLOG_CONJECTURE/slides/ORTHOLOG_CONJECTURE-slides.md)) — AI generated
+
 ## GO Context (How Orthology Appears in Annotations)
 GO annotations explicitly encode how an inference was made, and orthology appears directly in several mechanisms:
 

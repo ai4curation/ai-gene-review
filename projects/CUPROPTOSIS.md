@@ -139,6 +139,10 @@ The lipoic acid post-translational modification on TCA-cycle E2 enzymes is the
 - Watch for over-annotation of every lipoylation/TCA gene with a generic
   "cell death" process term where the experimental support is indirect.
 
+## Slides
+
+- [Slides](CUPROPTOSIS/slides/CUPROPTOSIS-slides.html) (Marp source: [CUPROPTOSIS-slides.md](CUPROPTOSIS/slides/CUPROPTOSIS-slides.md)) — AI generated
+
 ## Key References
 
 - Tsvetkov P et al. (2019) *Nat Chem Biol* — FDX1/elesclomol (PMID:31133756)

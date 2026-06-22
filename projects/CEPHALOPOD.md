@@ -15,6 +15,10 @@ GO annotations** across all species (0.008% of 333,921 total annotations). This 
 experimentally characterized cephalopod genes using the ai-gene-review framework, synthesizing
 literature evidence with computational predictions to fill this annotation desert.
 
+## Slides
+
+- [Slides](CEPHALOPOD/slides/CEPHALOPOD-slides.html) (Marp source: [CEPHALOPOD-slides.md](CEPHALOPOD/slides/CEPHALOPOD-slides.md)) — AI generated
+
 ## Genomic Resources
 
 ### Sequenced Genomes

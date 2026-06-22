@@ -201,6 +201,10 @@ Important caveats:
 - [ ] Resolve a stable public accession for `NaNAMNH`.
 - [ ] Revisit whether `NaNUP` belongs in the core transport batch after the minimal metabolon is reviewed.
 
+## Slides
+
+- [Slides](NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.html) (Marp source: [NICOTINE_BIOSYNTHESIS-slides.md](NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.md)) — AI generated
+
 ## Sources
 
 1. Chang L, Xu Z, Deng P, Zhang N, He T, Liu X, He W, Zheng A, Hu W, Pan M, Li W, Halitschke R, Li R, Fan M, Baldwin IT, Zhang Y, Li D. 2026. **Complete biosynthesis of nicotine**. *Cell*. Chris-provided source: `https://www.cell.com/cell/fulltext/S0092-8674(26)00335-1`
