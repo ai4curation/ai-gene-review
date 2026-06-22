@@ -112,5 +112,39 @@ Vesicle-Mediated Unconventional Protein Secretion"). Not re-added.
 - Falcon's cancer/heart-failure review citations (radziejewska2023, zaborska2023, tan2021, lozinski2024,
   mukherjee2025, zhang2025) are secondary reviews restating known lectin/lattice biology already covered
   by primary citations in the review; not added as top-level references.
-</content>
-</invoke>
+
+## 2026-06-22 — asta IBA-support sift (manual)
+
+Ran `just gene-iba-support-research asta human LGALS3` over the 15 IBA annotations that lacked
+independent literature support (outputs in `LGALS3-hypotheses/function-support-*/asta.md`). asta
+(Semantic Scholar relevance + snippet retrieval) returned 11–16 papers per term with verbatim
+snippets, PMIDs/DOIs and scores. I manually sifted every report.
+
+**Outcome: no supported_by added from this pass.** None of asta's candidates are adequate,
+term-specific *primary* evidence for the GO term in question. The hits fall into three
+false-positive classes:
+
+1. **Frequency bias toward recent disease papers.** The same modern cancer/disease studies recur
+   across many unrelated terms (HCC prognosis PMID:38643145; periplocin/CRC lysophagy PMID:37471054;
+   glioma prognosis PMID:32528967), surfaced because they use the symbol "LGALS3" plus a process word,
+   not because they assay that function.
+2. **Review / family-level statements**, not primary, gene-specific evidence (e.g. Liu & Rabinovich
+   2010 PMID:20146714 "Galectins, beta-galactoside-binding animal lectins"; Pregnancy Galectinology
+   review PMID:31231368). True but family-level orientation only.
+3. **Right gene, wrong specific process.** PMID:35230372 is "Macrophages secrete … galectin-3 to
+   regulate neutrophil **degranulation** after myocardial infarction" — asta's snippet paraphrased it
+   as neutrophil "migration", but the paper assays degranulation, so it does **not** support
+   GO:0030593 *neutrophil chemotaxis*. (This is the receptor/process-mismatch trap to watch for.)
+
+Crucially, asta **failed to surface the foundational primary literature** that actually established
+these galectin-3 functions — e.g. galectin-3 as a monocyte/macrophage chemoattractant (Sano et al.
+2000), the εBP/IgE-binding-protein biochemistry, and Mac-2/laminin binding. No laminin-, IgE/εBP-,
+or chemoattractant-titled primary paper appeared in any report; the only "disaccharide binding" hit
+was an incidental bone-phenotype study (PMID:36062328).
+
+**Tuning leverage for next runs** (the query is the prompt, truncated to ~500 chars, so wording
+matters): include legacy synonyms (`galectin-3`, `Mac-2`, `εBP`) alongside `LGALS3`, and consider
+asta date/citation params — the relevance model here skews to recent, highly-cited genomics-era
+papers and misses pre-2005 foundational biochemistry. For a well-studied gene like LGALS3, a targeted
+classic-literature lookup is more productive than asta; asta's recall value is likely higher for
+poorly-studied genes.
