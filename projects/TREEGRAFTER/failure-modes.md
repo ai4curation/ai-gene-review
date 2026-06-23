@@ -128,15 +128,17 @@ provenance are committed under each gene's `*-hypotheses/` directory.
 | **mcr-1** | REFUTED | wrong node term (placement right) (#3→node) | EC 2.7.8.43 ⇒ correct MF is GO:0016780, not sibling GO:0016776; EC2GO mapping; error traced to a TAS annotation on EptA at the `PTHR30443:SF0` node | `MODIFY` |
 | **eryAIII** | REFUTED | granularity, family-vs-subfamily (#1) | DEBS3 type-I modular PKS (EC 2.3.1.94); family-level FAS term propagated over the PKS subfamily | `MODIFY` |
 | **aprA** | REFUTED | within-superfamily mis-placement (#3) | APS reductase α (EC 1.8.99.2); **absent covalent FAD-binding His** required by all SDH/FRD catalysis | `REMOVE` |
-| **fcs** | *re-running (scope-narrowed)* — initial run hit the 7200 s API ceiling | — | — | `MODIFY` |
+| **fcs** | REFUTED | within-superfamily mis-placement (#3) | feruloyl-CoA synthetase (EC 6.2.1.34 ⇒ GO:0050563); aromatic-phenylpropanoid vs aliphatic-C6–C12 substrate, grafted onto the wrong acyl-CoA-synthetase branch | `MODIFY` |
 
-**Every completed blinded run refuted the TreeGrafter term and independently
+**All five blinded runs refuted the TreeGrafter term and independently
 recovered (a) the correct specific function, (b) the failure mode, and (c) in two
 cases the node-level provenance of the error** (mcr-1's EptA/SF0 TAS source;
 OCTS1's root-node propagation) — all matching both the held-out reviewer action
 and the [graft check](#lightweight-graft-check-panther-vs-interpro-no-re-run)
 above. The aprA run even executed the template's active-site test, pinning the
-refutation on a single missing catalytic histidine. This is strong evidence that
+refutation on a single missing catalytic histidine. (fcs required a
+scope-narrowed re-run at `max_iterations=2` after the first attempt hit the
+7200 s API ceiling.) This is strong evidence that
 a blinded LLM-agent function check is a viable **QC layer** over automated
 phylogenetic annotations: it reliably catches exactly the cases TreeGrafter gets
 wrong, without being told the answer.
