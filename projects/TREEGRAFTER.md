@@ -5,6 +5,7 @@ tags: [EVALUATION, PIPELINE]
 sidecars:
   per_annotation: TREEGRAFTER/treegrafter_review.tsv
   summary: TREEGRAFTER/treegrafter_summary.tsv
+  placement: TREEGRAFTER/treegrafter_placement.tsv
 ---
 
 # TreeGrafter Inference Evaluation
@@ -88,6 +89,14 @@ sequences that were *not* curated into the reference tree, with no curator
 checking residue-level evidence at the graft point.
 
 ### Where TreeGrafter inferences fail
+
+> **Deep dive:** [Failure Modes & Tree Placement](TREEGRAFTER/failure-modes.md)
+> joins every down-graded annotation to the PANTHER family/subfamily it was
+> grafted onto (and the ancestral `PTN` graft node), to answer whether the
+> *placement* or the *propagated term* is at fault. **Short answer: the
+> placement is usually fine; the inherited term is too coarse, assumes lost
+> catalysis, or is a generic localization** — only a handful (e.g. `aprA`,
+> `fcs`) are true within-superfamily mis-placements.
 
 The TreeGrafter terms most often down-graded (`REMOVE` / `MODIFY` /
 `MARK_AS_OVER_ANNOTATED`) cluster in two failure modes:
