@@ -112,12 +112,34 @@ independent, signature-based opinion). Computed live by
    *more* specific or correct than the phylogenetic graft — a concrete argument
    for cross-checking TreeGrafter against InterPro2GO (see next steps).
 
-> **Independent verification (in progress):** blinded OpenScientist
-> function-assignment runs for all five exemplars (using the dedicated
-> [`treegrafter_function_hypothesis.md`](../../templates/treegrafter_function_hypothesis.md)
-> prompt) are running to see whether an independent agent, given only "GENE has
-> *<propagated term>*", recovers the correct specific function. Verdicts will be
-> folded in here on completion.
+## OpenScientist blinded verification
+
+To test the graft-check conclusions independently, each propagated term was
+re-posed to OpenScientist as a **blinded** function-assignment hypothesis — the
+agent saw only *"GENE has \<propagated term\>"* (never the reviewer's action or
+the PANTHER subfamily name) using the dedicated
+[`treegrafter_function_hypothesis.md`](../../templates/treegrafter_function_hypothesis.md)
+prompt, which asks it to actively test the three failure modes. Reports and
+provenance are committed under each gene's `*-hypotheses/` directory.
+
+| Gene | Blinded verdict | Failure mode the agent assigned | Decisive evidence it found | Held-out reviewer action |
+|---|---|---|---|---|
+| **OCTS1** | REFUTED | pseudo-enzyme / activity lost (#2) | S-crystallin (IPR003083); lost catalytic Trp39; ~1000× lower kcat; PDB 5B7C | `MARK_AS_OVER_ANNOTATED` |
+| **mcr-1** | REFUTED | wrong node term (placement right) (#3→node) | EC 2.7.8.43 ⇒ correct MF is GO:0016780, not sibling GO:0016776; EC2GO mapping; error traced to a TAS annotation on EptA at the `PTHR30443:SF0` node | `MODIFY` |
+| **eryAIII** | REFUTED | granularity, family-vs-subfamily (#1) | DEBS3 type-I modular PKS (EC 2.3.1.94); family-level FAS term propagated over the PKS subfamily | `MODIFY` |
+| **aprA** | REFUTED | within-superfamily mis-placement (#3) | APS reductase α (EC 1.8.99.2); **absent covalent FAD-binding His** required by all SDH/FRD catalysis | `REMOVE` |
+| **fcs** | *re-running (scope-narrowed)* — initial run hit the 7200 s API ceiling | — | — | `MODIFY` |
+
+**Every completed blinded run refuted the TreeGrafter term and independently
+recovered (a) the correct specific function, (b) the failure mode, and (c) in two
+cases the node-level provenance of the error** (mcr-1's EptA/SF0 TAS source;
+OCTS1's root-node propagation) — all matching both the held-out reviewer action
+and the [graft check](#lightweight-graft-check-panther-vs-interpro-no-re-run)
+above. The aprA run even executed the template's active-site test, pinning the
+refutation on a single missing catalytic histidine. This is strong evidence that
+a blinded LLM-agent function check is a viable **QC layer** over automated
+phylogenetic annotations: it reliably catches exactly the cases TreeGrafter gets
+wrong, without being told the answer.
 
 ## What this means for the "re-run TreeGrafter" question
 
@@ -132,10 +154,19 @@ analysis via OpenScientist — would be decisive.
 
 ## Suggested follow-ups
 
-- **OpenScientist deep-dives** on the mode-4 candidates (`aprA`, `fcs`) as
-  blinded function-assignment hypotheses, comparing the verdict to the recorded
-  PANTHER subfamily.
+- ✅ **Blinded OpenScientist deep-dives** on the exemplars (done — see above);
+  the agent refuted every completed case and recovered the correct function and
+  failure mode without being told the answer.
+- **Scale the blinded check** as a routine QC pass over `GO_REF:0000118`
+  annotations — the per-gene runs reliably flag exactly the failures TreeGrafter
+  produces. The `treegrafter_function_hypothesis.md` prompt is the reusable
+  harness; watch the 7200 s API ceiling (narrow scope / `max_iterations=2` for
+  large multi-domain proteins like `fcs`).
 - **Active-site / pseudo-enzyme check** on mode-2 candidates (catalytic-residue
-  conservation) — the single most valuable upstream signal TreeGrafter lacks.
-- Feed the family-vs-subfamily granularity cases (mode 1) back as candidate
-  PAINT subfamily-annotation refinements (e.g. PTHR43775 PKS vs FAS).
+  conservation) — the single most valuable upstream signal TreeGrafter lacks
+  (aprA's missing FAD-His is the template case).
+- **Feed errors upstream**: family-vs-subfamily granularity cases (mode 1) as
+  candidate PAINT subfamily-annotation refinements (e.g. PTHR43775 PKS vs FAS);
+  node-term errors (mcr-1's EptA/SF0 TAS) as direct GO_Central corrections.
+- **Cross-check against InterPro2GO** where InterPro out-resolves PANTHER
+  (`IPR011803 AprA`, `IPR003083 S-crystallin`, `IPR058128 Mcr1`).

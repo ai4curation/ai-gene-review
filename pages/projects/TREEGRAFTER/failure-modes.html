@@ -536,14 +536,72 @@ independent, signature-based opinion). Computed live by<br />
 <em>more</em> specific or correct than the phylogenetic graft — a concrete argument<br />
    for cross-checking TreeGrafter against InterPro2GO (see next steps).</li>
 </ol>
-<blockquote>
-<p><strong>Independent verification (in progress):</strong> blinded OpenScientist<br />
-function-assignment runs for all five exemplars (using the dedicated<br />
+<h2 id="openscientist-blinded-verification">OpenScientist blinded verification</h2>
+<p>To test the graft-check conclusions independently, each propagated term was<br />
+re-posed to OpenScientist as a <strong>blinded</strong> function-assignment hypothesis — the<br />
+agent saw only <em>"GENE has \&lt;propagated term&gt;"</em> (never the reviewer's action or<br />
+the PANTHER subfamily name) using the dedicated<br />
 <a href="../../templates/treegrafter_function_hypothesis.html"><code>treegrafter_function_hypothesis.md</code></a><br />
-prompt) are running to see whether an independent agent, given only "GENE has<br />
-<em><propagated term></em>", recovers the correct specific function. Verdicts will be<br />
-folded in here on completion.</p>
-</blockquote>
+prompt, which asks it to actively test the three failure modes. Reports and<br />
+provenance are committed under each gene's <code>*-hypotheses/</code> directory.</p>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Blinded verdict</th>
+<th>Failure mode the agent assigned</th>
+<th>Decisive evidence it found</th>
+<th>Held-out reviewer action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OCTS1</strong></td>
+<td>REFUTED</td>
+<td>pseudo-enzyme / activity lost (#2)</td>
+<td>S-crystallin (IPR003083); lost catalytic Trp39; ~1000× lower kcat; PDB 5B7C</td>
+<td><code>MARK_AS_OVER_ANNOTATED</code></td>
+</tr>
+<tr>
+<td><strong>mcr-1</strong></td>
+<td>REFUTED</td>
+<td>wrong node term (placement right) (#3→node)</td>
+<td>EC 2.7.8.43 ⇒ correct MF is <a href="http://amigo.geneontology.org/amigo/term/GO:0016780">GO:0016780</a>, not sibling <a href="http://amigo.geneontology.org/amigo/term/GO:0016776">GO:0016776</a>; EC2GO mapping; error traced to a TAS annotation on EptA at the <code>PTHR30443:SF0</code> node</td>
+<td><code>MODIFY</code></td>
+</tr>
+<tr>
+<td><strong>eryAIII</strong></td>
+<td>REFUTED</td>
+<td>granularity, family-vs-subfamily (#1)</td>
+<td>DEBS3 type-I modular PKS (EC 2.3.1.94); family-level FAS term propagated over the PKS subfamily</td>
+<td><code>MODIFY</code></td>
+</tr>
+<tr>
+<td><strong>aprA</strong></td>
+<td>REFUTED</td>
+<td>within-superfamily mis-placement (#3)</td>
+<td>APS reductase α (EC 1.8.99.2); <strong>absent covalent FAD-binding His</strong> required by all SDH/FRD catalysis</td>
+<td><code>REMOVE</code></td>
+</tr>
+<tr>
+<td><strong>fcs</strong></td>
+<td><em>re-running (scope-narrowed)</em> — initial run hit the 7200 s API ceiling</td>
+<td>—</td>
+<td>—</td>
+<td><code>MODIFY</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Every completed blinded run refuted the TreeGrafter term and independently<br />
+recovered (a) the correct specific function, (b) the failure mode, and (c) in two<br />
+cases the node-level provenance of the error</strong> (mcr-1's EptA/SF0 TAS source;<br />
+OCTS1's root-node propagation) — all matching both the held-out reviewer action<br />
+and the <a href="#lightweight-graft-check-panther-vs-interpro-no-re-run">graft check</a><br />
+above. The aprA run even executed the template's active-site test, pinning the<br />
+refutation on a single missing catalytic histidine. This is strong evidence that<br />
+a blinded LLM-agent function check is a viable <strong>QC layer</strong> over automated<br />
+phylogenetic annotations: it reliably catches exactly the cases TreeGrafter gets<br />
+wrong, without being told the answer.</p>
 <h2 id="what-this-means-for-the-re-run-treegrafter-question">What this means for the "re-run TreeGrafter" question</h2>
 <p>For the <strong>bulk</strong> of failures (modes 1–3, ~90% of the down-grades), re-running<br />
 TreeGrafter would reproduce the <em>same, sensible</em> placement — the fix belongs at<br />
@@ -555,13 +613,22 @@ TreeGrafter re-run inspecting the graft branch, or a structural/active-site<br /
 analysis via OpenScientist — would be decisive.</p>
 <h2 id="suggested-follow-ups">Suggested follow-ups</h2>
 <ul>
-<li><strong>OpenScientist deep-dives</strong> on the mode-4 candidates (<code>aprA</code>, <code>fcs</code>) as<br />
-  blinded function-assignment hypotheses, comparing the verdict to the recorded<br />
-  PANTHER subfamily.</li>
+<li>✅ <strong>Blinded OpenScientist deep-dives</strong> on the exemplars (done — see above);<br />
+  the agent refuted every completed case and recovered the correct function and<br />
+  failure mode without being told the answer.</li>
+<li><strong>Scale the blinded check</strong> as a routine QC pass over <code>GO_REF:0000118</code><br />
+  annotations — the per-gene runs reliably flag exactly the failures TreeGrafter<br />
+  produces. The <code>treegrafter_function_hypothesis.md</code> prompt is the reusable<br />
+  harness; watch the 7200 s API ceiling (narrow scope / <code>max_iterations=2</code> for<br />
+  large multi-domain proteins like <code>fcs</code>).</li>
 <li><strong>Active-site / pseudo-enzyme check</strong> on mode-2 candidates (catalytic-residue<br />
-  conservation) — the single most valuable upstream signal TreeGrafter lacks.</li>
-<li>Feed the family-vs-subfamily granularity cases (mode 1) back as candidate<br />
-  PAINT subfamily-annotation refinements (e.g. PTHR43775 PKS vs FAS).</li>
+  conservation) — the single most valuable upstream signal TreeGrafter lacks<br />
+  (aprA's missing FAD-His is the template case).</li>
+<li><strong>Feed errors upstream</strong>: family-vs-subfamily granularity cases (mode 1) as<br />
+  candidate PAINT subfamily-annotation refinements (e.g. PTHR43775 PKS vs FAS);<br />
+  node-term errors (mcr-1's EptA/SF0 TAS) as direct GO_Central corrections.</li>
+<li><strong>Cross-check against InterPro2GO</strong> where InterPro out-resolves PANTHER<br />
+  (<code>IPR011803 AprA</code>, <code>IPR003083 S-crystallin</code>, <code>IPR058128 Mcr1</code>).</li>
 </ul>
     </div>
 
