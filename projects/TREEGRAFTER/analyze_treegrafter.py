@@ -1,18 +1,28 @@
 #!/usr/bin/env python3
-"""Evaluate TreeGrafter / PANTHER (IBA) inferences against AIGR reviews.
+"""Evaluate TreeGrafter inferences against AIGR reviews.
 
-TreeGrafter is the InterProScan tool that grafts query proteins onto PANTHER
-reference phylogenetic trees, propagating the PAINT/GO_Central ancestral GO
-annotations. In GOA these surface as ``IBA`` (Inferred from Biological aspect
-of Ancestor) evidence with reference ``GO_REF:0000033`` and assigned-by
-``GO_Central``. This script mines every ``*-ai-review.yaml`` for those
-annotations and tabulates the reviewer's adjudication (ACTION) so we can ask:
-how good are TreeGrafter-style phylogenetic inferences when held to GO review
-criteria?
+TreeGrafter (Tang et al. 2019, doi:10.1093/bioinformatics/bty625) is the
+algorithm bundled into InterProScan that **grafts** a query protein onto the
+most appropriate PANTHER reference phylogenetic tree and propagates the GO
+annotations of the grafting node. Crucially, this is distinct from PAINT/IBA:
+
+  * PAINT (GO_Central) annotations are made by curators directly on genes that
+    are already *in* the PANTHER reference tree; they surface in GOA as
+    ``IBA`` / ``GO_REF:0000033`` / assigned-by ``GO_Central``.
+  * TreeGrafter inferences are for sequences *not* in the reference tree — they
+    are grafted on and propagated automatically, surfacing in GOA as
+    ``IEA`` / ``GO_REF:0000118`` / assigned-by ``TreeGrafter`` / with-from
+    ``PANTHER:...``.
+
+This script evaluates the TreeGrafter set (GO_REF:0000118). For contrast it
+also reports the PAINT/IBA set (GO_REF:0000033), but that is a *different*
+pipeline and is labelled as such. ``GO_REF:0000120`` is UniProt's "combined
+multiple IEA methods" reference (InterPro/ARBA/RHEA/...) and is NOT TreeGrafter,
+so it is excluded.
 
 Outputs (written next to this script):
-  - treegrafter_iba_review.tsv   one row per reviewed IBA annotation
-  - treegrafter_summary.tsv      action counts + per-aspect breakdown
+  - treegrafter_review.tsv     one row per reviewed TreeGrafter (GO_REF:0000118) annotation
+  - treegrafter_summary.tsv    action counts + most-downgraded terms, with the PAINT/IBA contrast
 
 Run:
   uv run --with pyyaml projects/TREEGRAFTER/analyze_treegrafter.py
@@ -24,40 +34,31 @@ from __future__ import annotations
 import csv
 import glob
 import os
-from collections import Counter, defaultdict
+from collections import Counter
 
 import yaml
 
-# Resolve the repo root from this file's location (projects/TREEGRAFTER/).
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 
-# GO aspect prefixes are not stored in the review YAML, so we infer aspect from
-# the well-known root-term neighbourhoods only where present; otherwise leave
-# blank. We instead group by the high-level action which is what we care about.
-TREEGRAFTER_REF = "GO_REF:0000033"
+TREEGRAFTER_REF = "GO_REF:0000118"  # IEA / assigned-by TreeGrafter / with-from PANTHER
+PAINT_REF = "GO_REF:0000033"        # IBA / GO_Central — contrast only, NOT TreeGrafter
 
 
-def is_treegrafter(ann: dict) -> bool:
-    """True if an existing_annotation came from the PANTHER/PAINT (IBA) pipeline."""
-    if ann.get("evidence_type") != "IBA":
-        return False
-    ref = ann.get("original_reference_id") or ""
-    # PANTHER/PAINT IBA annotations carry GO_REF:0000033. A handful of reviews
-    # leave the ref blank; IBA is itself unambiguous for the phylogenetic
-    # pipeline, so we also count blank-ref IBA. We do NOT count other GO_REFs.
-    return ref == TREEGRAFTER_REF or ref == ""
+def annotations(doc: dict):
+    for ann in doc.get("existing_annotations") or []:
+        if isinstance(ann, dict):
+            yield ann
 
 
-def main() -> None:
+def collect(files, ref: str, evidence: str):
+    """Return per-annotation rows for annotations matching ref + evidence code."""
     rows = []
-    files = sorted(glob.glob(os.path.join(ROOT, "genes", "**", "*-ai-review.yaml"),
-                             recursive=True))
     for path in files:
         try:
             with open(path) as fh:
                 doc = yaml.safe_load(fh)
-        except Exception as exc:  # noqa: BLE001 - report and continue
+        except Exception as exc:  # noqa: BLE001
             print(f"WARN: failed to parse {path}: {exc}")
             continue
         if not isinstance(doc, dict):
@@ -65,8 +66,10 @@ def main() -> None:
         gene = doc.get("gene_symbol", "")
         taxon = (doc.get("taxon") or {}).get("label", "")
         rel = os.path.relpath(path, ROOT)
-        for ann in doc.get("existing_annotations") or []:
-            if not isinstance(ann, dict) or not is_treegrafter(ann):
+        for ann in annotations(doc):
+            if (ann.get("original_reference_id") or "") != ref:
+                continue
+            if ann.get("evidence_type") != evidence:
                 continue
             review = ann.get("review") or {}
             term = ann.get("term") or {}
@@ -80,52 +83,71 @@ def main() -> None:
                 "has_replacement": bool(review.get("proposed_replacement_terms")),
                 "file": rel,
             })
+    return rows
 
-    # Write per-annotation rows.
-    out_rows = os.path.join(HERE, "treegrafter_iba_review.tsv")
+
+def action_counter(rows):
+    return Counter(r["action"] for r in rows)
+
+
+def main() -> None:
+    files = sorted(glob.glob(os.path.join(ROOT, "genes", "**", "*-ai-review.yaml"),
+                             recursive=True))
+
+    tg_rows = collect(files, TREEGRAFTER_REF, "IEA")
+    paint_rows = collect(files, PAINT_REF, "IBA")
+
+    # Per-annotation TSV for the TreeGrafter set.
+    out_rows = os.path.join(HERE, "treegrafter_review.tsv")
+    fields = ["gene", "taxon", "term_id", "term_label", "action", "negated",
+              "has_replacement", "file"]
     with open(out_rows, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()) if rows else
-                           ["gene", "taxon", "term_id", "term_label", "action",
-                            "negated", "has_replacement", "file"],
-                           delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t")
         w.writeheader()
-        w.writerows(rows)
+        w.writerows(tg_rows)
 
-    # Summaries.
-    action_counts = Counter(r["action"] for r in rows)
-    genes_with_iba = len({r["file"] for r in rows})
-    total_genes = len(files)
-    # Most-common terms that get REMOVE / MARK_AS_OVER_ANNOTATED (problem terms).
+    tg_actions = action_counter(tg_rows)
+    paint_actions = action_counter(paint_rows)
     problem_actions = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
     problem_terms = Counter(
-        (r["term_id"], r["term_label"]) for r in rows if r["action"] in problem_actions
+        (r["term_id"], r["term_label"]) for r in tg_rows
+        if r["action"] in problem_actions
     )
 
     out_sum = os.path.join(HERE, "treegrafter_summary.tsv")
     with open(out_sum, "w", newline="") as fh:
         w = csv.writer(fh, delimiter="\t")
         w.writerow(["metric", "value"])
-        w.writerow(["total_review_files", total_genes])
-        w.writerow(["genes_with_treegrafter_iba", genes_with_iba])
-        w.writerow(["total_treegrafter_iba_annotations", len(rows)])
+        w.writerow(["total_review_files", len(files)])
+        w.writerow(["genes_with_treegrafter", len({r["file"] for r in tg_rows})])
+        w.writerow(["treegrafter_annotations (GO_REF:0000118, IEA)", len(tg_rows)])
+        w.writerow(["paint_iba_annotations (GO_REF:0000033, IBA; contrast only)",
+                    len(paint_rows)])
         w.writerow([])
-        w.writerow(["action", "count"])
-        for action, n in action_counts.most_common():
+        w.writerow(["TreeGrafter action", "count"])
+        for action, n in tg_actions.most_common():
             w.writerow([action, n])
         w.writerow([])
-        w.writerow(["top_problematic_terms (REMOVE/MODIFY/OVER_ANNOTATED)", "count"])
+        w.writerow(["PAINT/IBA action (contrast, NOT TreeGrafter)", "count"])
+        for action, n in paint_actions.most_common():
+            w.writerow([action, n])
+        w.writerow([])
+        w.writerow(["top_problematic_treegrafter_terms (REMOVE/MODIFY/OVER)", "count"])
         for (tid, label), n in problem_terms.most_common(25):
             w.writerow([f"{tid} {label}", n])
 
-    # Console report.
-    total = len(rows)
-    print(f"Scanned {total_genes} review files")
-    print(f"Genes with >=1 TreeGrafter/PANTHER IBA annotation: {genes_with_iba}")
-    print(f"Total reviewed TreeGrafter IBA annotations: {total}\n")
-    if total:
-        print("Action breakdown:")
-        for action, n in action_counts.most_common():
-            print(f"  {action:24s} {n:5d}  ({100*n/total:5.1f}%)")
+    def report(title, rows, counts):
+        total = len(rows)
+        print(f"\n{title}: {total} annotations across "
+              f"{len({r['file'] for r in rows})} genes")
+        for action, n in counts.most_common():
+            pct = 100 * n / total if total else 0
+            print(f"  {action:24s} {n:5d}  ({pct:5.1f}%)")
+
+    print(f"Scanned {len(files)} review files")
+    report("TreeGrafter (GO_REF:0000118, IEA)", tg_rows, tg_actions)
+    report("PAINT/IBA (GO_REF:0000033, IBA) — contrast, NOT TreeGrafter",
+           paint_rows, paint_actions)
     print(f"\nWrote {os.path.relpath(out_rows, ROOT)}")
     print(f"Wrote {os.path.relpath(out_sum, ROOT)}")
 
