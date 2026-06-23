@@ -83,6 +83,42 @@ bioinformatic/structural check) would change the call.
 | **aprA** (*Desulfovibrio*) | `succinate dehydrogenase activity` (REMOVE), `electron transfer activity`, `anaerobic respiration` | SUCCINATE DEHYDROGENASE [UBIQUINONE] FLAVOPROTEIN (PTHR11632:SF51) | **Adenylylsulfate (APS) reductase** α-subunit — shares the FAD fumarate-reductase/SDH flavoprotein fold but reduces APS, not succinate |
 | **fcs** (*P. putida*) | `medium-chain fatty acid-CoA ligase activity` (MODIFY), `fatty acid metabolic process` | 2-SUCCINYLBENZOATE–CoA LIGASE | **Feruloyl-CoA synthetase** — adjacent ANL adenylating-enzyme superfamily, wrong specific subfamily |
 
+## Lightweight graft check (PANTHER vs InterPro, no re-run)
+
+Rather than re-install InterProScan, we read the **two classifications UniProt
+already stores** for each exemplar: the PANTHER family/subfamily (the TreeGrafter
+graft point that propagated the term) and the InterPro signature entries (an
+independent, signature-based opinion). Computed live by
+[`graft_check.py`](graft_check.py) →
+[`treegrafter_graft_check.tsv`](treegrafter_graft_check.tsv).
+
+| Gene | Propagated term (down-graded) | PANTHER subfamily (graft) | InterPro's specific call | Diagnosis |
+|---|---|---|---|---|
+| **aprA** | succinate dehydrogenase activity | SDH flavoprotein, *mitochondrial* | **IPR011803 AprA** | PANTHER **subfamily-resolution gap**: no AprA subfamily exists, so it grafted onto the nearest (mito SDH) — but InterPro *does* identify AprA. An InterPro2GO call would beat TreeGrafter here. |
+| **OCTS1** | glutathione transferase activity | GLUTATHIONE S-TRANSFERASE | **IPR003083 S-crystallin** | InterPro names the lens **crystallin**; PANTHER subfamily stays "GST". Pseudo-enzyme invisible to the graft. |
+| **mcr-1** | phosphotransferase, phosphate acceptor | PHOSPHOETHANOLAMINE TRANSFERASE EptA | **IPR058128 Mcr1; IPR040423 PEA_transferase** | Placement is **right** (both methods); the propagated *GO term* is just a poor ancestral-node mapping. |
+| **eryAIII** | fatty acid synthase activity | *INACTIVE…POLYKETIDE SYNTHASE* | PKS ketoacyl-synthase / acyltransferase domains | Placement is **right** (both methods say PKS); the propagated term is the **family-level** FAS term. |
+| **fcs** | medium-chain fatty acid-CoA ligase | 2-succinylbenzoate–CoA ligase | only generic AMP-dependent ligase domain | Correct **superfamily**; *no* database has a feruloyl-CoA-synthetase-specific entry. Substrate unresolved by either method. |
+
+**Two conclusions from the graft check:**
+
+1. **In 4 of 5 cases the placement is sound — the error is the GO term bound to
+   the graft node**, not the tree position. Re-running TreeGrafter would
+   reproduce the same (reasonable) subfamily. The fix belongs upstream in
+   PAINT/PANTHER's node-to-GO mapping (propagate the subfamily-specific term;
+   don't attach a catalytic MF to a pseudo-enzyme subfamily).
+2. **InterPro frequently has resolution PANTHER lacks** (`AprA`, `S-crystallin`,
+   `Mcr1`). For these proteins a signature/InterPro2GO annotation would have been
+   *more* specific or correct than the phylogenetic graft — a concrete argument
+   for cross-checking TreeGrafter against InterPro2GO (see next steps).
+
+> **Independent verification (in progress):** blinded OpenScientist
+> function-assignment runs for all five exemplars (using the dedicated
+> [`treegrafter_function_hypothesis.md`](../../templates/treegrafter_function_hypothesis.md)
+> prompt) are running to see whether an independent agent, given only "GENE has
+> *<propagated term>*", recovers the correct specific function. Verdicts will be
+> folded in here on completion.
+
 ## What this means for the "re-run TreeGrafter" question
 
 For the **bulk** of failures (modes 1–3, ~90% of the down-grades), re-running

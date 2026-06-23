@@ -6,6 +6,7 @@ sidecars:
   per_annotation: TREEGRAFTER/treegrafter_review.tsv
   summary: TREEGRAFTER/treegrafter_summary.tsv
   placement: TREEGRAFTER/treegrafter_placement.tsv
+  graft_check: TREEGRAFTER/treegrafter_graft_check.tsv
 ---
 
 # TreeGrafter Inference Evaluation
@@ -139,12 +140,32 @@ curator made the call, fares so much better.
 - A few annotations are still `PENDING`/`UNREVIEWED` in partially-reviewed
   genes.
 
+## Deeper analyses
+
+- **[Failure Modes & Tree Placement](TREEGRAFTER/failure-modes.md)** — joins all
+  159 down-graded annotations to their PANTHER graft point, plus a lightweight
+  PANTHER-vs-InterPro [graft check](TREEGRAFTER/graft_check.py) on five
+  exemplars. Key result: the placement is usually sound; the error is the GO term
+  attached to the graft node, and **InterPro often resolves the protein better
+  than PANTHER** (e.g. `IPR011803 AprA`, `IPR003083 S-crystallin`).
+- **OpenScientist blinded verification** uses a dedicated TreeGrafter prompt
+  template,
+  [`templates/treegrafter_function_hypothesis.md`](../../templates/treegrafter_function_hypothesis.md),
+  which frames each propagated term as a blinded "GENE has *<term>*" hypothesis
+  and instructs the agent to actively test the three failure modes
+  (granularity, pseudo-enzyme, mis-placement). Run via
+  `gene-hypothesis-research openscientist <org> <gene> --annotation-term-id <GO>
+  --as-function-hypothesis --template templates/treegrafter_function_hypothesis.md`.
+
 ## Next steps
 
+- Fold in the OpenScientist verdicts for the five exemplars once the runs
+  complete (see failure-modes page).
+- **Contrast against `IEA` / `GO_REF:0000002` (InterPro2GO)** on the same genes —
+  the graft check suggests signature-based transfer would *out-resolve* the
+  phylogenetic graft for several of these proteins; quantify how often.
 - Break the TreeGrafter rates down by GO **aspect** (MF / BP / CC) — hypothesis:
   the over-specific MF propagations are the single worst category.
 - Cluster failures by PANTHER family/subfamily id (from `WITH/FROM`) to find
   families where TreeGrafter systematically over-reaches — candidate subfamily
   split / PAINT curation targets to feed upstream.
-- Contrast against `IEA` / `GO_REF:0000002` (InterPro2GO) on the same genes:
-  phylogenetic grafting vs. signature-based transfer.
