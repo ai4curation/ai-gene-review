@@ -143,6 +143,55 @@ a blinded LLM-agent function check is a viable **QC layer** over automated
 phylogenetic annotations: it reliably catches exactly the cases TreeGrafter gets
 wrong, without being told the answer.
 
+## Scale-up: 10 exemplars, two providers, family heterogeneity
+
+The exemplar set was extended to **10 genes across 10 distinct enzyme families**
+(adding NaPMT3, ADAR2, NaUGT1, aceK, ahpC) and each was run **blinded on two
+independent providers** (OpenScientist autonomous-compute + Falcon/Edison
+literature). The blinded conclusion is now cited back in each source review as a
+`file:…/openscientist.md` reference (in `references` and the annotation's
+`supported_by`).
+
+| Gene | Held-out action | OpenScientist | Falcon | Independent specific call |
+|---|---|---|---|---|
+| OCTS1 | OVER_ANNOTATED | REFUTED (pseudo-enzyme) | pseudo-enzyme | S-crystallin, structural (GO:0005212) |
+| mcr-1 | MODIFY | REFUTED (wrong node term) | too general | pEtN transferase ⇒ GO:0016780/GO:0043838 |
+| eryAIII | MODIFY | REFUTED (granularity) | mis-placed | DEBS3 modular PKS (EC 2.3.1.94) |
+| aprA | REMOVE | REFUTED (mis-placed) | mis-placed | APS reductase α (EC 1.8.99.2) |
+| fcs | MODIFY | REFUTED (mis-placed) | mis-placed | feruloyl-CoA synthetase (GO:0050563) |
+| NaPMT3 | REMOVE | REFUTED (granularity) | mis-placed | putrescine N-MTase (EC 2.1.1.53, GO:0030750) |
+| ADAR2 | REMOVE | REFUTED (mis-placed) | mis-placed | dsRNA/mRNA ADAR (not tRNA ADAT) |
+| NaUGT1 | REMOVE | REFUTED (granularity) | mis-placed | UGT85A clade, wrong substrate |
+| aceK | MODIFY | too general | too general | IDH kinase/phosphatase ⇒ GO:0101014 |
+| ahpC | MODIFY | too general | too general | AhpF-dependent peroxiredoxin |
+
+**Both providers down-graded the propagated term on all 10 genes** (8 REFUTED + 2
+"too general" for OpenScientist; 7 REFUTED + 3 "too general" for Falcon), agreeing
+on the failure mode in 8/10 and differing only in severity label on mcr-1 and
+eryAIII (both still say the term must change). Cross-provider agreement on a
+blinded task is strong evidence the QC signal is real, not a single-model artifact.
+
+**Family-level companion runs (Falcon) explain *why*.** Each PANTHER family was
+characterized for whether one GO MF term is safe to propagate. **9 of 10 families
+are HETEROGENEOUS** — a single substrate-specific term mis-annotates some
+branches:
+
+| Family | Verdict | Why |
+|---|---|---|
+| PTHR11632 (aprA) | HETEROGENEOUS | SDH + fumarate reductase; GO:0000104 over-annotates FRD |
+| PTHR43775 (eryAIII) | HETEROGENEOUS | FAS + modular PKS share the ketosynthase fold |
+| PTHR11571 (OCTS1) | HETEROGENEOUS | active GSTs + co-opted crystallins |
+| PTHR11558 (NaPMT3) | HETEROGENEOUS | spermidine synthases + neofunctionalized PMTs |
+| PTHR11926 (NaUGT1) | HETEROGENEOUS | 14 plant UGT groups, divergent substrates |
+| PTHR43201, PTHR30443, PTHR10910, PTHR10681 | HETEROGENEOUS | substrate/reductant/subfamily divergence |
+| **PTHR39559 (aceK)** | **HOMOGENEOUS** | single IDH kinase/phosphatase function — the *only* family where the propagated term was right-but-too-general, not wrong |
+
+The single homogeneous family is exactly the one whose blinded verdict was "too
+general" rather than "wrong" — family heterogeneity predicts the failure severity.
+The actionable upstream signal: **gate single-term GO propagation on a family
+homogeneity check**, and split or subfamily-annotate the heterogeneous ones in
+PAINT.
+
 ## What this means for the "re-run TreeGrafter" question
 
 For the **bulk** of failures (modes 1–3, ~90% of the down-grades), re-running
