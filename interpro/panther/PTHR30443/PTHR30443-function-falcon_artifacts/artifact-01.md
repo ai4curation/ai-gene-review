@@ -1,0 +1,16 @@
+> PTHR30443 is functionally **heterogeneous**: characterized members share phosphoethanolamine (pEtN) transfer chemistry, but diverge strongly in acceptor substrate, including lipid A, Kdo, heptose, O-antigen, cellulose, periplasmic glucans, and pilin; therefore a single narrow subfamily function is not safe to propagate across the whole family (pqac-00000008, pqac-00000009, pqac-00000011, pqac-00000023).
+>
+> The currently propagated term **GO:0016776 phosphotransferase activity, phosphate group as acceptor** is chemically defensible but **over-generic** for this family because it misses the defining conserved feature: these are Zn2+-dependent **phosphoethanolamine transferases** that use phosphatidylethanolamine as donor and transfer a pEtN moiety to diverse acceptors (pqac-00000000, pqac-00000001, pqac-00000003).
+>
+> **Family-level curation lead:** use a term equivalent to **phosphoethanolamine transferase activity** for branches where catalytic function is supported, rather than a lipid A-specific term; this better captures the conserved chemistry while avoiding false restriction to LPS/lipid A substrates (pqac-00000011, pqac-00000023, pqac-00000026).
+>
+> **Subfamily-level curation lead for PTHR30443:SF0 (EptA/MCR):** annotate as **lipid A phosphoethanolamine transferase activity** (or equivalent) because this branch specifically modifies lipid A and includes the canonical colistin-resistance enzymes EptA/MCR; within this branch, MCR-1 and EptA differ further in preferred lipid A phosphate site (4′ versus 1) (pqac-00000014, pqac-00000016, pqac-00000027, pqac-00000030).
+>
+> **Do not automatically propagate even the family-level catalytic term to all PET-like branches**: PET-B/PET-C-like proteins showed absent or weak/noncanonical phenotypes in E. coli, with PET-B lacking detectable pEtN modification and PET-C showing lipid A modification without a colistin-resistance phenotype; these branches may be host-specific, low-activity, or partially diverged and need direct evidence (pqac-00000027, pqac-00000029, pqac-00000030, pqac-00000031).
+>
+> **Class VI BcsG** remains within the broader pEtN-transferase family, but it uses altered catalytic machinery, including a **Ser** nucleophile instead of the canonical Class I **Thr**, different Zn2+-coordinating residues, and no second Zn2+ site; thus family-level chemistry may still apply, but Class I-specific residue annotations should **not** be propagated to BcsG branches (pqac-00000032, pqac-00000033).
+>
+> **Class XI PptA** modifies the pilin subunit **PilE** rather than lipid A, LPS core sugars, or other glycans; any LPS-specific or lipid A-specific GO term at the family node would therefore mis-annotate this branch (pqac-00000011, pqac-00000023, pqac-00000026).
+
+
+*Blockquote: This blockquote summarizes the curation implications of the PTHR30443 audit. It distinguishes the conserved family-level phosphoethanolamine transfer chemistry from the strongly divergent subfamily-level acceptor specificities that make broad GO propagation unsafe.*
