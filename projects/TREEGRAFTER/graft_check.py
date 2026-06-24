@@ -47,6 +47,18 @@ EXEMPLARS = [
      "MODIFY", "erythromycin polyketide synthase module (PKS)"),
     ("mcr-1", "ECOLX", "A0A0R6L508", "phosphotransferase activity, phosphate group as acceptor",
      "GO:0016776", "MODIFY", "phosphoethanolamine transferase (lipid A modification)"),
+    # --- second batch (distinct enzyme families) ---
+    ("NaPMT3", "NICAT", "A0A314LG79", "spermidine synthase activity", "GO:0004766",
+     "REMOVE", "putrescine N-methyltransferase (PMT, neofunctionalized from spermidine synthase)"),
+    ("ADAR2", "DOROP", "C1JAR3", "tRNA-specific adenosine deaminase activity", "GO:0008251",
+     "REMOVE", "double-stranded RNA / mRNA adenosine deaminase (ADAR, not tRNA-specific ADAT)"),
+    ("NaUGT1_candidate_UGT85A2_0", "NICAT", "A0A2H4GSI3",
+     "quercetin 3-O-glucosyltransferase activity", "GO:0080043",
+     "REMOVE", "UDP-glucuronosyltransferase / UGT family (specific flavonoid substrate unproven)"),
+    ("aceK", "PSEPK", "Q88EA1", "phosphoprotein phosphatase activity", "GO:0004721",
+     "MODIFY", "isocitrate dehydrogenase kinase/phosphatase (bifunctional, atypical)"),
+    ("ahpC", "PSEPK", "Q88K52", "thioredoxin peroxidase activity", "GO:0008379",
+     "MODIFY", "alkyl hydroperoxide reductase / 2-Cys peroxiredoxin (AhpC)"),
 ]
 
 
