@@ -45,7 +45,7 @@ synthesizes literature with comparative inference.
 | Species | UniProt code | Reference MOD | In repo? | Notes |
 |---|---|---|---|---|
 | *Caenorhabditis briggsae* | `CAEBR` | *C. elegans* (worm) | ✅ `genes/CAEBR/drd-5` | Standard congeneric comparator |
-| *Pristionchus pacificus* | `PRIPA` | *C. elegans* (worm) | ❌ not yet | Necromenic beetle associate; evo-devo "satellite model" for mouthpark plasticity |
+| *Pristionchus pacificus* | `PRIPA` (NCBITaxon:54126) | *C. elegans* (worm) | ❌ not yet | Necromenic beetle associate; evo-devo "satellite model" for mouthpart plasticity |
 
 Other genera (e.g. comparative *Drosophila* species, *Saccharomyces* relatives)
 may be added as gene reviews accrue.
@@ -54,7 +54,9 @@ may be added as gene reviews accrue.
 
 - [x] `CAEBR` **drd-5** — dopamine-receptor-family gene; reviewed (see
   `genes/CAEBR/drd-5/`).
-- [ ] `PRIPA` — seed gene(s) TBD; not yet fetched into the repo.
+- [ ] `PRIPA` (*P. pacificus*, NCBITaxon:54126) — seed gene(s) TBD; not yet
+  fetched into the repo. Developmental-plasticity / predatory-morph genes are
+  natural first candidates.
 
 ## Status / next steps
 

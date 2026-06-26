@@ -41,22 +41,22 @@ nematodes that are *also* used as comparative models are cross-listed.
 
 | Species | Parasitic lifestyle | In repo? | Notes |
 |---|---|---|---|
-| *Steinernema hermaphroditum* | Entomopathogenic (insect-parasitic) nematode | ❌ not yet | Mutualist of *Xenorhabdus*; emerging genetic model for EPN/symbiosis biology. UniProt species code TBD when fetched. |
+| *Steinernema hermaphroditum* | Entomopathogenic (insect-parasitic) nematode | ❌ not yet | Mutualist of *Xenorhabdus*; emerging genetic model for EPN/symbiosis biology. UniProt code `9BILA` (provisional, auto-assigned), NCBITaxon:289476 → `genes/9BILA/`. |
 
 Additional parasites (other *Steinernema*/*Heterorhabditis* EPNs, parasitic
 helminths, protozoan parasites) to be added as reviews are scoped.
 
 ## Genes for review
 
-- [ ] *Steinernema hermaphroditum* — seed gene(s) TBD; not yet fetched into the
-  repo. Candidate areas: infective-juvenile development, host-immune evasion, and
-  the *Xenorhabdus* symbiosis interface.
+- [ ] *Steinernema hermaphroditum* (`9BILA`, NCBITaxon:289476) — seed gene(s)
+  TBD; not yet fetched into the repo. Candidate areas: infective-juvenile
+  development, host-immune evasion, and the *Xenorhabdus* symbiosis interface.
 
 ## Status / next steps
 
 - **SCOPING.** No parasite genes from the nematode scope are in the repo yet.
-- Determine the correct UniProt species code / NCBI taxon for
-  *S. hermaphroditum* and run `just fetch-gene <CODE> <gene>` for a seed set.
+- Run `just fetch-gene 9BILA <gene>` for a *S. hermaphroditum* seed set (note
+  `9BILA` is a provisional code; most accessions will be TrEMBL, not Swiss-Prot).
 - Pull the [PARASITE_IMMUNE_MODULATORS](PARASITE_IMMUNE_MODULATORS.md) candidate
   list under this umbrella's "host-modulation" sub-topic.
 
