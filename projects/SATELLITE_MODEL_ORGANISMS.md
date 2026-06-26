@@ -2,7 +2,7 @@
 title: "Satellite Model Organisms"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-species: [CAEBR]
+species: [CAEBR, PRIPA]
 ---
 
 # Satellite Model Organisms
@@ -45,7 +45,7 @@ synthesizes literature with comparative inference.
 | Species | UniProt code | Reference MOD | In repo? | Notes |
 |---|---|---|---|---|
 | *Caenorhabditis briggsae* | `CAEBR` | *C. elegans* (worm) | ✅ `genes/CAEBR/drd-5` | Standard congeneric comparator |
-| *Pristionchus pacificus* | `PRIPA` (NCBITaxon:54126) | *C. elegans* (worm) | ❌ not yet | Necromenic beetle associate; evo-devo "satellite model" for mouthpart plasticity |
+| *Pristionchus pacificus* | `PRIPA` (NCBITaxon:54126) | *C. elegans* (worm) | ✅ `genes/PRIPA/oaz` | Necromenic beetle associate; evo-devo "satellite model" for mouthpart plasticity |
 
 Other genera (e.g. comparative *Drosophila* species, *Saccharomyces* relatives)
 may be added as gene reviews accrue.
@@ -54,21 +54,24 @@ may be added as gene reviews accrue.
 
 - [x] `CAEBR` **drd-5** — dopamine-receptor-family gene; reviewed (see
   `genes/CAEBR/drd-5/`).
-- [ ] `PRIPA` (*P. pacificus*, NCBITaxon:54126) — seed gene(s) TBD; not yet
-  fetched into the repo. Developmental-plasticity / predatory-morph genes are
-  natural first candidates.
+- [ ] `PRIPA` **oaz** (`Q9NHZ4`, ornithine decarboxylase antizyme) — seeded into
+  `genes/PRIPA/oaz/`; annotations are PENDING review. This is the species' only
+  reviewed (Swiss-Prot) entry; its 4 GOA annotations are all IBA/IEA (no
+  experimental evidence).
+- [ ] `PRIPA` developmental-plasticity / predatory-morph genes — TrEMBL-only;
+  candidates for future review from literature + bioinformatics.
 
 ## Status / next steps
 
-- **SCOPING.** Only *C. briggsae* `drd-5` is currently present.
+- **SCOPING.** *C. briggsae* `drd-5` and *P. pacificus* `oaz` are present.
 - **Annotation availability (UniProt, 2026-06):** `PRIPA` has just **1 reviewed
   (Swiss-Prot) entry** — `Q9NHZ4` (OAZ_PRIPA, ornithine decarboxylase antizyme,
-  142 aa) — alongside ~26,000 unreviewed TrEMBL entries. The classic
-  developmental-plasticity / predatory-morph genes are all TrEMBL-only, so seeding
-  those means working from unreviewed accessions.
-- Candidate first seed: `PRIPA` `Q9NHZ4` (antizyme) via `just fetch-gene PRIPA
-  <gene>` — a clean reviewed entry, though housekeeping rather than the
-  plasticity biology that motivates the project.
+  142 aa), now seeded as `genes/PRIPA/oaz/` — alongside ~26,000 unreviewed TrEMBL
+  entries. The classic developmental-plasticity / predatory-morph genes are all
+  TrEMBL-only, so seeding those means working from unreviewed accessions.
+- Next: complete the PENDING annotation review of `PRIPA` `oaz`, and decide
+  whether to pull in TrEMBL plasticity genes (e.g. the *eud-1*/sulfatase morph
+  switch) backed by literature + bioinformatics.
 - Where a satellite gene is annotated only by orthology to the reference MOD,
   record in the review whether the comparative inference is supported by direct
   evidence in the satellite species.
