@@ -39,5 +39,3 @@
 - MODIFY (too general → creatine kinase activity): GO:0003824 catalytic activity, GO:0016301 kinase activity, GO:0016772 transferase activity transferring phosphorus-containing groups, GO:0016775 phosphotransferase activity nitrogenous group as acceptor (all IEA/InterPro).
 - MARK_AS_OVER_ANNOTATED / KEEP_AS_NON_CORE: GO:0006936 muscle contraction (TAS PMID:2324105) — CKMT2 supplies energy to contracting muscle but is not part of the contractile machinery; this is downstream/contextual.
 - protein binding GO:0005515 (IPI, x2 references): uninformative; high-throughput. Do not adopt as core. Mark over-annotated (per curation guideline avoid bare protein binding).
-</content>
-</invoke>
