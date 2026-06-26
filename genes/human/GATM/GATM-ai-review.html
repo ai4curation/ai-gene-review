@@ -1,0 +1,4154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GATM - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GATM</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P50440" target="_blank" class="term-link">
+                        P50440
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GATM";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P50440" data-a="DESCRIPTION: GATM (AGAT; L-arginine:glycine amidinotransferase,..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GATM (AGAT; L-arginine:glycine amidinotransferase, EC 2.1.4.1) is the first and rate-limiting enzyme of creatine biosynthesis. It catalyzes the transfer of the amidino group of L-arginine onto the amino group of glycine to yield guanidinoacetate and L-ornithine; guanidinoacetate is subsequently methylated by GAMT to form creatine. The mature enzyme is a homodimer with a five-fold pseudosymmetric basket fold and a buried active site that uses a Cys-His-Asp catalytic triad and an amidino-cysteine covalent intermediate (ping-pong mechanism). Although glycine is the strongly preferred acceptor, the enzyme is promiscuous and can also amidinate GABA, beta-alanine and taurine to produce guanidinobutyrate, guanidinopropionate and taurocyamine. The canonical mitochondrial isoform carries a cleavable N-terminal transit peptide and localizes to the mitochondrial intermembrane space, attached to the intermembrane side of the inner membrane; an alternatively spliced isoform is cytoplasmic. GATM is expressed broadly with highest levels in kidney, and is also abundant in liver, pancreas (exocrine acinar cells), heart, brain and skeletal muscle, supplying creatine to high-energy-demand tissues for ATP buffering. Loss-of-function variants cause autosomal-recessive cerebral creatine deficiency syndrome 3 (AGAT deficiency), a treatable disorder of brain creatine depletion presenting with intellectual disability, speech delay and myopathy, whereas distinct dominant aggregation-prone variants cause Fanconi renotubular syndrome 1.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0005758" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of the mitochondrial intermembrane space localization, consistent with the experimentally determined human localization and the conserved mitochondrial targeting of the amidinotransferase family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The canonical isoform is a mitochondrial enzyme localized to the intermembrane space (attached to the intermembrane side of the inner membrane). This is the correct core location and is independently supported by an IDA annotation (PMID:9218780).
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006601" target="_blank" class="term-link">
+                                    GO:0006601
+                                </a>
+                            </span>
+                            <span class="term-label">creatine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0006601" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of involvement in creatine biosynthesis, the canonical and best-established biological role of GATM/AGAT.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GATM catalyzes the committed, rate-limiting step of creatine biosynthesis (formation of guanidinoacetate). This is a core biological process for the gene.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9218780" target="_blank" class="term-link">
+                                        PMID:9218780
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">L-arginine:glycine amidinotransferase (AT) catalyses the committed step in creatine biosynthesis by formation of guanidinoacetic acid, the immediate precursor of creatine.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015068" target="_blank" class="term-link">
+                                    GO:0015068
+                                </a>
+                            </span>
+                            <span class="term-label">glycine amidinotransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0015068" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of glycine amidinotransferase activity, the defining catalytic activity of GATM.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of GATM, directly demonstrated experimentally in human enzyme (EXP/IDA in multiple references) and conserved across the family.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic location derived by UniProt subcellular-location mapping, reflecting the cytoplasmic splice isoform (P50440-2) rather than the canonical mitochondrial enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates isoform 2 as cytoplasmic, so this term is not wrong, but the core, catalytically characterized form is the mitochondrial intermembrane-space enzyme. Retain as non-core (isoform-specific) localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0005743" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial inner membrane location from UniProt subcellular-location mapping; the enzyme is a peripheral membrane protein on the intermembrane side of the inner membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt subcellular location (Mitochondrion inner membrane; Peripheral membrane protein; Intermembrane side). The functionally most specific term is mitochondrial intermembrane space; this inner-membrane term is an accurate, slightly different facet of the same location.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015067" target="_blank" class="term-link">
+                                    GO:0015067
+                                </a>
+                            </span>
+                            <span class="term-label">amidinotransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0015067" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Parent amidinotransferase activity assigned via InterPro2GO from the amidinotransferase family signature.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate but less specific than glycine amidinotransferase activity. The broader parent is genuinely appropriate because GATM is promiscuous, also amidinating GABA, beta-alanine and taurine. Retained; the specific GO:0015068 term is the primary core function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015068" target="_blank" class="term-link">
+                                    GO:0015068
+                                </a>
+                            </span>
+                            <span class="term-label">glycine amidinotransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0015068" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycine amidinotransferase activity inferred electronically from Rhea/EC:2.1.4.1 mapping.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function, redundant with the experimental annotations for the same term but valid as an automated EC/Rhea-based assignment.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding annotations from a large-scale neurodegenerative-disease interactome/Y2H screen, covering 13 prey partners.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein binding (GO:0005515) is uninformative and does not capture a defined molecular function. These IPI calls come from a high-throughput interactome map and none of the listed partners corresponds to an established, functionally meaningful GATM complex. Per curation guidelines, bare protein binding should not be carried as a core function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120162" target="_blank" class="term-link">
+                                    GO:0120162
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of cold-induced thermogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0120162" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Positive regulation of cold-induced thermogenesis transferred electronically from the mouse ortholog (Gatm), based on adipocyte-specific knockout phenotypes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This reflects a genuine but tissue- and context-specific downstream consequence of adipocyte creatine synthesis demonstrated in mouse (fat-specific Gatm knockout impairs diet-induced/adaptive thermogenesis). It is a physiological role of creatine energetics, not a core molecular/biological function of the human enzyme; retain as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28844881" target="_blank" class="term-link">
+                                        PMID:28844881
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we have inactivated the first and rate-limiting enzyme of creatine biosynthesis, glycine amidinotransferase (GATM), selectively in fat (Adipo-Gatm KO).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006601" target="_blank" class="term-link">
+                                    GO:0006601
+                                </a>
+                            </span>
+                            <span class="term-label">creatine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0006601" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Creatine biosynthetic process inferred electronically from UniPathway mapping.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process, consistent with the curated and experimental annotations for the same term.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial localization from immunofluorescence (HPA), a broader but accurate compartment assignment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly observed mitochondrial localization. Less specific than mitochondrial intermembrane space but correct; retained as supporting localization evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-71275
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0005758" data-r="Reactome:R-HSA-71275" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial intermembrane space localization asserted by Reactome (creatine metabolism pathway).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same core location as the IDA and IBA annotations; traceable author statement consistent with the experimentally established localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015068" target="_blank" class="term-link">
+                                    GO:0015068
+                                </a>
+                            </span>
+                            <span class="term-label">glycine amidinotransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36543883" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36543883
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guanidino acid hydrolysis by the human enzyme annotated as a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0015068" data-r="PMID:36543883" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental demonstration that purified recombinant human GATM amidinates glycine (and, less efficiently, GABA/beta-alanine/taurine), with glycine as the preferred acceptor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the defining catalytic activity; this is the core molecular function of the gene.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36543883" target="_blank" class="term-link">
+                                        PMID:36543883
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">human GATM had the highest activity with glycine, but also GABA, β-alanine and taurine were accepted as substrates with decreasing preference</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015068" target="_blank" class="term-link">
+                                    GO:0015068
+                                </a>
+                            </span>
+                            <span class="term-label">glycine amidinotransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3800397" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3800397
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The purification and characterization of human kidney L-argi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0015068" data-r="PMID:3800397" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Purification and biochemical characterization of human kidney transamidinase establishing its amidinotransferase activity and dimeric structure.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Classic experimental support for the core catalytic activity of human AGAT.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3800397" target="_blank" class="term-link">
+                                        PMID:3800397
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Human kidney transamidinase is a dimer with a molecular mass of 89,000 Da and subunit masses of 44,000 Da. The Km for arginine and glycine were both 2.5 mM</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015068" target="_blank" class="term-link">
+                                    GO:0015068
+                                </a>
+                            </span>
+                            <span class="term-label">glycine amidinotransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9266688" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9266688
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate binding and catalysis by L-arginine:glycine amidin...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0015068" data-r="PMID:9266688" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutagenesis and crystallographic study confirming the catalytic activity and active-site residues of human AGAT.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental and structural support for the core glycine amidinotransferase activity, including identification of catalytic residues whose mutation abolishes activity.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial localization from a high-throughput high-confidence human mitochondrial proteome study.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the established mitochondrial localization; high-throughput evidence corroborating the more specific intermembrane-space assignment.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015067" target="_blank" class="term-link">
+                                    GO:0015067
+                                </a>
+                            </span>
+                            <span class="term-label">amidinotransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36543883" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36543883
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guanidino acid hydrolysis by the human enzyme annotated as a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0015067" data-r="PMID:36543883" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration of broader amidinotransferase activity, since human GATM amidinates multiple acceptors (glycine, GABA, beta-alanine, taurine).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The parent term is justified by the experimentally observed substrate promiscuity. The most specific core activity is glycine amidinotransferase activity (GO:0015068); this broader term legitimately captures the side reactions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36543883" target="_blank" class="term-link">
+                                        PMID:36543883
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">human GATM had the highest activity with glycine, but also GABA, β-alanine and taurine were accepted as substrates with decreasing preference</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120162" target="_blank" class="term-link">
+                                    GO:0120162
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of cold-induced thermogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28844881" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28844881
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic Depletion of Adipocyte Creatine Metabolism Inhibits ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0120162" data-r="PMID:28844881" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Positive regulation of cold-induced thermogenesis inferred by sequence/orthology from the mouse Gatm adipocyte-knockout phenotype.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same context-specific downstream role as the IEA annotation for this term: adipocyte creatine synthesis supports adaptive/diet-induced thermogenesis in mouse. A legitimate physiological consequence of creatine energetics, but not a core function of the enzyme; retain as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28844881" target="_blank" class="term-link">
+                                        PMID:28844881
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these data suggest that adipose tissue Gatm and creatine energetics support adaptive thermogenesis in response to environmental cold.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007611" target="_blank" class="term-link">
+                                    GO:0007611
+                                </a>
+                            </span>
+                            <span class="term-label">learning or memory</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26490222" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26490222
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Arginine:glycine amidinotransferase (AGAT) deficiency: Clini...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0007611" data-r="PMID:26490222" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Learning or memory assigned (CAFA) from the cognitive impairment seen in AGAT-deficiency patients.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The clinical phenotype is intellectual disability/developmental delay arising from severe brain creatine depletion. Annotating GATM directly to learning or memory over-reaches from a distal, secondary consequence of loss of creatine and does not reflect a molecular or cellular role of the enzyme in this process. The core process is creatine biosynthesis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26490222" target="_blank" class="term-link">
+                                        PMID:26490222
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">15 patients diagnosed between 16 months and 25 years of life had intellectual disability/developmental delay (IDD).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0014889" target="_blank" class="term-link">
+                                    GO:0014889
+                                </a>
+                            </span>
+                            <span class="term-label">muscle atrophy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26490222" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26490222
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Arginine:glycine amidinotransferase (AGAT) deficiency: Clini...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0014889" data-r="PMID:26490222" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Muscle atrophy assigned (CAFA) from the myopathy/muscle weakness seen in AGAT-deficiency patients.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Myopathy/proximal muscle weakness in AGAT deficiency is a downstream consequence of systemic creatine depletion, not evidence that GATM participates in a muscle-atrophy process per se. This is an over-annotation derived from a disease phenotype; the core process is creatine biosynthesis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26490222" target="_blank" class="term-link">
+                                        PMID:26490222
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">8 patients also had myopathy/proximal muscle weakness.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015068" target="_blank" class="term-link">
+                                    GO:0015068
+                                </a>
+                            </span>
+                            <span class="term-label">glycine amidinotransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27233232" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27233232
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Arginine-Glycine Amidinotransferase Deficiency and Functiona...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0015068" data-r="PMID:27233232" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of glycine amidinotransferase activity used to functionally characterize pathogenic GATM missense variants (several retaining 0% of wild-type activity).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental support for the core catalytic activity, with variant assays linking loss of this activity to AGAT-deficiency pathogenicity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27233232" target="_blank" class="term-link">
+                                        PMID:27233232
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We found seven missense variants retaining 0% of wild-type GATM activity indicating putative pathogenicity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular exosome localization from a high-throughput proteomic study of exosomes in expressed prostatic secretions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GATM is a mitochondrial intermembrane-space enzyme; detection in an exosome proteomics dataset is a high-throughput co-purification and does not reflect a functional extracellular/exosomal location. Over-annotation; not a core localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9218780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9218780
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure and mechanism of human L-arginine:glycine ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0005758" data-r="PMID:9218780" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) assignment of GATM to the mitochondrial intermembrane space, the core functional location of the enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported, most-specific correct localization. This is the core cellular location where the enzyme performs creatine precursor synthesis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9218780" target="_blank" class="term-link">
+                                        PMID:9218780
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a mitochondrial enzyme involved in creatine biosynthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006601" target="_blank" class="term-link">
+                                    GO:0006601
+                                </a>
+                            </span>
+                            <span class="term-label">creatine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9218780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9218780
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure and mechanism of human L-arginine:glycine ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0006601" data-r="PMID:9218780" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence linking GATM activity to creatine biosynthesis (formation of the immediate creatine precursor guanidinoacetate).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process for the gene. Captured with the same evidence as the enables/MF and involved_in/BP annotations; the acts_upstream_of_or_within qualifier is acceptable.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9218780" target="_blank" class="term-link">
+                                        PMID:9218780
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">L-arginine:glycine amidinotransferase (AT) catalyses the committed step in creatine biosynthesis by formation of guanidinoacetic acid, the immediate precursor of creatine.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015068" target="_blank" class="term-link">
+                                    GO:0015068
+                                </a>
+                            </span>
+                            <span class="term-label">glycine amidinotransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9218780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9218780
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure and mechanism of human L-arginine:glycine ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50440" data-a="GO:0015068" data-r="PMID:9218780" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) annotation of glycine amidinotransferase activity from the crystal-structure and mechanism study of the human enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function, supported by structural characterization of the catalytic mechanism (Cys-His-Asp triad, amidino-cysteine intermediate).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9218780" target="_blank" class="term-link">
+                                        PMID:9218780
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A reaction mechanism with a catalytic triad Cys-His-Asp is proposed on the basis of substrate and product bound states.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Glycine amidinotransferase activity: transfers the amidino group of L-arginine to glycine, producing guanidinoacetate and L-ornithine - the committed, rate-limiting step of creatine biosynthesis - acting in the mitochondrial intermembrane space.</h3>
+                <span class="vote-buttons" data-g="P50440" data-a="FUNCTION: Glycine amidinotransferase activity: transfers the..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015068" target="_blank" class="term-link">
+                            glycine amidinotransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006601" target="_blank" class="term-link">
+                                creatine biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                mitochondrial intermembrane space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:32682" target="_blank" class="term-link">
+                                L-arginine
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:57305" target="_blank" class="term-link">
+                                glycine
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9218780" target="_blank" class="term-link">
+                                PMID:9218780
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">L-arginine:glycine amidinotransferase (AT) catalyses the committed step in creatine biosynthesis by formation of guanidinoacetic acid, the immediate precursor of creatine.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36543883" target="_blank" class="term-link">
+                                PMID:36543883
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">human GATM had the highest activity with glycine, but also GABA, β-alanine and taurine were accepted as substrates with decreasing preference</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Broader amidinotransferase activity reflecting the enzyme&#39;s substrate promiscuity: in addition to glycine, GATM amidinates GABA, beta-alanine and taurine to form guanidinobutyrate, guanidinopropionate and taurocyamine, respectively.</h3>
+                <span class="vote-buttons" data-g="P50440" data-a="FUNCTION: Broader amidinotransferase activity reflecting the..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015067" target="_blank" class="term-link">
+                            amidinotransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                mitochondrial intermembrane space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36543883" target="_blank" class="term-link">
+                                PMID:36543883
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">we further show that the identified guanidino acid substrates were produced by the promiscuous action of human glycine amidinotransferase</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26490222" target="_blank" class="term-link">
+                            PMID:26490222
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Arginine:glycine amidinotransferase (AGAT) deficiency: Clinical features and long term outcomes in 16 patients diagnosed worldwide.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27233232" target="_blank" class="term-link">
+                            PMID:27233232
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Arginine-Glycine Amidinotransferase Deficiency and Functional Characterization of Missense Variants in GATM.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28844881" target="_blank" class="term-link">
+                            PMID:28844881
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic Depletion of Adipocyte Creatine Metabolism Inhibits Diet-Induced Thermogenesis and Drives Obesity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36543883" target="_blank" class="term-link">
+                            PMID:36543883
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Guanidino acid hydrolysis by the human enzyme annotated as agmatinase.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3800397" target="_blank" class="term-link">
+                            PMID:3800397
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The purification and characterization of human kidney L-arginine:glycine amidinotransferase.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9218780" target="_blank" class="term-link">
+                            PMID:9218780
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structure and mechanism of human L-arginine:glycine amidinotransferase: a mitochondrial enzyme involved in creatine biosynthesis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9266688" target="_blank" class="term-link">
+                            PMID:9266688
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Substrate binding and catalysis by L-arginine:glycine amidinotransferase--a mutagenesis and crystallographic study.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-71275
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Creatine metabolism</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the broad amidinotransferase promiscuity (GABA, beta-alanine, taurine) physiologically significant in vivo, or is it primarily an in vitro side reaction with little flux under normal conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P50440" data-a="Q: Is the broad amidinotransferase promiscuity (GABA,..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> By what mechanism does the FRTS1 aggregation-prone gain-of-toxicity of specific GATM variants cause proximal tubulopathy, and how does it relate (if at all) to loss of catalytic activity?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P50440" data-a="Q: By what mechanism does the FRTS1 aggregation-prone..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantify in vivo flux of GATM toward the non-canonical guanidino acids (guanidinobutyrate, guanidinopropionate, taurocyamine) in human/mouse tissues using stable-isotope tracing, to determine whether the promiscuous activities contribute meaningfully to metabolite pools.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The non-glycine amidinotransferase side reactions are minor relative to guanidinoacetate synthesis under physiological conditions.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P50440" data-a="EXPERIMENT: Quantify in vivo flux of GATM toward the non-canon..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use structure-guided mutants that selectively impair GATM aggregation (FRTS1 variants) while preserving catalytic activity to dissociate the toxic-aggregation phenotype from enzymatic loss of function in proximal tubule cell models.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FRTS1 pathology is driven by mitochondrial protein aggregation and downstream stress, not by loss of creatine synthesis.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P50440" data-a="EXPERIMENT: Use structure-guided mutants that selectively impa..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GATM-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P50440" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gatm-p50440-review-notes">GATM (P50440) review notes</h1>
+<p>Gene: GATM (HGNC:4175), synonym AGAT. UniProt P50440, "Glycine amidinotransferase, mitochondrial".<br />
+EC 2.1.4.1. L-arginine:glycine amidinotransferase / transamidinase.</p>
+<h2 id="core-catalytic-function">Core catalytic function</h2>
+<ul>
+<li>AGAT catalyzes the committed/rate-limiting step of creatine biosynthesis:<br />
+  L-arginine + glycine -&gt; guanidinoacetate (GAA) + L-ornithine (Rhea:13201). GAA is then<br />
+  methylated by GAMT to form creatine.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9218780" title="L-arginine:glycine amidinotransferase (AT) catalyses the committed step in creatine biosynthesis by formation of guanidinoacetic acid, the immediate precursor of creatine.">PMID:9218780</a></li>
+<li>Catalytic mechanism: ping-pong, catalytic triad Cys-His-Asp; amidino-cysteine covalent<br />
+  intermediate at Cys407 (mature numbering). Active site residues His303, Asp254, Asp305, etc.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9218780" title="A reaction mechanism with a catalytic triad Cys-His-Asp is proposed on the basis of substrate and product bound states.">PMID:9218780</a></li>
+<li>New fold ("basket") with 5-fold pseudosymmetry of betabeta-alphabeta modules.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9218780" title="The structure of AT reveals a new fold with 5-fold pseudosymmetry of circularly arranged betabeta alphabeta-modules.">PMID:9218780</a></li>
+<li>Purified human kidney enzyme: dimer ~89 kDa, subunits ~44 kDa; Km ~2.5 mM for both arginine<br />
+  and glycine (UniProt lists Km 2 uM / 3 uM from later work).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/3800397" title="Human kidney transamidinase is a dimer with a molecular mass of 89,000 Da and subunit masses of 44,000 Da. The Km for arginine and glycine were both 2.5 mM">PMID:3800397</a></li>
+<li>Mutagenesis + crystallography confirming catalytic residues and mechanism.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9266688">PMID:9266688</a> (substrate binding and catalysis; mutagenesis of Asp170, Glu233, Asp254, His303, Asp305, Arg322, Ser355, Cys407, Cys410).</li>
+</ul>
+<h2 id="substrate-promiscuity-moonlighting-side-reactions">Substrate promiscuity (moonlighting / side reactions)</h2>
+<ul>
+<li>Human GATM also accepts GABA, beta-alanine and taurine as amidino acceptors, producing<br />
+  guanidinobutyrate (GBA), guanidinopropionate (GPA) and taurocyamine (TC) respectively, with<br />
+  decreasing preference; glycine remains the main substrate.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36543883" title="human GATM had the highest activity with glycine, but also GABA, β-alanine and taurine were accepted as substrates with decreasing preference">PMID:36543883</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36543883" title="In creatine biosynthesis, the intermediate guanidinoacetate is formed from glycine and arginine by mitochondrial glycine amidinotransferase (GATM)">PMID:36543883</a><br />
+  These appear as additional CATALYTIC ACTIVITY entries in UniProt (Rhea 75939/75943/75947).<br />
+  This justifies the broader parent MF "amidinotransferase activity" (GO:0015067) as IDA in GOA.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Mitochondrial enzyme; canonical isoform 1 has a cleaved N-terminal mitochondrial transit<br />
+  peptide (1-43) and localizes to the mitochondrial intermembrane space / inner-membrane<br />
+  intermembrane side. IDA placement in intermembrane space (MGI, PMID:9218780).<br />
+  UniProt: "Mitochondrion inner membrane; Peripheral membrane protein; Intermembrane side.<br />
+  Note=Probably attached to the outer side of the inner membrane." Isoform 2 = cytoplasmic.</li>
+<li>GOA also has C:mitochondrion (IDA HPA, HTP) - consistent broader location.</li>
+<li>C:extracellular exosome (HDA, PMID:23533145, prostatic-secretion exosome proteomics) is a<br />
+  high-throughput proteomics co-purification; not a site of catalytic function. Over-annotation<br />
+  / non-core.</li>
+</ul>
+<h2 id="tissue-expression-and-regulation">Tissue expression and regulation</h2>
+<ul>
+<li>Expressed broadly; highest in kidney; also liver, pancreas (exocrine acinar cells), heart,<br />
+  brain, lung, salivary gland, skeletal muscle. HPA group-enriched kidney/liver/pancreas.<br />
+  [UniProt TISSUE SPECIFICITY: "highest expression in kidney"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/28844881" title="GATM is highly expressed in pancreatic exocrine acinar cells">PMID:28844881</a></li>
+<li>Feedback repression of AGAT by creatine (classic; not directly in cached abstracts but a<br />
+  well-established regulatory feature). Induction: elevated in failing myocardium (PMID:16820567),<br />
+  decreased in IUGR placenta (PMID:16125225). Not GO-annotated; record as biology only.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Cerebral creatine deficiency syndrome 3 (CCDS3 / AGAT deficiency, MIM:612718): autosomal<br />
+  recessive; intellectual disability/developmental delay, speech delay, severe brain creatine<br />
+  depletion; many develop myopathy. Treatable with oral creatine.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26490222" title="Arginine:glycine aminotransferase (AGAT) (GATM) deficiency is an autosomal recessive inborn error of creative synthesis.">PMID:26490222</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26490222" title="15 patients diagnosed between 16 months and 25 years of life had intellectual disability/developmental delay (IDD). 8 patients also had myopathy/proximal muscle weakness.">PMID:26490222</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27233232" title="Clinical features include intellectual disability, hypotonia, and myopathy.">PMID:27233232</a><br />
+  Many loss-of-activity missense variants characterized in PMID:27233232 (IDA glycine<br />
+  amidinotransferase activity supported by variant assays).</li>
+<li>Fanconi renotubular syndrome 1 (FRTS1, MIM:134600): autosomal DOMINANT; a distinct,<br />
+  gain-of-toxicity mechanism - specific GATM missense variants (e.g. P320S, T336A/I, P341L)<br />
+  cause GATM protein AGGREGATION in mitochondria, abnormal/elongated mitochondria, ROS,<br />
+  NLRP3 inflammasome activation, proximal tubulopathy and progressive kidney failure<br />
+  (PMID:29654216). This is a toxic-aggregation gain of function, NOT loss of catalytic activity.</li>
+</ul>
+<h2 id="go-annotation-assessment-summary">GO annotation assessment summary</h2>
+<p>Core:<br />
+- MF: glycine amidinotransferase activity (GO:0015068) - EXP/IDA, multiple papers. ACCEPT (core).<br />
+- BP: creatine biosynthetic process (GO:0006601) - IDA/IBA. ACCEPT (core).<br />
+- CC: mitochondrial intermembrane space (GO:0005758) - IDA. ACCEPT (core location).</p>
+<p>Supporting/peripheral:<br />
+- amidinotransferase activity (GO:0015067) parent MF - ACCEPT as accurate parent (promiscuous<br />
+  side activities). Keep.<br />
+- mitochondrial inner membrane (GO:0005743) IEA SubCell - ACCEPT/keep (UniProt subcellular).<br />
+- mitochondrion (GO:0005739) IDA/HTP - ACCEPT (broader true location).<br />
+- cytoplasm (GO:0005737) IEA SubCell - reflects cytoplasmic isoform 2; KEEP_AS_NON_CORE.<br />
+- positive regulation of cold-induced thermogenesis (GO:0120162) ISS/IEA from mouse Adipo-Gatm<br />
+  KO (PMID:28844881) - real mouse phenotype but a tissue/context-specific downstream consequence<br />
+  of creatine synthesis, not a core human function. KEEP_AS_NON_CORE.<br />
+- learning or memory (GO:0007611) IMP CAFA (PMID:26490222) - downstream of brain creatine<br />
+  depletion; over-reach from a clinical ID phenotype. MARK_AS_OVER_ANNOTATED.<br />
+- muscle atrophy (GO:0014889) IMP CAFA (PMID:26490222) - downstream myopathy consequence;<br />
+  over-annotation. MARK_AS_OVER_ANNOTATED.<br />
+- extracellular exosome (GO:0070062) HDA (PMID:23533145) - HTP co-purification; over-annotation.<br />
+- protein binding (GO:0005515) IPI x13 (PMID:32814053) - uninformative; this is the<br />
+  Haenig/neurodegeneration interactome map. MARK_AS_OVER_ANNOTATED (avoid bare protein binding).<br />
+- acts_upstream_of_or_within creatine biosynthetic process (GO:0006601) IDA - same as core BP,<br />
+  weaker qualifier; ACCEPT.</p>
+<p>References to cite: 9218780, 3800397, 9266688, 36543883, 27233232, 26490222, 28844881,<br />
+23533145, 32814053, 34800366, plus GO_REFs and Reactome already in stub.<br />
+</content></p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P50440
+gene_symbol: GATM
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GATM (AGAT; L-arginine:glycine amidinotransferase, EC 2.1.4.1) is the first and
+  rate-limiting enzyme of creatine biosynthesis. It catalyzes the transfer of the
+  amidino group of L-arginine onto the amino group of glycine to yield guanidinoacetate
+  and L-ornithine; guanidinoacetate is subsequently methylated by GAMT to form creatine.
+  The mature enzyme is a homodimer with a five-fold pseudosymmetric basket fold and a
+  buried active site that uses a Cys-His-Asp catalytic triad and an amidino-cysteine
+  covalent intermediate (ping-pong mechanism). Although glycine is the strongly preferred
+  acceptor, the enzyme is promiscuous and can also amidinate GABA, beta-alanine and taurine
+  to produce guanidinobutyrate, guanidinopropionate and taurocyamine. The canonical
+  mitochondrial isoform carries a cleavable N-terminal transit peptide and localizes to the
+  mitochondrial intermembrane space, attached to the intermembrane side of the inner
+  membrane; an alternatively spliced isoform is cytoplasmic. GATM is expressed broadly with
+  highest levels in kidney, and is also abundant in liver, pancreas (exocrine acinar cells),
+  heart, brain and skeletal muscle, supplying creatine to high-energy-demand tissues for
+  ATP buffering. Loss-of-function variants cause autosomal-recessive cerebral creatine
+  deficiency syndrome 3 (AGAT deficiency), a treatable disorder of brain creatine depletion
+  presenting with intellectual disability, speech delay and myopathy, whereas distinct
+  dominant aggregation-prone variants cause Fanconi renotubular syndrome 1.
+alternative_products:
+- name: 1 (Mitochondrial)
+  id: P50440-1
+- name: 2 (Cytoplasmic)
+  id: P50440-2
+  sequence_note: VSP_000235
+- name: &#39;3&#39;
+  id: P50440-3
+  sequence_note: VSP_039871
+existing_annotations:
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of the mitochondrial intermembrane space localization,
+      consistent with the experimentally determined human localization and the conserved
+      mitochondrial targeting of the amidinotransferase family.
+    action: ACCEPT
+    reason: &gt;-
+      The canonical isoform is a mitochondrial enzyme localized to the intermembrane space
+      (attached to the intermembrane side of the inner membrane). This is the correct core
+      location and is independently supported by an IDA annotation (PMID:9218780).
+- term:
+    id: GO:0006601
+    label: creatine biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of involvement in creatine biosynthesis, the canonical
+      and best-established biological role of GATM/AGAT.
+    action: ACCEPT
+    reason: &gt;-
+      GATM catalyzes the committed, rate-limiting step of creatine biosynthesis (formation of
+      guanidinoacetate). This is a core biological process for the gene.
+    supported_by:
+    - reference_id: PMID:9218780
+      supporting_text: &gt;-
+        L-arginine:glycine amidinotransferase (AT) catalyses the committed step in creatine
+        biosynthesis by formation of guanidinoacetic acid, the immediate precursor of creatine.
+- term:
+    id: GO:0015068
+    label: glycine amidinotransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of glycine amidinotransferase activity, the defining
+      catalytic activity of GATM.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function of GATM, directly demonstrated experimentally in
+      human enzyme (EXP/IDA in multiple references) and conserved across the family.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic location derived by UniProt subcellular-location mapping, reflecting the
+      cytoplasmic splice isoform (P50440-2) rather than the canonical mitochondrial enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt annotates isoform 2 as cytoplasmic, so this term is not wrong, but the core,
+      catalytically characterized form is the mitochondrial intermembrane-space enzyme.
+      Retain as non-core (isoform-specific) localization.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial inner membrane location from UniProt subcellular-location mapping; the
+      enzyme is a peripheral membrane protein on the intermembrane side of the inner membrane.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the UniProt subcellular location (Mitochondrion inner membrane;
+      Peripheral membrane protein; Intermembrane side). The functionally most specific term
+      is mitochondrial intermembrane space; this inner-membrane term is an accurate, slightly
+      different facet of the same location.
+- term:
+    id: GO:0015067
+    label: amidinotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Parent amidinotransferase activity assigned via InterPro2GO from the amidinotransferase
+      family signature.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate but less specific than glycine amidinotransferase activity. The broader parent
+      is genuinely appropriate because GATM is promiscuous, also amidinating GABA, beta-alanine
+      and taurine. Retained; the specific GO:0015068 term is the primary core function.
+- term:
+    id: GO:0015068
+    label: glycine amidinotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Glycine amidinotransferase activity inferred electronically from Rhea/EC:2.1.4.1 mapping.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function, redundant with the experimental annotations for the same
+      term but valid as an automated EC/Rhea-based assignment.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic protein binding annotations from a large-scale neurodegenerative-disease
+      interactome/Y2H screen, covering 13 prey partners.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Protein binding (GO:0005515) is uninformative and does not capture a defined molecular
+      function. These IPI calls come from a high-throughput interactome map and none of the
+      listed partners corresponds to an established, functionally meaningful GATM complex.
+      Per curation guidelines, bare protein binding should not be carried as a core function.
+- term:
+    id: GO:0120162
+    label: positive regulation of cold-induced thermogenesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Positive regulation of cold-induced thermogenesis transferred electronically from the
+      mouse ortholog (Gatm), based on adipocyte-specific knockout phenotypes.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This reflects a genuine but tissue- and context-specific downstream consequence of
+      adipocyte creatine synthesis demonstrated in mouse (fat-specific Gatm knockout impairs
+      diet-induced/adaptive thermogenesis). It is a physiological role of creatine energetics,
+      not a core molecular/biological function of the human enzyme; retain as non-core.
+    supported_by:
+    - reference_id: PMID:28844881
+      supporting_text: &gt;-
+        we have inactivated the first and rate-limiting enzyme of creatine biosynthesis,
+        glycine amidinotransferase (GATM), selectively in fat (Adipo-Gatm KO).
+- term:
+    id: GO:0006601
+    label: creatine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Creatine biosynthetic process inferred electronically from UniPathway mapping.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core biological process, consistent with the curated and experimental
+      annotations for the same term.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial localization from immunofluorescence (HPA), a broader but accurate
+      compartment assignment.
+    action: ACCEPT
+    reason: &gt;-
+      Directly observed mitochondrial localization. Less specific than mitochondrial
+      intermembrane space but correct; retained as supporting localization evidence.
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71275
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial intermembrane space localization asserted by Reactome (creatine
+      metabolism pathway).
+    action: ACCEPT
+    reason: &gt;-
+      Same core location as the IDA and IBA annotations; traceable author statement consistent
+      with the experimentally established localization.
+- term:
+    id: GO:0015068
+    label: glycine amidinotransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:36543883
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental demonstration that purified recombinant human GATM amidinates glycine
+      (and, less efficiently, GABA/beta-alanine/taurine), with glycine as the preferred acceptor.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental support for the defining catalytic activity; this is the core
+      molecular function of the gene.
+    supported_by:
+    - reference_id: PMID:36543883
+      supporting_text: &gt;-
+        human GATM had the highest activity with glycine, but also GABA, β-alanine and taurine
+        were accepted as substrates with decreasing preference
+- term:
+    id: GO:0015068
+    label: glycine amidinotransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:3800397
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Purification and biochemical characterization of human kidney transamidinase establishing
+      its amidinotransferase activity and dimeric structure.
+    action: ACCEPT
+    reason: &gt;-
+      Classic experimental support for the core catalytic activity of human AGAT.
+    supported_by:
+    - reference_id: PMID:3800397
+      supporting_text: &gt;-
+        Human kidney transamidinase is a dimer with a molecular mass of 89,000 Da and subunit
+        masses of 44,000 Da. The Km for arginine and glycine were both 2.5 mM
+- term:
+    id: GO:0015068
+    label: glycine amidinotransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:9266688
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Mutagenesis and crystallographic study confirming the catalytic activity and active-site
+      residues of human AGAT.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental and structural support for the core glycine amidinotransferase
+      activity, including identification of catalytic residues whose mutation abolishes activity.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial localization from a high-throughput high-confidence human mitochondrial
+      proteome study.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the established mitochondrial localization; high-throughput evidence
+      corroborating the more specific intermembrane-space assignment.
+- term:
+    id: GO:0015067
+    label: amidinotransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:36543883
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental demonstration of broader amidinotransferase activity, since human
+      GATM amidinates multiple acceptors (glycine, GABA, beta-alanine, taurine).
+    action: ACCEPT
+    reason: &gt;-
+      The parent term is justified by the experimentally observed substrate promiscuity. The
+      most specific core activity is glycine amidinotransferase activity (GO:0015068); this
+      broader term legitimately captures the side reactions.
+    supported_by:
+    - reference_id: PMID:36543883
+      supporting_text: &gt;-
+        human GATM had the highest activity with glycine, but also GABA, β-alanine and taurine
+        were accepted as substrates with decreasing preference
+- term:
+    id: GO:0120162
+    label: positive regulation of cold-induced thermogenesis
+  evidence_type: ISS
+  original_reference_id: PMID:28844881
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Positive regulation of cold-induced thermogenesis inferred by sequence/orthology from the
+      mouse Gatm adipocyte-knockout phenotype.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Same context-specific downstream role as the IEA annotation for this term: adipocyte
+      creatine synthesis supports adaptive/diet-induced thermogenesis in mouse. A legitimate
+      physiological consequence of creatine energetics, but not a core function of the enzyme;
+      retain as non-core.
+    supported_by:
+    - reference_id: PMID:28844881
+      supporting_text: &gt;-
+        these data suggest that adipose tissue Gatm and creatine energetics support adaptive
+        thermogenesis in response to environmental cold.
+- term:
+    id: GO:0007611
+    label: learning or memory
+  evidence_type: IMP
+  original_reference_id: PMID:26490222
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Learning or memory assigned (CAFA) from the cognitive impairment seen in AGAT-deficiency
+      patients.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The clinical phenotype is intellectual disability/developmental delay arising from severe
+      brain creatine depletion. Annotating GATM directly to learning or memory over-reaches
+      from a distal, secondary consequence of loss of creatine and does not reflect a molecular
+      or cellular role of the enzyme in this process. The core process is creatine biosynthesis.
+    supported_by:
+    - reference_id: PMID:26490222
+      supporting_text: &gt;-
+        15 patients diagnosed between 16 months and 25 years of life had intellectual
+        disability/developmental delay (IDD).
+- term:
+    id: GO:0014889
+    label: muscle atrophy
+  evidence_type: IMP
+  original_reference_id: PMID:26490222
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Muscle atrophy assigned (CAFA) from the myopathy/muscle weakness seen in AGAT-deficiency
+      patients.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Myopathy/proximal muscle weakness in AGAT deficiency is a downstream consequence of
+      systemic creatine depletion, not evidence that GATM participates in a muscle-atrophy
+      process per se. This is an over-annotation derived from a disease phenotype; the core
+      process is creatine biosynthesis.
+    supported_by:
+    - reference_id: PMID:26490222
+      supporting_text: &gt;-
+        8 patients also had myopathy/proximal muscle weakness.
+- term:
+    id: GO:0015068
+    label: glycine amidinotransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:27233232
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of glycine amidinotransferase activity used to functionally characterize
+      pathogenic GATM missense variants (several retaining 0% of wild-type activity).
+    action: ACCEPT
+    reason: &gt;-
+      Strong experimental support for the core catalytic activity, with variant assays linking
+      loss of this activity to AGAT-deficiency pathogenicity.
+    supported_by:
+    - reference_id: PMID:27233232
+      supporting_text: &gt;-
+        We found seven missense variants retaining 0% of wild-type GATM activity indicating
+        putative pathogenicity.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Extracellular exosome localization from a high-throughput proteomic study of exosomes in
+      expressed prostatic secretions.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GATM is a mitochondrial intermembrane-space enzyme; detection in an exosome proteomics
+      dataset is a high-throughput co-purification and does not reflect a functional
+      extracellular/exosomal location. Over-annotation; not a core localization.
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: IDA
+  original_reference_id: PMID:9218780
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct (IDA) assignment of GATM to the mitochondrial intermembrane space, the core
+      functional location of the enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally supported, most-specific correct localization. This is the core cellular
+      location where the enzyme performs creatine precursor synthesis.
+    supported_by:
+    - reference_id: PMID:9218780
+      supporting_text: &gt;-
+        a mitochondrial enzyme involved in creatine biosynthesis
+- term:
+    id: GO:0006601
+    label: creatine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:9218780
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      Direct evidence linking GATM activity to creatine biosynthesis (formation of the immediate
+      creatine precursor guanidinoacetate).
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process for the gene. Captured with the same evidence as the enables/MF
+      and involved_in/BP annotations; the acts_upstream_of_or_within qualifier is acceptable.
+    supported_by:
+    - reference_id: PMID:9218780
+      supporting_text: &gt;-
+        L-arginine:glycine amidinotransferase (AT) catalyses the committed step in creatine
+        biosynthesis by formation of guanidinoacetic acid, the immediate precursor of creatine.
+- term:
+    id: GO:0015068
+    label: glycine amidinotransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:9218780
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct (IDA) annotation of glycine amidinotransferase activity from the crystal-structure
+      and mechanism study of the human enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function, supported by structural characterization of the catalytic
+      mechanism (Cys-His-Asp triad, amidino-cysteine intermediate).
+    supported_by:
+    - reference_id: PMID:9218780
+      supporting_text: &gt;-
+        A reaction mechanism with a catalytic triad Cys-His-Asp is proposed on the basis of
+        substrate and product bound states.
+core_functions:
+- description: &gt;-
+    Glycine amidinotransferase activity: transfers the amidino group of L-arginine to glycine,
+    producing guanidinoacetate and L-ornithine - the committed, rate-limiting step of creatine
+    biosynthesis - acting in the mitochondrial intermembrane space.
+  molecular_function:
+    id: GO:0015068
+    label: glycine amidinotransferase activity
+  directly_involved_in:
+  - id: GO:0006601
+    label: creatine biosynthetic process
+  locations:
+  - id: GO:0005758
+    label: mitochondrial intermembrane space
+  substrates:
+  - id: CHEBI:32682
+    label: L-arginine
+  - id: CHEBI:57305
+    label: glycine
+  supported_by:
+  - reference_id: PMID:9218780
+    supporting_text: &gt;-
+      L-arginine:glycine amidinotransferase (AT) catalyses the committed step in creatine
+      biosynthesis by formation of guanidinoacetic acid, the immediate precursor of creatine.
+  - reference_id: PMID:36543883
+    supporting_text: &gt;-
+      human GATM had the highest activity with glycine, but also GABA, β-alanine and taurine
+      were accepted as substrates with decreasing preference
+- description: &gt;-
+    Broader amidinotransferase activity reflecting the enzyme&#39;s substrate promiscuity: in
+    addition to glycine, GATM amidinates GABA, beta-alanine and taurine to form guanidinobutyrate,
+    guanidinopropionate and taurocyamine, respectively.
+  molecular_function:
+    id: GO:0015067
+    label: amidinotransferase activity
+  locations:
+  - id: GO:0005758
+    label: mitochondrial intermembrane space
+  supported_by:
+  - reference_id: PMID:36543883
+    supporting_text: &gt;-
+      we further show that the identified guanidino acid substrates were produced by the
+      promiscuous action of human glycine amidinotransferase
+suggested_questions:
+- question: &gt;-
+    Is the broad amidinotransferase promiscuity (GABA, beta-alanine, taurine) physiologically
+    significant in vivo, or is it primarily an in vitro side reaction with little flux under
+    normal conditions?
+- question: &gt;-
+    By what mechanism does the FRTS1 aggregation-prone gain-of-toxicity of specific GATM variants
+    cause proximal tubulopathy, and how does it relate (if at all) to loss of catalytic activity?
+suggested_experiments:
+- description: &gt;-
+    Quantify in vivo flux of GATM toward the non-canonical guanidino acids (guanidinobutyrate,
+    guanidinopropionate, taurocyamine) in human/mouse tissues using stable-isotope tracing, to
+    determine whether the promiscuous activities contribute meaningfully to metabolite pools.
+  hypothesis: &gt;-
+    The non-glycine amidinotransferase side reactions are minor relative to guanidinoacetate
+    synthesis under physiological conditions.
+- description: &gt;-
+    Use structure-guided mutants that selectively impair GATM aggregation (FRTS1 variants) while
+    preserving catalytic activity to dissociate the toxic-aggregation phenotype from enzymatic
+    loss of function in proximal tubule cell models.
+  hypothesis: &gt;-
+    FRTS1 pathology is driven by mitochondrial protein aggregation and downstream stress, not by
+    loss of creatine synthesis.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to orthologs
+    using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions
+    in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput exosome proteomics; supports only an incidental co-purification, not a
+      functional extracellular location for this mitochondrial enzyme.
+- id: PMID:26490222
+  title: &#39;Arginine:glycine amidinotransferase (AGAT) deficiency: Clinical features and long term
+    outcomes in 16 patients diagnosed worldwide.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Clinical cohort establishing AGAT deficiency as a treatable creatine-deficiency disorder
+      (intellectual disability, myopathy); used (via CAFA) for the learning/memory and muscle
+      atrophy annotations, which are downstream disease consequences rather than core functions.
+- id: PMID:27233232
+  title: Arginine-Glycine Amidinotransferase Deficiency and Functional Characterization of
+    Missense Variants in GATM.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Functional assays of GATM missense variants directly measuring glycine amidinotransferase
+      activity; supports the core MF annotation and links activity loss to pathogenicity.
+- id: PMID:28844881
+  title: Genetic Depletion of Adipocyte Creatine Metabolism Inhibits Diet-Induced Thermogenesis
+    and Drives Obesity.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Mouse adipocyte-specific Gatm knockout; basis for the cold-induced thermogenesis
+      annotations. Establishes a tissue-specific physiological role of creatine energetics,
+      retained as non-core for the human gene.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers
+    Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome/Y2H map; source of 13 uninformative protein binding IPI
+      annotations. No defined functional GATM complex established.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular
+    context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: High-confidence mitochondrial proteome; corroborates mitochondrial localization.
+- id: PMID:36543883
+  title: Guanidino acid hydrolysis by the human enzyme annotated as agmatinase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Demonstrates purified human GATM amidinates glycine (preferred) plus GABA, beta-alanine and
+      taurine; supports both the specific and parent amidinotransferase MF annotations.
+- id: PMID:3800397
+  title: The purification and characterization of human kidney L-arginine:glycine
+    amidinotransferase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Classic purification/characterization of human AGAT as a dimeric transamidinase; supports
+      the core catalytic activity.
+- id: PMID:9218780
+  title: &#39;Crystal structure and mechanism of human L-arginine:glycine amidinotransferase: a
+    mitochondrial enzyme involved in creatine biosynthesis.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Crystal structure and mechanism; supports the core MF, the creatine biosynthetic process,
+      and the mitochondrial intermembrane space localization.
+- id: PMID:9266688
+  title: Substrate binding and catalysis by L-arginine:glycine amidinotransferase--a mutagenesis
+    and crystallographic study.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Mutagenesis/crystallography defining catalytic residues; supports the core glycine
+      amidinotransferase activity.
+- id: Reactome:R-HSA-71275
+  title: Creatine metabolism
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
