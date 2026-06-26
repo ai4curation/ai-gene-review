@@ -55,8 +55,12 @@ helminths, protozoan parasites) to be added as reviews are scoped.
 ## Status / next steps
 
 - **SCOPING.** No parasite genes from the nematode scope are in the repo yet.
-- Run `just fetch-gene 9BILA <gene>` for a *S. hermaphroditum* seed set (note
-  `9BILA` is a provisional code; most accessions will be TrEMBL, not Swiss-Prot).
+- **Annotation availability (UniProt, 2026-06):** `9BILA` has **0 reviewed
+  (Swiss-Prot) entries** and ~36,000 unreviewed TrEMBL entries — so any
+  *S. hermaphroditum* seed will be an unreviewed accession. Consider seeding from
+  a better-annotated congener (e.g. *S. carpocapsae*) or pairing TrEMBL accessions
+  with literature + bioinformatics rather than relying on existing GO annotation.
+- Run `just fetch-gene 9BILA <gene>` once a specific accession/gene is chosen.
 - Pull the [PARASITE_IMMUNE_MODULATORS](PARASITE_IMMUNE_MODULATORS.md) candidate
   list under this umbrella's "host-modulation" sub-topic.
 

@@ -61,9 +61,14 @@ may be added as gene reviews accrue.
 ## Status / next steps
 
 - **SCOPING.** Only *C. briggsae* `drd-5` is currently present.
-- Identify a small seed set of *P. pacificus* genes (developmental-plasticity /
-  predatory-morph genes are natural first candidates) and run
-  `just fetch-gene PRIPA <gene>`.
+- **Annotation availability (UniProt, 2026-06):** `PRIPA` has just **1 reviewed
+  (Swiss-Prot) entry** — `Q9NHZ4` (OAZ_PRIPA, ornithine decarboxylase antizyme,
+  142 aa) — alongside ~26,000 unreviewed TrEMBL entries. The classic
+  developmental-plasticity / predatory-morph genes are all TrEMBL-only, so seeding
+  those means working from unreviewed accessions.
+- Candidate first seed: `PRIPA` `Q9NHZ4` (antizyme) via `just fetch-gene PRIPA
+  <gene>` — a clean reviewed entry, though housekeeping rather than the
+  plasticity biology that motivates the project.
 - Where a satellite gene is annotated only by orthology to the reference MOD,
   record in the review whether the comparative inference is supported by direct
   evidence in the satellite species.
