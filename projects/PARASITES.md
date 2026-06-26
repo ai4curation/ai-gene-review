@@ -42,7 +42,7 @@ nematodes that are *also* used as comparative models are cross-listed.
 
 | Species | Parasitic lifestyle | In repo? | Notes |
 |---|---|---|---|
-| *Steinernema carpocapsae* | Entomopathogenic (insect-parasitic) nematode | ❌ not yet | Best-annotated EPN. UniProt code `STECR`, NCBITaxon:34508. **Holds the genus's only reviewed (Swiss-Prot) entry:** `D2KBH9` (NAS8_STECR), a secreted astacin metalloprotease — a natural parasitism-relevant anchor. |
+| *Steinernema carpocapsae* | Entomopathogenic (insect-parasitic) nematode | ✅ `genes/STECR/nas-8` | Best-annotated EPN. UniProt code `STECR`, NCBITaxon:34508. **Holds the genus's only reviewed (Swiss-Prot) entry:** `D2KBH9` (NAS8_STECR), a secreted astacin metalloprotease — the parasitism-relevant anchor seed. |
 | *Steinernema hermaphroditum* | Entomopathogenic (insect-parasitic) nematode | ❌ not yet | Mutualist of *Xenorhabdus*; emerging genetic model for EPN/symbiosis biology. UniProt code `9BILA` (provisional, auto-assigned), NCBITaxon:289476 → `genes/9BILA/`. No reviewed entries. |
 
 Additional parasites (other *Steinernema*/*Heterorhabditis* EPNs, parasitic
@@ -50,10 +50,11 @@ helminths, protozoan parasites) to be added as reviews are scoped.
 
 ## Genes for review
 
-- [ ] *Steinernema carpocapsae* `STECR` **nas-8** (`D2KBH9`, zinc metalloproteinase
-  / astacin, EC 3.4.24.21) — the genus's only Swiss-Prot entry and the
-  recommended first parasite seed; secreted protease relevant to host invasion.
-  Fetch with `just fetch-gene STECR D2KBH9 --alias nas-8`.
+- [x] *Steinernema carpocapsae* `STECR` **nas-8** (`D2KBH9`, zinc metalloproteinase
+  / astacin, EC 3.4.24.21) — seeded into `genes/STECR/nas-8/`; annotations are
+  PENDING review. Secreted protease relevant to host invasion; carries an **EXP**
+  metalloendopeptidase-activity annotation from PMID:20670659 (Sc-AST
+  characterization) plus IEA terms.
 - [ ] *Steinernema hermaphroditum* (`9BILA`, NCBITaxon:289476) — seed gene(s)
   TBD; not yet fetched into the repo. No reviewed entries, so any seed is a
   TrEMBL accession. Candidate areas: infective-juvenile development, host-immune
@@ -61,16 +62,17 @@ helminths, protozoan parasites) to be added as reviews are scoped.
 
 ## Status / next steps
 
-- **SCOPING.** No parasite genes from the nematode scope are in the repo yet.
+- **SCOPING.** First parasite seed present: *S. carpocapsae* `nas-8`
+  (`genes/STECR/nas-8/`, PENDING review).
 - **Annotation availability (UniProt, 2026-06):** across the **whole genus
   *Steinernema*** there is exactly **1 reviewed (Swiss-Prot) entry** — `D2KBH9`
   (NAS8_STECR, *S. carpocapsae* astacin metalloprotease). *S. hermaphroditum*
   (`9BILA`) has **0 reviewed** entries (~36,000 TrEMBL); *S. carpocapsae*
   (`STECR`) has 1 reviewed + ~35,200 TrEMBL.
-- **Recommended anchor:** seed *S. carpocapsae* `nas-8` (`D2KBH9`) first — it is
-  reviewed and parasitism-relevant — then expand to *S. hermaphroditum* TrEMBL
-  genes paired with literature + bioinformatics rather than relying on existing
-  GO annotation.
+- **Next:** complete the PENDING annotation review of *S. carpocapsae* `nas-8`
+  (start from the EXP PMID:20670659 evidence), then expand to *S. hermaphroditum*
+  TrEMBL genes paired with literature + bioinformatics rather than relying on
+  existing GO annotation.
 - Pull the [PARASITE_IMMUNE_MODULATORS](PARASITE_IMMUNE_MODULATORS.md) candidate
   list under this umbrella's "host-modulation" sub-topic.
 
