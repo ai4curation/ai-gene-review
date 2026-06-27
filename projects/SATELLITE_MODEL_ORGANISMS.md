@@ -44,7 +44,7 @@ synthesizes literature with comparative inference.
 
 | Species | UniProt code | Reference MOD | In repo? | Notes |
 |---|---|---|---|---|
-| *Caenorhabditis briggsae* | `CAEBR` | *C. elegans* (worm) | ✅ `drd-5`, `tra-1`, `tra-2`, `fem-3`, `she-1` | Standard congeneric comparator; sex-determination genes are the flagship comparative-evolution set |
+| *Caenorhabditis briggsae* | `CAEBR` | *C. elegans* (worm) | ✅ 10 genes seeded (see below) | Standard congeneric comparator; sex-determination genes are the flagship comparative-evolution set |
 | *Pristionchus pacificus* | `PRIPA` (NCBITaxon:54126) | *C. elegans* (worm) | ✅ `genes/PRIPA/oaz` | Necromenic beetle associate; evo-devo "satellite model" for mouthpart plasticity |
 
 Other genera (e.g. comparative *Drosophila* species, *Saccharomyces* relatives)
@@ -66,6 +66,15 @@ may be added as gene reviews accrue.
   - [ ] **she-1** (`A8XDR5`) — F-box "spermless hermaphrodites" protein, a
     *C. briggsae*-lineage-specific gene required for hermaphrodite spermatogenesis;
     **no GO annotations yet** (annotation gap — a good de-novo curation target).
+- **`CAEBR` other protein-level (PE=1) genes** — the remaining *C. briggsae*
+  entries with experimental protein-level evidence; seeded, annotations PENDING:
+  - [ ] **cep-1** (`A8WW61`) — p53/p63/p73-family transcription factor
+    (germline DNA-damage apoptosis); 31 GOA annotations.
+  - [ ] **trr-1** (`A8WTE8`) — TRRAP-like transcription-associated protein.
+  - [ ] **kin-1** (`A8XW88`) — cAMP-dependent protein kinase catalytic subunit (PKA).
+  - [ ] **peb-1** (`A8XJ98`) — FLYWCH-type zinc-finger pharyngeal regulator
+    (has an experimental annotation).
+  - [ ] **ubl-1** (`P37164`) — ubiquitin-like / ribosomal eS31 fusion protein.
 - [ ] `PRIPA` **oaz** (`Q9NHZ4`, ornithine decarboxylase antizyme) — seeded into
   `genes/PRIPA/oaz/`; annotations are PENDING review. This is the species' only
   reviewed (Swiss-Prot) entry; its 4 GOA annotations are all IBA/IEA (no
