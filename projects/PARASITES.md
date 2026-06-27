@@ -2,7 +2,7 @@
 title: "Parasites"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-species: [STECR, 9BILA]
+species: [STECR, 9BILA, BRUMA]
 ---
 
 # Parasites
@@ -44,9 +44,14 @@ nematodes that are *also* used as comparative models are cross-listed.
 |---|---|---|---|
 | *Steinernema carpocapsae* | Entomopathogenic (insect-parasitic) nematode | ✅ `genes/STECR/nas-8` | Best-annotated EPN. UniProt code `STECR`, NCBITaxon:34508. **Holds the genus's only reviewed (Swiss-Prot) entry:** `D2KBH9` (NAS8_STECR), a secreted astacin metalloprotease — the parasitism-relevant anchor seed. |
 | *Steinernema hermaphroditum* | Entomopathogenic (insect-parasitic) nematode | ❌ not yet | Mutualist of *Xenorhabdus*; emerging genetic model for EPN/symbiosis biology. UniProt code `9BILA` (provisional, auto-assigned), NCBITaxon:289476 → `genes/9BILA/`. No reviewed entries. |
+| *Brugia malayi* | Filarial (human lymphatic filariasis), mosquito-borne | ✅ 5 genes seeded (see below) | Model filarial nematode, UniProt code `BRUMA`, NCBITaxon:6279. **The reviewed-rich anchor for the project (68 Swiss-Prot entries)** — provides experimentally-characterized host-interaction/immune-evasion proteins to review. |
 
-Additional parasites (other *Steinernema*/*Heterorhabditis* EPNs, parasitic
-helminths, protozoan parasites) to be added as reviews are scoped.
+The EPNs most biologically aligned with *Steinernema* (*Heterorhabditis
+bacteriophora*, `HETBA`) and *Strongyloides ratti* (`STRRB`) have **0 reviewed
+entries**, so *B. malayi* was chosen as the reviewed-rich nematode anchor.
+Additional parasites (other filariae — *Onchocerca volvulus* `ONCVO` 43,
+*Ascaris suum* `ASCSU` 67 — parasitic helminths, protozoan parasites) to be added
+as reviews are scoped.
 
 ## Genes for review
 
@@ -59,11 +64,26 @@ helminths, protozoan parasites) to be added as reviews are scoped.
   TBD; not yet fetched into the repo. No reviewed entries, so any seed is a
   TrEMBL accession. Candidate areas: infective-juvenile development, host-immune
   evasion, and the *Xenorhabdus* symbiosis interface.
+- **`BRUMA` (*B. malayi*) host-interaction / immune-evasion set** — reviewed,
+  protein-level (PE=1) filarial genes; seeded, annotations PENDING:
+  - [ ] **cpi-2** (`A0A0K0IP23`) — cystatin; secreted immunomodulator (inhibits
+    host cysteine proteases / modulates antigen presentation). Has experimental
+    annotations.
+  - [ ] **far-1** (`Q93142`) — fatty-acid & retinol-binding protein (Bm20), a
+    classic secreted excretory–secretory immunomodulator. Has experimental
+    annotations.
+  - [ ] **dpy-31** (`A8Q2D1`) — zinc metalloproteinase / astacin (procollagen
+    C-proteinase), cuticle biogenesis — parallels the *Steinernema* nas-8 astacin.
+  - [ ] **gp29** (`P67877`) — cuticular glutathione peroxidase, major surface
+    antigen (oxidative defense at the host interface).
+  - [ ] **mf1** (`P29030`) — endochitinase (MF1 antigen), microfilarial
+    sheath / vaccine candidate.
 
 ## Status / next steps
 
-- **SCOPING.** First parasite seed present: *S. carpocapsae* `nas-8`
-  (`genes/STECR/nas-8/`, PENDING review).
+- **SCOPING.** Parasite seeds present: *S. carpocapsae* `nas-8` (EPN anchor) and
+  a 5-gene *B. malayi* host-interaction set (reviewed-rich filarial anchor) — all
+  PENDING review.
 - **Annotation availability (UniProt, 2026-06):** across the **whole genus
   *Steinernema*** there is exactly **1 reviewed (Swiss-Prot) entry** — `D2KBH9`
   (NAS8_STECR, *S. carpocapsae* astacin metalloprotease). *S. hermaphroditum*
