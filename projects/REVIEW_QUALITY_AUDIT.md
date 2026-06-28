@@ -40,11 +40,14 @@ scans every `genes/**/*-ai-review.yaml` and flags two severities:
 - **Tier 1 (critical):** ≥ 3 annotations carry the generic placeholder
   `supporting_text`. The *evidence is fake/non-specific* — the same defect class
   as Fyn. These should be re-reviewed (or reverted to unreviewed stubs).
-- **Tier 2 (templated reasons):** no placeholder evidence, but one `reason`
-  string dominates the file (unique-reason ratio ≤ 0.15 across ≥ 40% of
-  annotations). The prose is boilerplate; the `supporting_text` may still be a
-  real UniProt/literature quote, so severity is lower — but the per-annotation
-  rationale is not trustworthy.
+- **Tier 2 (genuine rework):** *both* the `summary` and the `reason` are drawn
+  from a tiny templated set (unique-summary ratio ≤ 0.15 **and** unique-reason
+  ratio ≤ 0.15). The per-annotation rationale carries no real curation signal,
+  even though the `supporting_text` may be a real quote. Needs full re-curation.
+- **Tier 3 (reason-only, low severity):** only the one-line `reason` is
+  templated; the `summary` is term-specific and `supporting_text` is a real
+  quote. The substantive review is genuine — only the `reason` field is lazy.
+  Low priority; can be tightened in bulk later.
 
 ```bash
 uv run python projects/REVIEW_QUALITY_AUDIT/scan_boilerplate.py \
@@ -76,19 +79,28 @@ verified `supporting_text`), so Tier 1 is now empty:
 (Fyn was re-reviewed first and seeded this audit.) Re-running the scanner now
 reports **Tier 1: 0**.
 
-### Tier 2 — templated reasons (47 files)
+### Tier 2 — genuine rework (13 files)
 
-One templated `reason` repeated across most annotations, but evidence is not the
-generic placeholder. Largest cases include `mouse/Ctnnb1` (759 annotations, one
-reason used 350×), `human/AKT1` (446), `mouse/Mtor` (372), `mouse/Bcl2` (359),
-the Argonautes `human/AGO1–4`, the calmodulins `mouse/Calm1–3`, the RAS family
-(`Kras`/`Hras`/`human/NRAS`/`KRAS`), `mouse/Pten`, `mouse/Nf1`, and
-`mouse/Hsp90aa1`. See the full list in
+Both `summary` and `reason` templated — no real per-annotation curation signal.
+These are the real worklist after Tier 1: `mouse/Ctnnb1` (759), `mouse/Mtor`
+(372), `human/YWHAZ` (220), `mouse/Nf1` (195), `human/SORL1` (168),
+`mouse/Brca1` (167), `human/ADAM10` (151), `human/ABCA1` (145), `mouse/Tert`
+(143), `human/NCSTN` (99), `human/FERMT2` (85), `mouse/Ccnt1` (50),
+`yeast/NTE1` (17).
+
+### Tier 3 — reason-only boilerplate (34 files, low severity)
+
+Only the one-line `reason` is lazy; the `summary` is term-specific and the
+`supporting_text` is a real quote, so the substantive review is genuine. This
+group includes many large hub genes that *look* templated by reason alone but
+are actually fine — e.g. `human/AKT1`, `mouse/Bcl2`, `mouse/Pten`,
+`mouse/Hsp90aa1`, the Argonautes `AGO1–4`, the calmodulins `Calm1–3`, and the
+RAS family. Low priority. See the full split in
 [the report](REVIEW_QUALITY_AUDIT/reports/REPORT.md).
 
-These are heavily weighted toward large, pleiotropic hub genes — exactly the
-genes with the most annotations, where templating saves the most effort and
-where over-annotation is most likely.
+The flagged genes are heavily weighted toward large, pleiotropic hub genes —
+exactly the genes with the most annotations, where templating saves the most
+effort and where over-annotation is most likely.
 
 ## Recommended actions
 

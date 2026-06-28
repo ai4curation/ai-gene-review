@@ -4,67 +4,74 @@
 
 
 - Review files scanned: **2801**
-- Flagged: **47** (Tier 1: **0**, Tier 2: **47**)
+- Flagged: **47** — Tier 1: **0**, Tier 2: **13**, Tier 3: **34**
 
 
 ## Tier 1 (critical) — fake/non-specific supporting evidence
 
-These files attach the generic placeholder supporting_text to many annotations: the evidence does not support the specific term. Same defect class as the mouse Fyn review.
+Generic placeholder `supporting_text` on many annotations: the evidence does not support the specific term. Same defect class as the mouse Fyn review. **Re-review fully.**
 
 | File | reviewed | placeholder uses | top templated reason |
 |---|---|---|---|
 | _none_ | | | |
 
-## Tier 2 — templated reasons (evidence may be real)
+## Tier 2 — summary AND reason both templated
 
-One `reason` string dominates the file (unique-reason ratio ≤ 0.15). Prose is boilerplate; supporting_text is not the generic placeholder.
+Both the `summary` and the `reason` are drawn from a tiny templated set (unique-summary ratio ≤ 0.15 and unique-reason ratio ≤ 0.15). The per-annotation rationale carries no real curation signal even though the `supporting_text` may be a real quote. **Genuine rework needed.**
 
-| File | reviewed | uniq-reason ratio | top reason |
-|---|---|---|---|
-| mouse/Ctnnb1/Ctnnb1-ai-review.yaml | 759 | 0.014 | 350× "The annotation is compatible with beta-catenin biology, but it reflects developmental patt" |
-| human/AKT1/AKT1-ai-review.yaml | 446 | 0.036 | 208× "Falcon research and UniProt support AKT1 activation downstream of PI3K and phosphorylation" |
-| mouse/Mtor/Mtor-ai-review.yaml | 372 | 0.024 | 223× "Valid mTOR-associated context or downstream phenotype, but not the core catalytic TORC fun" |
-| mouse/Bcl2/Bcl2-ai-review.yaml | 359 | 0.05 | 177× "Bcl2-dependent survival has broad tissue and developmental consequences; these terms are b" |
-| human/AGO2/AGO2-ai-review.yaml | 267 | 0.049 | 134× "The falcon report supports AGO2 function in miRISC-mediated small-RNA-guided repression an" |
-| mouse/Edn1/Edn1-ai-review.yaml | 253 | 0.055 | 114× "This overstates the direct role of the gene product; the curated model is better captured " |
-| mouse/Mapk1/Mapk1-ai-review.yaml | 233 | 0.043 | 111× "The generic ERK context-dependence evidence does not justify retaining this specific annot" |
-| mouse/Pten/Pten-ai-review.yaml | 231 | 0.035 | 169× "Secondary or downstream function" |
-| mouse/Cdc42/Cdc42-ai-review.yaml | 226 | 0.071 | 98× "The term directly reflects Cdc42 GDP/GTP switch activity, effector binding, membrane local" |
-| mouse/Syk/Syk-ai-review.yaml | 223 | 0.063 | 106× "The annotation is biologically plausible for Syk-dependent immune, platelet, myeloid, vasc" |
-| human/YWHAZ/YWHAZ-ai-review.yaml | 220 | 0.077 | 172× "Valid IPI evidence documenting a protein-protein interaction. YWHAZ is an adapter protein " |
-| rat/Hspa8/Hspa8-ai-review.yaml | 208 | 0.087 | 133× "Kept as non-core to preserve potentially valid context-specific annotation without elevati" |
-| mouse/Hsp90aa1/Hsp90aa1-ai-review.yaml | 201 | 0.06 | 118× "Retain this annotation as context-specific while keeping the core review focused on ATP-de" |
-| mouse/Nf1/Nf1-ai-review.yaml | 195 | 0.051 | 162× "Valid NF1-associated context or phenotype, but downstream or accessory to RasGAP activity" |
-| human/PSMA1/PSMA1-ai-review.yaml | 191 | 0.063 | 86× "The reviewed core function occurs in cytosolic and nuclear proteasome pools, supported by " |
-| mouse/Mapk3/Mapk3-ai-review.yaml | 186 | 0.054 | 112× "The generic ERK context-dependence evidence does not justify retaining this specific annot" |
-| mouse/Myc/Myc-ai-review.yaml | 181 | 0.061 | 73× "The term directly reflects Myc DNA binding, transcription factor activity, Myc-Max complex" |
-| mouse/Ednra/Ednra-ai-review.yaml | 172 | 0.064 | 101× "This annotation captures a real downstream or context-specific consequence of Ednra activi" |
-| human/SORL1/SORL1-ai-review.yaml | 168 | 0.042 | 92× "The term matches the synthesized core function of SORL1 as a multi-cargo sorting receptor," |
-| mouse/Brca1/Brca1-ai-review.yaml | 167 | 0.048 | 83× "Valid BRCA1-associated context, but secondary to DNA repair and E3 ligase core functions" |
-| mouse/Calm1/Calm1-ai-review.yaml | 155 | 0.026 | 94× "Tissue-specific or specialized function" |
-| human/PSMB5/PSMB5-ai-review.yaml | 154 | 0.071 | 75× "The reviewed core function occurs in cytosolic and nuclear proteasome pools, supported by " |
-| human/ADAM10/ADAM10-ai-review.yaml | 151 | 0.033 | 88× "The term aligns with the synthesized core function of ADAM10 as a regulated transmembrane " |
-| human/ABCA1/ABCA1-ai-review.yaml | 145 | 0.041 | 69× "Accept as core. UniProt and cached primary studies support ABCA1 as an ATP-binding cassett" |
-| mouse/Tert/Tert-ai-review.yaml | 143 | 0.049 | 96× "Valid TERT-associated context or non-canonical role, but secondary to telomerase-mediated " |
-| mouse/Calm2/Calm2-ai-review.yaml | 134 | 0.097 | 57× "Tissue-specific or specialized function" |
-| mouse/Dnmt1/Dnmt1-ai-review.yaml | 127 | 0.087 | 74× "Secondary or downstream function" |
-| mouse/Calm3/Calm3-ai-review.yaml | 125 | 0.128 | 53× "Tissue-specific or specialized function" |
-| mouse/Hras/Hras-ai-review.yaml | 119 | 0.084 | 62× "This term reflects a cell-type, disease-model, developmental, transcriptional, or phenotyp" |
-| human/AGO1/AGO1-ai-review.yaml | 113 | 0.088 | 63× "The falcon report supports AGO1 function in miRISC-mediated small-RNA-guided repression an" |
-| human/NCSTN/NCSTN-ai-review.yaml | 99 | 0.051 | 73× "The term aligns with the synthesized core function of NCSTN as an essential gamma-secretas" |
-| human/AGO3/AGO3-ai-review.yaml | 95 | 0.116 | 60× "The falcon report supports AGO3 function in miRISC-mediated small-RNA-guided repression an" |
-| human/FERMT2/FERMT2-ai-review.yaml | 85 | 0.059 | 52× "Accept as part of the core FERMT2 function. Kindlin-2 binds integrins and phosphoinositide" |
-| human/AGO4/AGO4-ai-review.yaml | 83 | 0.108 | 59× "The falcon report supports AGO4 function in miRISC-mediated small-RNA-guided repression an" |
-| human/ABCA7/ABCA7-ai-review.yaml | 81 | 0.086 | 55× "The term aligns with direct biochemical evidence or well-supported cellular consequences o" |
-| human/APH1A/APH1A-ai-review.yaml | 73 | 0.096 | 38× "The term aligns with APH1A function as a non-catalytic gamma-secretase subunit that suppor" |
-| human/PSENEN/PSENEN-ai-review.yaml | 71 | 0.099 | 29× "The term aligns with PSENEN/PEN-2 function as an essential non-catalytic gamma-secretase s" |
-| yeast/NAP1/NAP1-ai-review.yaml | 60 | 0.117 | 24× "Marked over-annotated because more specific terms capture the biology more accurately." |
-| mouse/Ccnt1/Ccnt1-ai-review.yaml | 50 | 0.1 | 36× "The term is consistent with Cyclin T1 as a CDK9 regulatory cyclin in P-TEFb that promotes " |
-| human/CD33/CD33-ai-review.yaml | 45 | 0.133 | 18× "This term captures the core CD33/Siglec-3 role as a myeloid cell-surface sialic-acid-bindi" |
-| rat/Slc13a2/Slc13a2-ai-review.yaml | 44 | 0.091 | 32× "This term is directly supported by Slc13a2 sodium-coupled dicarboxylate transport of succi" |
-| human/APH1B/APH1B-ai-review.yaml | 43 | 0.116 | 22× "The term aligns with APH1B function as a non-catalytic gamma-secretase subunit that suppor" |
-| DANRE/cyp26a1/cyp26a1-ai-review.yaml | 38 | 0.079 | 25× "This annotation is broad, inferred, or reflects downstream developmental/physiological con" |
-| yeast/PDI1/PDI1-ai-review.yaml | 32 | 0.062 | 23× "Retained as supported or plausible for this gene and evidence context." |
-| DANRE/gnptab/gnptab-ai-review.yaml | 26 | 0.077 | 14× "This annotation is broad, inferred, or reflects downstream developmental/physiological con" |
-| yeast/EUG1/EUG1-ai-review.yaml | 24 | 0.083 | 20× "Retained as supported or plausible for this gene and evidence context." |
-| yeast/NTE1/NTE1-ai-review.yaml | 17 | 0.059 | 17× "This annotation accurately reflects NTE1 core enzymatic function as demonstrated experimen" |
+| File | reviewed | uniq-summary ratio | uniq-reason ratio | top reason |
+|---|---|---|---|---|
+| mouse/Ctnnb1/Ctnnb1-ai-review.yaml | 759 | 0.016 | 0.014 | 350× "The annotation is compatible with beta-catenin biology, but it reflects developmental patt" |
+| mouse/Mtor/Mtor-ai-review.yaml | 372 | 0.024 | 0.024 | 223× "Valid mTOR-associated context or downstream phenotype, but not the core catalytic TORC fun" |
+| human/YWHAZ/YWHAZ-ai-review.yaml | 220 | 0.082 | 0.077 | 172× "Valid IPI evidence documenting a protein-protein interaction. YWHAZ is an adapter protein " |
+| mouse/Nf1/Nf1-ai-review.yaml | 195 | 0.046 | 0.051 | 162× "Valid NF1-associated context or phenotype, but downstream or accessory to RasGAP activity" |
+| human/SORL1/SORL1-ai-review.yaml | 168 | 0.089 | 0.042 | 92× "The term matches the synthesized core function of SORL1 as a multi-cargo sorting receptor," |
+| mouse/Brca1/Brca1-ai-review.yaml | 167 | 0.048 | 0.048 | 83× "Valid BRCA1-associated context, but secondary to DNA repair and E3 ligase core functions" |
+| human/ADAM10/ADAM10-ai-review.yaml | 151 | 0.079 | 0.033 | 88× "The term aligns with the synthesized core function of ADAM10 as a regulated transmembrane " |
+| human/ABCA1/ABCA1-ai-review.yaml | 145 | 0.041 | 0.041 | 69× "Accept as core. UniProt and cached primary studies support ABCA1 as an ATP-binding cassett" |
+| mouse/Tert/Tert-ai-review.yaml | 143 | 0.049 | 0.049 | 96× "Valid TERT-associated context or non-canonical role, but secondary to telomerase-mediated " |
+| human/NCSTN/NCSTN-ai-review.yaml | 99 | 0.121 | 0.051 | 73× "The term aligns with the synthesized core function of NCSTN as an essential gamma-secretas" |
+| human/FERMT2/FERMT2-ai-review.yaml | 85 | 0.059 | 0.059 | 52× "Accept as part of the core FERMT2 function. Kindlin-2 binds integrins and phosphoinositide" |
+| mouse/Ccnt1/Ccnt1-ai-review.yaml | 50 | 0.1 | 0.1 | 36× "The term is consistent with Cyclin T1 as a CDK9 regulatory cyclin in P-TEFb that promotes " |
+| yeast/NTE1/NTE1-ai-review.yaml | 17 | 0.059 | 0.059 | 17× "This annotation accurately reflects NTE1 core enzymatic function as demonstrated experimen" |
+
+## Tier 3 — reason-only boilerplate (low severity)
+
+Only the one-line `reason` is templated; the `summary` is term-specific (unique-summary ratio > 0.15) and `supporting_text` is a real quote. The substantive review is genuine — only the `reason` field is lazy. Low priority; can be tightened in bulk later.
+
+| File | reviewed | uniq-summary ratio | uniq-reason ratio | top reason |
+|---|---|---|---|---|
+| human/AKT1/AKT1-ai-review.yaml | 446 | 0.325 | 0.036 | 208× "Falcon research and UniProt support AKT1 activation downstream of PI3K and phosphorylation" |
+| mouse/Bcl2/Bcl2-ai-review.yaml | 359 | 0.474 | 0.05 | 177× "Bcl2-dependent survival has broad tissue and developmental consequences; these terms are b" |
+| human/AGO2/AGO2-ai-review.yaml | 267 | 0.199 | 0.049 | 134× "The falcon report supports AGO2 function in miRISC-mediated small-RNA-guided repression an" |
+| mouse/Edn1/Edn1-ai-review.yaml | 253 | 0.684 | 0.055 | 114× "This overstates the direct role of the gene product; the curated model is better captured " |
+| mouse/Mapk1/Mapk1-ai-review.yaml | 233 | 0.481 | 0.043 | 111× "The generic ERK context-dependence evidence does not justify retaining this specific annot" |
+| mouse/Pten/Pten-ai-review.yaml | 231 | 0.662 | 0.035 | 169× "Secondary or downstream function" |
+| mouse/Cdc42/Cdc42-ai-review.yaml | 226 | 0.509 | 0.071 | 98× "The term directly reflects Cdc42 GDP/GTP switch activity, effector binding, membrane local" |
+| mouse/Syk/Syk-ai-review.yaml | 223 | 0.498 | 0.063 | 106× "The annotation is biologically plausible for Syk-dependent immune, platelet, myeloid, vasc" |
+| rat/Hspa8/Hspa8-ai-review.yaml | 208 | 0.635 | 0.087 | 133× "Kept as non-core to preserve potentially valid context-specific annotation without elevati" |
+| mouse/Hsp90aa1/Hsp90aa1-ai-review.yaml | 201 | 0.488 | 0.06 | 118× "Retain this annotation as context-specific while keeping the core review focused on ATP-de" |
+| human/PSMA1/PSMA1-ai-review.yaml | 191 | 0.22 | 0.063 | 86× "The reviewed core function occurs in cytosolic and nuclear proteasome pools, supported by " |
+| mouse/Mapk3/Mapk3-ai-review.yaml | 186 | 0.565 | 0.054 | 112× "The generic ERK context-dependence evidence does not justify retaining this specific annot" |
+| mouse/Myc/Myc-ai-review.yaml | 181 | 0.619 | 0.061 | 73× "The term directly reflects Myc DNA binding, transcription factor activity, Myc-Max complex" |
+| mouse/Ednra/Ednra-ai-review.yaml | 172 | 0.715 | 0.064 | 101× "This annotation captures a real downstream or context-specific consequence of Ednra activi" |
+| mouse/Calm1/Calm1-ai-review.yaml | 155 | 0.465 | 0.026 | 94× "Tissue-specific or specialized function" |
+| human/PSMB5/PSMB5-ai-review.yaml | 154 | 0.201 | 0.071 | 75× "The reviewed core function occurs in cytosolic and nuclear proteasome pools, supported by " |
+| mouse/Calm2/Calm2-ai-review.yaml | 134 | 0.687 | 0.097 | 57× "Tissue-specific or specialized function" |
+| mouse/Dnmt1/Dnmt1-ai-review.yaml | 127 | 0.346 | 0.087 | 74× "Secondary or downstream function" |
+| mouse/Calm3/Calm3-ai-review.yaml | 125 | 0.992 | 0.128 | 53× "Tissue-specific or specialized function" |
+| mouse/Hras/Hras-ai-review.yaml | 119 | 0.487 | 0.084 | 62× "This term reflects a cell-type, disease-model, developmental, transcriptional, or phenotyp" |
+| human/AGO1/AGO1-ai-review.yaml | 113 | 0.265 | 0.088 | 63× "The falcon report supports AGO1 function in miRISC-mediated small-RNA-guided repression an" |
+| human/AGO3/AGO3-ai-review.yaml | 95 | 0.316 | 0.116 | 60× "The falcon report supports AGO3 function in miRISC-mediated small-RNA-guided repression an" |
+| human/AGO4/AGO4-ai-review.yaml | 83 | 0.277 | 0.108 | 59× "The falcon report supports AGO4 function in miRISC-mediated small-RNA-guided repression an" |
+| human/ABCA7/ABCA7-ai-review.yaml | 81 | 0.16 | 0.086 | 55× "The term aligns with direct biochemical evidence or well-supported cellular consequences o" |
+| human/APH1A/APH1A-ai-review.yaml | 73 | 0.178 | 0.096 | 38× "The term aligns with APH1A function as a non-catalytic gamma-secretase subunit that suppor" |
+| human/PSENEN/PSENEN-ai-review.yaml | 71 | 0.155 | 0.099 | 29× "The term aligns with PSENEN/PEN-2 function as an essential non-catalytic gamma-secretase s" |
+| yeast/NAP1/NAP1-ai-review.yaml | 60 | 0.533 | 0.117 | 24× "Marked over-annotated because more specific terms capture the biology more accurately." |
+| human/CD33/CD33-ai-review.yaml | 45 | 0.311 | 0.133 | 18× "This term captures the core CD33/Siglec-3 role as a myeloid cell-surface sialic-acid-bindi" |
+| rat/Slc13a2/Slc13a2-ai-review.yaml | 44 | 1.0 | 0.091 | 32× "This term is directly supported by Slc13a2 sodium-coupled dicarboxylate transport of succi" |
+| human/APH1B/APH1B-ai-review.yaml | 43 | 0.256 | 0.116 | 22× "The term aligns with APH1B function as a non-catalytic gamma-secretase subunit that suppor" |
+| DANRE/cyp26a1/cyp26a1-ai-review.yaml | 38 | 0.711 | 0.079 | 25× "This annotation is broad, inferred, or reflects downstream developmental/physiological con" |
+| yeast/PDI1/PDI1-ai-review.yaml | 32 | 0.531 | 0.062 | 23× "Retained as supported or plausible for this gene and evidence context." |
+| DANRE/gnptab/gnptab-ai-review.yaml | 26 | 1.0 | 0.077 | 14× "This annotation is broad, inferred, or reflects downstream developmental/physiological con" |
+| yeast/EUG1/EUG1-ai-review.yaml | 24 | 0.417 | 0.083 | 20× "Retained as supported or plausible for this gene and evidence context." |
