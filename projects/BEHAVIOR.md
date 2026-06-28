@@ -193,8 +193,13 @@ clear-cut enough to overturn.
 - [x] Spot-check the `ACCEPT`ed behaviour annotations — proximal cases upheld
       (CRY, lov-1/pkd-2, GCG, DpuGr29); 9 missed downgrades (App ×5, STAT3 ×3,
       nphp-1 ×1) corrected to `KEEP_AS_NON_CORE`.
-- [ ] Re-review the un-adjudicated / `PENDING` behaviour annotations against the
-      rubric above.
+- [x] Re-review the un-adjudicated / `PENDING` behaviour annotations: only one
+      remained — **Casp3** `swimming behavior` (IEP, PMID:33574912). The cited
+      study uses the swimming-based Morris Water Maze to assay **memory**
+      (postoperative cognitive dysfunction) and measures caspase-3 only as a
+      hippocampal apoptosis marker, so swimming is the assay modality, not a
+      caspase-3 function → `MARK_AS_OVER_ANNOTATED`. **Every behaviour annotation
+      in the corpus is now adjudicated** (0 PENDING).
 - [ ] Cross-link with [ASSAY_TO_FUNCTION](ASSAY_TO_FUNCTION.md): behaviour
       readouts are the most distal, most convergent quadrant of that framework.
 

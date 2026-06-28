@@ -47,7 +47,7 @@ Most-used behaviour terms:
 ## 2. Reviewer actions (from `*-ai-review.yaml`)
 
 - Behaviour annotations already adjudicated in reviews: **155**
-- Of reviewed behaviour annotations, **126/154 (82%)** were downgraded (non-core / over-annotated / removed); only **19** were ACCEPTed as a core function.
+- Of reviewed behaviour annotations, **127/155 (82%)** were downgraded (non-core / over-annotated / removed); only **19** were ACCEPTed as a core function.
 
 Action distribution:
 
@@ -55,7 +55,6 @@ Action distribution:
 |---|---|
 | KEEP_AS_NON_CORE | 105 |
 | ACCEPT | 19 |
-| MARK_AS_OVER_ANNOTATED | 12 |
+| MARK_AS_OVER_ANNOTATED | 13 |
 | REMOVE | 9 |
 | NEW | 9 |
-| PENDING | 1 |
