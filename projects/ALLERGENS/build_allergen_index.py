@@ -115,7 +115,19 @@ def review_stats(review_path: Path) -> dict:
     return {"status": data.get("status", "UNKNOWN"), "n_core": len(core), "n_gaps": n_gaps}
 
 
+def load_iedb(path: Path) -> dict[tuple[str, str], dict]:
+    """Optional IEDB epitope counts keyed by (allergen_molecule, source_taxon_id)."""
+    if not path.exists():
+        return {}
+    out: dict[tuple[str, str], dict] = {}
+    with path.open() as fh:
+        for row in csv.DictReader(fh, delimiter="\t"):
+            out[(row["allergen_molecule"], row["source_taxon_id"])] = row
+    return out
+
+
 def build_rows() -> list[dict]:
+    iedb = load_iedb(Path(__file__).resolve().parent / "iedb_epitopes.tsv")
     rows: list[dict] = []
     for uniprot_file in sorted(GENES_DIR.glob("*/*/*-uniprot.txt")):
         rec = parse_uniprot(uniprot_file)
@@ -126,11 +138,14 @@ def build_rows() -> list[dict]:
         gene = gene_dir.name
         review_path = gene_dir / f"{gene}-ai-review.yaml"
         stats = review_stats(review_path)
+        mol = molecule_name(rec)
+        taxon = rec["taxon"] or ""
+        ie = iedb.get((mol, taxon), {})
         rows.append(
             {
-                "allergen_molecule": molecule_name(rec),
+                "allergen_molecule": mol,
                 "allergome_id": allergome_molecule_id(rec),
-                "source_taxon_id": rec["taxon"] or "",
+                "source_taxon_id": taxon,
                 "species_code": species,
                 "gene_symbol": gene,
                 "uniprot": rec["accession"] or "",
@@ -140,6 +155,8 @@ def build_rows() -> list[dict]:
                 "n_core_functions": stats["n_core"],
                 "n_knowledge_gaps": stats["n_gaps"],
                 "function_gap_flagged": "yes" if stats["n_gaps"] else "no",
+                "iedb_epitopes": ie.get("n_epitopes", ""),
+                "iedb_has_ige": ie.get("has_ige", ""),
             }
         )
     rows.sort(key=lambda r: (r["allergen_molecule"], r["gene_symbol"]))
@@ -159,6 +176,8 @@ FIELDS = [
     "n_core_functions",
     "n_knowledge_gaps",
     "function_gap_flagged",
+    "iedb_epitopes",
+    "iedb_has_ige",
 ]
 
 

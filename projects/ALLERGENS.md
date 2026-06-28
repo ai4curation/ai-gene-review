@@ -141,7 +141,8 @@ gene present under `genes/`, so the index grows automatically as the cohort expa
 
 Columns: `allergen_molecule` (the WHO/IUIS unit), `allergome_id`, `source_taxon_id`,
 `species_code`, `gene_symbol`, `uniprot`, `uniprot_allergen_name`, `review_path`,
-`review_status`, `n_core_functions`, `n_knowledge_gaps`, `function_gap_flagged`.
+`review_status`, `n_core_functions`, `n_knowledge_gaps`, `function_gap_flagged`,
+`iedb_epitopes`, `iedb_has_ige` (the last two merged from the IEDB ETL below).
 
 Membership is detected from the cached UniProt records either by the reviewed
 `Allergen` keyword/`Allergen=` name **or** by an Allergome cross-reference (so
@@ -149,24 +150,25 @@ unreviewed TrEMBL allergens such as Fel d 7 and Fel d 8 are included). The index
 currently holds **16 genes across 15 allergen molecules**, including allergens
 already in the repo for other reasons (e.g. human GBA1, INS, GLA; yeast SOD2).
 
-The `function_gap_flagged` column operationalizes the prioritization metric: a
-member with documented knowledge gaps is exactly an "intervention-relevant but
-uncertain-function" candidate. The complete domestic-cat set is now covered:
+The index now carries **both axes of the prioritization metric**: `function_gap_flagged`
+(uncertainty) and the IEDB epitope counts (`iedb_epitopes`, `iedb_has_ige` —
+intervention pressure; see below). The complete domestic-cat set, ranked by the two
+axes together:
 
-| allergen molecule | genes (UniProt) | family | review | function gap? |
-|---|---|---|---|---|
-| Fel d 1 | CH1 (P30438) + CH2 (P30440) | secretoglobin | DRAFT | **yes** — native role unknown |
-| Fel d 2 | ALB (P49064) | serum albumin | DRAFT | no — multi-ligand carrier |
-| Fel d 3 | CSTA (Q8WNR9) | cystatin | DRAFT | no — cysteine-protease inhibitor |
-| Fel d 4 | Feld4 (Q5VFH6) | lipocalin | DRAFT | no — pheromone carrier |
-| Fel d 7 | Feld7 (E5D2Z5) | lipocalin | DRAFT | **yes** — specific ligand unknown |
-| Fel d 8 | Feld8 (F6K0R4) | BPI/LBP/PLUNC | DRAFT | **yes** — ligand family-inferred only |
+| allergen molecule | genes (UniProt) | family | function gap? | IEDB epitopes (IgE) | priority |
+|---|---|---|---|---|---|
+| Fel d 1 | CH1 (P30438) + CH2 (P30440) | secretoglobin | **yes** — native role unknown | **127 (IgE+)** | **highest** |
+| Fel d 7 | Feld7 (E5D2Z5) | lipocalin | **yes** — specific ligand unknown | 14 | high |
+| Fel d 8 | Feld8 (F6K0R4) | BPI/LBP/PLUNC | **yes** — ligand family-inferred | 0 | medium (gap, low data) |
+| Fel d 4 | Feld4 (Q5VFH6) | lipocalin | no — pheromone carrier | 14 (IgE+) | low (characterized) |
+| Fel d 3 | CSTA (Q8WNR9) | cystatin | no — cysteine-protease inhibitor | 6 | low (characterized) |
+| Fel d 2 | ALB (P49064) | serum albumin | no — multi-ligand carrier | 4 | low (characterized) |
 
-(Fel d 5/6 are cat immunoglobulins, out of scope.) The spread is striking even
-within one species: of the cat allergens only **Fel d 1** (secretoglobin) and the
-two least-characterized lipocalin/PLUNC members (**Fel d 7, Fel d 8**, both
-unreviewed TrEMBL) carry function gaps, whereas Fel d 2/3/4 are well-understood
-protein families (albumin carrier, cystatin inhibitor, lipocalin pheromone carrier).
+(Fel d 5/6 are cat immunoglobulins, out of scope.) The ranking falls out cleanly:
+**Fel d 1** tops it — heavily IgE-targeted (127 epitopes) *and* of unknown native
+function — the textbook "know before you knock out" case. The two least-characterized
+members (**Fel d 7, Fel d 8**, both unreviewed TrEMBL) also carry gaps, while the
+well-understood Fel d 2/3/4 families are deprioritized despite real epitope load.
 `mouse/Scgb1a1` is intentionally absent — it is the secretoglobin comparator, not a
 registered allergen, so it does not appear in the membership-derived index.
 
@@ -204,6 +206,43 @@ The worklist is currently ordered by organism then allergen name; true
 epitope step. It is the backlog from which the cohort is grown by running the listed
 `fetch-gene` commands and then reviewing each gene.
 
+### IEDB epitopes (intervention-pressure axis)
+
+[ALLERGENS/fetch_iedb_epitopes.py](ALLERGENS/fetch_iedb_epitopes.py) populates the
+second axis of the metric from the **IEDB IQ-API** (`query-api.iedb.org`, a real
+PostgREST API), writing [ALLERGENS/iedb_epitopes.tsv](ALLERGENS/iedb_epitopes.tsv)
+and merging epitope counts into the main index:
+
+```bash
+uv run python projects/ALLERGENS/fetch_iedb_epitopes.py
+uv run python projects/ALLERGENS/build_allergen_index.py   # re-merge into the index
+```
+
+Per allergen molecule it records distinct epitope, B-cell-assay, T-cell-assay and
+reference counts and an IgE flag (`has_ige` — the most allergy-relevant signal).
+
+**Join caveat (handled honestly):** IEDB keys allergens under its *own* UniProt
+accessions (Fel d 1 = `UNIPROT:A0ABI7XLA3`), which differ from the Swiss-Prot
+accessions used here (`P30438`). IEDB does label them by WHO/IUIS **allergen name**,
+so the ETL joins by *allergen-molecule name within source taxon* rather than by
+accession. This works for WHO/IUIS-style names (`Fel d 1`); it does **not** match
+allergens that IEDB labels by ordinary protein name (e.g. human self-allergens
+catalogued here as `Hom s …`), which therefore show `0` — meaning *not matched*, not
+necessarily *no epitopes*. The cat cohort matches cleanly:
+
+| allergen | IEDB epitopes | IgE | refs |
+|---|---|---|---|
+| Fel d 1 | 127 | yes | 26 |
+| Fel d 4 | 14 | yes | 2 |
+| Fel d 7 | 14 | no | 2 |
+| Fel d 3 | 6 | no | 3 |
+| Fel d 2 | 4 | no | 1 |
+| Fel d 8 | 0 | no | 0 |
+
+The numbers track clinical reality (Fel d 1 dominates) and complete the metric:
+crossing IEDB epitope load with the function-gap flag yields the priority column in
+the cat table above.
+
 ## Status
 
 - **SCOPING.** Architecture and first secretoglobin cohort drafted.
@@ -211,5 +250,7 @@ epitope step. It is the backlog from which the cohort is grown by running the li
 - Done: allergen→UniProt index (molecule↔gene bridge, now 16 genes / 15 molecules)
   and a UniProt-KW-0020 registry snapshot + fetch worklist (6/1020 reviewed-registry
   covered). The full domestic-cat allergen set (Fel d 1, 2, 3, 4, 7, 8) is curated.
-- Next: prototype an IEDB epitope ETL to add the intervention-pressure ranking, then
-  expand the cohort by working the backlog (other lipocalins, profilins, PR-10, etc.).
+- Done: IEDB epitope ETL — **both axes of the prioritization metric are now live**
+  (function-gap flag × IEDB epitope/IgE load), realized in the cat priority ranking.
+- Next: extend the IEDB name-join to protein-name-labelled allergens (human `Hom s …`),
+  then expand the cohort by working the backlog (other lipocalins, profilins, PR-10, etc.).
