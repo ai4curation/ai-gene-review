@@ -55,23 +55,26 @@ Outputs (regenerated, not hand-edited):
 [`REVIEW_QUALITY_AUDIT/reports/REPORT.md`](REVIEW_QUALITY_AUDIT/reports/REPORT.md)
 and `boilerplate_flags.csv`.
 
-## Findings (current run)
+## Findings
 
-**51 of 2801** review files flagged: **4 Tier 1**, **47 Tier 2**.
+The first run flagged **51 of 2801** review files: **4 Tier 1**, **47 Tier 2**.
 
-### Tier 1 — critical (fake placeholder evidence)
+### Tier 1 — critical (fake placeholder evidence) — RESOLVED
 
-All four are mouse genes from the same generation pass that produced Fyn, with
-the identical templated reason set and placeholder evidence:
+All four were mouse genes from the same generation pass that produced Fyn, with
+the identical templated reason set and placeholder evidence. **All four have now
+been fully re-reviewed** (genuine per-term actions, summaries, reasons, and
+verified `supporting_text`), so Tier 1 is now empty:
 
-| Gene | reviewed annotations | placeholder uses |
+| Gene | reviewed annotations | status |
 |---|---|---|
-| Egfr | 304 | 293 |
-| Grb2 | 188 | 180 |
-| Cbl | 140 | 139 |
-| Egf | 129 | 125 |
+| Egfr (receptor tyrosine kinase) | 304 | re-reviewed |
+| Grb2 (adaptor) | 188 | re-reviewed |
+| Cbl (E3 ubiquitin ligase) | 140 | re-reviewed |
+| Egf (ligand) | 129 | re-reviewed |
 
-(Fyn itself is already re-reviewed and removed from the flag list.)
+(Fyn was re-reviewed first and seeded this audit.) Re-running the scanner now
+reports **Tier 1: 0**.
 
 ### Tier 2 — templated reasons (47 files)
 

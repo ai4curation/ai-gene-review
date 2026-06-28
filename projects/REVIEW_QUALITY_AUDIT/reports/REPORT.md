@@ -4,7 +4,7 @@
 
 
 - Review files scanned: **2801**
-- Flagged: **51** (Tier 1: **4**, Tier 2: **47**)
+- Flagged: **47** (Tier 1: **0**, Tier 2: **47**)
 
 
 ## Tier 1 (critical) — fake/non-specific supporting evidence
@@ -13,10 +13,7 @@ These files attach the generic placeholder supporting_text to many annotations: 
 
 | File | reviewed | placeholder uses | top templated reason |
 |---|---|---|---|
-| mouse/Egfr/Egfr-ai-review.yaml | 304 | 293 | 162× "Supported secondary or context-specific role" |
-| mouse/Grb2/Grb2-ai-review.yaml | 188 | 180 | 61× "Directly supported core function, process, or location" |
-| mouse/Cbl/Cbl-ai-review.yaml | 140 | 139 | 63× "Directly supported core function, process, or location" |
-| mouse/Egf/Egf-ai-review.yaml | 129 | 125 | 71× "Supported secondary or context-specific role" |
+| _none_ | | | |
 
 ## Tier 2 — templated reasons (evidence may be real)
 
