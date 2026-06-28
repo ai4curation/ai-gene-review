@@ -3,7 +3,7 @@ title: "Allergens Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [FELCA, mouse, human]
-genes: [CH1, CH2, ALB, CSTA, Feld4, Scgb1a1]
+genes: [CH1, CH2, ALB, CSTA, Feld4, Feld7, Feld8, Scgb1a1]
 ---
 
 # Allergens Project
@@ -143,26 +143,32 @@ Columns: `allergen_molecule` (the WHO/IUIS unit), `allergome_id`, `source_taxon_
 `species_code`, `gene_symbol`, `uniprot`, `uniprot_allergen_name`, `review_path`,
 `review_status`, `n_core_functions`, `n_knowledge_gaps`, `function_gap_flagged`.
 
+Membership is detected from the cached UniProt records either by the reviewed
+`Allergen` keyword/`Allergen=` name **or** by an Allergome cross-reference (so
+unreviewed TrEMBL allergens such as Fel d 7 and Fel d 8 are included). The index
+currently holds **16 genes across 15 allergen molecules**, including allergens
+already in the repo for other reasons (e.g. human GBA1, INS, GLA; yeast SOD2).
+
 The `function_gap_flagged` column operationalizes the prioritization metric: a
-member with documented knowledge gaps is exactly a "intervention-relevant but
-uncertain-function" candidate. Current contents (one row per gene):
+member with documented knowledge gaps is exactly an "intervention-relevant but
+uncertain-function" candidate. The complete domestic-cat set is now covered:
 
-| allergen molecule | genes (UniProt) | source | review | function gap? |
+| allergen molecule | genes (UniProt) | family | review | function gap? |
 |---|---|---|---|---|
-| Fel d 1 | CH1 (P30438) + CH2 (P30440) | cat (9685) | DRAFT | **yes** — native role unknown |
-| Fel d 2 | ALB (P49064) | cat (9685) | DRAFT | no — serum albumin carrier |
-| Fel d 3 | CSTA (Q8WNR9) | cat (9685) | DRAFT | no — cystatin protease inhibitor |
-| Fel d 4 | Feld4 (Q5VFH6) | cat (9685) | DRAFT | no — lipocalin pheromone carrier |
-| Hom s Trx | TXN (P10599) | human (9606) | COMPLETE | no — characterized (thioredoxin) |
+| Fel d 1 | CH1 (P30438) + CH2 (P30440) | secretoglobin | DRAFT | **yes** — native role unknown |
+| Fel d 2 | ALB (P49064) | serum albumin | DRAFT | no — multi-ligand carrier |
+| Fel d 3 | CSTA (Q8WNR9) | cystatin | DRAFT | no — cysteine-protease inhibitor |
+| Fel d 4 | Feld4 (Q5VFH6) | lipocalin | DRAFT | no — pheromone carrier |
+| Fel d 7 | Feld7 (E5D2Z5) | lipocalin | DRAFT | **yes** — specific ligand unknown |
+| Fel d 8 | Feld8 (F6K0R4) | BPI/LBP/PLUNC | DRAFT | **yes** — ligand family-inferred only |
 
-The rows illustrate the spread the cohort is meant to capture, and it is striking
-even within a single species: of the cat allergens, only **Fel d 1** has an
-unresolved evolved function (high priority), whereas the secondary cat allergens are
-each a well-understood protein family — Fel d 2 a serum-albumin carrier, Fel d 3 a
-cystatin cysteine-protease inhibitor, Fel d 4 a lipocalin pheromone carrier — and
-human thioredoxin is a characterized self-allergen (all low priority). `mouse/Scgb1a1`
-is intentionally absent — it is the secretoglobin comparator, not a registered
-allergen, so it does not appear in the membership-derived index.
+(Fel d 5/6 are cat immunoglobulins, out of scope.) The spread is striking even
+within one species: of the cat allergens only **Fel d 1** (secretoglobin) and the
+two least-characterized lipocalin/PLUNC members (**Fel d 7, Fel d 8**, both
+unreviewed TrEMBL) carry function gaps, whereas Fel d 2/3/4 are well-understood
+protein families (albumin carrier, cystatin inhibitor, lipocalin pheromone carrier).
+`mouse/Scgb1a1` is intentionally absent — it is the secretoglobin comparator, not a
+registered allergen, so it does not appear in the membership-derived index.
 
 ### Registry coverage and fetch worklist
 
@@ -185,9 +191,13 @@ Outputs (UniProt release **2026_02**):
 - [ALLERGENS/allergen_worklist.tsv](ALLERGENS/allergen_worklist.tsv) — the **1014**
   registry members **not yet fetched**, each with a ready-to-run `fetch-gene` command.
 
-Coverage so far: **6 / 1020** entries are in the repo (Fel d 1 chains P30438/P30440;
-cat Fel d 2/3/4 and human thioredoxin). This calls a real API (UniProt REST) and records the
-release for provenance — it does not fabricate or fake-fetch a WHO/IUIS table.
+Coverage of this reviewed registry: **6 / 1020** entries (Fel d 1 chains
+P30438/P30440; cat Fel d 2/3/4; human thioredoxin). Note this differs from the
+local index count (16) above: the registry/worklist tracks only **reviewed**
+UniProt entries, whereas the local index also counts unreviewed TrEMBL allergens
+(Fel d 7, Fel d 8) and Allergome-listed entries that lack the UniProt `Allergen`
+keyword. This calls a real API (UniProt REST) and records the release for
+provenance — it does not fabricate or fake-fetch a WHO/IUIS table.
 
 The worklist is currently ordered by organism then allergen name; true
 **intervention-pressure** ranking (IgE prevalence, epitope load) awaits the IEDB
@@ -198,7 +208,8 @@ epitope step. It is the backlog from which the cohort is grown by running the li
 
 - **SCOPING.** Architecture and first secretoglobin cohort drafted.
 - Curated: FELCA/CH1, FELCA/CH2, mouse/Scgb1a1.
-- Done: allergen→UniProt index (molecule↔gene bridge) and a UniProt-KW-0020
-  registry snapshot + 1017-entry fetch worklist (3/1020 covered).
+- Done: allergen→UniProt index (molecule↔gene bridge, now 16 genes / 15 molecules)
+  and a UniProt-KW-0020 registry snapshot + fetch worklist (6/1020 reviewed-registry
+  covered). The full domestic-cat allergen set (Fel d 1, 2, 3, 4, 7, 8) is curated.
 - Next: prototype an IEDB epitope ETL to add the intervention-pressure ranking, then
-  expand the cohort by working the backlog (lipocalins, profilins, PR-10, etc.).
+  expand the cohort by working the backlog (other lipocalins, profilins, PR-10, etc.).

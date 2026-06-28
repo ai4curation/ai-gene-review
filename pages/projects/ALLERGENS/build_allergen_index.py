@@ -70,7 +70,10 @@ def parse_uniprot(path: Path) -> dict:
         "accession": acc,
         "gene": gene,
         "taxon": taxon,
-        "is_allergen": bool(is_allergen_kw or allergen_name),
+        # Reviewed entries carry the Allergen keyword / "Allergen=" name; unreviewed
+        # (TrEMBL) allergens (e.g. Fel d 7, Fel d 8) are identified by an Allergome
+        # cross-reference instead.
+        "is_allergen": bool(is_allergen_kw or allergen_name or allergome),
         "allergen_name": allergen_name,
         "allergome": allergome,
     }
