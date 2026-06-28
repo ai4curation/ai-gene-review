@@ -184,6 +184,54 @@ outputs) and `trpm7` swimming (a channel-kinase whose swimming phenotype is
 plausibly a distal developmental consequence) — defensible either way and not
 clear-cut enough to overturn.
 
+## Cross-link: behaviour is the extreme readout quadrant
+
+[ASSAY_TO_FUNCTION](ASSAY_TO_FUNCTION.md) frames over-annotation risk on two
+axes — **proximity** (does the readout measure the gene product's own molecular
+activity, or a downstream cellular consequence?) and **convergence** (is the
+readout a specific signature of process P, or a hub that many inputs feed into?).
+A whole-animal behaviour is the *maximal* phenotypic + high-convergence readout:
+it integrates the entire nervous system plus development, metabolism and basic
+cell biology, so almost any perturbation can move it. That is exactly why ~82% of
+reviewed behaviour annotations are downgraded.
+
+Behaviour has now been added as a first-class readout in that project's catalogue
+(`BEHAVIORAL_ASSAY` in
+[`readout_catalog.yaml`](ASSAY_TO_FUNCTION/readout_catalog.yaml)), with the test
+names — Morris Water Maze, open field, rotarod, fear conditioning, … — as match
+patterns. The **Casp3 `swimming behavior`** case above is the emblematic failure
+mode: the *assay modality* is mistaken for the gene's function. The Morris Water
+Maze is a swimming-based test of *spatial memory*; a gene merely measured in it
+(caspase-3, as an apoptosis marker) gets mis-annotated to `swimming behavior`.
+
+### Standardized behavioural-assay resources
+
+There is **no single canonical ontology that maps a behavioural assay to the GO
+process it licenses** (which is the gap `readout_catalog.yaml` fills by hand).
+The landscape is split across three complementary layers:
+
+- **Process / phenotype vocabularies.** The **Neuro Behavior Ontology (NBO)** is
+  the OBO Foundry ontology of behavioural *processes* (it complements and extends
+  GO's behaviour branch) and behavioural *phenotypes*; GO's `behavior` terms are
+  aligned with it. The **Mammalian Phenotype Ontology (MP)** has a
+  `behavior/neurological phenotype` branch (MP:0005386) for the *outcome* of a
+  test. These describe the process/phenotype, not the assay.
+- **Assay / protocol registries.** **IMPReSS** (the International Mouse
+  Phenotyping Resource of Standardised Screens, from the IMPC) is the closest
+  thing to a standardized *list of behavioural assays*: versioned SOPs with
+  defined parameters for open field, rotarod, etc. — a protocol registry rather
+  than an ontology. **OBI** (Ontology for Biomedical Investigations) models
+  assays generically (as planned processes) and can type a "behavioural assay".
+- **Human cognitive tasks.** The **Cognitive Paradigm Ontology (CogPO)** and the
+  **Cognitive Atlas** catalogue human behavioural/cognitive *paradigms*,
+  decomposed into stimulus → instruction → response, harmonised with OBI/BFO.
+
+For this project's purposes the practical takeaway is that an assay (IMPReSS/OBI)
+reports a phenotype (MP/NBO), which is at best weak, non-core evidence for a GO
+*process* (NBO/GO) — and never for a molecular function. Tightening the
+behaviour branch's GO↔NBO alignment, and recording *which assay* drove each
+behaviour annotation, would let the over-annotation check run automatically.
+
 ## Status & next steps
 
 - [x] Mine the source surface and reviewer decisions; confirm the
@@ -200,8 +248,10 @@ clear-cut enough to overturn.
       hippocampal apoptosis marker, so swimming is the assay modality, not a
       caspase-3 function → `MARK_AS_OVER_ANNOTATED`. **Every behaviour annotation
       in the corpus is now adjudicated** (0 PENDING).
-- [ ] Cross-link with [ASSAY_TO_FUNCTION](ASSAY_TO_FUNCTION.md): behaviour
-      readouts are the most distal, most convergent quadrant of that framework.
+- [x] Cross-link with [ASSAY_TO_FUNCTION](ASSAY_TO_FUNCTION.md): behaviour
+      readouts are the most distal, most convergent quadrant of that framework;
+      added a `BEHAVIORAL_ASSAY` readout class to its catalogue and documented the
+      standardized behavioural-assay resources (NBO, MP, IMPReSS, OBI, CogPO).
 
 ## Related projects
 
