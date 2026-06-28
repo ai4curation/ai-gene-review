@@ -158,10 +158,41 @@ whose molecular function is well established (human thioredoxin, low priority).
 `mouse/Scgb1a1` is intentionally absent — it is the secretoglobin comparator, not a
 registered allergen, so it does not appear in the membership-derived index.
 
+### Registry coverage and fetch worklist
+
+WHO/IUIS publishes no stable API, but UniProt's **`Allergen` keyword (KW-0020)** is
+a curated, API-accessible proxy: each reviewed allergen entry carries its WHO/IUIS
+designation inline in its protein names as `(allergen <name>)`
+(e.g. `(allergen Fel d 1-A)`). [ALLERGENS/fetch_uniprot_allergens.py](ALLERGENS/fetch_uniprot_allergens.py)
+snapshots that registry and cross-references it against `genes/` to produce a
+prioritizable backlog:
+
+```bash
+uv run python projects/ALLERGENS/fetch_uniprot_allergens.py
+```
+
+Outputs (UniProt release **2026_02**):
+
+- [ALLERGENS/uniprot_allergens.tsv](ALLERGENS/uniprot_allergens.tsv) — the registry
+  snapshot: **1020** reviewed allergen entries spanning **624** allergen molecules,
+  with accession, source organism/taxon, gene, WHO/IUIS name, molecule and Allergome id.
+- [ALLERGENS/allergen_worklist.tsv](ALLERGENS/allergen_worklist.tsv) — the **1017**
+  registry members **not yet fetched**, each with a ready-to-run `fetch-gene` command.
+
+Coverage so far: **3 / 1020** entries are in the repo (Fel d 1 chains P30438/P30440;
+human thioredoxin P10599). This calls a real API (UniProt REST) and records the
+release for provenance — it does not fabricate or fake-fetch a WHO/IUIS table.
+
+The worklist is currently ordered by organism then allergen name; true
+**intervention-pressure** ranking (IgE prevalence, epitope load) awaits the IEDB
+epitope step. It is the backlog from which the cohort is grown by running the listed
+`fetch-gene` commands and then reviewing each gene.
+
 ## Status
 
 - **SCOPING.** Architecture and first secretoglobin cohort drafted.
 - Curated: FELCA/CH1, FELCA/CH2, mouse/Scgb1a1.
-- Next: define the allergen→UniProt index (WHO/IUIS membership), prototype an IEDB
-  epitope ETL, and expand the cohort beyond secretoglobins (lipocalins, profilins,
-  PR-10, etc.).
+- Done: allergen→UniProt index (molecule↔gene bridge) and a UniProt-KW-0020
+  registry snapshot + 1017-entry fetch worklist (3/1020 covered).
+- Next: prototype an IEDB epitope ETL to add the intervention-pressure ranking, then
+  expand the cohort by working the backlog (lipocalins, profilins, PR-10, etc.).
