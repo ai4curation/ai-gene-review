@@ -79,18 +79,24 @@ verified `supporting_text`), so Tier 1 is now empty:
 (Fyn was re-reviewed first and seeded this audit.) Re-running the scanner now
 reports **Tier 1: 0**.
 
-### Tier 2 — genuine rework (13 found; 1 remaining)
+### Tier 2 — genuine rework (13 found; **all complete**)
 
 Both `summary` and `reason` templated — no real per-annotation curation signal.
-**Re-reviewed (12):** `mouse/Mtor` (372), `human/YWHAZ` (220), `mouse/Nf1`
-(195), `human/NCSTN` (99) [batch 1]; `human/SORL1` (168), `human/ADAM10` (151),
-`human/ABCA1` (145), `human/FERMT2` (85) [batch 2 — Alzheimer-risk genes];
-`mouse/Brca1` (167), `mouse/Tert` (143), `mouse/Ccnt1` (50), `yeast/NTE1` (17)
-[batch 3]. Each had its full per-term action/summary/reason regenerated with the
-real `supporting_text` preserved.
+All 13 have been re-reviewed: full per-term action/summary/reason regenerated
+with the real `supporting_text` preserved.
 
-**Remaining (1):** `mouse/Ctnnb1` (759) — the largest single review in the
-corpus, with real PMID-level evidence; reserved for its own focused pass.
+- **Batch 1:** `mouse/Mtor` (372), `human/YWHAZ` (220), `mouse/Nf1` (195),
+  `human/NCSTN` (99).
+- **Batch 2 (Alzheimer-risk):** `human/SORL1` (168), `human/ADAM10` (151),
+  `human/ABCA1` (145), `human/FERMT2` (85).
+- **Batch 3:** `mouse/Brca1` (167), `mouse/Tert` (143), `mouse/Ccnt1` (50),
+  `yeast/NTE1` (17).
+- **`mouse/Ctnnb1` (759)** — the largest review in the corpus; its 295 unique
+  terms were curated by four parallel agents split across β-catenin's roles
+  (adhesion/structure, Wnt/transcription, and the developmental-phenotype tail),
+  then merged with exact disjoint coverage.
+
+Re-running the scanner now reports **Tier 2: 0**.
 
 ### Tier 3 — reason-only boilerplate (34 files, low severity)
 

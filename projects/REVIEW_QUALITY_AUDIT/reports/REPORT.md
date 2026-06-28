@@ -4,7 +4,7 @@
 
 
 - Review files scanned: **2801**
-- Flagged: **35** — Tier 1: **0**, Tier 2: **1**, Tier 3: **34**
+- Flagged: **34** — Tier 1: **0**, Tier 2: **0**, Tier 3: **34**
 
 
 ## Tier 1 (critical) — fake/non-specific supporting evidence
@@ -21,7 +21,7 @@ Both the `summary` and the `reason` are drawn from a tiny templated set (unique-
 
 | File | reviewed | uniq-summary ratio | uniq-reason ratio | top reason |
 |---|---|---|---|---|
-| mouse/Ctnnb1/Ctnnb1-ai-review.yaml | 759 | 0.016 | 0.014 | 350× "The annotation is compatible with beta-catenin biology, but it reflects developmental patt" |
+| _none_ | | | | |
 
 ## Tier 3 — reason-only boilerplate (low severity)
 
