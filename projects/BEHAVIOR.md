@@ -144,15 +144,55 @@ Outputs (regenerated, not hand-edited):
 - `BEHAVIOR/reports/behavior_review_actions.csv` — every behaviour annotation a
   reviewer has adjudicated, with the action and rationale.
 
+## Spot-check of the `ACCEPT`ed annotations
+
+Applying the rubric to every behaviour annotation that a reviewer had `ACCEPT`ed
+as a core function sorts them cleanly into genuinely-proximal cases and missed
+downgrades.
+
+**Genuinely proximal — `ACCEPT` upheld:**
+
+- **CRY** (Drosophila) — `circadian behavior`: cryptochrome is a bona fide
+  circadian-clock photoreceptor; the behaviour is the clock's direct output.
+- **lov-1 / pkd-2** (C. elegans) — `male mating behavior` / `mating behavior`:
+  the polycystin-1/2 sensory channels that *constitute* the male-mating sensory
+  circuit; an ion channel acting directly in the relevant neurons (rubric step 2).
+- **GCG** (human) — `feeding behavior`: proglucagon/GLP-1 is a neuropeptide that
+  directly signals satiety to feeding circuits.
+- **DpuGr29** (Daphnia) — `chemosensory behavior`: a gustatory chemoreceptor,
+  the proximal transducer of the behaviour.
+
+**Missed downgrades — corrected to `KEEP_AS_NON_CORE`:**
+
+- **App** (mouse) — `adult locomotory behavior` / `locomotory behavior` (×5,
+  IMP/IGI): "supported by knockout phenotypes" with supporting text describing
+  righting difficulty, ataxia and balance deficits — a distal neurological
+  readout, exactly the Tuba1a pattern.
+- **STAT3** (human) — `regulation of feeding behavior` / `eating behavior` (×3,
+  IEA/ISS): electronic annotations on a highly pleiotropic transcription factor;
+  distal to its core JAK-STAT signalling role.
+- **nphp-1** (C. elegans) — `turning behavior involved in mating` (IGI): a
+  **ciliary** gene (named in this project) whose behaviour annotation's own
+  reason states it is "part of the … phenotype" — a downstream consequence of
+  cilium dysfunction.
+
+This moved 9 annotations from core to non-core, raising the downgrade rate among
+reviewed behaviour annotations from ~76% to **82%** (now only 19 `ACCEPT`ed as
+core). **Borderline cases left as-is** (documented, not changed): `daf-2`
+feeding/eating (the pleiotropic insulin receptor — feeding is one of many
+outputs) and `trpm7` swimming (a channel-kinase whose swimming phenotype is
+plausibly a distal developmental consequence) — defensible either way and not
+clear-cut enough to overturn.
+
 ## Status & next steps
 
 - [x] Mine the source surface and reviewer decisions; confirm the
       over-annotation signature (~76% of reviewed behaviour annotations
-      downgraded).
+      downgraded, rising to 82% after the spot-check below).
 - [x] Document exemplars and a working rubric.
-- [ ] Spot-check the `ACCEPT`ed behaviour annotations — confirm each is a
-      genuinely proximal case (receptor / neuropeptide / clock gene) and not a
-      missed downgrade.
+- [x] Spot-check the `ACCEPT`ed behaviour annotations — proximal cases upheld
+      (CRY, lov-1/pkd-2, GCG, DpuGr29); 9 missed downgrades (App ×5, STAT3 ×3,
+      nphp-1 ×1) corrected to `KEEP_AS_NON_CORE`.
 - [ ] Re-review the un-adjudicated / `PENDING` behaviour annotations against the
       rubric above.
 - [ ] Cross-link with [ASSAY_TO_FUNCTION](ASSAY_TO_FUNCTION.md): behaviour
