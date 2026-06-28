@@ -121,6 +121,43 @@ which surfaced the experimentally-grounded LPS-binding / TLR4-enhancement activi
 ([PMID:34026578]); all such claims were verified against the cited primary
 literature before annotation.
 
+## Allergen → UniProt index
+
+The cohort membership and the molecule→gene bridge are maintained as a generated
+TSV, [ALLERGENS/allergen_index.tsv](ALLERGENS/allergen_index.tsv), built by
+[ALLERGENS/build_allergen_index.py](ALLERGENS/build_allergen_index.py):
+
+```bash
+uv run python projects/ALLERGENS/build_allergen_index.py \
+    -o projects/ALLERGENS/allergen_index.tsv
+```
+
+The builder is deliberately **download-honest**: it derives membership from the
+already-cached UniProt records (the `Allergen=` name, the `Allergen` keyword, and
+Allergome cross-references) and joins them to the local reviews. It does **not**
+call or fake a WHO/IUIS API; to fold in the official registry, drop its downloaded
+table into the folder and extend the merge step. Re-running picks up every allergen
+gene present under `genes/`, so the index grows automatically as the cohort expands.
+
+Columns: `allergen_molecule` (the WHO/IUIS unit), `allergome_id`, `source_taxon_id`,
+`species_code`, `gene_symbol`, `uniprot`, `uniprot_allergen_name`, `review_path`,
+`review_status`, `n_core_functions`, `n_knowledge_gaps`, `function_gap_flagged`.
+
+The `function_gap_flagged` column operationalizes the prioritization metric: a
+member with documented knowledge gaps is exactly a "intervention-relevant but
+uncertain-function" candidate. Current contents (one row per gene):
+
+| allergen molecule | genes (UniProt) | source | review | function gap? |
+|---|---|---|---|---|
+| Fel d 1 | CH1 (P30438) + CH2 (P30440) | cat (9685) | DRAFT | **yes** — native role unknown |
+| Hom s Trx | TXN (P10599) | human (9606) | COMPLETE | no — characterized (thioredoxin) |
+
+The two rows illustrate the spread the cohort is meant to capture: a major allergen
+whose evolved function is unresolved (Fel d 1, high priority) versus a self-allergen
+whose molecular function is well established (human thioredoxin, low priority).
+`mouse/Scgb1a1` is intentionally absent — it is the secretoglobin comparator, not a
+registered allergen, so it does not appear in the membership-derived index.
+
 ## Status
 
 - **SCOPING.** Architecture and first secretoglobin cohort drafted.
