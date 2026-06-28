@@ -61,3 +61,34 @@ in vivo biological role + cavity ligand recorded as knowledge gaps (shared with 
 - PMID:1572548 — genomic structure, alternative splicing and variants of chain 2.
 - PMID:1712068 — biochemical structure of the major cat allergen.
 - PMID:6747135 — Cat allergen 1 biochemical/antigenic/allergenic properties.
+
+---
+
+## Update: Falcon deep research integration (CH2-deep-research-falcon.md)
+
+Ran FutureHouse Falcon deep research for chain 2 (27 citations). Findings mirror
+the CH1 deep research, since the documented activities are properties of the
+assembled Fel d 1 tetramer to which chain 2 contributes (the deep research notes
+"no independent chain-specific mechanism reported" for chain 2). Verified against
+the same primary sources used for CH1:
+
+- LPS binding + TLR4/TLR2 enhancement (Herre 2013, PMID:23878318): Fel d 1 binds
+  LPS and enhances TLR4/TLR2 signaling via CD14/MD2-dependent lipid transfer;
+  enhancement is independent of glycosylation status (relevant since chain 2 is the
+  glycosylated chain) [PMID:23878318 "bind to the TLR4 agonist LPS"].
+  → Added NEW: lipopolysaccharide binding (GO:0001530) and positive regulation of
+  toll-like receptor 4 signaling pathway (GO:0034145), framed as chain 2's
+  contribution to the heterotetramer (UniProt places the same FUNCTION on both
+  P30438 and P30440).
+- Ligand binding: Fel d 1 binds fatty acids and steroids (lauric acid, androsterone)
+  [PMID:34026578 "binding with good affinity to some fatty acids and steroids, the best ligands being lauric acid"];
+  both chains form the hydrophobic cavity. Captured in description/knowledge gaps
+  rather than as a chain-2-specific MF.
+- Chain-2 specifics reaffirmed: glycosylated (N-linked tri-antennary), ~10 kDa,
+  tissue-specific length isoforms (skin short / salivary long), contributes
+  calcium-coordinating residues.
+
+### Newly added references
+- PMID:23878318 — Herre 2013 (LPS/TLR4 enhancement; glycosylation-independent).
+- PMID:34026578 — Popescu 2021 (fatty-acid/steroid ligand binding).
+- file:FELCA/CH2/CH2-deep-research-falcon.md — Falcon deep research report.
