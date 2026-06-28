@@ -3,7 +3,7 @@ title: "Allergens Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [FELCA, mouse, human]
-genes: [CH1, CH2, Scgb1a1]
+genes: [CH1, CH2, ALB, CSTA, Feld4, Scgb1a1]
 ---
 
 # Allergens Project
@@ -150,13 +150,19 @@ uncertain-function" candidate. Current contents (one row per gene):
 | allergen molecule | genes (UniProt) | source | review | function gap? |
 |---|---|---|---|---|
 | Fel d 1 | CH1 (P30438) + CH2 (P30440) | cat (9685) | DRAFT | **yes** — native role unknown |
+| Fel d 2 | ALB (P49064) | cat (9685) | DRAFT | no — serum albumin carrier |
+| Fel d 3 | CSTA (Q8WNR9) | cat (9685) | DRAFT | no — cystatin protease inhibitor |
+| Fel d 4 | Feld4 (Q5VFH6) | cat (9685) | DRAFT | no — lipocalin pheromone carrier |
 | Hom s Trx | TXN (P10599) | human (9606) | COMPLETE | no — characterized (thioredoxin) |
 
-The two rows illustrate the spread the cohort is meant to capture: a major allergen
-whose evolved function is unresolved (Fel d 1, high priority) versus a self-allergen
-whose molecular function is well established (human thioredoxin, low priority).
-`mouse/Scgb1a1` is intentionally absent — it is the secretoglobin comparator, not a
-registered allergen, so it does not appear in the membership-derived index.
+The rows illustrate the spread the cohort is meant to capture, and it is striking
+even within a single species: of the cat allergens, only **Fel d 1** has an
+unresolved evolved function (high priority), whereas the secondary cat allergens are
+each a well-understood protein family — Fel d 2 a serum-albumin carrier, Fel d 3 a
+cystatin cysteine-protease inhibitor, Fel d 4 a lipocalin pheromone carrier — and
+human thioredoxin is a characterized self-allergen (all low priority). `mouse/Scgb1a1`
+is intentionally absent — it is the secretoglobin comparator, not a registered
+allergen, so it does not appear in the membership-derived index.
 
 ### Registry coverage and fetch worklist
 
@@ -176,11 +182,11 @@ Outputs (UniProt release **2026_02**):
 - [ALLERGENS/uniprot_allergens.tsv](ALLERGENS/uniprot_allergens.tsv) — the registry
   snapshot: **1020** reviewed allergen entries spanning **624** allergen molecules,
   with accession, source organism/taxon, gene, WHO/IUIS name, molecule and Allergome id.
-- [ALLERGENS/allergen_worklist.tsv](ALLERGENS/allergen_worklist.tsv) — the **1017**
+- [ALLERGENS/allergen_worklist.tsv](ALLERGENS/allergen_worklist.tsv) — the **1014**
   registry members **not yet fetched**, each with a ready-to-run `fetch-gene` command.
 
-Coverage so far: **3 / 1020** entries are in the repo (Fel d 1 chains P30438/P30440;
-human thioredoxin P10599). This calls a real API (UniProt REST) and records the
+Coverage so far: **6 / 1020** entries are in the repo (Fel d 1 chains P30438/P30440;
+cat Fel d 2/3/4 and human thioredoxin). This calls a real API (UniProt REST) and records the
 release for provenance — it does not fabricate or fake-fetch a WHO/IUIS table.
 
 The worklist is currently ordered by organism then allergen name; true
