@@ -27,6 +27,17 @@ process (if any) it can legitimately support.
   *(generated)* — scans every annotation whose evidence text *names* a
   recognised assay and flags `MISMATCH` (assay doesn't license the GO term),
   `OVER_CORE` (accepted as core), or `FENCED` (assay licenses no behaviour term).
+- **`validate_map.py`** — validates `behavioural_assay_go_map.yaml` (these files
+  are bespoke project data, not bound to the LinkML gene-review schema, so this
+  is their dedicated check). Offline: parse, structure, unique `assay_type`,
+  well-formed `GO:nnnnnnn`/label entries, and an exact join to the ingested
+  canonical assay types. `--online`: every GO id resolves in QuickGO, is
+  non-obsolete, is a `biological_process`, and its label matches verbatim
+  (checked per occurrence). Exits non-zero on failure.
+
+  ```bash
+  uv run python projects/BEHAVIOR/impress/validate_map.py --online
+  ```
 
 ## Regenerate
 
