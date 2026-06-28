@@ -72,3 +72,49 @@ extracellular region; in vivo biological role recorded as a knowledge gap.
 - PMID:1572548 — genomic structure of the two Fel d 1 genes.
 - PMID:1712068 — biochemical structure of the major cat allergen.
 - PMID:6747135 — Cat allergen 1 biochemical/antigenic/allergenic properties.
+
+---
+
+## Update: Falcon deep research integration (CH1-deep-research-falcon.md)
+
+Ran FutureHouse Falcon deep research (34 citations). Key additions beyond the
+original PMC5891966-based review, with primary sources fetched and verified:
+
+### New molecular activity — LPS binding + TLR4/TLR2 enhancement (experimental)
+Herre et al. 2013 (PMID:23878318, full text in PMC) is the best-characterized
+molecular activity of Fel d 1:
+- "Fel d 1 substantially enhances signaling through the innate receptors TLR4 and TLR2"
+  [PMID:23878318 "enhances signaling through the innate receptors TLR4 and TLR2"].
+- Fel d 1 binds the TLR4 agonist LPS, acting via a lipid-transfer mechanism (CD14/MD2-
+  dependent) rather than by mimicking MD2
+  [PMID:23878318 "bind to the TLR4 agonist LPS"].
+→ Supports NEW annotations: lipopolysaccharide binding (GO:0001530) and positive
+  regulation of toll-like receptor 4 signaling pathway (GO:0034145). This is shown
+  largely in the context of human allergic sensitization/innate amplification, not
+  confirmed cat physiology, but it is a bona fide molecular activity of the protein.
+
+### Ligand binding revises the "steroid binding" assessment
+Popescu et al. 2021 (PMID:34026578) reports that Fel d 1 binds fatty acids and
+steroids with good affinity:
+- [PMID:34026578 "binding with good affinity to some fatty acids and steroids, the best ligands being lauric acid"]
+  (lauric acid; androsterone — a volatile steroid pheromone).
+→ The IBA/IEA "steroid binding" (GO:0005496) is therefore NOT merely a baseless
+  family inference; there is reported ligand-binding evidence. Revised from
+  MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE: a real activity, plausibly part of a
+  broader small-hydrophobic-ligand binding / transport (pheromone) role, but not the
+  single core function. Fatty acid binding (lauric acid) is also reported.
+
+### Native function still unknown; expression is androgen-regulated
+- Native biological function in the cat remains formally unestablished
+  (Grönlund 2010 PMID:19844127; Popescu 2021); proposed roles: lipid/steroid (pheromone)
+  transport, chemical communication, epithelial/skin defense, immunoregulation.
+- Production is testosterone-regulated (intact males >> neutered); secreted by
+  sebaceous, salivary, lacrimal glands and anal sacs.
+- Secretoglobin superfamily binds retinoids, phospholipids, steroids and calcium
+  (Karn & Laukaitis 2025); no SCGB has a firmly established function.
+
+### Newly added/verified references
+- PMID:23878318 — Herre 2013, Fel d 1 enhances TLR activation by lipid ligands (PMC full text).
+- PMID:19844127 — Grönlund 2010, major cat allergen Fel d 1 in diagnosis and therapy (review).
+- PMID:34026578 — Popescu 2021, molecular diagnosis in cat allergy (review; ligand data).
+- file:FELCA/CH1/CH1-deep-research-falcon.md — Falcon deep research report.
