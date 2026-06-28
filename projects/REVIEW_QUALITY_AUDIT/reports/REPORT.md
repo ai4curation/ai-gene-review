@@ -4,7 +4,7 @@
 
 
 - Review files scanned: **2801**
-- Flagged: **47** — Tier 1: **0**, Tier 2: **13**, Tier 3: **34**
+- Flagged: **43** — Tier 1: **0**, Tier 2: **9**, Tier 3: **34**
 
 
 ## Tier 1 (critical) — fake/non-specific supporting evidence
@@ -22,15 +22,11 @@ Both the `summary` and the `reason` are drawn from a tiny templated set (unique-
 | File | reviewed | uniq-summary ratio | uniq-reason ratio | top reason |
 |---|---|---|---|---|
 | mouse/Ctnnb1/Ctnnb1-ai-review.yaml | 759 | 0.016 | 0.014 | 350× "The annotation is compatible with beta-catenin biology, but it reflects developmental patt" |
-| mouse/Mtor/Mtor-ai-review.yaml | 372 | 0.024 | 0.024 | 223× "Valid mTOR-associated context or downstream phenotype, but not the core catalytic TORC fun" |
-| human/YWHAZ/YWHAZ-ai-review.yaml | 220 | 0.082 | 0.077 | 172× "Valid IPI evidence documenting a protein-protein interaction. YWHAZ is an adapter protein " |
-| mouse/Nf1/Nf1-ai-review.yaml | 195 | 0.046 | 0.051 | 162× "Valid NF1-associated context or phenotype, but downstream or accessory to RasGAP activity" |
 | human/SORL1/SORL1-ai-review.yaml | 168 | 0.089 | 0.042 | 92× "The term matches the synthesized core function of SORL1 as a multi-cargo sorting receptor," |
 | mouse/Brca1/Brca1-ai-review.yaml | 167 | 0.048 | 0.048 | 83× "Valid BRCA1-associated context, but secondary to DNA repair and E3 ligase core functions" |
 | human/ADAM10/ADAM10-ai-review.yaml | 151 | 0.079 | 0.033 | 88× "The term aligns with the synthesized core function of ADAM10 as a regulated transmembrane " |
 | human/ABCA1/ABCA1-ai-review.yaml | 145 | 0.041 | 0.041 | 69× "Accept as core. UniProt and cached primary studies support ABCA1 as an ATP-binding cassett" |
 | mouse/Tert/Tert-ai-review.yaml | 143 | 0.049 | 0.049 | 96× "Valid TERT-associated context or non-canonical role, but secondary to telomerase-mediated " |
-| human/NCSTN/NCSTN-ai-review.yaml | 99 | 0.121 | 0.051 | 73× "The term aligns with the synthesized core function of NCSTN as an essential gamma-secretas" |
 | human/FERMT2/FERMT2-ai-review.yaml | 85 | 0.059 | 0.059 | 52× "Accept as part of the core FERMT2 function. Kindlin-2 binds integrins and phosphoinositide" |
 | mouse/Ccnt1/Ccnt1-ai-review.yaml | 50 | 0.1 | 0.1 | 36× "The term is consistent with Cyclin T1 as a CDK9 regulatory cyclin in P-TEFb that promotes " |
 | yeast/NTE1/NTE1-ai-review.yaml | 17 | 0.059 | 0.059 | 17× "This annotation accurately reflects NTE1 core enzymatic function as demonstrated experimen" |

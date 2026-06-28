@@ -79,14 +79,16 @@ verified `supporting_text`), so Tier 1 is now empty:
 (Fyn was re-reviewed first and seeded this audit.) Re-running the scanner now
 reports **Tier 1: 0**.
 
-### Tier 2 — genuine rework (13 files)
+### Tier 2 — genuine rework (13 found; 9 remaining)
 
 Both `summary` and `reason` templated — no real per-annotation curation signal.
-These are the real worklist after Tier 1: `mouse/Ctnnb1` (759), `mouse/Mtor`
-(372), `human/YWHAZ` (220), `mouse/Nf1` (195), `human/SORL1` (168),
-`mouse/Brca1` (167), `human/ADAM10` (151), `human/ABCA1` (145), `mouse/Tert`
-(143), `human/NCSTN` (99), `human/FERMT2` (85), `mouse/Ccnt1` (50),
-`yeast/NTE1` (17).
+**Re-reviewed so far:** `mouse/Mtor` (372), `human/YWHAZ` (220), `mouse/Nf1`
+(195), `human/NCSTN` (99) — full per-term action/summary/reason regenerated with
+the real `supporting_text` preserved.
+
+**Remaining (9):** `mouse/Ctnnb1` (759), `human/SORL1` (168), `mouse/Brca1`
+(167), `human/ADAM10` (151), `human/ABCA1` (145), `mouse/Tert` (143),
+`human/FERMT2` (85), `mouse/Ccnt1` (50), `yeast/NTE1` (17).
 
 ### Tier 3 — reason-only boilerplate (34 files, low severity)
 
