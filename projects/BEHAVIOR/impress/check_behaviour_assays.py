@@ -95,7 +95,8 @@ def main() -> None:
     args = ap.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
 
-    gomap = yaml.safe_load(open(args.map))
+    with open(args.map) as fh:
+        gomap = yaml.safe_load(fh)
     licensed: dict[str, set[str]] = {
         a["assay_type"]: {g["id"] for g in (a.get("supports_go") or [])}
         for a in gomap["assays"]
@@ -105,7 +106,8 @@ def main() -> None:
     flags = []
     for path in glob.glob(os.path.join(args.genes_dir, "**", "*-ai-review.yaml"), recursive=True):
         try:
-            doc = yaml.load(open(path), Loader=Loader)
+            with open(path) as fh:
+                doc = yaml.load(fh, Loader=Loader)
         except Exception:
             continue
         if not isinstance(doc, dict):

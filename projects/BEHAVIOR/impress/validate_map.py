@@ -44,12 +44,14 @@ def main() -> int:
     errors: list[str] = []
 
     try:
-        m = yaml.safe_load(open(MAP))
+        with open(MAP) as fh:
+            m = yaml.safe_load(fh)
     except Exception as e:
         print(f"FAIL: map does not parse: {e}")
         return 1
     try:
-        ing = yaml.safe_load(open(INGEST))
+        with open(INGEST) as fh:
+            ing = yaml.safe_load(fh)
     except Exception as e:
         print(f"FAIL: ingest does not parse: {e}")
         return 1

@@ -2,6 +2,8 @@
 title: "Behaviour Annotation Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
+species: [mouse, human, rat, worm, yeast, DANRE, DROME, DAPPU]
+genes: [App, STAT3, nphp-1, Casp3, Drd1, CRY, lov-1, pkd-2, GCG, daf-2, trpm7, Tuba1a, Agtr1a, Mtor, Fyn]
 ---
 
 # Behaviour Annotation Project
@@ -58,8 +60,9 @@ terms are the broad ones — `locomotory behavior` (GO:0007626) by a wide margin
 followed by `behavioral response to pain`, `mating behavior`, `social
 behavior`, `circadian behavior`, and `adult locomotory behavior`.
 
-**Reviewer decisions.** Of the behaviour annotations that reviewers have already
-adjudicated, **~76% were downgraded** — kept as non-core, marked as
+**Reviewer decisions.** Of the behaviour annotations reviewers have adjudicated
+as core-vs-not (146, excluding the 9 `NEW` proposed terms, which add rather than
+downgrade), **~81% were downgraded** — kept as non-core, marked as
 over-annotated, or removed — and only a minority were `ACCEPT`ed as a core
 function:
 
@@ -177,8 +180,8 @@ downgrades.
   cilium dysfunction.
 
 This moved 9 annotations from core to non-core, raising the downgrade rate among
-reviewed behaviour annotations from ~76% to **82%** (now only 19 `ACCEPT`ed as
-core). **Borderline cases left as-is** (documented, not changed): `daf-2`
+adjudicated behaviour annotations from ~81% to **87%** (127 of 146; now only 19
+`ACCEPT`ed as core). **Borderline cases left as-is** (documented, not changed): `daf-2`
 feeding/eating (the pleiotropic insulin receptor — feeding is one of many
 outputs) and `trpm7` swimming (a channel-kinase whose swimming phenotype is
 plausibly a distal developmental consequence) — defensible either way and not
@@ -192,8 +195,8 @@ activity, or a downstream cellular consequence?) and **convergence** (is the
 readout a specific signature of process P, or a hub that many inputs feed into?).
 A whole-animal behaviour is the *maximal* phenotypic + high-convergence readout:
 it integrates the entire nervous system plus development, metabolism and basic
-cell biology, so almost any perturbation can move it. That is exactly why ~82% of
-reviewed behaviour annotations are downgraded.
+cell biology, so almost any perturbation can move it. That is exactly why ~87% of
+adjudicated behaviour annotations are downgraded.
 
 Behaviour has now been added as a first-class readout in that project's catalogue
 (`BEHAVIORAL_ASSAY` in
@@ -256,8 +259,8 @@ is only the modality) — confirming that fix from the assay side.
 ## Status & next steps
 
 - [x] Mine the source surface and reviewer decisions; confirm the
-      over-annotation signature (~76% of reviewed behaviour annotations
-      downgraded, rising to 82% after the spot-check below).
+      over-annotation signature (~81% of adjudicated behaviour annotations
+      downgraded, rising to 87% after the spot-check below).
 - [x] Document exemplars and a working rubric.
 - [x] Spot-check the `ACCEPT`ed behaviour annotations — proximal cases upheld
       (CRY, lov-1/pkd-2, GCG, DpuGr29); 9 missed downgrades (App ×5, STAT3 ×3,

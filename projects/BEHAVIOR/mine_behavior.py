@@ -47,6 +47,10 @@ BEHAVIOR_RE = re.compile(r"behaviou?r", re.IGNORECASE)
 DOWNGRADE = {"KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "REMOVE"}
 KEPT_CORE = {"ACCEPT"}
 NOT_REVIEWED = {"UNREVIEWED", "UNDECIDED", "PENDING", "NONE", ""}
+# NEW proposes a brand-new annotation rather than adjudicating an existing one as
+# core-vs-not, so it is excluded from the downgrade-rate denominator (it would
+# otherwise dilute the rate without being a downgrade *or* a kept-core call).
+NEW_PROPOSED = {"NEW"}
 
 
 def source_pass(genes_dir: str) -> list[dict[str, str]]:
@@ -77,7 +81,8 @@ def review_pass(genes_dir: str) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     for path in glob.glob(os.path.join(genes_dir, "**", "*-ai-review.yaml"), recursive=True):
         try:
-            doc = yaml.safe_load(open(path))
+            with open(path) as fh:
+                doc = yaml.safe_load(fh)
         except Exception:
             continue
         if not isinstance(doc, dict):
@@ -129,9 +134,12 @@ def main() -> None:
 
     src_ev = Counter(r["evidence"] for r in src)
     rev_act = Counter(r["action"] for r in rev)
-    reviewed = [r for r in rev if r["action"] not in NOT_REVIEWED]
     n_down = sum(rev_act[a] for a in DOWNGRADE)
     n_core = sum(rev_act[a] for a in KEPT_CORE)
+    n_new = sum(rev_act[a] for a in NEW_PROPOSED)
+    # Denominator = existing annotations adjudicated as core-vs-not (excludes NEW
+    # proposed terms and not-yet-reviewed annotations).
+    adjudicated = n_down + n_core
 
     lines: list[str] = []
     lines.append("# Behaviour annotation mining report\n")
@@ -155,13 +163,15 @@ def main() -> None:
         lines.append(f"| {lbl} | {tid} | {c} |")
 
     lines.append("\n## 2. Reviewer actions (from `*-ai-review.yaml`)\n")
-    lines.append(f"- Behaviour annotations already adjudicated in reviews: **{len(rev)}**")
-    if reviewed:
-        pct = 100.0 * n_down / len(reviewed)
+    lines.append(f"- Behaviour annotations in reviews: **{len(rev)}**")
+    if adjudicated:
+        pct = 100.0 * n_down / adjudicated
         lines.append(
-            f"- Of reviewed behaviour annotations, **{n_down}/{len(reviewed)} "
-            f"({pct:.0f}%)** were downgraded (non-core / over-annotated / removed); "
-            f"only **{n_core}** were ACCEPTed as a core function.\n"
+            f"- Of behaviour annotations adjudicated as core-vs-not (**{adjudicated}** "
+            f"= {n_down} downgraded + {n_core} kept core; excludes {n_new} NEW proposed "
+            f"terms and any not-yet-reviewed), **{n_down}/{adjudicated} ({pct:.0f}%)** "
+            f"were downgraded (non-core / over-annotated / removed); only **{n_core}** "
+            f"were ACCEPTed as a core function.\n"
         )
     lines.append("Action distribution:\n")
     lines.append("| Action | Count |")
