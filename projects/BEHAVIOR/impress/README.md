@@ -41,11 +41,23 @@ process (if any) it can legitimately support.
 
 ## Regenerate
 
+A project-local `justfile` wraps the workflow (recipes `cd` to the repo root):
+
 ```bash
-# Ingest (default: IMPC_001 + JAX_001 + ESLIM_002 + GMC_001 + ICS_001)
+cd projects/BEHAVIOR/impress
+just                 # list recipes
+just ingest          # refresh procedures.tsv / behavioural_assays.yaml / REPORT.md
+just validate-online # structure + exact join + QuickGO id/label check
+just check           # ASSAY_CHECK.md / assay_check_flags.csv
+just all             # ingest -> validate-online -> check
+```
+
+Or call the scripts directly from the repo root:
+
+```bash
 uv run python projects/BEHAVIOR/impress/ingest_impress.py --out-dir projects/BEHAVIOR/impress
-# Check the corpus against the assay→GO map
 uv run python projects/BEHAVIOR/impress/check_behaviour_assays.py --out-dir projects/BEHAVIOR/impress
+uv run python projects/BEHAVIOR/impress/validate_map.py --online
 ```
 
 The default ingest covers **15 canonical behavioural/neurological assay types**
