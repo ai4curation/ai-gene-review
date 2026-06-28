@@ -232,6 +232,17 @@ reports a phenotype (MP/NBO), which is at best weak, non-core evidence for a GO
 behaviour branch's GO↔NBO alignment, and recording *which assay* drove each
 behaviour annotation, would let the over-annotation check run automatically.
 
+The **IMPReSS** standardized assay battery is ingested under
+[`BEHAVIOR/impress/`](BEHAVIOR/impress/README.md): a reproducible pull of the
+curated IMPC pipeline (86 procedures, 16 behavioural/neurological), plus a
+hand-curated [`behavioural_assay_go_map.yaml`](BEHAVIOR/impress/behavioural_assay_go_map.yaml)
+that maps each assay (Open Field, Y-maze, Fear Conditioning, Acoustic
+Startle/PPI, …) to the GO behaviour term it can support as `KEEP_AS_NON_CORE`
+(QuickGO-verified ids). That map closes the missing assay→GO link and fences off
+the traps — Grip Strength (neuromuscular, no behaviour term) and Auditory Brain
+Stem Response (electrophysiology, a hearing term at most, not `auditory
+behavior`).
+
 ## Status & next steps
 
 - [x] Mine the source surface and reviewer decisions; confirm the
