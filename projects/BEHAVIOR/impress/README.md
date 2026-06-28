@@ -1,4 +1,4 @@
-# IMPReSS behavioural-assay ingest
+# IMPReSS behavioural-assay ingest + assay→GO check
 
 Standardized phenotyping assays from **IMPReSS** (the International Mouse
 Phenotyping Resource of Standardised Screens, IMPC), ingested to operationalize
@@ -8,51 +8,75 @@ process (if any) it can legitimately support.
 
 ## Files
 
-- **`ingest_impress.py`** — reproducible fetch of one pipeline's full procedure
-  set from the IMPC API (`https://api.mousephenotype.org/impress`). Live fetch;
-  nothing hard-coded.
-- **`impc_procedures.tsv`** *(generated)* — all procedures in pipeline
-  `IMPC_001` (the curated IMPC screen): key, name, level, version, #parameters,
-  MP terms parsed from the description, and a transparent
-  `behavioural_neurological` flag.
-- **`behavioural_assays.yaml`** *(generated)* — the behavioural/neurological
-  subset with detail.
-- **`REPORT.md`** *(generated)* — counts + the behavioural-assay table.
+- **`ingest_impress.py`** — reproducible fetch of one or more pipelines' full
+  procedure sets from the IMPC API (`https://api.mousephenotype.org/impress`),
+  classifying behavioural/neurological procedures into canonical assay *types*.
+  Live fetch; nothing hard-coded.
+- **`procedures.tsv`** *(generated)* — every procedure across the ingested
+  pipelines (pipeline, key, name, level, version, #parameters, MP terms,
+  behavioural flag, canonical assay type).
+- **`behavioural_assays.yaml`** *(generated)* — behavioural/neurological assays
+  grouped by canonical type, each listing every (pipeline, key) instance.
+- **`REPORT.md`** *(generated)* — counts + the canonical behavioural-assay table.
 - **`behavioural_assay_go_map.yaml`** *(hand-curated)* — the bridge: each
-  behavioural assay → the GO behaviour term(s) a hit can support, as
+  behavioural assay type → the GO behaviour term(s) a hit can support, as
   `KEEP_AS_NON_CORE` (all ids QuickGO-verified), with the over-annotation
-  caution. This is the layer no public ontology provides.
+  caution. `assay_type` joins to `behavioural_assays.yaml`. Includes the
+  Morris Water Maze (flagged `not_in_impress`: a classic literature assay).
+- **`check_behaviour_assays.py`** + **`ASSAY_CHECK.md` / `assay_check_flags.csv`**
+  *(generated)* — scans every annotation whose evidence text *names* a
+  recognised assay and flags `MISMATCH` (assay doesn't license the GO term),
+  `OVER_CORE` (accepted as core), or `FENCED` (assay licenses no behaviour term).
 
 ## Regenerate
 
 ```bash
-uv run python projects/BEHAVIOR/impress/ingest_impress.py \
-    --pipeline IMPC_001 --out-dir projects/BEHAVIOR/impress
+# Ingest (default: IMPC_001 + JAX_001 + ESLIM_002 + GMC_001 + ICS_001)
+uv run python projects/BEHAVIOR/impress/ingest_impress.py --out-dir projects/BEHAVIOR/impress
+# Check the corpus against the assay→GO map
+uv run python projects/BEHAVIOR/impress/check_behaviour_assays.py --out-dir projects/BEHAVIOR/impress
 ```
+
+The default ingest covers **15 canonical behavioural/neurological assay types**
+across 5 pipelines — including the assays absent from the IMPC core pipeline
+(Rotarod, Hole-board, Hot Plate, Tail Suspension, Von Frey, Sleep-Wake). Pass
+`--pipelines` to ingest others.
+
+## How the check wires into the readout mining
+
+Two complementary layers:
+
+1. **Generic** — `BEHAVIORAL_ASSAY` is a readout class in
+   `ASSAY_TO_FUNCTION/readout_catalog.yaml`, so `mine_readouts.py` already
+   cross-tabulates behavioural-assay mentions against reviewer action.
+2. **Specific** — `check_behaviour_assays.py` uses
+   `behavioural_assay_go_map.yaml` to verify the *exact GO term* against the
+   *specific assay*. This independently re-derived the **Casp3 `swimming
+   behavior` → Morris Water Maze** over-annotation (the assay is a spatial-memory
+   test; swimming is only the modality).
+
+The check is **exact-id and advisory**: it matches the annotated term id against
+the assay's licensed set (a future refinement would use GO subsumption so child
+terms pass automatically), and `OVER_CORE` should be read as "confirm this gene
+is genuinely proximal" — bona-fide clock genes / receptors are the documented
+rubric exceptions (e.g. CRY sleep/wake is correctly near-core).
 
 ## Why a hand-curated GO map
 
-The ontology landscape splits the problem three ways and never closes it:
-
-- **NBO** (Neuro Behavior Ontology) and **MP** (`behavior/neurological
-  phenotype`, MP:0005386) describe the *process / phenotype*.
-- **IMPReSS** (this ingest) and **OBI** describe the *assay / protocol*.
-- **CogPO** / **Cognitive Atlas** describe human *cognitive tasks*.
-
-None maps "assay X → GO process P, with reliability R". `behavioural_assay_go_map.yaml`
-encodes that for the IMPReSS battery, with the ASSAY_TO_FUNCTION caution baked in:
-a behavioural assay is the extreme phenotypic + high-convergence readout, so a
-hit licenses at most a non-core BP term — never an MF or core call. Two assays
-are deliberately fenced off: **Grip Strength** (neuromuscular, no behaviour term)
-and **Auditory Brain Stem Response** (electrophysiology — a hearing/sensory term
-at most, *not* `auditory behavior`).
+No public ontology maps "assay → GO process": **NBO** / **MP**
+(`behavior/neurological phenotype`, MP:0005386) describe the *process/phenotype*,
+**IMPReSS** (this ingest) / **OBI** the *assay*, **CogPO** / **Cognitive Atlas**
+human *cognitive tasks*. `behavioural_assay_go_map.yaml` closes that gap for the
+IMPReSS battery, with the ASSAY_TO_FUNCTION caution baked in (phenotypic +
+high-convergence → non-core only). Two assays are deliberately fenced (empty
+`supports_go`): **Grip Strength** (neuromuscular) and **Tail Suspension** (no GO
+term for depression-like immobility); **Auditory Brain Stem Response** is capped
+at a hearing term and fenced against `auditory behavior`.
 
 ## Caveats
 
-- `IMPC_001` is the current curated pipeline; legacy/other pipelines add assays
-  (Rotarod, Hole-board, Tail Suspension, …) — pass a different `--pipeline` to
-  ingest them. The `BEHAVIORAL_ASSAY` readout class in
-  `ASSAY_TO_FUNCTION/readout_catalog.yaml` already carries patterns for those.
-- MP terms here come from the procedure *description*; richer parameter-level MP
-  mappings are available via `/ontologyterm/belongingtoparameter/:parameterID`
-  for future enrichment.
+- MP terms come from the procedure *description*; richer parameter-level MP
+  mappings are available via `/ontologyterm/belongingtoparameter/:parameterID`.
+- The checker only sees annotations that *name* an assay in their evidence text;
+  most cite a PMID instead, so its flag count is a floor, not the full
+  population.

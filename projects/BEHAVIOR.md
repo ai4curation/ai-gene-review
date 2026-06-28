@@ -233,15 +233,25 @@ behaviour branch's GO↔NBO alignment, and recording *which assay* drove each
 behaviour annotation, would let the over-annotation check run automatically.
 
 The **IMPReSS** standardized assay battery is ingested under
-[`BEHAVIOR/impress/`](BEHAVIOR/impress/README.md): a reproducible pull of the
-curated IMPC pipeline (86 procedures, 16 behavioural/neurological), plus a
-hand-curated [`behavioural_assay_go_map.yaml`](BEHAVIOR/impress/behavioural_assay_go_map.yaml)
-that maps each assay (Open Field, Y-maze, Fear Conditioning, Acoustic
-Startle/PPI, …) to the GO behaviour term it can support as `KEEP_AS_NON_CORE`
+[`BEHAVIOR/impress/`](BEHAVIOR/impress/README.md): a reproducible pull across 5
+IMPC pipelines (287 procedures → **15 canonical behavioural/neurological assay
+types**, including Rotarod, Hole-board, Hot Plate, Tail Suspension, Von Frey and
+Sleep-Wake, which the core pipeline omits), plus a hand-curated
+[`behavioural_assay_go_map.yaml`](BEHAVIOR/impress/behavioural_assay_go_map.yaml)
+mapping each assay to the GO behaviour term it can support as `KEEP_AS_NON_CORE`
 (QuickGO-verified ids). That map closes the missing assay→GO link and fences off
-the traps — Grip Strength (neuromuscular, no behaviour term) and Auditory Brain
-Stem Response (electrophysiology, a hearing term at most, not `auditory
-behavior`).
+the traps — Grip Strength (neuromuscular, no behaviour term), Tail Suspension (no
+GO term for depression-like immobility) and Auditory Brain Stem Response
+(electrophysiology, a hearing term at most, not `auditory behavior`).
+
+The map is wired into the over-annotation mining two ways: a `BEHAVIORAL_ASSAY`
+readout class in [`ASSAY_TO_FUNCTION/readout_catalog.yaml`](ASSAY_TO_FUNCTION/readout_catalog.yaml)
+(generic readout↔action cross-tab via `mine_readouts.py`), and a dedicated
+[`check_behaviour_assays.py`](BEHAVIOR/impress/check_behaviour_assays.py) that
+verifies the *specific* GO term against the *specific* assay named in an
+annotation's evidence. The checker independently re-derived the **Casp3 `swimming
+behavior`** over-annotation (Morris Water Maze is a spatial-memory test; swimming
+is only the modality) — confirming that fix from the assay side.
 
 ## Status & next steps
 

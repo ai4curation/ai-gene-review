@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IMPReSS behavioural-assay ingest - AI Gene Review Projects</title>
+    <title>IMPReSS behavioural-assay ingest + assay→GO check - AI Gene Review Projects</title>
     <style>
         :root {
             --color-accept: #22c55e;
@@ -325,11 +325,11 @@
     <nav class="breadcrumb">
         <a href="../index.html">Home</a> &raquo;
         <a href="index.html">Projects</a> &raquo;
-        IMPReSS behavioural-assay ingest
+        IMPReSS behavioural-assay ingest + assay→GO check
     </nav>
 
     <header class="header">
-        <h1>IMPReSS behavioural-assay ingest</h1>
+        <h1>IMPReSS behavioural-assay ingest + assay→GO check</h1>
         
         
         
@@ -338,9 +338,18 @@
     
 
     
+    <div class="warnings">
+        <h3>Warnings (1)</h3>
+        <ul>
+            
+            <li>Ambiguous symbol &#39;Casp3&#39; found in species: mouse, rat. Add &#39;species: [mouse]&#39; to frontmatter to resolve.</li>
+            
+        </ul>
+    </div>
+    
 
     <div class="content">
-        <h1 id="impress-behavioural-assay-ingest">IMPReSS behavioural-assay ingest</h1>
+        <h1 id="impress-behavioural-assay-ingest-assaygo-check">IMPReSS behavioural-assay ingest + assay→GO check</h1>
 <p>Standardized phenotyping assays from <strong>IMPReSS</strong> (the International Mouse<br />
 Phenotyping Resource of Standardised Screens, IMPC), ingested to operationalize<br />
 the <a href="../../BEHAVIOR.html">BEHAVIOR</a> ↔ <a href="../../ASSAY_TO_FUNCTION.html">ASSAY_TO_FUNCTION</a><br />
@@ -348,50 +357,71 @@ cross-link: which standardized assay drives a behaviour annotation, and what GO<
 process (if any) it can legitimately support.</p>
 <h2 id="files">Files</h2>
 <ul>
-<li><strong><code>ingest_impress.py</code></strong> — reproducible fetch of one pipeline's full procedure<br />
-  set from the IMPC API (<code>https://api.mousephenotype.org/impress</code>). Live fetch;<br />
-  nothing hard-coded.</li>
-<li><strong><code>impc_procedures.tsv</code></strong> <em>(generated)</em> — all procedures in pipeline<br />
-<code>IMPC_001</code> (the curated IMPC screen): key, name, level, version, #parameters,<br />
-  MP terms parsed from the description, and a transparent<br />
-<code>behavioural_neurological</code> flag.</li>
-<li><strong><code>behavioural_assays.yaml</code></strong> <em>(generated)</em> — the behavioural/neurological<br />
-  subset with detail.</li>
-<li><strong><code>REPORT.md</code></strong> <em>(generated)</em> — counts + the behavioural-assay table.</li>
+<li><strong><code>ingest_impress.py</code></strong> — reproducible fetch of one or more pipelines' full<br />
+  procedure sets from the IMPC API (<code>https://api.mousephenotype.org/impress</code>),<br />
+  classifying behavioural/neurological procedures into canonical assay <em>types</em>.<br />
+  Live fetch; nothing hard-coded.</li>
+<li><strong><code>procedures.tsv</code></strong> <em>(generated)</em> — every procedure across the ingested<br />
+  pipelines (pipeline, key, name, level, version, #parameters, MP terms,<br />
+  behavioural flag, canonical assay type).</li>
+<li><strong><code>behavioural_assays.yaml</code></strong> <em>(generated)</em> — behavioural/neurological assays<br />
+  grouped by canonical type, each listing every (pipeline, key) instance.</li>
+<li><strong><code>REPORT.md</code></strong> <em>(generated)</em> — counts + the canonical behavioural-assay table.</li>
 <li><strong><code>behavioural_assay_go_map.yaml</code></strong> <em>(hand-curated)</em> — the bridge: each<br />
-  behavioural assay → the GO behaviour term(s) a hit can support, as<br />
+  behavioural assay type → the GO behaviour term(s) a hit can support, as<br />
 <code>KEEP_AS_NON_CORE</code> (all ids QuickGO-verified), with the over-annotation<br />
-  caution. This is the layer no public ontology provides.</li>
+  caution. <code>assay_type</code> joins to <code>behavioural_assays.yaml</code>. Includes the<br />
+  Morris Water Maze (flagged <code>not_in_impress</code>: a classic literature assay).</li>
+<li><strong><code>check_behaviour_assays.py</code></strong> + <strong><code>ASSAY_CHECK.md</code> / <code>assay_check_flags.csv</code></strong><br />
+<em>(generated)</em> — scans every annotation whose evidence text <em>names</em> a<br />
+  recognised assay and flags <code>MISMATCH</code> (assay doesn't license the GO term),<br />
+<code>OVER_CORE</code> (accepted as core), or <code>FENCED</code> (assay licenses no behaviour term).</li>
 </ul>
 <h2 id="regenerate">Regenerate</h2>
-<div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/BEHAVIOR/impress/ingest_impress.py<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--pipeline<span class="w"> </span>IMPC_001<span class="w"> </span>--out-dir<span class="w"> </span>projects/BEHAVIOR/impress
+<div class="codehilite"><pre><span></span><code><span class="c1"># Ingest (default: IMPC_001 + JAX_001 + ESLIM_002 + GMC_001 + ICS_001)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/BEHAVIOR/impress/ingest_impress.py<span class="w"> </span>--out-dir<span class="w"> </span>projects/BEHAVIOR/impress
+<span class="c1"># Check the corpus against the assay→GO map</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/BEHAVIOR/impress/check_behaviour_assays.py<span class="w"> </span>--out-dir<span class="w"> </span>projects/BEHAVIOR/impress
 </code></pre></div>
 
+<p>The default ingest covers <strong>15 canonical behavioural/neurological assay types</strong><br />
+across 5 pipelines — including the assays absent from the IMPC core pipeline<br />
+(Rotarod, Hole-board, Hot Plate, Tail Suspension, Von Frey, Sleep-Wake). Pass<br />
+<code>--pipelines</code> to ingest others.</p>
+<h2 id="how-the-check-wires-into-the-readout-mining">How the check wires into the readout mining</h2>
+<p>Two complementary layers:</p>
+<ol>
+<li><strong>Generic</strong> — <code>BEHAVIORAL_ASSAY</code> is a readout class in<br />
+<code>ASSAY_TO_FUNCTION/readout_catalog.yaml</code>, so <code>mine_readouts.py</code> already<br />
+   cross-tabulates behavioural-assay mentions against reviewer action.</li>
+<li><strong>Specific</strong> — <code>check_behaviour_assays.py</code> uses<br />
+<code>behavioural_assay_go_map.yaml</code> to verify the <em>exact GO term</em> against the<br />
+<em>specific assay</em>. This independently re-derived the <strong>Casp3 <code>swimming
+   behavior</code> → Morris Water Maze</strong> over-annotation (the assay is a spatial-memory<br />
+   test; swimming is only the modality).</li>
+</ol>
+<p>The check is <strong>exact-id and advisory</strong>: it matches the annotated term id against<br />
+the assay's licensed set (a future refinement would use GO subsumption so child<br />
+terms pass automatically), and <code>OVER_CORE</code> should be read as "confirm this gene<br />
+is genuinely proximal" — bona-fide clock genes / receptors are the documented<br />
+rubric exceptions (e.g. <a href="../../../../genes/DROME/CRY/CRY-ai-review.html">CRY</a> sleep/wake is correctly near-core).</p>
 <h2 id="why-a-hand-curated-go-map">Why a hand-curated GO map</h2>
-<p>The ontology landscape splits the problem three ways and never closes it:</p>
-<ul>
-<li><strong>NBO</strong> (Neuro Behavior Ontology) and <strong>MP</strong> (<code>behavior/neurological
-  phenotype</code>, MP:0005386) describe the <em>process / phenotype</em>.</li>
-<li><strong>IMPReSS</strong> (this ingest) and <strong>OBI</strong> describe the <em>assay / protocol</em>.</li>
-<li><strong>CogPO</strong> / <strong>Cognitive Atlas</strong> describe human <em>cognitive tasks</em>.</li>
-</ul>
-<p>None maps "assay X → GO process P, with reliability R". <code>behavioural_assay_go_map.yaml</code><br />
-encodes that for the IMPReSS battery, with the ASSAY_TO_FUNCTION caution baked in:<br />
-a behavioural assay is the extreme phenotypic + high-convergence readout, so a<br />
-hit licenses at most a non-core BP term — never an MF or core call. Two assays<br />
-are deliberately fenced off: <strong>Grip Strength</strong> (neuromuscular, no behaviour term)<br />
-and <strong>Auditory Brain Stem Response</strong> (electrophysiology — a hearing/sensory term<br />
-at most, <em>not</em> <code>auditory behavior</code>).</p>
+<p>No public ontology maps "assay → GO process": <strong>NBO</strong> / <strong>MP</strong><br />
+(<code>behavior/neurological phenotype</code>, MP:0005386) describe the <em>process/phenotype</em>,<br />
+<strong>IMPReSS</strong> (this ingest) / <strong>OBI</strong> the <em>assay</em>, <strong>CogPO</strong> / <strong>Cognitive Atlas</strong><br />
+human <em>cognitive tasks</em>. <code>behavioural_assay_go_map.yaml</code> closes that gap for the<br />
+IMPReSS battery, with the ASSAY_TO_FUNCTION caution baked in (phenotypic +<br />
+high-convergence → non-core only). Two assays are deliberately fenced (empty<br />
+<code>supports_go</code>): <strong>Grip Strength</strong> (neuromuscular) and <strong>Tail Suspension</strong> (no GO<br />
+term for depression-like immobility); <strong>Auditory Brain Stem Response</strong> is capped<br />
+at a hearing term and fenced against <code>auditory behavior</code>.</p>
 <h2 id="caveats">Caveats</h2>
 <ul>
-<li><code>IMPC_001</code> is the current curated pipeline; legacy/other pipelines add assays<br />
-  (Rotarod, Hole-board, Tail Suspension, …) — pass a different <code>--pipeline</code> to<br />
-  ingest them. The <code>BEHAVIORAL_ASSAY</code> readout class in<br />
-<code>ASSAY_TO_FUNCTION/readout_catalog.yaml</code> already carries patterns for those.</li>
-<li>MP terms here come from the procedure <em>description</em>; richer parameter-level MP<br />
-  mappings are available via <code>/ontologyterm/belongingtoparameter/:parameterID</code><br />
-  for future enrichment.</li>
+<li>MP terms come from the procedure <em>description</em>; richer parameter-level MP<br />
+  mappings are available via <code>/ontologyterm/belongingtoparameter/:parameterID</code>.</li>
+<li>The checker only sees annotations that <em>name</em> an assay in their evidence text;<br />
+  most cite a PMID instead, so its flag count is a floor, not the full<br />
+  population.</li>
 </ul>
     </div>
 
