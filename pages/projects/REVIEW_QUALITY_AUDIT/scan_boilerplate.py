@@ -50,7 +50,8 @@ NOT_REVIEWED = {None, "", "PENDING", "UNREVIEWED"}
 
 def scan_file(path: str) -> dict | None:
     try:
-        doc = yaml.load(open(path), Loader=Loader)
+        with open(path) as fh:
+            doc = yaml.load(fh, Loader=Loader)
     except Exception:
         return None
     if not isinstance(doc, dict):
