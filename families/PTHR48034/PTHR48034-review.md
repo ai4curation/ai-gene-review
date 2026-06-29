@@ -72,7 +72,10 @@ target, not the seeds. Verified from UniProt and experimental GO evidence:
   "Sequence-specific RNA-binding protein which participates in the control of pre-mRNA
   splicing. Can either activate or suppress exon inclusion. Acts additively with RBMX to
   promote exon 7 inclusion of the survival motor neuron SMN2. Activates the splicing of
-  MAPT/Tau exon 10." Has **direct experimental** splicing annotations: `GO:0000398`
+  MAPT/Tau exon 10." Falcon deep research (file:human/TRA2B/TRA2B-deep-research-falcon.md)
+  likewise places it firmly in splicing — "Belongs to the splicing factor SR family" and a
+  regulator of "pre-mRNA splicing, where it interacts with the spliceosome and other
+  SR-domain-containing proteins." Has **direct experimental** splicing annotations: `GO:0000398`
   mRNA splicing via spliceosome (IDA, PMID:9546399), `GO:0000381` regulation of
   alternative mRNA splicing (IDA PMID:12165565, PMID:12761049; IMP PMID:25689357),
   `GO:0005681` spliceosomal complex (IMP PMID:25689357), `GO:0048026` positive regulation
