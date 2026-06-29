@@ -147,6 +147,7 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 - **ALDH1L1 (rat)** — `GO:0005739` (mitochondrion): UniProt names it *Cytosolic 10-formyltetrahydrofolate dehydrogenase* with `SUBCELLULAR LOCATION: Cytoplasm, cytosol` and a cytosol IDA. Mitochondrial one-carbon oxidation is the job of the distinct paralog **ALDH1L2**.
 - **HMGCS2 (rat)** — `GO:0010142` (farnesyl-PP biosynthesis, mevalonate pathway): a **paralog-pathway conflation**. The IBA comes from a PANTHER node (PTN000222418) that lumps the HMGCS paralogs. The cytosolic paralog **HMGCS1** feeds mevalonate→FPP→sterol/isoprenoid synthesis; mitochondrial HMGCS2's HMG-CoA is cleaved by HMG-CoA lyase to acetoacetate (ketogenesis). The shared HMG-CoA-synthase *reaction* is correctly classified under mevalonate biosynthesis (UniProt UniPathway tag), but assigning HMGCS2 to **FPP/isoprenoid** biosynthesis follows the wrong paralog's flux — an over-annotation. *(Nuance: the enzymatic step is real, so this is paralog over-annotation, not a fabricated activity.)*
 - **PEX2 (human)** — `GO:0016593` (Cdc73/Paf1 complex): PEX2 is a peroxisomal RING E3 ligase for PEX5 retrotranslocation (UniProt) and has no role in RNA Pol II transcription elongation, so membership in the Cdc73/Paf1 complex is clearly wrong. *(Caveat: the cause is unconfirmed — the IBA WITH/FROM is a PANTHER node, not a PAF1 gene. A legacy synonym collision — PEX2's old name "PAF1"/Peroxisome Assembly Factor 1 vs the unrelated transcription factor PAF1 — is a plausible but unverified explanation.)*
+- **CIRBP (human)** — `GO:0005681` (spliceosomal complex) + `GO:0000398` (mRNA splicing, via spliceosome): the cold-inducible RNA-binding protein CIRBP shares only the N-terminal RRM with the transformer-2/RBMX splicing factors that anchor these terms. PANTHER PAINT shows the splicing IBD sits at ancestral node **PTN000391532** (seeded by TRA2A, TRA2B, RBMX, *Drosophila* tra2, rat Tra2 — all bona fide splicing factors), while CIRBP's own subfamily node **PTN008729690** carries only `mRNA binding`. CIRBP has no experimental splicing evidence; its function is 3'-UTR binding, mRNA stabilization and translational control. A non-enzyme instance of complex-membership over-transfer across a functional-divergence boundary. *(See Featured Example and `families/PTHR48034/PTHR48034-review.md`.)*
 - **Lesson**: complex membership, compartment, and downstream pathway are not conserved across paralogs even when the fold/reaction is; verify the protein actually occupies the annotated complex/compartment and that its product reaches the annotated pathway.
 
 ### 11. Substrate Over-Propagation From a Multi-Specificity Enzyme Family
@@ -364,6 +365,36 @@ The IBA inference of "transmembrane transporter activity" comes from propagating
 
 See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 
+### CIRBP (PTHR48034) - Splicing Terms Over-Propagated to a Cold-Shock mRNA-Stability Subfamily
+
+**Species**: human (Q14011); applies equally to the RBM3/CIRBP branch (mouse Cirbp P60824, RBM3, *Xenopus* cirbp-a)
+**Status**: COMPLETE
+**Family**: PTHR48034 (RNA-binding motif / RBM; InterPro IPR050441)
+
+**IBA Annotations Flagged**:
+| Term | Issue | Action |
+|------|-------|--------|
+| GO:0000398 mRNA splicing, via spliceosome | No splicing evidence for CIRBP; seeded by transformer-2/RBMX splicing factors | MARK_AS_OVER_ANNOTATED |
+| GO:0005681 spliceosomal complex | CIRBP is not a spliceosome component; co-purification only | MARK_AS_OVER_ANNOTATED |
+
+**Lesson**: PTHR48034 is a heterogeneous RRM family that lumps two functionally divergent groups sharing only the N-terminal RRM: (i) **transformer-2/RBMX/SR-type splicing regulators** (RS-domain C-terminus) and (ii) **cold-inducible mRNA-stability/translation proteins** CIRBP and RBM3 (glycine-rich/RGG C-terminus). The splicing terms are real for group (i) but were propagated across the divergence boundary into group (ii). This is the RNA-biology analogue of the arnF case — homology correctly identifies the fold, but the annotation does not track the functional split (pre-mRNA splicing → mRNA stabilization/translational control). CIRBP's verified activities are 3'-UTR binding (IDA: RPA2, TXN), mRNA stabilization, and translational control, with stress-granule recruitment — none of which is splicing.
+
+**Root Cause Analysis** (PANTHER PAINT, `interpro/panther/PTHR48034/PTHR48034-paint.tsv`):
+1. Splicing IBD is anchored at **internal node PTN000391532**, seeded *only* by splicing factors: `GO:0000398` from TRA2A (Q13595), TRA2B (P62995), *Drosophila* tra2 (FBgn0003742), rat Tra2 (RGD:1306751, RGD:1565256); `GO:0005681` from TRA2B (P62995), RBMX (P38159), rat Tra2 (RGD:1306751).
+2. The node's annotations descend as IBA to **all** descendants, including the cold-shock branch.
+3. CIRBP's own subfamily node **PTN008729690** carries only `GO:0003729` mRNA binding (and lists CIRBP, Q14011, as a seed) — the correct, generic call.
+4. CIRBP's GOA WITH/FROM names the source node explicitly: `PANTHER:PTN000391532|...|UniProtKB:P62995|UniProtKB:Q13595` — a textbook case of mis-grouping revealed by the WITH/FROM column (pattern 12).
+5. PAINT already prunes other branches of this family (node PTN001924395 carries IRD/NOT records blocking `GO:0003729`, `GO:0000381`, `GO:0016607`), so the gap is the absence of an equivalent pruning on the CIRBP/RBM3 branch.
+
+**Seed (mod) genes verified as bona fide splicing factors** (no change needed):
+- TRA2B (P62995): UniProt "participates in the control of pre-mRNA splicing"; direct IDA GO:0000398 (PMID:9546399); controls SMN2 exon 7 / MAPT exon 10. Falcon: "Belongs to the splicing factor SR family."
+- TRA2A (Q13595), RBMX (P38159), *Drosophila* tra2 (P19018), rat Tra2b (P62997): all UniProt-confirmed pre-mRNA / alternative splicing regulators.
+
+**Recommendation for PANTHER Curators**:
+- Add an IRD/NOT (or restrictive re-annotation) for GO:0000398 and GO:0005681 on the CIRBP/RBM3 subfamily branch (node PTN008729690 and descendants), so the splicing terms stop descending to the cold-inducible mRNA-stability members.
+
+See detailed family analysis: `families/PTHR48034/PTHR48034-review.md`
+
 ## Genes with IBA Issues
 
 | Gene | Species | IBA Issue Type | Severity | Status |
@@ -411,6 +442,7 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 | CASP12 | human | Pseudo-enzyme (UniProt "Inactive caspase-12") | MEDIUM | COMPLETE |
 | Serpinh1/HSP47 | mouse | Pseudo-inhibitor (non-inhibitory serpin; collagen chaperone) | MEDIUM | COMPLETE |
 | sigF/sigG/sigK | BACSU | Subunit assigned holoenzyme catalytic activity (sigma ≠ RNA pol) | LOW | COMPLETE |
+| CIRBP / RBM3 | human | Functional divergence within RRM family (splicing terms on cold-shock mRNA-stability subfamily; PTHR48034 node PTN000391532) | MEDIUM | COMPLETE |
 
 ## IBA Incompleteness: core function that IBA fails to propagate
 
