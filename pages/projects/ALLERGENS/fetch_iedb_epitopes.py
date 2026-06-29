@@ -26,10 +26,16 @@ from __future__ import annotations
 
 import argparse
 import csv
+import re
 from collections import defaultdict
 from pathlib import Path
 
 import requests
+
+# WHO/IUIS allergen designation, e.g. "Fel d 1", "Can f 6", "Bet v 1" — possibly
+# embedded in a longer IEDB name ("Major allergen Can f 1", "Lipocalin Can f 6.0101")
+# and possibly carrying an isoallergen (.0101) or chain (-A) suffix to strip.
+ALLERGEN_DESIGNATION = re.compile(r"\b([A-Z][a-z]{1,4} [a-z] \d+)(?:\.\d+|-[A-Za-z0-9]+)?\b")
 
 PROJECT_DIR = Path(__file__).resolve().parent
 IEDB_API = "https://query-api.iedb.org/antigen_search"
@@ -52,15 +58,38 @@ def molecules_by_taxon(index_path: Path) -> dict[str, set[str]]:
 
 
 def reduce_name(name: str) -> str:
-    """IEDB antigen name -> bare allergen molecule (strip the trailing UniProt tag)."""
+    """IEDB antigen name -> bare WHO/IUIS allergen molecule.
+
+    Extracts the allergen designation (handling embedded forms such as
+    "Major allergen Can f 1" and isoallergen suffixes such as "Can f 6.0101");
+    falls back to stripping a trailing "(UniProt:...)" tag.
+    """
+    m = ALLERGEN_DESIGNATION.search(name)
+    if m:
+        return m.group(1)
     return name.split(" (")[0].strip()
 
 
 def fetch_taxon_antigens(taxon: str) -> list[dict]:
-    params = {"source_organism_iris": f"cs.{{NCBITaxon:{taxon}}}", "select": SELECT, "limit": "500"}
-    r = requests.get(IEDB_API, params=params, timeout=60)
-    r.raise_for_status()
-    return r.json()
+    """All antigens for a source taxon, paginated via the Range header.
+
+    The IEDB API rejects an ``offset`` query param, so pagination uses PostgREST
+    ``Range``/``Range-Unit: items`` headers (some taxa have >1000 antigens).
+    """
+    page = 1000
+    out: list[dict] = []
+    start = 0
+    params = {"source_organism_iris": f"cs.{{NCBITaxon:{taxon}}}", "select": SELECT}
+    while True:
+        headers = {"Range-Unit": "items", "Range": f"{start}-{start + page - 1}"}
+        r = requests.get(IEDB_API, params=params, headers=headers, timeout=60)
+        r.raise_for_status()
+        batch = r.json()
+        out.extend(batch)
+        if len(batch) < page:
+            break
+        start += page
+    return out
 
 
 FIELDS = [

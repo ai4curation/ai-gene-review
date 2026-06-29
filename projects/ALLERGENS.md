@@ -2,8 +2,8 @@
 title: "Allergens Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-species: [FELCA, mouse, human]
-genes: [CH1, CH2, ALB, CSTA, Feld4, Feld7, Feld8, Scgb1a1]
+species: [FELCA, CANLF, mouse, human]
+genes: [CH1, CH2, ALB, CSTA, Feld4, Feld7, Feld8, Canf1, Canf2, Canf6, Scgb1a1]
 ---
 
 # Allergens Project
@@ -147,8 +147,9 @@ Columns: `allergen_molecule` (the WHO/IUIS unit), `allergome_id`, `source_taxon_
 Membership is detected from the cached UniProt records either by the reviewed
 `Allergen` keyword/`Allergen=` name **or** by an Allergome cross-reference (so
 unreviewed TrEMBL allergens such as Fel d 7 and Fel d 8 are included). The index
-currently holds **16 genes across 15 allergen molecules**, including allergens
-already in the repo for other reasons (e.g. human GBA1, INS, GLA; yeast SOD2).
+currently holds **20 genes across 19 allergen molecules** — the cat set, the dog
+set (Can f 1, 2, 3, 6), and allergens already in the repo for other reasons
+(e.g. human GBA1, INS, GLA; yeast SOD2).
 
 The index now carries **both axes of the prioritization metric**: `function_gap_flagged`
 (uncertainty) and the IEDB epitope counts (`iedb_epitopes`, `iedb_has_ige` —
@@ -243,6 +244,26 @@ The numbers track clinical reality (Fel d 1 dominates) and complete the metric:
 crossing IEDB epitope load with the function-gap flag yields the priority column in
 the cat table above.
 
+**Worklist in action — the dog cohort (Can f 1, 2, 3, 6).** Working the worklist by
+intervention pressure (rather than alphabetically) picked the dog allergens next.
+The same two-axis ranking applies, and **Can f 1** is the standout:
+
+| allergen | gene | family | function gap? | IEDB epitopes (IgE) | priority |
+|---|---|---|---|---|---|
+| Can f 1 | Canf1 (O18873) | lipocalin (tear-lipocalin homolog) | **yes** — specific ligand unknown | **83 (IgE+)** | **high** |
+| Can f 2 | Canf2 (O18874) | lipocalin | no — odorant binding | 9 | low |
+| Can f 6 | Canf6 (H2B3G5) | lipocalin | no — odorant binding | 5 (IgE+) | low |
+| Can f 3 | ALB (P49822) | serum albumin | no — multi-ligand carrier | 0* | low |
+
+Can f 1, the dominant dog allergen, mirrors Fel d 1 exactly: heavily IgE-targeted yet
+of unknown specific ligand/function — the highest-value review target. (\*Can f 3 = 0
+is the same name-join limitation: IEDB labels dog albumin epitopes under other names.)
+
+Two robustness fixes were needed to cover dog: the ETL now **paginates** via the
+PostgREST `Range` header (the API rejects `offset`; some taxa exceed 1000 antigens),
+and matches the allergen designation by **regex** so embedded IEDB names
+("Major allergen Can f 1", "Lipocalin Can f 6.0101") reduce correctly to the molecule.
+
 ## Status
 
 - **SCOPING.** Architecture and first secretoglobin cohort drafted.
@@ -252,5 +273,7 @@ the cat table above.
   covered). The full domestic-cat allergen set (Fel d 1, 2, 3, 4, 7, 8) is curated.
 - Done: IEDB epitope ETL — **both axes of the prioritization metric are now live**
   (function-gap flag × IEDB epitope/IgE load), realized in the cat priority ranking.
+- Done: worked the worklist by priority — curated the dog cohort (Can f 1, 2, 3, 6);
+  Can f 1 is the high-priority pick (83 IgE+ epitopes × unknown specific function).
 - Next: extend the IEDB name-join to protein-name-labelled allergens (human `Hom s …`),
-  then expand the cohort by working the backlog (other lipocalins, profilins, PR-10, etc.).
+  then continue the backlog (horse Equ c lipocalins, mite Der p, birch Bet v, etc.).
