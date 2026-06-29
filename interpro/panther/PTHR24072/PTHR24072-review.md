@@ -86,3 +86,13 @@ Four IBA (GO_REF:0000033) annotations were propagated to **cdc42 (Q01112)**. Bec
 - **Reviewer**: AI-assisted review
 - **Status**: DRAFT
 - **Based on**: PANTHER metadata/entries, UniProt, S. pombe cdc42 curated review, GOA IBA annotations, PANTHER_IBA_REVIEW propagation table
+
+## Falcon Deep Research Integration (2026-06-28)
+
+**Source:** [PTHR24072-deep-research-falcon.md](PTHR24072-deep-research-falcon.md)
+
+**Falcon verdict:** Over-annotation verdict for PTHR24072 (RHO FAMILY GTPASE): the current InterPro2GO state - no mapped GO terms - is APPROPRIATE and should be ACCEPTED as-is.
+
+**Family-level synthesis:** Over-annotation verdict for PTHR24072 (RHO FAMILY GTPASE): the current InterPro2GO state - no mapped GO terms - is APPROPRIATE and should be ACCEPTED as-is.
+
+**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR24072` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.

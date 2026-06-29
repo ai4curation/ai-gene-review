@@ -1,0 +1,13 @@
+| Assessment Area | Finding | Recommendation |
+|---|---|---|
+| Family Functional Homogeneity | Extremely heterogeneous: includes lipid kinases (PI3K, PI4K, PIP kinases), protein kinases (mTOR, ATM, ATR, DNA-PKcs, SMG1), and pseudokinase (TRRAP) (pqac-00000016, pqac-00000010, pqac-00000007) | No family-level GO term can capture all members |
+| Current InterPro2GO Status | No GO terms currently mapped | ACCEPT - this is correct; do not add any GO terms |
+| Molecular Function GO Term Assessment | `phosphatidylinositol kinase activity` would be incorrect for PIKK protein kinases and TRRAP; `ATP binding` is incorrect for TRRAP; `kinase activity` is incorrect for TRRAP because it lacks catalytic motifs (pqac-00000009, pqac-00000010, pqac-00000007) | Do NOT add any MF term at family level |
+| Biological Process GO Term Assessment | Processes span lipid signaling, DNA damage response, mRNA decay, autophagy, and transcription, with no process shared by all members (pqac-00000018, pqac-00000020, pqac-00000013) | Do NOT add any BP term at family level |
+| Cellular Component GO Term Assessment | Members act at plasma membrane, cytoplasm, nucleus, Golgi/endomembrane systems, and chromatin-associated complexes; no common compartment fits all members (pqac-00000018, pqac-00000020, pqac-00000013) | Do NOT add any CC term at family level |
+| Pseudokinase Members | TRRAP completely lacks the canonical catalytic motifs required in other PIKKs (VAIK, HRD, DFG absent) and functions as a scaffold/pseudokinase (pqac-00000007, pqac-00000008) | Any kinase or ATP-binding term would be systematically incorrect for TRRAP |
+| Overall Verdict | The absence of InterPro2GO mappings for PTHR10048 is correct and sound given the family's biochemical and biological diversity (pqac-00000016, pqac-00000007, pqac-00000010) | ACCEPT the current empty mapping |
+| Recommendation for InterPro | GO annotations should be assigned, if at all, to the 28 PTHR10048 subfamilies rather than to the parent family, because function is resolved only at narrower clade levels (pqac-00000016, pqac-00000021) | Consider adding subfamily-level InterPro2GO mappings instead |
+
+
+*Table: This table summarizes the GO annotation review verdict for the broad PTHR10048 phosphatidylinositol kinase family. It is useful because it shows why the current absence of InterPro2GO mappings is appropriate and why any future GO annotation should be pushed down to subfamily level.*
