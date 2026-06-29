@@ -2,8 +2,8 @@
 title: "Allergens Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-species: [FELCA, CANLF, mouse, human]
-genes: [CH1, CH2, ALB, CSTA, Feld4, Feld7, Feld8, Canf1, Canf2, Canf6, Scgb1a1]
+species: [FELCA, CANLF, HORSE, BOVIN, DERPT, BETPN, mouse, rat, human]
+genes: [CH1, CH2, ALB, CSTA, Feld4, Feld7, Feld8, Canf1, Canf2, Canf6, Equc1, Equc2, Equc4, Bosd2, Musm1, Ratn1, Derp1, Derp2, Derp23, Betv1, Betv2, Scgb1a1]
 ---
 
 # Allergens Project
@@ -147,9 +147,30 @@ Columns: `allergen_molecule` (the WHO/IUIS unit), `allergome_id`, `source_taxon_
 Membership is detected from the cached UniProt records either by the reviewed
 `Allergen` keyword/`Allergen=` name **or** by an Allergome cross-reference (so
 unreviewed TrEMBL allergens such as Fel d 7 and Fel d 8 are included). The index
-currently holds **20 genes across 19 allergen molecules** — the cat set, the dog
-set (Can f 1, 2, 3, 6), and allergens already in the repo for other reasons
-(e.g. human GBA1, INS, GLA; yeast SOD2).
+currently holds **32 genes across 31 allergen molecules** — the cat, dog, horse,
+cow, mouse and rat danders, the headline mite (Der p 1/2/23) and birch (Bet v 1/2)
+allergens, and allergens already in the repo for other reasons (e.g. human GBA1,
+INS, GLA; yeast SOD2).
+
+### Cross-cohort priority (function gap × IEDB load)
+
+With both axes populated, the index ranks the whole curated cohort. The highest-value
+review targets are allergens that are **both** heavily IgE-targeted **and** of
+uncertain evolved function:
+
+| allergen | IEDB epitopes (IgE) | function gap | note |
+|---|---|---|---|
+| Bet v 1 | **450** (IgE+) | **yes** | PR-10 promiscuous ligand carrier; true in-planta ligand unresolved |
+| Fel d 1 | 127 (IgE+) | **yes** | secretoglobin; native cat role unknown |
+| Can f 1 | 83 (IgE+) | **yes** | tear-lipocalin homolog; specific ligand unknown |
+| Der p 23 | 8 (IgE+) | **yes** | peritrophin domain but does **not** bind chitin |
+| Der p 1 | 347 (IgE+) | no | characterized cysteine protease |
+| Der p 2 | 210 (IgE+) | no | NPC2/MD-2-mimic auto-adjuvant (TLR4) |
+
+The deprioritized rows (Der p 1, Der p 2) carry the *largest* epitope loads yet have
+well-defined functions — exactly the "high data, low uncertainty" quadrant the metric
+is meant to filter out. Conversely **Bet v 1** rises to the top: the single
+most-IgE-targeted allergen in the set whose physiological function is still unresolved.
 
 The index now carries **both axes of the prioritization metric**: `function_gap_flagged`
 (uncertainty) and the IEDB epitope counts (`iedb_epitopes`, `iedb_has_ige` —
@@ -273,7 +294,13 @@ and matches the allergen designation by **regex** so embedded IEDB names
   covered). The full domestic-cat allergen set (Fel d 1, 2, 3, 4, 7, 8) is curated.
 - Done: IEDB epitope ETL — **both axes of the prioritization metric are now live**
   (function-gap flag × IEDB epitope/IgE load), realized in the cat priority ranking.
-- Done: worked the worklist by priority — curated the dog cohort (Can f 1, 2, 3, 6);
-  Can f 1 is the high-priority pick (83 IgE+ epitopes × unknown specific function).
+- Done: worked the worklist by priority — dog cohort (Can f 1/2/3/6), mammalian
+  inhalants (horse Equ c 1/2/3/4, cow Bos d 2, mouse Mus m 1, rat Rat n 1), and the
+  headline environmental allergens (mite Der p 1/2/23, birch Bet v 1/2). 32 genes /
+  31 molecules now in the index with full IEDB load.
+- Notable findings: Der p 2 is an MD-2-mimic TLR4 auto-adjuvant (direct Fel d 1
+  parallel); MUP (Mus m 1 / Rat n 1) metabolic annotations are ISS over-propagation;
+  Bet v 1 ABA-receptor annotations are fold-based over-propagation; Der p 23 chitin
+  binding is correctly a negated GOA annotation.
 - Next: extend the IEDB name-join to protein-name-labelled allergens (human `Hom s …`),
-  then continue the backlog (horse Equ c lipocalins, mite Der p, birch Bet v, etc.).
+  then continue the backlog (other pollens, foods, molds, insects) by priority.
