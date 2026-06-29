@@ -91,6 +91,21 @@ for a specific MF.
 - **protein binding (GO:0005515, many IPI)**: uninformative; keep as-is per convention (cannot
   propose better term from generic binding).
 
+## Key recent reviews (from deep research, falcon)
+- Corre & Lebreton 2024, Biochimie 217:3-9 (doi:10.1016/j.biochi.2023.04.003) — regulation of CIRBP by cellular stresses.
+- Rana et al. 2024 (doi:10.1016/j.cstres.2024.07.001) — comprehensive CIRBP review.
+- Aziz, Chaudry & Wang 2025, IJMS 26:3524 — extracellular CIRP (eCIRP) DAMP biology.
+- Han et al. 2023, Front Immunol — exosome-derived CIRP as inflammation amplifier.
+- Zhou et al. 2025, Nat Commun (doi:10.1038/s41467-025-59802-2) — TNPO3 structural basis of phosphorylation-independent nuclear import (PDB 8CMK).
+
+## Final review decisions (CIRBP-ai-review.yaml)
+- ACCEPT (core MF): mRNA 3'-UTR binding (GO:0003730, IDA x2), mRNA binding (IBA), RNA binding (IEA/HDA), translation repressor activity (ISS).
+- ACCEPT (core BP/CC): mRNA stabilization, positive regulation of translation, response to UV, response to cold (TAS+IEA), stress granule assembly, negative regulation of translation, nucleus/nucleoplasm/cytoplasm/cytoplasmic stress granule.
+- ACCEPT (valid but generic): nucleic acid binding (IEA); all protein binding (IPI) — noted partner per study; TNPO1/TNPO3 (32234784) and eIF4G1 (16513844) flagged as functionally meaningful.
+- MARK_AS_OVER_ANNOTATED: mRNA splicing via spliceosome (IBA) and spliceosomal complex (IBA) — family-level propagation, no CIRBP-specific splicing evidence; co-purification only (22365833).
+- UNDECIDED: small ribosomal subunit rRNA binding (GO:0070181, IDA PMID:11574538) — abstract describes mRNA 3'-UTR binding not rRNA; full text unavailable, so not removed per guidance.
+- NEW (non-core, extracellular moonlighting): extracellular space (GO:0005615) and positive regulation of inflammatory response (GO:0050729) for eCIRP/DAMP biology — absent from current GOA.
+
 ## Open questions / to verify
 - GO:0070181 small ribosomal subunit rRNA binding from PMID:11574538 — does full text support rRNA
   binding, or is this a curation slip from "ribosome association"? (full text not in cache; abstract
