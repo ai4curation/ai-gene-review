@@ -12,12 +12,11 @@
 
 **Source:** [PTHR47901-deep-research-falcon.md](PTHR47901-deep-research-falcon.md)
 
-**Falcon verdict:** The current state of no InterPro2GO terms for PTHR47901 is correct and should be maintained. The absence of mappings accurately reflects the impossibility of assigning any GO term that would be true for all proteins matched by this signature.
+**Falcon verdict:** ACCEPT - maintain no InterPro2GO terms
 
-**Family-level synthesis:** The current state of no InterPro2GO terms for PTHR47901 is correct and should be maintained. The absence of mappings accurately reflects the impossibility of assigning any GO term that would be true for all proteins matched by this signature.
+**Family-level synthesis:** CARD18, also known as ICEBERG, is a CARD-only protein (COP) that was the first identified member of the COP class of inflammasome regulators. It encodes a small, ~90-amino acid protein consisting solely of a single caspase recruitment domain (CARD) with 52% amino acid sequence homology to the CARD of caspase-1. The gene is located on human chromosome 11q22.3, adjacent to the caspase-1 gene and the other COP genes (CARD16 and CARD17) within the proinflammatory caspase gene cluster.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR47901` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

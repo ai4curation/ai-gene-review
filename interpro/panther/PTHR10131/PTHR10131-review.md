@@ -12,12 +12,11 @@
 
 **Source:** [PTHR10131-deep-research-falcon.md](PTHR10131-deep-research-falcon.md)
 
-**Falcon verdict:** The current absence of InterPro2GO terms for PTHR10131 (TNF RECEPTOR ASSOCIATED FACTOR) is appropriate and should be maintained. This is a functionally highly heterogeneous family-level entry with:
+**Falcon verdict:** The current absence of InterPro2GO terms for PTHR10131 (TNF RECEPTOR ASSOCIATED FACTOR) is appropriate and should be maintained. This is a functionally highly heterogeneous family-level entry with.
 
-**Family-level synthesis:** The current absence of InterPro2GO terms for PTHR10131 (TNF RECEPTOR ASSOCIATED FACTOR) is appropriate and should be maintained. This is a functionally highly heterogeneous family-level entry with:
+**Family-level synthesis:** The TRAF (TNF Receptor-Associated Factor) family comprises cytoplasmic signaling adaptor proteins that function downstream of the TNF receptor superfamily (TNFRSF), Toll-like receptor (TLR)/interleukin-1 receptor (IL-1R) superfamily, and unconventional cytokine receptors such as IL-6R and IL-17R. Seven mammalian members (TRAF1-TRAF7) have been identified, each with a multi-domain architecture that is only partially shared across the family.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR10131` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

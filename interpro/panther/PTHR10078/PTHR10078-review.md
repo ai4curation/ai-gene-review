@@ -12,12 +12,11 @@
 
 **Source:** [PTHR10078-deep-research-falcon.md](PTHR10078-deep-research-falcon.md)
 
-**Falcon verdict:** The current InterPro2GO status of PTHR10078-no mapped GO terms-is appropriate and sound. This is one of the rare cases where the absence of annotation is the correct decision, driven by three converging factors:
+**Falcon verdict:** the current state of no InterPro2GO mappings. No GO term is universally valid across this functionally heterogeneous family.
 
-**Family-level synthesis:** The current InterPro2GO status of PTHR10078-no mapped GO terms-is appropriate and sound. This is one of the rare cases where the absence of annotation is the correct decision, driven by three converging factors:
+**Family-level synthesis:** The PANTHER entry PTHR10078 (INTERLEUKIN-1 FAMILY MEMBER) corresponds to the IL-1 cytokine superfamily, a group of 11 secreted immune-regulatory ligands that share a characteristic β-trefoil fold. This fold comprises 12 anti-parallel β-strands arranged into six β-hairpin motifs that assemble into a pyramidal barrel structure with a central hydrophobic core. The mature proteins have molecular weights of approximately 17-18 kDa. This structural motif is evolutionarily ancient and is also found in fibroblast growth factors (FGFs) and certain carbohydrate-binding proteins, though distinct amino acid sequences can independently adopt this fold.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR10078` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

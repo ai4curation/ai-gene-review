@@ -12,12 +12,11 @@
 
 **Source:** [PTHR10155-deep-research-falcon.md](PTHR10155-deep-research-falcon.md)
 
-**Falcon verdict:** Current status: no InterPro2GO terms are mapped to PTHR10155, and the available evidence indicates that this absence is appropriate rather than missing annotation.
+**Falcon verdict:** No GO terms mapped - correct
 
-**Family-level synthesis:** Current status: no InterPro2GO terms are mapped to PTHR10155, and the available evidence indicates that this absence is appropriate rather than missing annotation.
+**Family-level synthesis:** PTHR10155 is a PANTHER family-level entry that groups the non-catalytic (regulatory/adaptor) subunits of phosphatidylinositol 3-kinases (PI3Ks). The family spans 16,060 proteins across 4,817 taxa and encompasses 21 subfamilies.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR10155` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

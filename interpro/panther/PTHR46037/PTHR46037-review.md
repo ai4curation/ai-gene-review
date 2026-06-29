@@ -12,12 +12,11 @@
 
 **Source:** [PTHR46037-deep-research-falcon.md](PTHR46037-deep-research-falcon.md)
 
-**Falcon verdict:** The current status of PTHR46037 is that no InterPro2GO terms are mapped. This is a reasonable conservative position given the family's functional heterogeneity, but it may represent an under-annotation of a well-characterized protein family.
+**Falcon verdict:** The current absence of InterPro2GO terms represents a conservative but defensible position; however, the addition of GO:0005070 (SH3/SH2 adaptor activity) is strongly recommended as a family-wide molecular function term, while more specific process terms should be reserved for subfamily-level annotation to avoid over-annotation across the 7,580 proteins matched by this signature.
 
-**Family-level synthesis:** The current status of PTHR46037 is that no InterPro2GO terms are mapped. This is a reasonable conservative position given the family's functional heterogeneity, but it may represent an under-annotation of a well-characterized protein family.
+**Family-level synthesis:** The InterPro entry PTHR46037, named "PROTEIN ENHANCER OF SEVENLESS 2B," derives its name from *Drosophila* genetics. The designation E(sev)2B refers to an enhancer locus of the Sevenless receptor tyrosine kinase (RTK) pathway, identified through genetic screens for modifiers of Sevenless-mediated R7 photoreceptor cell fate specification in the developing *Drosophila* eye. The gene identified at the E(sev)2B locus is *drk* (downstream of receptor kinases), which encodes the *Drosophila* homolog of mammalian Growth Factor Receptor-Bound Protein 2 (GRB2) and *C. elegans* Sem-5.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR46037` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

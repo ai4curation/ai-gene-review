@@ -12,12 +12,11 @@
 
 **Source:** [PTHR14334-deep-research-falcon.md](PTHR14334-deep-research-falcon.md)
 
-**Falcon verdict:** The summary of the GO annotation review for PTHR14334 is presented below:
+**Falcon verdict:** Falcon treats the empty InterPro2GO state as sound but incomplete, not over-annotated. It recommends considering only conservative family-safe additions such as B cell receptor signaling pathway (GO:0050853) and plasma membrane (GO:0005886), while keeping CD79A- or CD79B-specific signaling details on child entries.
 
-**Family-level synthesis:** The summary of the GO annotation review for PTHR14334 is presented below:
+**Family-level synthesis:** PTHR14334 covers the CD79A/CD79B B-cell receptor signaling subunits: single-pass Ig-superfamily proteins with cytoplasmic ITAMs that form the signaling module of the membrane BCR complex in jawed vertebrates.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR14334` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as candidate support for conservative family-wide additions, then manually confirm each GO term against family scope before changing InterPro2GO or module descriptors. Keep CD79A/CD79B-specific interaction and regulatory details on child entries or representative members.
 
 ## Review Status
 

@@ -14,10 +14,9 @@
 
 **Falcon verdict:** Current no-mapping status is SOUND - ACCEPT (no change needed)
 
-**Family-level synthesis:** The current state of PTHR24418-no InterPro2GO terms mapped-is appropriate and should be maintained. This is a well-justified decision for a family of this scale and diversity, consistent with best practices for GO annotation quality.
+**Family-level synthesis:** PTHR24418 is a PANTHER family-level entry corresponding to the broad grouping of non-receptor tyrosine kinases (NRTKs) involved in cell signaling. It encompasses 45,131 proteins across 5,684 taxa, organized into 76 subfamilies. This entry is integrated into IPR050198 and is specifically referenced by name in the recent Feuermann et al. (2025) *Nature* publication describing PAN-GO evolutionary models of human gene functions, where it is cited as an example of a large, complex family requiring careful functional annotation.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR24418` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

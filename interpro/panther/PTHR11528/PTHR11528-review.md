@@ -12,12 +12,11 @@
 
 **Source:** [PTHR11528-deep-research-falcon.md](PTHR11528-deep-research-falcon.md)
 
-**Falcon verdict:** Current no-mapping state is defensible but slightly conservative
+**Falcon verdict:** The absence of InterPro2GO mappings for PTHR11528 is largely appropriate given the substantial functional heterogeneity across the 32 subfamilies. The family spans five major paralog groups (HSP90α, HSP90β, GRP94, TRAP1, HtpG, plus plant HSP90C) with distinct subcellular localizations (cytosol, ER, mitochondria, chloroplast, bacterial cytoplasm), different client repertoires, different co-chaperone dependencies, and different stress-response profiles.
 
-**Family-level synthesis:** The absence of InterPro2GO mappings for PTHR11528 is largely appropriate given the substantial functional heterogeneity across the 32 subfamilies.
+**Family-level synthesis:** PTHR11528 corresponds to the PANTHER classification of the HSP90 (Heat Shock Protein 90) family, integrated into the InterPro parent entry IPR001404. The family encompasses 43,519 proteins across 31,125 taxa with 32 subfamilies, making it one of the most broadly distributed chaperone families in biology.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR11528` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

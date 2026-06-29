@@ -12,12 +12,11 @@
 
 **Source:** [PTHR22969-deep-research-falcon.md](PTHR22969-deep-research-falcon.md)
 
-**Falcon verdict:** The current state of no InterPro2GO terms mapped to PTHR22969 is appropriate and should be maintained. This is a sound decision for the following reasons:
+**Falcon verdict:** The current state of no InterPro2GO terms mapped to PTHR22969 is appropriate and should be maintained. This is a sound decision for the following reasons.
 
-**Family-level synthesis:** The current state of no InterPro2GO terms mapped to PTHR22969 is appropriate and should be maintained. This is a sound decision for the following reasons:
+**Family-level synthesis:** PTHR22969 encompasses the I-kappa-B kinase (IKK) family, a group of serine/threonine kinases that are central regulators of immune signaling. In mammals, the family comprises four catalytic members divided into two subfamilies: (i) the classical IKKs - IKKα (CHUK) and IKKβ (IKBKB), which share 52% amino acid identity and associate with the regulatory subunit NEMO/IKKγ; and (ii) the IKK-related kinases - TBK1 and IKKε (IKBKE), which share 64-67% sequence identity with each other but only ~30% homology with IKKα/IKKβ.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR22969` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

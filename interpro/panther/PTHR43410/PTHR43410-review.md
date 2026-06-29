@@ -12,12 +12,11 @@
 
 **Source:** [PTHR43410-deep-research-falcon.md](PTHR43410-deep-research-falcon.md)
 
-**Falcon verdict:** The absence of mapped GO terms for PTHR43410 is the correct and conservative state for the following reasons:
+**Falcon verdict:** the current absence of InterPro2GO terms for PTHR43410 represents sound annotation practice. The NOS family is a textbook example of a functionally heterogeneous protein family where the core catalytic chemistry is broadly conserved but the biological deployment, cofactor requirements, domain architecture, and downstream processes are profoundly divergent across the >7,000 taxa in which this signature occurs.
 
-**Family-level synthesis:** The absence of mapped GO terms for PTHR43410 is the correct and conservative state for the following reasons:
+**Family-level synthesis:** The Nitric Oxide Synthase (NOS) family catalyzes the NADPH- and O₂-dependent oxidation of L-arginine to L-citrulline and nitric oxide (NO) via a five-electron oxidation mechanism. The reaction proceeds in two sequential monooxygenation steps: first, L-arginine is hydroxylated at its terminal guanidinium nitrogen to form the intermediate Nω-hydroxy-L-arginine (NOHA); second, NOHA is further oxidized to yield L-citrulline and NO.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR43410` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

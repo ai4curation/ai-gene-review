@@ -14,10 +14,9 @@
 
 **Falcon verdict:** ACCEPT current state (no GO terms mapped) - The absence of InterPro2GO mappings is well-justified for this highly heterogeneous family-level entry.
 
-**Family-level synthesis:** The current absence of InterPro2GO mappings for PTHR24416 is appropriate and sound. This family-level PANTHER entry encompasses an extraordinarily heterogeneous superfamily of 83,290 proteins across 6,103 taxa and 96 subfamilies. Three major factors prevent any GO term from being universally appropriate:
+**Family-level synthesis:** The Receptor Tyrosine Kinase (RTK) family (PTHR24416) encompasses single-pass transmembrane proteins with a characteristic modular architecture comprising: (i) a variable extracellular ligand-binding domain, (ii) a transmembrane α-helix, and (iii) an intracellular region containing a juxtamembrane regulatory region, a tyrosine kinase domain (TKD), and a C-terminal tail. In humans, 58 RTKs have been identified and classified into 20 distinct subfamilies based primarily on their extracellular domain composition.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR24416` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

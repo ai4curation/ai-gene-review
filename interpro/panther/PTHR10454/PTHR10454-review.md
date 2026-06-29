@@ -14,10 +14,9 @@
 
 **Falcon verdict:** ACCEPT the current no-mapping state
 
-**Family-level synthesis:** The PTHR10454 (CASPASE) entry currently has no InterPro2GO mappings, and this is the correct and appropriate state. The family is far too functionally heterogeneous for any safe family-level GO term transfer, based on the following evidence:
+**Family-level synthesis:** The PTHR10454 CASPASE entry represents a broad protein family within clan CD of cysteine peptidases (MEROPS family C14). Clan CD is defined by a conserved structural fold comprising a central six-stranded β-sheet (five parallel and one antiparallel strand) surrounded by five conserved α-helices (Hα1-Hα5), termed the caspase-hemoglobinase fold (CHF). This fold represents the minimal structural unit conserved across all clan CD members and serves as the archetype for the entire clan.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR10454` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

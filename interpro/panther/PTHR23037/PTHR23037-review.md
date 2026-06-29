@@ -12,12 +12,11 @@
 
 **Source:** [PTHR23037-deep-research-falcon.md](PTHR23037-deep-research-falcon.md)
 
-**Falcon verdict:** The current absence of InterPro2GO mappings for PTHR23037 is appropriate and should be maintained. This verdict is based on the following considerations:
+**Falcon verdict:** The current absence of InterPro2GO mappings for PTHR23037 is appropriate and should be maintained. This verdict is based on the following considerations.
 
-**Family-level synthesis:** The current absence of InterPro2GO mappings for PTHR23037 is appropriate and should be maintained. This verdict is based on the following considerations:
+**Family-level synthesis:** The Type I Cytokine Receptor family (also designated Class I cytokine receptors or hematopoietin receptors) represents the largest cytokine receptor family, comprising over 30 human members. PTHR23037, as defined in InterPro, encompasses 19,493 proteins across 2,954 taxa with 20 recognized subfamilies.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR23037` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

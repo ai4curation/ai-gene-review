@@ -12,12 +12,11 @@
 
 **Source:** [PTHR10516-deep-research-falcon.md](PTHR10516-deep-research-falcon.md)
 
-**Falcon verdict:** The current state of PTHR10516-no InterPro2GO terms mapped-is appropriate and should be maintained at the parent family level. The FKBP-type PPIase family is a textbook example of a functionally heterogeneous protein family where:
+**Falcon verdict:** Overall verdict: The current absence of InterPro2GO mappings for PTHR10516 is SOUND. No new terms should be added at the parent family level. GO annotations should be applied at the subfamily level where functional homogeneity can be verified.
 
-**Family-level synthesis:** The current state of PTHR10516-no InterPro2GO terms mapped-is appropriate and should be maintained at the parent family level. The FKBP-type PPIase family is a textbook example of a functionally heterogeneous protein family where:
+**Family-level synthesis:** The FKBP (FK506-Binding Protein) family is defined by a characteristic fold consisting of a five-stranded antiparallel β-sheet wrapped around a short α-helix. A shallow groove between the α-helix and β-sheets forms a solvent-exposed active site that binds the target proline residue (dunyak2016peptidylprolineisomerases(ppiases) pages 2-3).
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR10516` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

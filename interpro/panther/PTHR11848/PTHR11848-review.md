@@ -12,12 +12,11 @@
 
 **Source:** [PTHR11848-deep-research-falcon.md](PTHR11848-deep-research-falcon.md)
 
-**Falcon verdict:** The current state of no InterPro2GO mappings for PTHR11848 is sound and appropriate. This family-level PANTHER entry encompasses the entire TGF-beta superfamily-a structurally unified but functionally profoundly heterogeneous collection of signaling ligands, a...
+**Falcon verdict:** Falcon concludes that the current absence of InterPro2GO mappings is sound because no single GO term is safely true for the whole parent family. Family-wide growth-factor, receptor-binding, SMAD signaling, or proliferation terms should be pushed to homogeneous child entries.
 
-**Family-level synthesis:** The current state of no InterPro2GO mappings for PTHR11848 is sound and appropriate. This family-level PANTHER entry encompasses the entire TGF-beta superfamily-a structurally unified but functionally profoundly heterogeneous collection of signaling ligands, antagonists, and divergent members spanning all Metazoa.
+**Family-level synthesis:** PTHR11848 represents the broad TGF-beta superfamily: a conserved cystine-knot ligand fold spanning TGF-beta, BMP, activin/inhibin, AMH, Nodal/Lefty-related, GDF, and divergent members across metazoans.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR11848` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for keeping the parent family unmapped or very conservative. Module descriptors that cite PTHR11848 should stay grounded by representative members, PAINT/PTN anchors, or child-family evidence rather than by parent-family GO propagation.
 
 ## Review Status
 

@@ -12,12 +12,11 @@
 
 **Source:** [PTHR11801-deep-research-falcon.md](PTHR11801-deep-research-falcon.md)
 
-**Falcon verdict:** The current absence of InterPro2GO mappings for PTHR11801 is largely appropriate and reflects sound curatorial judgment, given:
+**Falcon verdict:** Overall verdict: ACCEPT the current absence of InterPro2GO mappings, with minor suggestions.
 
-**Family-level synthesis:** The current absence of InterPro2GO mappings for PTHR11801 is largely appropriate and reflects sound curatorial judgment, given:
+**Family-level synthesis:** STAT proteins share a highly conserved multi-domain architecture consisting of six functional domains: (i) an N-terminal domain (NTD) involved in dimer-dimer (tetramer) contacts and cooperative DNA binding; (ii) a coiled-coil domain (CCD) that mediates protein-protein interactions and receptor recruitment; (iii) a DNA-binding domain (DBD) that forms a C-shaped clamp structure recognizing GAS (gamma-activated sequence) and ISRE (interferon-stimulated response element) DNA motifs; (iv) an α-helical linker domain (LD) connecting the DBD and SH2 domain; (v) a Src Homology 2 (SH2) domain, the most conserved region across the family, which mediates phosphotyrosine recognition and reciprocal dimerization; and (vi) a C-terminal transactivation domain (TAD) harboring the critical tyrosine and serine phosphorylation sites.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR11801` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

@@ -14,10 +14,9 @@
 
 **Falcon verdict:** The current state of PTHR14098's InterPro2GO mapping-no GO terms mapped-is sound and appropriate. This family exhibits extreme functional heterogeneity that precludes safe propagation of any biologically meaningful GO term to all 4,117 matched proteins.
 
-**Family-level synthesis:** The current state of PTHR14098's InterPro2GO mapping-no GO terms mapped-is sound and appropriate. This family exhibits extreme functional heterogeneity that precludes safe propagation of any biologically meaningful GO term to all 4,117 matched proteins.
+**Family-level synthesis:** PTHR14098 (Immunoreceptor signaling adapters) is a PANTHER family-level entry encompassing a heterogeneous collection of adaptor and linker proteins that function as non-enzymatic scaffolds downstream of immunoreceptors. These proteins lack catalytic or transcriptional activity; instead, they organize multiprotein signaling complexes (signalosomes) by providing docking sites for SH2-domain-containing, SH3-domain-containing, and other interaction-module-containing proteins. The family spans 4,117 proteins across 3,321 taxa with 7 recognized subfamilies.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR14098` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

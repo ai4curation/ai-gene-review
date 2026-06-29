@@ -14,10 +14,9 @@
 
 **Falcon verdict:** The PTHR24106 entry (NOD-like receptor family) currently has no InterPro2GO terms mapped. Based on the comprehensive evidence gathered, this absence is scientifically appropriate and should be maintained.
 
-**Family-level synthesis:** The PTHR24106 entry (NOD-like receptor family) currently has no InterPro2GO terms mapped. Based on the comprehensive evidence gathered, this absence is scientifically appropriate and should be maintained. The NLR family as defined by PTHR24106 is one of the most functionally heterogeneous protein families in biology, with members performing:
+**Family-level synthesis:** The NOD-like receptor (NLR) family comprises multidomain intracellular proteins typically ~1,000 amino acids (~120 kDa) in size, organized around a conserved tripartite domain architecture. The three core structural elements are.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR24106` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

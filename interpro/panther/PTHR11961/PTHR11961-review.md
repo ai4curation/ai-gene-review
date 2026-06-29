@@ -12,12 +12,11 @@
 
 **Source:** [PTHR11961-deep-research-falcon.md](PTHR11961-deep-research-falcon.md)
 
-**Falcon verdict:** The absence of InterPro2GO terms on PTHR11961 is the correct annotation strategy for this entry. The family is a PANTHER family-level classification encompassing 16,207 proteins across 14,406 taxa with 18 subfamilies.
+**Falcon verdict:** The absence of InterPro2GO terms on PTHR11961 is the correct annotation strategy for this entry. The family is a PANTHER family-level classification encompassing 16,207 proteins across 14,406 taxa with 18 subfamilies. The functional heterogeneity is extreme, ranging from mitochondrial electron transfer to photosynthetic electron transfer to extracellular nanowire-mediated electron transfer to uncertain/divergent functions.
 
-**Family-level synthesis:** The absence of InterPro2GO terms on PTHR11961 is the correct annotation strategy for this entry. The family is a PANTHER family-level classification encompassing 16,207 proteins across 14,406 taxa with 18 subfamilies.
+**Family-level synthesis:** PTHR11961 is a PANTHER family-level entry for cytochrome c, integrated into the parent InterPro entry IPR002327. It encompasses 16,207 proteins across 14,406 taxa with 18 defined subfamilies, making it one of the most broadly distributed protein families in biology.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR11961` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

@@ -12,12 +12,11 @@
 
 **Source:** [PTHR11699-deep-research-falcon.md](PTHR11699-deep-research-falcon.md)
 
-**Falcon verdict:** The absence of GO terms is appropriate because PTHR11699 is a broad, top-level ALDH family containing canonical enzymes, specialized semialdehyde dehydrogenases, fusion enzymes, multifunctional proteins, and pseudoenzymes.
+**Falcon verdict:** The absence of GO terms is appropriate because PTHR11699 is a broad, top-level ALDH family containing canonical enzymes, specialized semialdehyde dehydrogenases, fusion enzymes, multifunctional proteins, and pseudoenzymes. Any family-wide GO mapping would likely over-annotate at least some matched proteins (cuatlayotlolarte2023aldehydedehydrogenasediversity pages 1-2, brocker2013aldehydedehydrogenase(aldh) pages 14-18, liu2019crystalstructureof pages 11-13, heider2025thealdehydedehydrogenase pages 9-10). ACCEPT - retain no InterPro2GO mappings for PTHR11699; annotate only at more specific child/subfamily levels.
 
-**Family-level synthesis:** The detailed assessment of whether GO terms should be added to PTHR11699 is summarized below:
+**Family-level synthesis:** The aldehyde dehydrogenase (ALDH) superfamily adopts a conserved three-domain architecture consisting of an N-terminal NAD(P)+-binding domain featuring a Rossmann fold, a catalytic domain of roughly equal size, and a smaller C-terminal oligomerization domain. Structural alignments across the superfamily reveal remarkably similar folds with RMSD values of 0.67-1.4 Å despite substantial sequence divergence.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR11699` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 

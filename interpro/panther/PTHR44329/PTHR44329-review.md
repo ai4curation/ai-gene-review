@@ -14,10 +14,9 @@
 
 **Falcon verdict:** ACCEPT - The current absence of InterPro2GO terms is correct
 
-**Family-level synthesis:** The current InterPro2GO status for PTHR44329 - no mapped GO terms - is correct and should be ACCEPTED.
+**Family-level synthesis:** PTHR44329 is a PANTHER family-level classification that encompasses both catalytically active serine/threonine protein kinases (STKs) and catalytically inactive pseudokinases. All members share the conserved bilobal protein kinase fold, consisting of an N-terminal lobe (predominantly β-sheets and the αC-helix) and a C-terminal lobe (predominantly α-helical), with the active site cleft positioned between the two lobes.
 
-**Curation use:** Treat this Falcon report as curation support for broad family boundaries, functional heterogeneity, and InterPro2GO mapping risk. Machine-generated citations are not manually adjudicated here. Module descriptors that cite `PTHR44329` should remain grounded by representative members and PAINT/PTN anchors rather than by blanket propagation from the parent family.
-
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.
 
 ## Review Status
 
