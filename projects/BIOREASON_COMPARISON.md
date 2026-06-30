@@ -156,6 +156,18 @@ Each review includes a comparison with interpro2go (GO_REF:0000002) annotations 
 
 ## Failure mode taxonomy
 
+The prose failure modes below are encoded as controlled `error_type` values on the
+discordant (NPI/PLI/REP) predictions in the per-gene `*-predictions.yaml` files, using the
+same shared `PredictionErrorTypeEnum` as the [ProtNLM evaluation](PROTNLM_EVALUATION.md) so
+the two projects are directly comparable. Four values were added for patterns Table 1 of de
+Crécy-Lagard et al. does not name: `PSEUDOENZYME_OVERANNOTATION` (mode 1), `LOCALIZATION_DEFAULT`
+(mode 2), `TAXON_CONSTRAINT_VIOLATION` (mode 7, cross-kingdom), and `WRONG_INPUT_SEQUENCE`
+(mode 8). Paralog indistinguishability (mode 3) maps to the existing `PARALOG_OVERANNOTATION`
+and neofunctionalization/moonlighting (mode 5) to `MULTIPLE_FUNCTIONS`. These tags are applied
+where a *predicted GO term* embodies the failure; modes that are narrative-only (e.g. the model
+calling a periplasmic protein "cytoplasmic" in prose while GO-GPT still predicts the periplasm
+term) leave no discordant term to tag and are recorded only in the RL narrative reviews.
+
 ### 1. Pseudo-enzyme blind spot
 
 BioReason assumes catalytic activity from conserved domains without checking whether catalytic residues are intact. This is a systematic failure for proteins that retain an ancestral fold but have lost enzymatic activity.
