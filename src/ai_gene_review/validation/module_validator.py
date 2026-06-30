@@ -27,9 +27,16 @@ It also enforces **bundle-scoped conformance**: any node declaring
 or an unresolvable template -- blocks validation, while declared
 ``WITH_DEVIATIONS`` deviations surface as advisory warnings.
 
+It also runs an **advisory reaction-chaining check**: for each ``PRECEDES``
+connection it resolves both reactions' GO molecular-function terms to RHEA (via
+the GO->RHEA mapping) and warns when the upstream reaction's product is not the
+downstream reaction's substrate. This NEVER blocks; a ``chaining_status``
+override on the connection (e.g. ``KNOWLEDGE_GAP``, ``MAPPING_GAP``) acknowledges
+a real break and suppresses its warning.
+
 Structural (schema) validation is handled separately by ``linkml-validate``
-(see ``just validate-modules``); this module adds term-label and conformance
-checking.
+(see ``just validate-modules``); this module adds term-label, conformance, and
+chaining checking.
 """
 
 from __future__ import annotations
@@ -254,7 +261,32 @@ def validate_module_file(
     errors.extend(conformance_errors)
     warnings.extend(conformance_warnings)
 
+    # Reaction chaining: advisory only (never blocks). A `chaining_status`
+    # override on a connection acknowledges a known gap and suppresses its
+    # warning. Resolution touches the GO/RHEA ontology DBs, so it degrades to
+    # "no findings" when those are unavailable.
+    warnings.extend(validate_chaining(doc))
+
     return ModuleValidationResult(path=path, errors=errors, warnings=warnings)
+
+
+def validate_chaining(doc: object) -> List[str]:
+    """Return advisory chaining warnings for a module document.
+
+    Only ``warning``-severity findings are surfaced (an unacknowledged break
+    where the upstream reaction's product is not the downstream substrate).
+    ``info`` findings -- verified continuity or an acknowledged ``chaining_status``
+    gap -- are not reported. This check NEVER produces errors.
+    """
+    from ai_gene_review.module_qc import reaction_chaining_findings
+
+    if not isinstance(doc, dict):
+        return []
+    return [
+        f"Reaction chaining: {f['message']}"
+        for f in reaction_chaining_findings(doc)
+        if f.get("severity") == "warning"
+    ]
 
 
 def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], List[str]]:

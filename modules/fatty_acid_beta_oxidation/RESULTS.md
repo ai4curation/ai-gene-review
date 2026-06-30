@@ -17,6 +17,16 @@ captured? (See the parent module `../fatty_acid_beta_oxidation.yaml`.)
   label-checked (and only for prefixes in `conf/oak_config.yaml`, which **does**
   include `CHEBI` and `RHEA`).
 
+## Now generalized into the module tooling
+
+This check is no longer one-off. `ai_gene_review.module_qc.reaction_chaining_findings`
+runs the same GO→RHEA chaining logic for **any** module, surfaces it on the
+rendered "Reaction chaining (advisory)" QC card, and `module_validator` reports
+unacknowledged breaks as **warnings (never errors)**. A curator acknowledges or
+overrides a break with `chaining_status` (+ `chaining_note`) on the connection —
+see `../README.md`. The standalone `rhea_chaining_check.py` below remains as a
+verbose, module-specific report.
+
 ## Approach (this folder)
 
 GO molecular-function terms are already mapped to RHEA. `rhea_chaining_check.py`
