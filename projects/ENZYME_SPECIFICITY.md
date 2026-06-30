@@ -2,6 +2,7 @@
 title: "Enzyme Specificity Project"
 maturity: COMPLETE
 tags: [PIPELINE, FLAGSHIP]
+species: [CANAL, human, SACEN]
 ---
 
 # Enzyme Specificity Project
