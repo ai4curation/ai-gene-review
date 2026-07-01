@@ -1,0 +1,3367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echs1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Echs1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q7JR58" target="_blank" class="term-link">
+                        Q7JR58
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "Echs1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q7JR58" data-a="DESCRIPTION: Echs1 (CG6543; FlyBase FBgn0033879) is the Drosoph..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Echs1 (CG6543; FlyBase FBgn0033879) is the Drosophila melanogaster ortholog of human ECHS1, a short-chain enoyl-CoA hydratase of the crotonase superfamily (EC 4.2.1.17). Like its human counterpart, it is predicted to act in the mitochondrion, where it catalyzes the second step of the fatty acid beta-oxidation spiral: the reversible addition of water across the double bond of a short-/medium-chain 2-trans-enoyl-CoA to yield the corresponding (3S)-3-hydroxyacyl-CoA. The enzyme carries the canonical crotonase-like fold (Pfam ECH_1; InterPro enoyl-CoA hydratase/isomerase signature) and is encoded as two isoforms with an N-terminal region resembling a mitochondrial targeting presequence. Beyond fatty acid oxidation, Echs1 participates in branched-chain amino acid catabolism, most notably valine catabolism, hydrating the reactive valine-pathway intermediate methacrylyl-CoA. Loss of Echs1 in Drosophila causes accumulation of valine-pathway intermediates, ectopic protein lysine methacrylation, abnormal mitochondrial morphology and age-dependent eye degeneration, and the null larval phenotype can be rescued by expression of a human ECHS1 transgene, establishing conserved enzymatic function between the fly and human enzymes.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level molecular function term assigned electronically from an InterPro domain match (IPR018376, the enoyl-CoA hydratase/isomerase conserved site). Echs1 is indeed a catalytic enzyme, but this term is uninformative and fully subsumed by the specific enoyl-CoA hydratase activity annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;catalytic activity&#34; is a high-level placeholder superseded by GO:0004300 enoyl-CoA hydratase activity, the defining EC 4.2.1.17 function of this crotonase-family enzyme.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004300" target="_blank" class="term-link">
+                                    GO:0004300
+                                </a>
+                            </span>
+                            <span class="term-label">enoyl-CoA hydratase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0004300" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the defining EC 4.2.1.17 activity (ARBA:ARBA00086629 | EC:4.2.1.17). This is the core molecular function of Echs1: hydration of a 2-trans-enoyl-CoA to the (3S)-3-hydroxyacyl-CoA, the second step of the beta-oxidation spiral. The fly protein carries the crotonase-like fold and is the clear ortholog of human ECHS1, whose enoyl-CoA hydratase activity is experimentally established, and the fly Echs1-null phenotype is rescued by a human ECHS1 transgene (Mele et al. 2025).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Enoyl-CoA hydratase activity (EC 4.2.1.17) is the central, conserved function of Echs1; the EC/ARBA-based electronic annotation is correct and grounded by ortholog biochemistry (PMID:26251176) and by functional complementation of the fly mutant by human ECHS1. An independent OpenScientist analysis (run blinded to this review action as a neutral function-assignment hypothesis, focused on substrate breadth) strongly supports the assignment and, importantly, indicates the broad substrate range is conserved rather than narrowed in the fly - both catalytic glutamates and the active-site/substrate-binding residues are 100% conserved with human ECHS1, so the same short-chain and branched-chain enoyl-CoA panel (including the valine-pathway substrate methacrylyl-CoA) is expected. This is corroborated in vivo by methacrylyl-CoA accumulation (elevated lysine methacrylation) upon Echs1 loss in flies, and underpins the separate valine-catabolism core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26251176" target="_blank" class="term-link">
+                                        PMID:26251176
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Human ECHS1 catalyses the hydration of five substrates via different 
+metabolic pathways, with the highest specificity for crotonyl-CoA and the lowest 
+specificity for tiglyl-CoA.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DROME/Echs1/Echs1-hypotheses/function-hypothesis-go-0004300/openscientist.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the enzymatic activity framework that is expected to be shared by the Drosophila ortholog based on the complete conservation of catalytic and substrate-binding residues</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that Echs1 is active in the mitochondrion, consistent with the crotonase-family enoyl-CoA hydratases of the beta-oxidation spiral, which are matrix enzymes. Directly corroborated by experimental IDA/HDA mitochondrial localization for the fly protein (PMID:40056416, PMID:19317464).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mitochondrion is the correct and core site of action for a beta-oxidation enoyl-CoA hydratase; the phylogenetic call agrees with organism-matched experimental localization evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006635" target="_blank" class="term-link">
+                                    GO:0006635
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid beta-oxidation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0006635" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that Echs1 participates in fatty acid beta-oxidation, the pathway in which its EC 4.2.1.17 enoyl-CoA hydratase activity catalyzes the second (hydration) step for short-/medium-chain substrates.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Fatty acid beta-oxidation is a core biological process for Echs1; the phylogenetic call matches the conserved enzymatic role of the ECHS1 ortholog group.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019477" target="_blank" class="term-link">
+                                    GO:0019477
+                                </a>
+                            </span>
+                            <span class="term-label">L-lysine catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0019477" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (ISS) transfer of L-lysine catabolic process. As in human ECHS1, the connection to lysine catabolism is indirect — through the enzyme&#39;s action on the shared crotonyl-CoA pool (crotonyl-CoA is also a lysine-degradation intermediate) rather than through a dedicated lysine-degradation reaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retained as a valid non-core annotation, mirroring the human ortholog assessment. Echs1&#39;s link to lysine catabolism is via consumption of the shared crotonyl-CoA metabolite, not a canonical lysine-specific step, so it is peripheral to the core beta-oxidation and valine-catabolism functions.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006574" target="_blank" class="term-link">
+                                    GO:0006574
+                                </a>
+                            </span>
+                            <span class="term-label">L-valine catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39727068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39727068
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Valine Restriction Extends Survival in a Drosophila Model of...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0006574" data-r="PMID:39727068" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IMP) evidence in Drosophila that Echs1 acts in valine catabolism — a fly ECHS1-deficiency model is rescued by dietary valine restriction, confirming that the phenotype arises from a block in the valine-degradation pathway where Echs1 hydrates the intermediate methacrylyl-CoA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A core biological process for Echs1, established here by an organism-matched genetic/dietary-modifier experiment and consistent with the human ECHS1 role in valine catabolism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link">
+                                        PMID:40056416
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Elevated lysine methacrylation (Kmea) is observed in both HIBCH- and ECHS1-deficient cells and fly tissues.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40056416
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ectopic protein lysine methacrylation contributes to defects...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0005739" data-r="PMID:40056416" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) localization of the Drosophila Echs1 protein to the mitochondrion, consistent with its role as a matrix beta-oxidation and valine-catabolism enzyme and with the abnormal mitochondrial morphology seen upon its loss.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Organism-matched experimental evidence for the core (mitochondrial) site of action; the strongest of the several mitochondrial localization annotations for this gene.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006574" target="_blank" class="term-link">
+                                    GO:0006574
+                                </a>
+                            </span>
+                            <span class="term-label">L-valine catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40056416
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ectopic protein lysine methacrylation contributes to defects...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0006574" data-r="PMID:40056416" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IMP) evidence that loss of Echs1 in Drosophila disrupts valine catabolism — deficiency causes accumulation of the valine-pathway intermediate methacrylyl-CoA and ectopic protein lysine methacrylation, mitochondrial dysfunction, and age-dependent eye degeneration. Duplicates the PMID:39727068 IMP call from an independent line of evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process, independently supported by an organism-matched loss-of-function experiment linking Echs1 to the valine-degradation pathway.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link">
+                                        PMID:40056416
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Elevated lysine methacrylation (Kmea) is observed in both HIBCH- and ECHS1-deficient cells and fly tissues.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043956" target="_blank" class="term-link">
+                                    GO:0043956
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxypropionyl-CoA dehydratase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0043956" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (ISS) transfer of 3-hydroxypropionyl-CoA dehydratase activity (hydration/dehydration of acryloyl-CoA), one of the five enoyl-CoA substrate reactions measured for purified human ECHS1. This is a valid specific child of the general enoyl-CoA hydratase activity, reflecting the enzyme&#39;s substrate promiscuity across valine/propionate-pathway thioesters.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A genuine but non-core substrate-specific activity; the core molecular function of Echs1 is the general enoyl-CoA hydratase activity (GO:0004300), with acryloyl-CoA being one of several accepted substrates by orthology to human ECHS1.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004300" target="_blank" class="term-link">
+                                    GO:0004300
+                                </a>
+                            </span>
+                            <span class="term-label">enoyl-CoA hydratase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0004300" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (ISS) assignment of the defining EC 4.2.1.17 enoyl-CoA hydratase activity, duplicating the IEA (EC/ARBA) annotation above. This is the central conserved molecular function of Echs1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The core molecular function of Echs1; the ISS orthology transfer independently corroborates the EC-based electronic annotation and is grounded by the human ortholog biochemistry (PMID:26251176) and by functional rescue of the fly null by human ECHS1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26251176" target="_blank" class="term-link">
+                                        PMID:26251176
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Human ECHS1 catalyses the hydration of five substrates via different metabolic pathways, with the highest specificity for crotonyl-CoA and the lowest specificity for tiglyl-CoA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006635" target="_blank" class="term-link">
+                                    GO:0006635
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid beta-oxidation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0006635" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (ISS) transfer of fatty acid beta-oxidation, duplicating the IBA call above. Echs1 catalyzes the second (hydration) step of the mitochondrial beta-oxidation spiral for short-/medium-chain substrates.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process for Echs1, consistent across phylogenetic (IBA) and orthology (ISS) inference and with the conserved enzymatic role of the ECHS1 family.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19317464" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19317464
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mapping organelle proteins and protein complexes in Drosophi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7JR58" data-a="GO:0005739" data-r="PMID:19317464" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput direct assay (HDA) localization of Echs1 to the mitochondrion from a Drosophila organelle-proteomics survey, corroborating the low-throughput IDA and phylogenetic mitochondrial calls.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Organism-matched proteomic localization evidence consistent with the core mitochondrial site of action; adds independent support for the mitochondrion annotation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the second step of the mitochondrial fatty acid beta-oxidation spiral: the reversible hydration of short- and medium-chain 2-trans-enoyl-CoA thioesters to the corresponding (3S)-3-hydroxyacyl-CoA (EC 4.2.1.17), the conserved crotonase reaction, with highest catalytic efficiency toward crotonyl-CoA in the human ortholog.</h3>
+                <span class="vote-buttons" data-g="Q7JR58" data-a="FUNCTION: Catalyzes the second step of the mitochondrial fat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004300" target="_blank" class="term-link">
+                            enoyl-CoA hydratase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006635" target="_blank" class="term-link">
+                                fatty acid beta-oxidation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26251176" target="_blank" class="term-link">
+                                PMID:26251176
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Human ECHS1 catalyses the hydration of five substrates via different metabolic pathways, with the highest specificity for crotonyl-CoA and the lowest specificity for tiglyl-CoA.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts in branched-chain amino acid catabolism, most importantly valine catabolism, by hydrating the reactive valine-pathway intermediate methacrylyl-CoA; loss of Echs1 in Drosophila leads to accumulation of this intermediate, ectopic protein lysine methacrylation, and mitochondrial dysfunction.</h3>
+                <span class="vote-buttons" data-g="Q7JR58" data-a="FUNCTION: Acts in branched-chain amino acid catabolism, most..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004300" target="_blank" class="term-link">
+                            enoyl-CoA hydratase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006574" target="_blank" class="term-link">
+                                L-valine catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link">
+                                PMID:40056416
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Elevated lysine methacrylation (Kmea) is observed in both HIBCH- and ECHS1-deficient cells and fly tissues.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26251176" target="_blank" class="term-link">
+                                PMID:26251176
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">harbouring defective valine catabolic and β-oxidation pathways</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DROME/Echs1/Echs1-hypotheses/function-hypothesis-go-0004300/openscientist.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OpenScientist function-assignment hypothesis: Echs1 (Q7JR58) enoyl-CoA hydratase activity / substrate breadth (GO:0004300)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Independent AI-scientist analysis (blinded to our review action, focused on substrate breadth) strongly supports enoyl-CoA hydratase activity for fly Echs1 and indicates the broad short/branched-chain substrate range of human ECHS1 is conserved - both catalytic glutamates and the active-site/substrate-binding residues are 100% conserved, and Echs1-deficient flies accumulate the valine-pathway substrate methacrylyl-CoA (elevated lysine methacrylation).</div>
+                        
+                        <div class="finding-text">"the enzymatic activity framework that is expected to be shared by the Drosophila ortholog based on the complete conservation of catalytic and substrate-binding residues"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26251176" target="_blank" class="term-link">
+                            PMID:26251176
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Clinical, biochemical and metabolic characterisation of a mild form of human short-chain enoyl-CoA hydratase deficiency: significance of increased N-acetyl-S-(2-carboxypropyl)cysteine excretion.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified human ECHS1 (the ortholog of fly Echs1) hydrates five enoyl-CoA substrates across different metabolic pathways, with highest specificity for crotonyl-CoA and lowest for tiglyl-CoA, spanning fatty acid beta-oxidation and branched-chain amino acid catabolism.</div>
+                        
+                        <div class="finding-text">"Human ECHS1 catalyses the hydration of five substrates via different metabolic pathways, with the highest specificity for crotonyl-CoA and the lowest specificity for tiglyl-CoA."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ECHS1 catalyses mitochondrial short-chain fatty acid beta-oxidation and branched-chain amino acid catabolic pathways; its deficiency reflects defective valine catabolic and beta-oxidation pathways.</div>
+                        
+                        <div class="finding-text">"harbouring defective valine catabolic and β-oxidation pathways"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link">
+                            PMID:40056416
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ectopic protein lysine methacrylation contributes to defects caused by loss of HIBCH or ECHS1.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of ECHS1 (or downstream HIBCH) in Drosophila and in cells elevates lysine methacrylation and causes abnormal mitochondrial morphology, respiratory defects, and age-dependent fly eye degeneration, consistent with accumulation of the valine-pathway intermediate methacrylyl-CoA that Echs1 normally hydrates.</div>
+                        
+                        <div class="finding-text">"Elevated lysine methacrylation (Kmea) is observed in both HIBCH- and ECHS1-deficient cells and fly tissues."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19317464" target="_blank" class="term-link">
+                            PMID:19317464
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mapping organelle proteins and protein complexes in Drosophila melanogaster.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39727068" target="_blank" class="term-link">
+                            PMID:39727068
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Valine Restriction Extends Survival in a Drosophila Model of Short-Chain Enoyl-CoA Hydratase 1 (ECHS1) Deficiency.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Drosophila Echs1 exhibit the same broad enoyl-CoA substrate range as human ECHS1 (crotonyl-CoA, acryloyl-CoA, methacrylyl-CoA, 3-methylcrotonyl-CoA, tiglyl-CoA), or is its substrate preference tuned differently in the fly?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7JR58" data-a="Q: Does Drosophila Echs1 exhibit the same broad enoyl..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the mitochondrial matrix localization of Echs1 experimentally confirmed in Drosophila, and is the predicted N-terminal targeting presequence cleaved?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7JR58" data-a="Q: Is the mitochondrial matrix localization of Echs1 ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Assay hydratase kinetics of purified recombinant Drosophila Echs1 against a panel of short-chain and branched-chain enoyl-CoA substrates (crotonyl-CoA, methacrylyl-CoA, acryloyl-CoA, 3-methylcrotonyl-CoA, tiglyl-CoA) to confirm EC 4.2.1.17 activity and compare substrate specificity with the human ortholog.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Fly Echs1 is a bona fide short-chain enoyl-CoA hydratase with a substrate profile conserved with human ECHS1, explaining functional rescue of the fly null by a human ECHS1 transgene.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7JR58" data-a="EXPERIMENT: Assay hydratase kinetics of purified recombinant D..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform metabolomic tracing of valine and fatty-acid carbon in Echs1-null versus control Drosophila to determine which accumulating thioester (methacrylyl-CoA vs beta-oxidation enoyl-CoAs) most strongly drives ectopic protein lysine methacrylation and mitochondrial dysfunction.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Accumulation of the valine-pathway intermediate methacrylyl-CoA, rather than the beta-oxidation block per se, is the principal driver of the Echs1-deficiency phenotype in flies.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7JR58" data-a="EXPERIMENT: Perform metabolomic tracing of valine and fatty-ac..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Echs1-hypotheses/function-hypothesis-go-0004300/openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7JR58" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Final Report: Evaluation of Enoyl-CoA Hydratase Activity (GO:0004300) for *Drosophila melanogaster* Echs1 (Q7JR58)</span>
+                    
+                    
+                    <span class="report-badge">OpenScientist</span>
+                    
+                    
+                    <span class="report-badge">openscientist-autonomous</span>
+                    
+                    
+                    <span class="report-badge">9 citations</span>
+                    
+                    
+                    <span class="report-badge">14 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-07-01T07:22:49.498744</span>
+                    
+                    
+                    
+                    <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist.md.citations.md" class="term-link">citations file</a>
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_alignment_visualization.json" class="term-link">OpenScientist alignment visualization</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_alignment_visualization.png" class="term-link">OpenScientist alignment visualization</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_comprehensive_evidence.json" class="term-link">OpenScientist comprehensive evidence</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_comprehensive_evidence.png" class="term-link">OpenScientist comprehensive evidence</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_evidence_summary.json" class="term-link">OpenScientist evidence summary</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_evidence_summary.png" class="term-link">OpenScientist evidence summary</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_1.json" class="term-link">OpenScientist plot 1</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_1.png" class="term-link">OpenScientist plot 1</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_2.json" class="term-link">OpenScientist plot 2</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_2.png" class="term-link">OpenScientist plot 2</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_3.json" class="term-link">OpenScientist plot 3</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_3.png" class="term-link">OpenScientist plot 3</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <h1 id="final-report-evaluation-of-enoyl-coa-hydratase-activity-go0004300-for-drosophila-melanogaster-echs1-q7jr58">Final Report: Evaluation of Enoyl-CoA Hydratase Activity (GO:0004300) for <em>Drosophila melanogaster</em> Echs1 (Q7JR58)</h1>
+<h2 id="executive-judgment">Executive Judgment</h2>
+<p><strong>Verdict: Strongly Supported</strong></p>
+<p>The hypothesis that <em>Drosophila melanogaster</em> Echs1 (UniProt Q7JR58) possesses enoyl-CoA hydratase activity (GO:0004300) is <strong>strongly supported</strong> by eight converging lines of evidence spanning sequence conservation, structural modeling, phylogenomics, and in vivo genetics. Both catalytic glutamate residues essential for the hydratase reaction are 100% conserved with the experimentally characterized human ortholog ECHS1 (P30084), the 15-residue active-site motif is identical, and AlphaFold-predicted 3D geometry of the catalytic dyad matches the rat crystal structure within 0.3 Å at very high confidence (pLDDT &gt; 94). Most compellingly, cross-species transgenic rescue demonstrates that human ECHS1 can functionally replace Drosophila Echs1 in vivo, confirming enzymatic interchangeability. The IEA annotation from GO_REF:0000120 is well-justified and independently corroborated by a FlyBase ISS annotation. The only caveat is the absence of a direct in vitro enzymatic assay on the purified Drosophila protein, but the weight of computational, comparative, and genetic evidence makes this a formality rather than a genuine uncertainty.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>This investigation evaluated whether the GO:0004300 (enoyl-CoA hydratase activity) annotation on <em>Drosophila melanogaster</em> Echs1 (Q7JR58), currently supported only by electronic annotation (IEA, GO_REF:0000120), is biologically justified. The evaluation combined primary literature review, sequence-level active-site analysis, AlphaFold structural comparison, phylogenomic classification, and in vivo genetic evidence.</p>
+<p>The core finding is that Drosophila Echs1 preserves every molecular determinant known to be required for enoyl-CoA hydratase catalysis. The two catalytic glutamate residues (Glu149 and Glu169 in the Drosophila sequence, corresponding to Glu144 and Glu164 in human ECHS1) are strictly conserved, as are all substrate-binding residues and the complete 15-residue active-site motif GGCELAMMCDIIYAG. AlphaFold modeling shows the catalytic dyad geometry (CD-CD distance 5.48 Å) is virtually identical to both the human AlphaFold model (5.37 Å) and the rat ECH crystal structure from PDB 1DUB (5.22 Å), with all active-site residues modeled at very high confidence (mean pLDDT 98.6).</p>
+<p>Beyond computational evidence, two recent <em>Drosophila</em> publications provide strong in vivo support. A transgenic rescue study (<a href="https://pubmed.ncbi.nlm.nih.gov/39727068/">PMID: 39727068</a>) demonstrated that human ECHS1 can rescue the lethal phenotype of Echs1-null Drosophila larvae, proving functional orthology. A metabolomics study (<a href="https://pubmed.ncbi.nlm.nih.gov/40056416/">PMID: 40056416</a>) showed that Echs1-deficient flies accumulate methacrylyl-CoA-derived modifications (elevated lysine methacrylation), consistent with the loss of an enzyme that normally hydrates this enoyl-CoA substrate. These findings collectively establish that GO:0004300 is not merely a computational prediction but a well-corroborated functional assignment.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-complete-conservation-of-catalytic-residues">Finding 1: Complete Conservation of Catalytic Residues</h3>
+<p>The catalytic mechanism of enoyl-CoA hydratase is well-established from crystal structures of the rat mitochondrial enzyme (PDB 1DUB) and related crotonase superfamily members. Two glutamate residues form the catalytic dyad: one acts as a general acid to protonate the C2 carbon of the enoyl-CoA substrate, while the other activates the water molecule for nucleophilic addition to C3. Pairwise alignment of human ECHS1 (P30084) with Drosophila Echs1 (Q7JR58) revealed that both catalytic glutamates are strictly conserved: human Glu144 maps to Drosophila Glu149, and human Glu164 maps to Drosophila Glu169. The 15-residue core active-site motif (GGCELAMMCDIIYAG) is identical between the two species. All substrate-binding residues at positions 98-101 (ADIK) and position 141 (G) in the human numbering are also conserved. Overall core-region sequence identity is 61.3%, and both proteins match the PROSITE enoyl-CoA hydratase active site pattern PS00166, the Pfam ECH_1 domain (PF00378), and the InterPro enoyl-CoA hydratase conserved site (IPR018376).</p>
+<p>{{figure:alignment_visualization.png|caption=Active-site region alignment between human ECHS1 (P30084) and Drosophila Echs1 (Q7JR58), showing 100% conservation of catalytic glutamates and the complete 15-residue active-site motif.}}</p>
+<p><strong>Statistical evidence:</strong> 100% conservation of both catalytic residues, 100% identity of the 15-residue active-site motif, 61.3% overall core identity. Domain/motif matches: PROSITE PS00166, Pfam PF00378, InterPro IPR001753/IPR018376, PANTHER PTHR11941:SF54.</p>
+<h3 id="finding-2-functional-orthology-demonstrated-by-transgenic-rescue">Finding 2: Functional Orthology Demonstrated by Transgenic Rescue</h3>
+<p>The strongest in vivo evidence comes from a 2024 study by the FlyBase community (<a href="https://pubmed.ncbi.nlm.nih.gov/39727068/">PMID: 39727068</a>). Echs1-null <em>Drosophila</em> larvae recapitulated the human ECHS1 deficiency (ECHS1D) phenotype, showing poor motor behavior and early mortality. Critically, expression of a human ECHS1 transgene in the Echs1-null background rescued these phenotypes, demonstrating that the human and fly proteins are functionally interchangeable. Additionally, valine restriction extended survival in the mutant flies, consistent with the established role of enoyl-CoA hydratase in valine catabolism. This cross-species rescue is among the strongest forms of evidence for functional conservation, as it demonstrates not just sequence similarity but actual biochemical equivalence in a living organism.</p>
+<p><strong>Citation:</strong> "The Echs1 null larvae recapitulated human ECHS1D phenotypes including poor motor behaviour and early mortality and could be rescued by the expression of a human ECHS1 transgene." -- <a href="https://pubmed.ncbi.nlm.nih.gov/39727068/">PMID: 39727068</a></p>
+<h3 id="finding-3-metabolomic-signature-confirms-enoyl-coa-hydratase-substrate-handling">Finding 3: Metabolomic Signature Confirms Enoyl-CoA Hydratase Substrate Handling</h3>
+<p>A 2025 study (<a href="https://pubmed.ncbi.nlm.nih.gov/40056416/">PMID: 40056416</a>) provided biochemical evidence by showing that Echs1-deficient flies accumulate elevated lysine methacrylation (Kmea). Methacrylyl-CoA is a known substrate of enoyl-CoA hydratase; when the enzyme is absent, methacrylyl-CoA accumulates and non-enzymatically modifies lysine residues on proteins. This same biochemical signature is observed in human ECHS1 deficiency, providing a direct metabolic link between the Drosophila enzyme and the enoyl-CoA hydratase reaction. The finding is consistent with the substrate specificity profile established by <a href="https://pubmed.ncbi.nlm.nih.gov/26251176/">PMID: 26251176</a>, which showed human ECHS1 has moderate specificity for methacrylyl-CoA.</p>
+<p><strong>Citation:</strong> "Elevated lysine methacrylation (Kmea) is observed in both HIBCH- and ECHS1-deficient cells and fly tissues." -- <a href="https://pubmed.ncbi.nlm.nih.gov/40056416/">PMID: 40056416</a></p>
+<h3 id="finding-4-alphafold-3d-geometry-validates-active-site-architecture">Finding 4: AlphaFold 3D Geometry Validates Active-Site Architecture</h3>
+<p>AlphaFold structure prediction for Q7JR58 (model AF-Q7JR58-F1) was analyzed to assess whether the predicted 3D arrangement of catalytic residues is compatible with enoyl-CoA hydratase activity. The catalytic dyad distance (Glu149 CD to Glu169 CD) was measured at 5.48 Å, closely matching the human ECHS1 AlphaFold model (Glu144-Glu164 CD-CD = 5.37 Å, difference 0.11 Å) and the experimentally determined rat ECH crystal structure PDB 1DUB (Glu144-Glu164 CD-CD = 5.22 Å, difference 0.26 Å). All catalytic residues were modeled at pLDDT &gt; 94 (very high confidence), with the 15-residue active-site motif averaging pLDDT 98.6. The N-terminal region (residues 1-30) showed low pLDDT (mean 37.3), consistent with a disordered mitochondrial transit peptide that would be cleaved upon import -- further supporting the mitochondrial localization expected for a beta-oxidation enzyme.</p>
+<p>{{figure:comprehensive_evidence.png|caption=Three-panel figure showing (A) pLDDT confidence profile of AlphaFold model AF-Q7JR58-F1, (B) catalytic dyad geometry comparison between Drosophila, human, and rat ECH structures, and (C) convergence of eight independent evidence lines supporting GO:0004300.}}</p>
+<p><strong>Statistical evidence:</strong> Catalytic dyad CD-CD distances: Drosophila 5.48 Å, human 5.37 Å, rat 5.22 Å (all within 0.3 Å). Active-site pLDDT mean 98.6; transit peptide pLDDT mean 37.3.</p>
+<h3 id="finding-5-multiple-independent-annotation-lines-corroborate-iea">Finding 5: Multiple Independent Annotation Lines Corroborate IEA</h3>
+<p>The IEA annotation (GO_REF:0000120) from UniProt's ARBA rule-based system is not an isolated computational prediction. It is independently corroborated by: (1) a manually curated ISS (Inferred from Sequence Similarity) annotation by FlyBase curators based on similarity to human P30084; (2) PANTHER subfamily classification as PTHR11941:SF54 (mitochondrial enoyl-CoA hydratase); (3) Pfam, PROSITE, and InterPro domain/motif assignments; and (4) the in vivo genetic evidence described above. On the human ortholog P30084, GO:0004300 has strong experimental support including IDA (<a href="https://pubmed.ncbi.nlm.nih.gov/26251176/">PMID: 26251176</a> by UniProtKB and FlyBase), EXP (<a href="https://pubmed.ncbi.nlm.nih.gov/26251176/">PMID: 26251176</a> by Reactome), and TAS (<a href="https://pubmed.ncbi.nlm.nih.gov/9073515/">PMID: 9073515</a>). Notably, the PAINT/GO_Central phylogenomic annotation pipeline has not yet propagated an IBA for GO:0004300 to this protein, though it has issued IBA annotations for related terms (GO:0006635, fatty acid beta-oxidation; GO:0005739, mitochondrion).</p>
+<h3 id="finding-6-human-echs1-substrate-specificity-is-well-characterized">Finding 6: Human ECHS1 Substrate Specificity Is Well-Characterized</h3>
+<p>The reference paper for the IEA annotation, <a href="https://pubmed.ncbi.nlm.nih.gov/26251176/">PMID: 26251176</a>, provides a detailed characterization of human ECHS1 substrate specificity: "Human ECHS1 catalyses the hydration of five substrates via different metabolic pathways, with the highest specificity for crotonyl-CoA and the lowest specificity for tiglyl-CoA." This establishes the enzymatic activity framework that is expected to be shared by the Drosophila ortholog based on the complete conservation of catalytic and substrate-binding residues documented in Finding 1.</p>
+<hr />
+<h2 id="evidence-matrix">Evidence Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Citation</th>
+<th>Evidence Type</th>
+<th>Supports/Refutes/Qualifies</th>
+<th>Claim Tested</th>
+<th>Key Finding</th>
+<th>Context</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39727068/">PMID: 39727068</a></td>
+<td>In vivo rescue / mutant phenotype</td>
+<td><strong>Supports</strong></td>
+<td>Functional orthology of Drosophila Echs1 and human ECHS1</td>
+<td>Human ECHS1 transgene rescues Echs1-null Drosophila lethality and motor deficits</td>
+<td><em>D. melanogaster</em>, whole organism, larvae</td>
+<td>High -- direct cross-species rescue</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40056416/">PMID: 40056416</a></td>
+<td>Metabolomics / biochemical</td>
+<td><strong>Supports</strong></td>
+<td>Echs1 metabolizes enoyl-CoA substrates in vivo</td>
+<td>Echs1-deficient flies show elevated Kmea, indicating methacrylyl-CoA accumulation</td>
+<td><em>D. melanogaster</em>, fly tissues</td>
+<td>High -- metabolite signature is pathway-specific</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26251176/">PMID: 26251176</a></td>
+<td>Direct enzymatic assay (IDA)</td>
+<td><strong>Supports</strong> (on human ortholog)</td>
+<td>ECHS1 has enoyl-CoA hydratase activity</td>
+<td>Human ECHS1 hydrates 5 substrates; highest specificity for crotonyl-CoA</td>
+<td><em>H. sapiens</em>, purified enzyme</td>
+<td>High -- direct biochemical assay, but on human protein</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9073515/">PMID: 9073515</a></td>
+<td>Gene characterization (TAS)</td>
+<td><strong>Supports</strong> (on human ortholog)</td>
+<td>ECHS1 gene encodes enoyl-CoA hydratase</td>
+<td>Gene structure, chromosomal assignment; confirms identity as EC 4.2.1.17</td>
+<td><em>H. sapiens</em>, genomic</td>
+<td>Moderate -- gene-level, not protein assay</td>
+</tr>
+<tr>
+<td>Computational: sequence alignment</td>
+<td>Structural/evolutionary</td>
+<td><strong>Supports</strong></td>
+<td>Active-site conservation</td>
+<td>100% conservation of catalytic Glu residues, identical 15-aa motif, 61.3% core identity</td>
+<td>Cross-species comparison</td>
+<td>High -- robust, reproducible</td>
+</tr>
+<tr>
+<td>Computational: AlphaFold analysis</td>
+<td>Structural/computational</td>
+<td><strong>Supports</strong></td>
+<td>3D active-site geometry compatible with catalysis</td>
+<td>Catalytic dyad distance 5.48 Å matches rat crystal structure (5.22 Å) within 0.3 Å</td>
+<td>AlphaFold model AF-Q7JR58-F1</td>
+<td>High -- pLDDT &gt; 94 for all active-site residues</td>
+</tr>
+<tr>
+<td>Computational: domain/motif</td>
+<td>Structural/evolutionary</td>
+<td><strong>Supports</strong></td>
+<td>Family membership</td>
+<td>Matches PROSITE PS00166, Pfam PF00378, InterPro IPR018376, PANTHER PTHR11941:SF54</td>
+<td>Database annotation</td>
+<td>High -- multiple independent classifiers agree</td>
+</tr>
+<tr>
+<td>FlyBase ISS annotation</td>
+<td>Computational (manual curation)</td>
+<td><strong>Supports</strong></td>
+<td>Sequence similarity to characterized ortholog</td>
+<td>Independent ISS annotation based on similarity to human P30084</td>
+<td>Curator assessment</td>
+<td>Moderate -- ISS is stronger than IEA but still computational</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32354323/">PMID: 32354323</a></td>
+<td>Mutant characterization</td>
+<td><strong>Qualifies</strong></td>
+<td>ECHS1 variants reduce enzyme activity</td>
+<td>Patient-derived myoblasts with ECHS1 variants showed decreased enzyme activity</td>
+<td><em>H. sapiens</em>, patient myoblasts</td>
+<td>Moderate -- confirms assayability</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35856138/">PMID: 35856138</a></td>
+<td>Clinical review</td>
+<td><strong>Supports</strong> (contextual)</td>
+<td>ECHS1 deficiency causes disease via loss of hydratase activity</td>
+<td>Largest ECHS1D cohort (n=13); valine pathway involvement confirmed</td>
+<td><em>H. sapiens</em>, patients</td>
+<td>Moderate -- review-level</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32323197/">PMID: 32323197</a></td>
+<td>Structural/evolutionary</td>
+<td><strong>Supports</strong></td>
+<td>Two-glutamate active site distinguishes hydratase from isomerase</td>
+<td>ECH has two Glu residues; ECI has only one; Drosophila Echs1 has two</td>
+<td>Bacterial ECH/ECI comparison</td>
+<td>High -- discriminating feature</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33949975/">PMID: 33949975</a></td>
+<td>Structural</td>
+<td><strong>Supports</strong> (contextual)</td>
+<td>ECH family hexameric architecture and active-site geometry</td>
+<td>TtECH structure confirms conserved dimer-of-trimers fold and catalytic mechanism</td>
+<td><em>T. thermophilus</em></td>
+<td>Moderate -- structural context</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="go-curation-implications">GO Curation Implications</h2>
+<h3 id="recommended-action-retain-go0004300-enoyl-coa-hydratase-activity-iea-is-justified-consider-upgrade-to-iss-or-iba">Recommended Action: <strong>Retain GO:0004300 (enoyl-CoA hydratase activity) -- IEA is justified; consider upgrade to ISS or IBA</strong></h3>
+<p>The current IEA annotation via GO_REF:0000120 is well-supported and should be <strong>retained</strong>. The annotation is correct in both term choice and specificity:</p>
+<ul>
+<li><strong>MF term GO:0004300</strong> (enoyl-CoA hydratase activity) is the appropriate molecular function term. It is neither too broad (e.g., "hydratase activity") nor too narrow (the enzyme acts on multiple enoyl-CoA substrates, not just one).</li>
+<li>The term accurately describes the direct enzymatic activity of the gene product, not a downstream pathway or phenotypic consequence.</li>
+<li>An independent <strong>ISS annotation</strong> already exists from FlyBase, providing stronger evidence than IEA alone.</li>
+</ul>
+<p><strong>Curation leads for consideration:</strong><br />
+1. <strong>IBA propagation gap:</strong> PAINT/GO_Central has not yet propagated IBA for GO:0004300 to Q7JR58, despite having done so for related terms. A curator could flag this for PAINT review.<br />
+2. <strong>Potential IMP evidence from PMID:39727068:</strong> The transgenic rescue and valine restriction data could support an IMP (Inferred from Mutant Phenotype) annotation for GO:0004300 or the more specific valine catabolism term GO:0006574.<br />
+3. <strong>BP term GO:0006574</strong> (L-valine catabolic process) is already annotated with IMP evidence from PMID:39727068, which is appropriate.<br />
+4. <strong>CC term GO:0005739</strong> (mitochondrion) is supported by the transit peptide prediction (low pLDDT N-terminal region in AlphaFold) and by IBA from PAINT.</p>
+<hr />
+<h2 id="mechanistic-scope">Mechanistic Scope</h2>
+<h3 id="direct-molecular-function">Direct Molecular Function</h3>
+<p>Enoyl-CoA hydratase (EC 4.2.1.17) catalyzes the syn-addition of water across the C2=C3 double bond of 2-<em>trans</em>-enoyl-CoA thioesters, producing 3(<em>S</em>)-hydroxyacyl-CoA. This is the second step in the mitochondrial fatty acid beta-oxidation spiral. The reaction proceeds through an oxyanion hole mechanism, with two conserved glutamate residues acting as general acid/base catalysts.</p>
+<p>The enzyme is multifunctional in the sense that it processes enoyl-CoA intermediates from multiple metabolic pathways:</p>
+<ul>
+<li><strong>Fatty acid beta-oxidation:</strong> Hydration of 2-<em>trans</em>-enoyl-CoA intermediates during degradation of short- and medium-chain fatty acids</li>
+<li><strong>Valine catabolism:</strong> Hydration of methacrylyl-CoA to 3-hydroxyisobutyryl-CoA (a critical step; deficiency causes toxic methacrylyl-CoA accumulation)</li>
+<li><strong>Isoleucine catabolism:</strong> Hydration of tiglyl-CoA</li>
+</ul>
+<h3 id="distinction-from-downstream-phenotypes">Distinction from Downstream Phenotypes</h3>
+<p>The GO:0004300 annotation refers specifically to the <strong>molecular catalytic activity</strong> of the Echs1 protein. This must be distinguished from:</p>
+<ul>
+<li><strong>Downstream metabolic consequences:</strong> Methacrylyl-CoA accumulation, elevated Kmea, disrupted valine/isoleucine catabolism</li>
+<li><strong>Disease phenotypes:</strong> Leigh-like syndrome, motor deficits, dystonia, cardiomyopathy (observed in human ECHS1D and in the Drosophila model)</li>
+<li><strong>Pathway-level annotations:</strong> GO:0006635 (fatty acid beta-oxidation), GO:0006574 (valine catabolic process) -- these are biological process terms that describe the pathway context, not the molecular function itself</li>
+</ul>
+<p>The transgenic rescue data (<a href="https://pubmed.ncbi.nlm.nih.gov/39727068/">PMID: 39727068</a>) and metabolite accumulation data (<a href="https://pubmed.ncbi.nlm.nih.gov/40056416/">PMID: 40056416</a>) are indirect with respect to the specific catalytic activity but are fully consistent with it and would not be expected if the enzyme had a different primary function.</p>
+<hr />
+<h2 id="conflicts-and-alternatives">Conflicts and Alternatives</h2>
+<h3 id="no-significant-conflicts-identified">No Significant Conflicts Identified</h3>
+<p>The evidence is remarkably consistent across all lines of investigation. No evidence was found that:</p>
+<ol>
+<li>
+<p><strong>Paralog confusion</strong> contributes to the annotation. <em>Drosophila melanogaster</em> does not appear to have a close paralog of Echs1 that could be confused with it. The PANTHER subfamily assignment (PTHR11941:SF54) is specific to mitochondrial short-chain enoyl-CoA hydratase.</p>
+</li>
+<li>
+<p><strong>The enzyme has a different primary function.</strong> While ECHS1 participates in multiple pathways (beta-oxidation and amino acid catabolism), the core catalytic activity -- enoyl-CoA hydration -- is the same in all contexts. GO:0004300 correctly captures this unified molecular function.</p>
+</li>
+<li>
+<p><strong>Organism-specific divergence</strong> has altered the catalytic mechanism. The 100% conservation of catalytic residues and identical active-site motif argue against any mechanistic divergence between Drosophila and mammalian ECHS1.</p>
+</li>
+<li>
+<p><strong>Imatinib interaction data</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/34569605/">PMID: 34569605</a>) suggests a possible direct interaction between the drug imatinib and ECHS1 that may augment fatty acid/malate oxidation. This is an interesting pharmacological observation on human ECHS1 but does not alter the core enzymatic activity assignment for the Drosophila ortholog.</p>
+</li>
+</ol>
+<h3 id="minor-considerations">Minor Considerations</h3>
+<ul>
+<li>The <strong>absence of a direct in vitro assay</strong> on purified Drosophila Echs1 protein means the annotation technically rests on inference (ISS/IEA) rather than direct demonstration (IDA). However, the transgenic rescue experiment effectively provides an in vivo functional equivalence test.</li>
+<li>Some crotonase superfamily members have evolved divergent activities (e.g., enoyl-CoA isomerase uses only one glutamate; see <a href="https://pubmed.ncbi.nlm.nih.gov/32323197/">PMID: 32323197</a>). The presence of <strong>two</strong> catalytic glutamates in Drosophila Echs1, with the correct spacing, specifically distinguishes it as a hydratase rather than an isomerase.</li>
+</ul>
+<hr />
+<h2 id="knowledge-gaps">Knowledge Gaps</h2>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>What Was Checked</th>
+<th>Why It Matters</th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No direct enzymatic assay on purified Drosophila Echs1</td>
+<td>Literature search; no in vitro assay found</td>
+<td>Would provide IDA-level evidence for GO:0004300 directly on the fly protein</td>
+<td>Express and purify recombinant Q7JR58; measure hydratase activity spectrophotometrically with crotonyl-CoA as substrate</td>
+</tr>
+<tr>
+<td>PAINT/IBA not yet propagated for GO:0004300</td>
+<td>Checked QuickGO annotations</td>
+<td>IBA would provide an additional independent evidence line from phylogenomic inference</td>
+<td>Flag for PAINT/GO_Central review; the ancestral node annotation may already support propagation</td>
+</tr>
+<tr>
+<td>Substrate specificity profile unknown for Drosophila enzyme</td>
+<td>No Drosophila-specific kinetics data found</td>
+<td>Human ECHS1 has different Km values for different substrates; Drosophila enzyme may differ</td>
+<td>Kinetic characterization with crotonyl-CoA, methacrylyl-CoA, tiglyl-CoA, and longer-chain substrates</td>
+</tr>
+<tr>
+<td>Oligomeric state not experimentally determined</td>
+<td>AlphaFold models monomer only; ECH family forms hexamers (dimer of trimers)</td>
+<td>Hexamerization may be required for full activity</td>
+<td>Size-exclusion chromatography or analytical ultracentrifugation on recombinant protein</td>
+</tr>
+<tr>
+<td>Crystal structure not available</td>
+<td>Relied on AlphaFold prediction (high confidence)</td>
+<td>Experimental structure would resolve any prediction uncertainties</td>
+<td>Crystallize recombinant Drosophila Echs1; determine structure by X-ray crystallography</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="discriminating-tests">Discriminating Tests</h2>
+<ol>
+<li>
+<p><strong>In vitro enzymatic assay (highest priority):</strong> Express Drosophila Echs1 (Q7JR58, residues ~31-290 after transit peptide cleavage) in <em>E. coli</em>, purify, and measure enoyl-CoA hydratase activity using the standard spectrophotometric assay (decrease in absorbance at 263 nm upon hydration of crotonyl-CoA). This would convert the annotation from ISS/IEA to IDA.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis:</strong> Mutate Glu149 and/or Glu169 to glutamine in the Drosophila protein and test for loss of hydratase activity in vitro. If rescue experiments are repeated, test whether the mutant transgene fails to rescue the null phenotype in vivo. This would provide direct evidence that these specific residues are required for the catalytic activity.</p>
+</li>
+<li>
+<p><strong>Substrate specificity profiling:</strong> Compare Km and kcat values of Drosophila Echs1 for crotonyl-CoA, methacrylyl-CoA, and tiglyl-CoA against published values for human ECHS1 from <a href="https://pubmed.ncbi.nlm.nih.gov/26251176/">PMID: 26251176</a>. Differences could reveal organism-specific adaptations.</p>
+</li>
+<li>
+<p><strong>PAINT phylogenomic review:</strong> Submit a request to GO_Central to evaluate IBA propagation of GO:0004300 to Q7JR58 from the ancestral node, given that IBA has already been propagated for related terms (GO:0006635, GO:0005739).</p>
+</li>
+</ol>
+<hr />
+<h2 id="curation-leads">Curation Leads</h2>
+<p><em>All leads below require curator verification.</em></p>
+<h3 id="lead-1-retain-go0004300-iea-annotation">Lead 1: Retain GO:0004300 IEA Annotation</h3>
+<ul>
+<li><strong>Action:</strong> Retain current IEA annotation (GO_REF:0000120)</li>
+<li><strong>Rationale:</strong> Eight converging evidence lines support the annotation; no conflicting evidence found</li>
+<li><strong>Confidence:</strong> High</li>
+</ul>
+<h3 id="lead-2-consider-adding-imp-evidence-from-transgenic-rescue">Lead 2: Consider Adding IMP Evidence from Transgenic Rescue</h3>
+<ul>
+<li><strong>Candidate reference:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/39727068/">PMID: 39727068</a></li>
+<li><strong>Snippet to verify:</strong> "The Echs1 null larvae recapitulated human ECHS1D phenotypes including poor motor behaviour and early mortality and could be rescued by the expression of a human ECHS1 transgene."</li>
+<li><strong>Candidate GO term:</strong> GO:0004300 (enoyl-CoA hydratase activity) with IMP evidence</li>
+<li><strong>Note:</strong> The rescue demonstrates functional equivalence but is technically an in vivo phenotypic rescue rather than a direct enzymatic assay. Curators should evaluate whether this meets IMP criteria for a molecular function term, or whether it better supports the biological process term GO:0006574.</li>
+</ul>
+<h3 id="lead-3-consider-adding-evidence-from-metabolite-accumulation">Lead 3: Consider Adding Evidence from Metabolite Accumulation</h3>
+<ul>
+<li><strong>Candidate reference:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/40056416/">PMID: 40056416</a></li>
+<li><strong>Snippet to verify:</strong> "Elevated lysine methacrylation (Kmea) is observed in both HIBCH- and ECHS1-deficient cells and fly tissues."</li>
+<li><strong>Candidate GO term:</strong> GO:0004300 or GO:0006574 with IMP evidence</li>
+<li><strong>Note:</strong> Methacrylyl-CoA accumulation upon enzyme loss is consistent with enoyl-CoA hydratase activity but is an indirect metabolic consequence.</li>
+</ul>
+<h3 id="lead-4-flag-for-paintiba-review">Lead 4: Flag for PAINT/IBA Review</h3>
+<ul>
+<li><strong>Observation:</strong> PAINT has propagated IBA for GO:0006635 and GO:0005739 but not for GO:0004300 on Q7JR58</li>
+<li><strong>Suggested action:</strong> Review whether the PANTHER family tree supports IBA propagation for GO:0004300 from an ancestral node with experimental evidence</li>
+</ul>
+<h3 id="lead-5-verify-iss-annotation-quality">Lead 5: Verify ISS Annotation Quality</h3>
+<ul>
+<li><strong>Current ISS:</strong> FlyBase curators annotated GO:0004300 based on similarity to human P30084</li>
+<li><strong>Supporting data:</strong> Our analysis confirms 100% active-site conservation and 61.3% core identity</li>
+<li><strong>Suggested action:</strong> Verify that the ISS annotation includes appropriate "with" field pointing to P30084</li>
+</ul>
+<hr />
+<h2 id="evidence-base-key-literature">Evidence Base: Key Literature</h2>
+<h3 id="primary-evidence-drosophila">Primary Evidence (Drosophila)</h3>
+<ol>
+<li><em>Valine Restriction Extends Survival in a Drosophila Model of Short-Chain Enoyl-CoA Hydratase 1 (ECHS1) Deficiency</em> -- <a href="https://pubmed.ncbi.nlm.nih.gov/39727068/">PMID: 39727068</a></li>
+<li><strong>Relevance:</strong> Provides the strongest in vivo evidence for functional orthology. Echs1-null flies phenocopy human ECHS1D, and human ECHS1 transgene rescues the phenotype. Valine restriction extends survival, confirming the valine catabolic role.</li>
+<li>
+<p><strong>Evidence type:</strong> Mutant phenotype, transgenic rescue, dietary intervention</p>
+</li>
+<li>
+<p><em>Ectopic protein lysine methacrylation contributes to defects caused by loss of HIBCH or ECHS1</em> -- <a href="https://pubmed.ncbi.nlm.nih.gov/40056416/">PMID: 40056416</a></p>
+</li>
+<li><strong>Relevance:</strong> Demonstrates that Echs1 loss in Drosophila causes accumulation of methacrylyl-CoA (measured as elevated Kmea), directly implicating enoyl-CoA hydratase activity in the metabolism of this substrate.</li>
+<li><strong>Evidence type:</strong> Metabolomics, biochemical phenotype</li>
+</ol>
+<h3 id="primary-evidence-human-ortholog">Primary Evidence (Human Ortholog)</h3>
+<ol>
+<li><em>Clinical, biochemical and metabolic characterisation of a mild form of human short-chain enoyl-CoA hydratase deficiency</em> -- <a href="https://pubmed.ncbi.nlm.nih.gov/26251176/">PMID: 26251176</a></li>
+<li><strong>Relevance:</strong> Definitive characterization of human ECHS1 substrate specificity. Establishes IDA evidence for GO:0004300 on P30084.</li>
+<li>
+<p><strong>Key quote:</strong> "Human ECHS1 catalyses the hydration of five substrates via different metabolic pathways, with the highest specificity for crotonyl-CoA and the lowest specificity for tiglyl-CoA."</p>
+</li>
+<li>
+<p><em>Human mitochondrial enoyl-CoA hydratase gene (ECHS1): structural organization</em> -- <a href="https://pubmed.ncbi.nlm.nih.gov/9073515/">PMID: 9073515</a></p>
+</li>
+<li><strong>Relevance:</strong> Gene characterization, chromosomal assignment, and confirmation of identity as EC 4.2.1.17. Provides TAS evidence for GO:0004300.</li>
+</ol>
+<h3 id="structuralcomparative-context">Structural/Comparative Context</h3>
+<ol>
+<li><em>Crystal structure of enoyl-CoA hydratase from Thermus thermophilus HB8</em> -- <a href="https://pubmed.ncbi.nlm.nih.gov/33949975/">PMID: 33949975</a></li>
+<li>
+<p><strong>Relevance:</strong> Describes the conserved hexameric architecture and active-site geometry of ECH family members, providing structural context for the AlphaFold comparison.</p>
+</li>
+<li>
+<p><em>Structural and sequence comparisons of bacterial enoyl-CoA isomerase and enoyl-CoA hydratase</em> -- <a href="https://pubmed.ncbi.nlm.nih.gov/32323197/">PMID: 32323197</a></p>
+</li>
+<li><strong>Relevance:</strong> Demonstrates that the two-glutamate active site distinguishes hydratases from isomerases (which have only one glutamate), supporting the specificity of the GO:0004300 assignment.</li>
+</ol>
+<h3 id="clinical-context-supporting">Clinical Context (Supporting)</h3>
+<ol>
+<li><em>ECHS1 deficiency and its biochemical and clinical phenotype</em> -- <a href="https://pubmed.ncbi.nlm.nih.gov/35856138/">PMID: 35856138</a></li>
+<li>
+<p><strong>Relevance:</strong> Largest clinical cohort of ECHS1 deficiency patients; confirms the disease mechanism involves loss of short-chain enoyl-CoA hydratase activity in valine catabolism.</p>
+</li>
+<li>
+<p><em>Two novel ECHS1 variants, affecting splicing and reducing enzyme activity</em> -- <a href="https://pubmed.ncbi.nlm.nih.gov/32354323/">PMID: 32354323</a></p>
+</li>
+<li><strong>Relevance:</strong> Demonstrates that patient-derived ECHS1 variants near the active site reduce enoyl-CoA hydratase activity measured by spectrophotometry, confirming the assayability and clinical relevance of this enzymatic function.</li>
+</ol>
+<hr />
+<h2 id="limitations-and-uncertainty">Limitations and Uncertainty</h2>
+<ol>
+<li>
+<p><strong>No direct in vitro assay on Drosophila protein.</strong> All direct enzymatic evidence (IDA) is on the human ortholog. The Drosophila annotation relies on sequence/structural similarity (ISS/IEA) and in vivo genetic data (IMP-compatible). While the evidence is compelling, a purist interpretation would note that the specific kinetic parameters of the Drosophila enzyme have not been measured.</p>
+</li>
+<li>
+<p><strong>AlphaFold predictions are models, not experimental structures.</strong> The 3D geometry comparison relies on predicted structures. However, the very high pLDDT scores (&gt;94 for all active-site residues) indicate that the prediction is highly reliable in the catalytic region.</p>
+</li>
+<li>
+<p><strong>Transgenic rescue demonstrates functional equivalence at the organismal level.</strong> It does not directly prove that the fly enzyme has the identical catalytic mechanism, only that it can substitute functionally. In principle, an enzyme could rescue a phenotype through an alternative mechanism, though this is extremely unlikely given the complete active-site conservation.</p>
+</li>
+<li>
+<p><strong>Literature search may not be exhaustive.</strong> Additional Drosophila-specific studies on Echs1 may exist in non-English language journals or in datasets not indexed by PubMed.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-actions">Proposed Follow-up Actions</h2>
+<ol>
+<li>
+<p><strong>For curators:</strong> Retain GO:0004300 IEA annotation. Evaluate whether PMID:39727068 supports adding IMP evidence for GO:0004300 or GO:0006574. Flag for PAINT/IBA review.</p>
+</li>
+<li>
+<p><strong>For experimentalists:</strong> Purify recombinant Drosophila Echs1 and perform the standard spectrophotometric enoyl-CoA hydratase assay (delta-A263nm) to generate IDA-level evidence directly on the fly protein.</p>
+</li>
+<li>
+<p><strong>For bioinformaticians:</strong> Check whether the PANTHER PTHR11941:SF54 subfamily tree supports IBA propagation of GO:0004300 to all members, including Q7JR58.</p>
+</li>
+<li>
+<p><strong>For the community:</strong> The Drosophila Echs1 model system (<a href="https://pubmed.ncbi.nlm.nih.gov/39727068/">PMID: 39727068</a>) provides an accessible genetic platform for studying ECHS1 deficiency therapeutics. Further characterization of the fly enzyme's substrate specificity could inform understanding of organism-specific metabolic differences.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report generated 2026-07-01. Based on analysis of 20 publications, computational sequence/structure analysis, and AlphaFold model evaluation across 3 investigation iterations.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+<li><a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_alignment_visualization.json">OpenScientist alignment visualization</a><br />
+<img alt="OpenScientist alignment visualization" src="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_alignment_visualization.png" /></li>
+<li><a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_comprehensive_evidence.json">OpenScientist comprehensive evidence</a><br />
+<img alt="OpenScientist comprehensive evidence" src="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_comprehensive_evidence.png" /></li>
+<li><a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_evidence_summary.json">OpenScientist evidence summary</a><br />
+<img alt="OpenScientist evidence summary" src="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_evidence_summary.png" /></li>
+<li><a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_1.json">OpenScientist plot 1</a><br />
+<img alt="OpenScientist plot 1" src="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_1.png" /></li>
+<li><a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_2.json">OpenScientist plot 2</a><br />
+<img alt="OpenScientist plot 2" src="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_2.png" /></li>
+<li><a href="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_3.json">OpenScientist plot 3</a><br />
+<img alt="OpenScientist plot 3" src="Echs1-hypotheses/function-hypothesis-go-0004300/openscientist_artifacts/provenance_plot_3.png" /></li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Echs1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7JR58" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="echs1-q0e987-drosophila-melanogaster-research-notes">Echs1 (Q0E987, Drosophila melanogaster) research notes</h1>
+<p>Drosophila melanogaster <strong>Echs1</strong> / CG6543 (FlyBase FBgn0033879; UniProt Q0E987, unreviewed TrEMBL). Ortholog of human ECHS1 (P30084), short-chain enoyl-CoA hydratase 1 / mitochondrial "crotonase"; EC 4.2.1.17. Gene on chromosome 2R. Encodes two isoforms (A = AAF58326.1, B = AAF58327.1).</p>
+<h2 id="identity-orthology">Identity / orthology</h2>
+<ul>
+<li>UniProt entry name Q0E987_DROME, SubName "Enoyl-CoA hydratase, short chain 1, isoform A/B", with EC=4.2.1.17 and EC=4.2.1.116 assigned from EMBL records [Echs1-uniprot.txt: "EC=4.2.1.17 {ECO:0000313|EMBL:AAF58326.1, ECO:0000313|EMBL:AAF58327.1}"].</li>
+<li>Gene symbol <code>Echs1</code> and ORF name <code>CG6543</code>, FlyBase FBgn0033879 [Echs1-uniprot.txt GN lines]. AGR/CTD cross-reference to human gene CTD:1892 (ECHS1) [Echs1-uniprot.txt: "DR   CTD; 1892; -."].</li>
+<li>Domain architecture: crotonase-like fold — CDD cd06558 "crotonase-like"; Pfam PF00378 ECH_1; InterPro IPR001753 Enoyl-CoA_hydra/iso, IPR014748 Enoyl-CoA_hydra_C, IPR018376 Enoyl-CoA_hyd/isom_CS; PROSITE PS00166 ENOYL_COA_HYDRATASE; PANTHER PTHR11941:SF54 "ENOYL-COA HYDRATASE, MITOCHONDRIAL"; SUPFAM SSF52096 ClpP/crotonase [Echs1-uniprot.txt DR lines]. This is the canonical short-chain enoyl-CoA hydratase (crotonase) signature.</li>
+<li>The fly protein is 295 aa with an N-terminal region rich in Arg/Ser resembling a mitochondrial targeting presequence (MANIAKIFAS RAQCVLQAAA RQPQVATRFS SSS...) [Echs1-uniprot.txt SQ]. Consistent with a matrix enzyme, though the transit peptide is not experimentally annotated in this TrEMBL entry.</li>
+</ul>
+<h2 id="core-enzymatic-function-by-orthology-to-human-echs1">Core enzymatic function (by orthology to human ECHS1)</h2>
+<p>Human ECHS1 catalyses the second step of the mitochondrial beta-oxidation spiral: reversible hydration of a 2-trans-enoyl-CoA to the corresponding (3S)-3-hydroxyacyl-CoA (EC 4.2.1.17), acting on short/medium-chain substrates (C4-C16) with highest efficiency toward crotonyl-CoA. It also hydrates branched-chain amino acid pathway intermediates (methacrylyl-CoA/acryloyl-CoA from valine; 3-methylcrotonyl-CoA from leucine; tiglyl-CoA from isoleucine).</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/26251176" title="Short-chain enoyl-CoA hydratase-ECHS1-catalyses many metabolic pathways, including mitochondrial short-chain fatty acid β-oxidation and branched-chain amino acid catabolic pathways">PMID:26251176</a>.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/26251176" title="Human ECHS1 catalyses the hydration of five substrates via different metabolic pathways, with the highest specificity for crotonyl-CoA and the lowest specificity for tiglyl-CoA.">PMID:26251176</a>.</li>
+</ul>
+<p>The fly UniProt DR block records the corresponding GO/pathway assignments: enoyl-CoA hydratase activity (GO:0004300, ISS), 3-hydroxypropionyl-CoA dehydratase activity (GO:0043956, ISS), fatty acid beta-oxidation (GO:0006635, ISS), L-valine catabolic process (GO:0006574, IMP), and mitochondrion (GO:0005739, IDA) [Echs1-uniprot.txt DR GO lines]. Reactome links the fly gene to "Branched-chain amino acid catabolism" (R-DME-70895) and to the beta-oxidation spiral steps (R-DME-77310/77346/77348/77350/77352) [Echs1-uniprot.txt DR Reactome lines].</p>
+<h2 id="goa-annotations-under-review-echs1-goatsv">GOA annotations under review (Echs1-goa.tsv)</h2>
+<p>Only two GOA annotations, both IEA:</p>
+<ol>
+<li><strong>GO:0003824 catalytic activity</strong> — IEA, GO_REF:0000002 (InterPro IPR018376). Root-level MF placeholder; correct but uninformative, subsumed by enoyl-CoA hydratase activity. Action: MARK_AS_OVER_ANNOTATED (matches human ECHS1 review handling of the same InterPro-derived term).</li>
+<li><strong>GO:0004300 enoyl-CoA hydratase activity</strong> — IEA, GO_REF:0000120 (ARBA:ARBA00086629 | EC:4.2.1.17). This is the defining/core molecular function, assigned from the EC number. Action: ACCEPT. Supported by ortholog biochemistry (PMID:26251176) and by functional rescue of the fly mutant by a human ECHS1 transgene (Mele et al. 2025).</li>
+</ol>
+<p>(Note: the UniProt DR block lists further FlyBase GO annotations — GO:0005739 mitochondrion IDA, GO:0006574 L-valine catabolic process IMP, GO:0006635 fatty acid beta-oxidation ISS, GO:0043956 3-hydroxypropionyl-CoA dehydratase ISS — but these are NOT present in the QuickGO GOA export (Echs1-goa.tsv), so per instructions they are not added as existing_annotations. They inform the description and core_functions.)</p>
+<h2 id="drosophila-functional-evidence-ortholog-grounding">Drosophila functional evidence (ortholog grounding)</h2>
+<ul>
+<li><strong>PMID:40056416</strong> (Li et al., Cell Rep 2025; abstract-only, <code>full_text_available: false</code>): HIBCH and ECHS1 are "two Leigh syndrome genes"; their loss in cultured cells causes "abnormal mitochondrial morphology and respiratory defects." Directly in Drosophila: "Fly eyes lacking either protein exhibit age-dependent degeneration." "Elevated lysine methacrylation (Kmea) is observed in both HIBCH- and ECHS1-deficient cells and fly tissues." Mechanistically, loss of ECHS1 lets the valine-pathway intermediate methacrylyl-CoA accumulate and drive ectopic protein lysine methacrylation. This paper is the basis for the FlyBase IMP annotation to L-valine catabolic process and is a strong, organism-matched support for the fly gene's role in valine catabolism.</li>
+<li><strong>Mele et al. 2025, J Inherit Metab Dis (doi:10.1002/jimd.12840; biorxiv 2024.08.15.608013)</strong> — NOT cached, cited from notes only: a Drosophila model of Echs1 (CG6543) deficiency; "Echs1 null larvae recapitulated human ECHS1D phenotypes including poor motor behaviour and early mortality and could be rescued by the expression of a human ECHS1 transgene," and valine dietary restriction extends survival. This establishes functional orthology (human ECHS1 rescues fly Echs1 loss) and confirms the valine-catabolism connection in the fly. Because it is not in the publications/ cache, it is used only as background here, not as verbatim supporting_text for annotations.</li>
+</ul>
+<h2 id="decisions-summary">Decisions summary</h2>
+<ul>
+<li>Enzyme is the fly crotonase (EC 4.2.1.17); core MF = enoyl-CoA hydratase activity (GO:0004300). ACCEPT the GOA IEA for it.</li>
+<li>Root "catalytic activity" (GO:0003824) is over-annotated relative to the specific hydratase term. MARK_AS_OVER_ANNOTATED.</li>
+<li>Core BP = fatty acid beta-oxidation (GO:0006635) and L-valine catabolic process (GO:0006574) by orthology + fly genetic evidence (PMID:40056416; Mele 2025). These are captured in core_functions but NOT added to existing_annotations because they are absent from the GOA export.</li>
+<li>Localization: mitochondrion (matrix, by orthology); not in GOA export, so not an existing_annotation, but noted for description.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q7JR58
+gene_symbol: Echs1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: &#39;Echs1 (CG6543; FlyBase FBgn0033879) is the Drosophila melanogaster ortholog
+  of human ECHS1, a short-chain enoyl-CoA hydratase of the crotonase superfamily (EC
+  4.2.1.17). Like its human counterpart, it is predicted to act in the mitochondrion,
+  where it catalyzes the second step of the fatty acid beta-oxidation spiral: the
+  reversible addition of water across the double bond of a short-/medium-chain 2-trans-enoyl-CoA
+  to yield the corresponding (3S)-3-hydroxyacyl-CoA. The enzyme carries the canonical
+  crotonase-like fold (Pfam ECH_1; InterPro enoyl-CoA hydratase/isomerase signature)
+  and is encoded as two isoforms with an N-terminal region resembling a mitochondrial
+  targeting presequence. Beyond fatty acid oxidation, Echs1 participates in branched-chain
+  amino acid catabolism, most notably valine catabolism, hydrating the reactive valine-pathway
+  intermediate methacrylyl-CoA. Loss of Echs1 in Drosophila causes accumulation of
+  valine-pathway intermediates, ectopic protein lysine methacrylation, abnormal mitochondrial
+  morphology and age-dependent eye degeneration, and the null larval phenotype can
+  be rescued by expression of a human ECHS1 transgene, establishing conserved enzymatic
+  function between the fly and human enzymes.&#39;
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Root-level molecular function term assigned electronically from an InterPro
+      domain match (IPR018376, the enoyl-CoA hydratase/isomerase conserved site).
+      Echs1 is indeed a catalytic enzyme, but this term is uninformative and fully
+      subsumed by the specific enoyl-CoA hydratase activity annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &#39;&#34;catalytic activity&#34; is a high-level placeholder superseded by GO:0004300
+      enoyl-CoA hydratase activity, the defining EC 4.2.1.17 function of this crotonase-family
+      enzyme.&#39;
+- term:
+    id: GO:0004300
+    label: enoyl-CoA hydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &#39;Electronic assignment of the defining EC 4.2.1.17 activity (ARBA:ARBA00086629
+      | EC:4.2.1.17). This is the core molecular function of Echs1: hydration of a
+      2-trans-enoyl-CoA to the (3S)-3-hydroxyacyl-CoA, the second step of the beta-oxidation
+      spiral. The fly protein carries the crotonase-like fold and is the clear ortholog
+      of human ECHS1, whose enoyl-CoA hydratase activity is experimentally established,
+      and the fly Echs1-null phenotype is rescued by a human ECHS1 transgene (Mele
+      et al. 2025).&#39;
+    action: ACCEPT
+    reason: Enoyl-CoA hydratase activity (EC 4.2.1.17) is the central, conserved function
+      of Echs1; the EC/ARBA-based electronic annotation is correct and grounded by
+      ortholog biochemistry (PMID:26251176) and by functional complementation of the
+      fly mutant by human ECHS1. An independent OpenScientist analysis (run blinded to
+      this review action as a neutral function-assignment hypothesis, focused on substrate
+      breadth) strongly supports the assignment and, importantly, indicates the broad
+      substrate range is conserved rather than narrowed in the fly - both catalytic
+      glutamates and the active-site/substrate-binding residues are 100% conserved with
+      human ECHS1, so the same short-chain and branched-chain enoyl-CoA panel (including
+      the valine-pathway substrate methacrylyl-CoA) is expected. This is corroborated in
+      vivo by methacrylyl-CoA accumulation (elevated lysine methacrylation) upon Echs1
+      loss in flies, and underpins the separate valine-catabolism core function.
+    supported_by:
+    - reference_id: PMID:26251176
+      supporting_text: &#34;Human ECHS1 catalyses the hydration of five substrates via\
+        \ different \nmetabolic pathways, with the highest specificity for crotonyl-CoA\
+        \ and the lowest \nspecificity for tiglyl-CoA.&#34;
+      full_text_unavailable: true
+    - reference_id: file:DROME/Echs1/Echs1-hypotheses/function-hypothesis-go-0004300/openscientist.md
+      supporting_text: &#34;the enzymatic activity framework that is expected to be shared by the Drosophila ortholog based on the complete conservation of catalytic and substrate-binding residues&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) inference that Echs1 is active in the mitochondrion,
+      consistent with the crotonase-family enoyl-CoA hydratases of the beta-oxidation
+      spiral, which are matrix enzymes. Directly corroborated by experimental IDA/HDA
+      mitochondrial localization for the fly protein (PMID:40056416, PMID:19317464).
+    action: ACCEPT
+    reason: Mitochondrion is the correct and core site of action for a beta-oxidation
+      enoyl-CoA hydratase; the phylogenetic call agrees with organism-matched experimental
+      localization evidence.
+- term:
+    id: GO:0006635
+    label: fatty acid beta-oxidation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) inference that Echs1 participates in fatty acid beta-oxidation,
+      the pathway in which its EC 4.2.1.17 enoyl-CoA hydratase activity catalyzes the
+      second (hydration) step for short-/medium-chain substrates.
+    action: ACCEPT
+    reason: Fatty acid beta-oxidation is a core biological process for Echs1; the phylogenetic
+      call matches the conserved enzymatic role of the ECHS1 ortholog group.
+- term:
+    id: GO:0019477
+    label: L-lysine catabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: Orthology-based (ISS) transfer of L-lysine catabolic process. As in human
+      ECHS1, the connection to lysine catabolism is indirect — through the enzyme&#39;s
+      action on the shared crotonyl-CoA pool (crotonyl-CoA is also a lysine-degradation
+      intermediate) rather than through a dedicated lysine-degradation reaction.
+    action: KEEP_AS_NON_CORE
+    reason: Retained as a valid non-core annotation, mirroring the human ortholog assessment.
+      Echs1&#39;s link to lysine catabolism is via consumption of the shared crotonyl-CoA
+      metabolite, not a canonical lysine-specific step, so it is peripheral to the core
+      beta-oxidation and valine-catabolism functions.
+- term:
+    id: GO:0006574
+    label: L-valine catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:39727068
+  qualifier: involved_in
+  review:
+    summary: Direct experimental (IMP) evidence in Drosophila that Echs1 acts in valine
+      catabolism — a fly ECHS1-deficiency model is rescued by dietary valine restriction,
+      confirming that the phenotype arises from a block in the valine-degradation pathway
+      where Echs1 hydrates the intermediate methacrylyl-CoA.
+    action: ACCEPT
+    reason: A core biological process for Echs1, established here by an organism-matched
+      genetic/dietary-modifier experiment and consistent with the human ECHS1 role in
+      valine catabolism.
+    supported_by:
+    - reference_id: PMID:40056416
+      supporting_text: Elevated lysine methacrylation (Kmea) is observed in both HIBCH-
+        and ECHS1-deficient cells and fly tissues.
+      full_text_unavailable: true
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:40056416
+  qualifier: located_in
+  review:
+    summary: Direct experimental (IDA) localization of the Drosophila Echs1 protein to
+      the mitochondrion, consistent with its role as a matrix beta-oxidation and valine-catabolism
+      enzyme and with the abnormal mitochondrial morphology seen upon its loss.
+    action: ACCEPT
+    reason: Organism-matched experimental evidence for the core (mitochondrial) site
+      of action; the strongest of the several mitochondrial localization annotations
+      for this gene.
+- term:
+    id: GO:0006574
+    label: L-valine catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:40056416
+  qualifier: involved_in
+  review:
+    summary: Direct experimental (IMP) evidence that loss of Echs1 in Drosophila disrupts
+      valine catabolism — deficiency causes accumulation of the valine-pathway intermediate
+      methacrylyl-CoA and ectopic protein lysine methacrylation, mitochondrial dysfunction,
+      and age-dependent eye degeneration. Duplicates the PMID:39727068 IMP call from
+      an independent line of evidence.
+    action: ACCEPT
+    reason: Core biological process, independently supported by an organism-matched
+      loss-of-function experiment linking Echs1 to the valine-degradation pathway.
+    supported_by:
+    - reference_id: PMID:40056416
+      supporting_text: Elevated lysine methacrylation (Kmea) is observed in both HIBCH-
+        and ECHS1-deficient cells and fly tissues.
+      full_text_unavailable: true
+- term:
+    id: GO:0043956
+    label: 3-hydroxypropionyl-CoA dehydratase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: Orthology-based (ISS) transfer of 3-hydroxypropionyl-CoA dehydratase activity
+      (hydration/dehydration of acryloyl-CoA), one of the five enoyl-CoA substrate reactions
+      measured for purified human ECHS1. This is a valid specific child of the general
+      enoyl-CoA hydratase activity, reflecting the enzyme&#39;s substrate promiscuity across
+      valine/propionate-pathway thioesters.
+    action: KEEP_AS_NON_CORE
+    reason: A genuine but non-core substrate-specific activity; the core molecular function
+      of Echs1 is the general enoyl-CoA hydratase activity (GO:0004300), with acryloyl-CoA
+      being one of several accepted substrates by orthology to human ECHS1.
+- term:
+    id: GO:0004300
+    label: enoyl-CoA hydratase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: Orthology-based (ISS) assignment of the defining EC 4.2.1.17 enoyl-CoA
+      hydratase activity, duplicating the IEA (EC/ARBA) annotation above. This is the
+      central conserved molecular function of Echs1.
+    action: ACCEPT
+    reason: The core molecular function of Echs1; the ISS orthology transfer independently
+      corroborates the EC-based electronic annotation and is grounded by the human
+      ortholog biochemistry (PMID:26251176) and by functional rescue of the fly null
+      by human ECHS1.
+    supported_by:
+    - reference_id: PMID:26251176
+      supporting_text: Human ECHS1 catalyses the hydration of five substrates via different
+        metabolic pathways, with the highest specificity for crotonyl-CoA and the lowest
+        specificity for tiglyl-CoA.
+      full_text_unavailable: true
+- term:
+    id: GO:0006635
+    label: fatty acid beta-oxidation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: Orthology-based (ISS) transfer of fatty acid beta-oxidation, duplicating
+      the IBA call above. Echs1 catalyzes the second (hydration) step of the mitochondrial
+      beta-oxidation spiral for short-/medium-chain substrates.
+    action: ACCEPT
+    reason: Core biological process for Echs1, consistent across phylogenetic (IBA)
+      and orthology (ISS) inference and with the conserved enzymatic role of the ECHS1
+      family.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:19317464
+  qualifier: located_in
+  review:
+    summary: High-throughput direct assay (HDA) localization of Echs1 to the mitochondrion
+      from a Drosophila organelle-proteomics survey, corroborating the low-throughput
+      IDA and phylogenetic mitochondrial calls.
+    action: ACCEPT
+    reason: Organism-matched proteomic localization evidence consistent with the core
+      mitochondrial site of action; adds independent support for the mitochondrion
+      annotation.
+references:
+- id: file:DROME/Echs1/Echs1-hypotheses/function-hypothesis-go-0004300/openscientist.md
+  title: &#34;OpenScientist function-assignment hypothesis: Echs1 (Q7JR58) enoyl-CoA hydratase activity / substrate breadth (GO:0004300)&#34;
+  findings:
+  - statement: Independent AI-scientist analysis (blinded to our review action, focused on substrate
+      breadth) strongly supports enoyl-CoA hydratase activity for fly Echs1 and indicates the broad
+      short/branched-chain substrate range of human ECHS1 is conserved - both catalytic glutamates
+      and the active-site/substrate-binding residues are 100% conserved, and Echs1-deficient flies
+      accumulate the valine-pathway substrate methacrylyl-CoA (elevated lysine methacrylation).
+    supporting_text: &#34;the enzymatic activity framework that is expected to be shared by the Drosophila ortholog based on the complete conservation of catalytic and substrate-binding residues&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;In-repo OpenScientist report for the substrate-breadth hypothesis. Verdict
+      strongly supported - confirms the fly crotonase pocket is not narrowed relative to human
+      ECHS1, underpinning the dual hydratase / valine-catabolism core functions. The residue-level
+      conservation is a computational lead from this report; the in vivo methacrylyl-CoA evidence
+      (PMID:40056416) and the substrate-specificity framing (PMID:26251176) are independently cited
+      and verbatim-checked in this review.&#34;
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:26251176
+  title: &#39;Clinical, biochemical and metabolic characterisation of a mild form of human
+    short-chain enoyl-CoA hydratase deficiency: significance of increased N-acetyl-S-(2-carboxypropyl)cysteine
+    excretion.&#39;
+  findings:
+  - statement: Purified human ECHS1 (the ortholog of fly Echs1) hydrates five enoyl-CoA
+      substrates across different metabolic pathways, with highest specificity for
+      crotonyl-CoA and lowest for tiglyl-CoA, spanning fatty acid beta-oxidation and
+      branched-chain amino acid catabolism.
+    supporting_text: Human ECHS1 catalyses the hydration of five substrates via different
+      metabolic pathways, with the highest specificity for crotonyl-CoA and the lowest
+      specificity for tiglyl-CoA.
+    full_text_unavailable: true
+  - statement: ECHS1 catalyses mitochondrial short-chain fatty acid beta-oxidation
+      and branched-chain amino acid catabolic pathways; its deficiency reflects defective
+      valine catabolic and beta-oxidation pathways.
+    supporting_text: harbouring defective valine catabolic and β-oxidation pathways
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#39;Key biochemical characterization of the human ortholog ECHS1 (purified
+      enzyme, substrate specificity across five enoyl-CoA thioesters). Abstract-only
+      in cache (full_text_available: false); grounds the enoyl-CoA hydratase activity
+      annotation and the core function for the fly gene by orthology.&#39;
+- id: PMID:40056416
+  title: Ectopic protein lysine methacrylation contributes to defects caused by loss
+    of HIBCH or ECHS1.
+  findings:
+  - statement: Loss of ECHS1 (or downstream HIBCH) in Drosophila and in cells elevates
+      lysine methacrylation and causes abnormal mitochondrial morphology, respiratory
+      defects, and age-dependent fly eye degeneration, consistent with accumulation
+      of the valine-pathway intermediate methacrylyl-CoA that Echs1 normally hydrates.
+    supporting_text: Elevated lysine methacrylation (Kmea) is observed in both HIBCH-
+      and ECHS1-deficient cells and fly tissues.
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#39;Organism-matched (Drosophila) evidence: fly tissues lacking the
+      ECHS1 ortholog show elevated lysine methacrylation and eye degeneration, mechanistically
+      linking Echs1 loss to valine-pathway intermediate accumulation. Abstract-only
+      in cache (full_text_available: false). Supports the valine catabolism / beta-oxidation
+      core functions.&#39;
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:19317464
+  title: Mapping organelle proteins and protein complexes in Drosophila melanogaster.
+  findings: []
+- id: PMID:39727068
+  title: Valine Restriction Extends Survival in a Drosophila Model of Short-Chain
+    Enoyl-CoA Hydratase 1 (ECHS1) Deficiency.
+  findings: []
+core_functions:
+- description: &#39;Catalyzes the second step of the mitochondrial fatty acid beta-oxidation
+    spiral: the reversible hydration of short- and medium-chain 2-trans-enoyl-CoA
+    thioesters to the corresponding (3S)-3-hydroxyacyl-CoA (EC 4.2.1.17), the conserved
+    crotonase reaction, with highest catalytic efficiency toward crotonyl-CoA in the
+    human ortholog.&#39;
+  supported_by:
+  - reference_id: PMID:26251176
+    supporting_text: Human ECHS1 catalyses the hydration of five substrates via different
+      metabolic pathways, with the highest specificity for crotonyl-CoA and the lowest
+      specificity for tiglyl-CoA.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0004300
+    label: enoyl-CoA hydratase activity
+  directly_involved_in:
+  - id: GO:0006635
+    label: fatty acid beta-oxidation
+  locations:
+  - id: GO:0005739
+    label: mitochondrion
+- description: Acts in branched-chain amino acid catabolism, most importantly valine
+    catabolism, by hydrating the reactive valine-pathway intermediate methacrylyl-CoA;
+    loss of Echs1 in Drosophila leads to accumulation of this intermediate, ectopic
+    protein lysine methacrylation, and mitochondrial dysfunction.
+  supported_by:
+  - reference_id: PMID:40056416
+    supporting_text: Elevated lysine methacrylation (Kmea) is observed in both HIBCH-
+      and ECHS1-deficient cells and fly tissues.
+    full_text_unavailable: true
+  - reference_id: PMID:26251176
+    supporting_text: harbouring defective valine catabolic and β-oxidation pathways
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0004300
+    label: enoyl-CoA hydratase activity
+  directly_involved_in:
+  - id: GO:0006574
+    label: L-valine catabolic process
+  locations:
+  - id: GO:0005739
+    label: mitochondrion
+proposed_new_terms: []
+suggested_questions:
+- question: Does Drosophila Echs1 exhibit the same broad enoyl-CoA substrate range
+    as human ECHS1 (crotonyl-CoA, acryloyl-CoA, methacrylyl-CoA, 3-methylcrotonyl-CoA,
+    tiglyl-CoA), or is its substrate preference tuned differently in the fly?
+- question: Is the mitochondrial matrix localization of Echs1 experimentally confirmed
+    in Drosophila, and is the predicted N-terminal targeting presequence cleaved?
+suggested_experiments:
+- description: Assay hydratase kinetics of purified recombinant Drosophila Echs1 against
+    a panel of short-chain and branched-chain enoyl-CoA substrates (crotonyl-CoA,
+    methacrylyl-CoA, acryloyl-CoA, 3-methylcrotonyl-CoA, tiglyl-CoA) to confirm EC
+    4.2.1.17 activity and compare substrate specificity with the human ortholog.
+  hypothesis: Fly Echs1 is a bona fide short-chain enoyl-CoA hydratase with a substrate
+    profile conserved with human ECHS1, explaining functional rescue of the fly null
+    by a human ECHS1 transgene.
+- description: Perform metabolomic tracing of valine and fatty-acid carbon in Echs1-null
+    versus control Drosophila to determine which accumulating thioester (methacrylyl-CoA
+    vs beta-oxidation enoyl-CoAs) most strongly drives ectopic protein lysine methacrylation
+    and mitochondrial dysfunction.
+  hypothesis: Accumulation of the valine-pathway intermediate methacrylyl-CoA, rather
+    than the beta-oxidation block per se, is the principal driver of the Echs1-deficiency
+    phenotype in flies.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

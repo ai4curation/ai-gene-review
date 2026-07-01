@@ -1,0 +1,3884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acat1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Acat1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9W3N9" target="_blank" class="term-link">
+                        Q9W3N9
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "Acat1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9W3N9" data-a="DESCRIPTION: Acat1 (CG10932) is the single Drosophila melanogas..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Acat1 (CG10932) is the single Drosophila melanogaster ortholog of human mitochondrial acetoacetyl-CoA thiolase (ACAT1 / &#34;T2&#34;; EC 2.3.1.9), a member of the thiolase family with the canonical Cys-His-Cys catalytic triad. It is a mitochondrial, CoA-dependent thiolase that catalyzes the reversible Claisen condensation/thiolysis at the acetoacetyl-CoA node (2 acetyl-CoA &lt;-&gt; acetoacetyl-CoA + CoA), placing it centrally in ketone body metabolism (both ketolysis and ketogenesis). By analogy to human T2 it also cleaves the 2-methyl-branched intermediate 2-methylacetoacetyl-CoA, the final thiolytic step of L-isoleucine catabolism. In vivo, Acat1 is required in adult mushroom body neurons for the mitochondrial oxidation of imported ketone bodies to acetyl-CoA, supplying energy that sustains associative memory during starvation. Despite the shared historical nickname &#34;ACAT1&#34;, this mitochondrial thiolase is distinct from the endoplasmic-reticulum cholesterol-esterifying sterol O-acyltransferase (SOAT1/SOAT2, EC 2.3.1.26, also called &#34;ACAT&#34;); Acat1 has no cholesterol O-acyltransferase activity.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003985" target="_blank" class="term-link">
+                                    GO:0003985
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA C-acetyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0003985" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the acetyl-CoA C-acetyltransferase (acetoacetyl-CoA thiolase, EC 2.3.1.9) activity across the ACAT1/T2 orthology group. This is the core catalytic function of Acat1, concordant with the thiolase-family domain architecture and the DIOPT 15/15 orthology to human ACAT1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function, supported by IBA, EC-based IEA, ISS from human T2, and the canonical thiolase catalytic triad (Cys109/His368/Cys396) in the UniProt record.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                        PMID:35177854
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003985" target="_blank" class="term-link">
+                                    GO:0003985
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA C-acetyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0003985" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the core acetyl-CoA C-acetyltransferase activity via EC 2.3.1.9 mapping. Redundant with the IBA and ISS annotations but correct.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core catalytic function; EC 2.3.1.9 is asserted in the UniProt record.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003985" target="_blank" class="term-link">
+                                    GO:0003985
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA C-acetyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0003985" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator ISS transfer of the acetyl-CoA C-acetyltransferase activity from the experimentally characterized human ortholog ACAT1 (UniProtKB:P24752). Concordant with the IBA/IEA annotations and the shared thiolase catalytic machinery.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function; ortholog transfer from human T2 is appropriate given the 15/15 DIOPT orthology and conserved catalytic residues.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                        PMID:35177854
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016453" target="_blank" class="term-link">
+                                    GO:0016453
+                                </a>
+                            </span>
+                            <span class="term-label">C-acetyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0016453" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation to the more general parent term C-acetyltransferase activity. Correct but less informative than the specific child GO:0003985.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct parent term; the specific acetyl-CoA C-acetyltransferase activity (GO:0003985) is the preferred core molecular-function annotation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0016746" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based assignment of the broad acyltransferase-activity parent term from the thiolase domain signatures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Technically correct but uninformative; superseded by the specific thiolase term GO:0003985.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                                    GO:0016747
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, transferring groups other than amino-acyl groups</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0016747" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based assignment of an intermediate acyltransferase parent term from the thiolase InterPro signatures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct parent term; the specific acetyl-CoA C-acetyltransferase activity better captures the molecular function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic localization of Acat1 to the mitochondrion across the ACAT1/T2 orthology group. Concordant with the direct organelle-proteomics evidence and with the mitochondrial-matrix localization of human T2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core cellular localization; the mitochondrion is the compartment where this thiolase acts, and the fly experimental study describes Acat1 generating acetyl-CoA &#34;in the mitochondria&#34;.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                        PMID:35177854
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">KBs are used by ACAT1 to generate acetyl-CoA in the mitochondria for energy</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19317464" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19317464
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mapping organelle proteins and protein complexes in Drosophi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0005739" data-r="PMID:19317464" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput organelle-proteomics (LOPIT) mapping of Drosophila embryo proteins assigns Acat1 to the mitochondrion. Direct mass-spectrometry-based localization consistent with the IBA annotation and the mitochondrial identity of the ACAT1/T2 subfamily.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core mitochondrial localization supported by an experimental (HDA) organelle-mapping dataset.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19317464" target="_blank" class="term-link">
+                                        PMID:19317464
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we apply LOPIT, a mass-spectrometry based technique that simultaneously maps proteins to specific subcellular compartments, to Drosophila embryos</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22758915" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22758915
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An inventory of peroxisomal proteins and pathways in Drosoph...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0005739" data-r="PMID:22758915" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-model (ISM) mitochondrial prediction. Redundant with the direct HDA and phylogenetic mitochondrial annotations and consistent with them; the mitochondrion is the core localization of this thiolase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core compartment, agreeing with the HDA (LOPIT) and IBA mitochondrial annotations for the same term.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22758915" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22758915
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An inventory of peroxisomal proteins and pathways in Drosoph...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0005777" data-r="PMID:22758915" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-model (ISM) peroxisomal prediction from a Drosophila peroxisomal-proteome inventory. This conflicts with the mitochondrial identity of the ACAT1/T2 subfamily (human T2 is a mitochondrial-matrix protein) and with the direct LOPIT and phylogenetic mitochondrial annotations for Acat1. The cited paper is abstract-only and states only that &#34;five of these predicted peroxisomal proteins&#34; had their localization confirmed, without indicating whether Acat1 was among them, so the prediction cannot be verified and is contradicted by stronger mitochondrial evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Computational targeting-signal prediction with no verification for Acat1 and contradicted by the mitochondrial localization of the ACAT1/T2 thiolase subfamily; peroxisomal thiolase activity in flies belongs to distinct ACAA1-type thiolases, not the ACAT1/T2 ortholog.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22758915" target="_blank" class="term-link">
+                                        PMID:22758915
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The subcellular localization of five of these predicted peroxisomal proteins was confirmed.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046952" target="_blank" class="term-link">
+                                    GO:0046952
+                                </a>
+                            </span>
+                            <span class="term-label">ketone body catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0046952" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer from human ACAT1 (P24752) placing Acat1 in ketone body catabolism (ketolysis: acetoacetyl-CoA + CoA -&gt; 2 acetyl-CoA). Directly corroborated in Drosophila by the demonstration that Acat1 is required in mushroom body neurons for mitochondrial oxidation of imported ketone bodies to acetyl-CoA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process. The single experimental fly study identifies Acat1 as a key enzyme of ketone-body oxidation, matching this catabolic term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                        PMID:35177854
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">KBs are used by ACAT1 to generate acetyl-CoA in the mitochondria for energy</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                        PMID:35177854
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we targeted a key enzyme of KB oxidation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042182" target="_blank" class="term-link">
+                                    GO:0042182
+                                </a>
+                            </span>
+                            <span class="term-label">ketone catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0042182" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation to the broader parent &#34;ketone catabolic process&#34;. Correct in direction (ketolysis) but less specific than ketone body catabolic process (GO:0046952).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but superseded by the more specific ketone body catabolic process for the core role.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006550" target="_blank" class="term-link">
+                                    GO:0006550
+                                </a>
+                            </span>
+                            <span class="term-label">L-isoleucine catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0006550" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer from human ACAT1 (P24752). Human T2 uniquely cleaves the 2-methyl-branched intermediate 2-methylacetoacetyl-CoA, the final thiolytic step of L-isoleucine catabolism; the conserved fly ortholog is expected to perform the same step. Reactome (fly) places Acat1 in &#34;Branched-chain amino acid catabolism&#34; (R-DME-70895), consistent with this assignment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process inferred from the well-characterized substrate specificity of the human ortholog and supported by fly pathway curation, though no direct fly isoleucine-flux assay exists.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                        PMID:35177854
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006085" target="_blank" class="term-link">
+                                    GO:0006085
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0006085" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation reflecting that thiolytic cleavage of acetoacetyl-CoA yields acetyl-CoA. This is a reaction-level restatement of the thiolase chemistry (and matches the fly observation that Acat1 generates acetyl-CoA in neurons) rather than a distinct physiological process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Chemically defensible product of the reaction, but the physiological process core is ketone body catabolism / isoleucine catabolism rather than generic acetyl-CoA biosynthesis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                        PMID:35177854
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">KBs are used by ACAT1 to generate acetyl-CoA in the mitochondria for energy</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046951" target="_blank" class="term-link">
+                                    GO:0046951
+                                </a>
+                            </span>
+                            <span class="term-label">ketone body biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35177854
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glia fuel neurons with locally synthesized ketone bodies to ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0046951" data-r="PMID:35177854" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS annotation to ketogenesis. The reversible thiolase can in principle contribute the acetoacetyl-CoA-forming (condensation) step of ketone-body synthesis, and Silva et al. describe ketogenesis via &#34;the successive actions of a thiolase, the HMGS and the HMG-CoA lyase&#34;. However, the direct experimental evidence in that paper for Acat1/CG10932 is its neuronal ketone-body OXIDATION (catabolic) role; the ketogenic (biosynthetic) direction is inferred rather than demonstrated for this gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Biologically plausible via the reversible thiolase chemistry, but not the direction directly demonstrated for Acat1 in the fly; the well-supported core is ketone body catabolism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                        PMID:35177854
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">acetyl-CoA that will be used to generate acetoacetate by the successive actions of a thiolase, the HMGS and the HMG-CoA lyase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042181" target="_blank" class="term-link">
+                                    GO:0042181
+                                </a>
+                            </span>
+                            <span class="term-label">ketone biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35177854
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glia fuel neurons with locally synthesized ketone bodies to ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9W3N9" data-a="GO:0042181" data-r="PMID:35177854" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS annotation to the broader parent &#34;ketone biosynthetic process&#34; (ketogenesis direction). Same considerations as GO:0046951: plausible for a reversible thiolase but not the direction directly demonstrated for Acat1 in the fly study.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Broad parent of ketone body biosynthetic process; inferred ketogenic direction, non-core relative to the demonstrated catabolic role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                        PMID:35177854
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">acetyl-CoA that will be used to generate acetoacetate by the successive actions of a thiolase, the HMGS and the HMG-CoA lyase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mitochondrial acetoacetyl-CoA thiolase (EC 2.3.1.9) catalyzing the reversible thiolytic cleavage/condensation at the acetoacetyl-CoA node (acetoacetyl-CoA + CoA &lt;-&gt; 2 acetyl-CoA). In Drosophila neurons this activity oxidizes imported ketone bodies to acetyl-CoA for mitochondrial energy production, the ketolytic role of ketone body catabolism.</h3>
+                <span class="vote-buttons" data-g="Q9W3N9" data-a="FUNCTION: Mitochondrial acetoacetyl-CoA thiolase (EC 2.3.1.9..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003985" target="_blank" class="term-link">
+                            acetyl-CoA C-acetyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046952" target="_blank" class="term-link">
+                                ketone body catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                PMID:35177854
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">KBs are used by ACAT1 to generate acetyl-CoA in the mitochondria for energy</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                PMID:35177854
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acetoacetyl-CoA thiolase acting in the final thiolytic step of L-isoleucine catabolism, cleaving the 2-methyl-branched intermediate 2-methylacetoacetyl-CoA into propionyl-CoA and acetyl-CoA (inferred from the well-characterized substrate specificity of the conserved human ACAT1/T2 ortholog and fly branched-chain-amino-acid-catabolism pathway curation).</h3>
+                <span class="vote-buttons" data-g="Q9W3N9" data-a="FUNCTION: Acetoacetyl-CoA thiolase acting in the final thiol..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003985" target="_blank" class="term-link">
+                            acetyl-CoA C-acetyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006550" target="_blank" class="term-link">
+                                L-isoleucine catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                                PMID:35177854
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19317464" target="_blank" class="term-link">
+                            PMID:19317464
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mapping organelle proteins and protein complexes in Drosophila melanogaster.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LOPIT mass-spectrometry organelle mapping of Drosophila embryos assigns Acat1 to the mitochondrion, providing direct (HDA) subcellular-localization support.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22758915" target="_blank" class="term-link">
+                            PMID:22758915
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An inventory of peroxisomal proteins and pathways in Drosophila melanogaster.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Computational peroxisomal-proteome inventory (targeting-signal prediction) that is the source of both the ISM mitochondrion and ISM peroxisome predictions for Acat1. Only five predicted peroxisomal proteins were experimentally confirmed, and the abstract does not indicate whether Acat1 was among them.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" target="_blank" class="term-link">
+                            PMID:35177854
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Glia fuel neurons with locally synthesized ketone bodies to sustain memory under starvation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies CG10932 as the Drosophila ortholog of human mitochondrial acetoacetyl-CoA thiolase ACAT1 (DIOPT 15/15) and shows by RNAi that Acat1 is required in adult mushroom body neurons for ketone-body oxidation, generating acetyl-CoA in mitochondria to sustain memory under starvation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Describes ketogenesis in cortex glia as proceeding via a thiolase, HMGS and HMG-CoA lyase; the thiolase step of ketogenesis is stated generically rather than assigned to CG10932, whereas the gene experimentally assayed as ACAT1 is the neuronal ketone-body-oxidation enzyme.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> In Drosophila, does Acat1 act physiologically in the ketogenic (acetoacetyl-CoA condensation) direction as well as the demonstrated ketolytic (oxidation) direction, i.e. is the thiolase step of glial ketogenesis in Silva et al. 2022 actually catalyzed by CG10932 or by a different thiolase?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9W3N9" data-a="Q: In Drosophila, does Acat1 act physiologically in t..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the peroxisomal localization prediction for Acat1 (ISM, PMID:22758915) ever experimentally realized, or is Acat1 exclusively mitochondrial as expected for the ACAT1/T2 subfamily?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9W3N9" data-a="Q: Is the peroxisomal localization prediction for Aca..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Assay recombinant Drosophila Acat1 for acetoacetyl-CoA thiolase (EC 2.3.1.9) activity in both directions and test cleavage of 2-methylacetoacetyl-CoA, alongside a negative control for cholesterol O-acyltransferase (EC 2.3.1.26) activity.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Acat1 has bidirectional acetoacetyl-CoA thiolase activity and can cleave the 2-methyl-branched isoleucine intermediate, but has no cholesterol-esterifying (SOAT) activity.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9W3N9" data-a="EXPERIMENT: Assay recombinant Drosophila Acat1 for acetoacetyl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine the endogenous subcellular localization of tagged Acat1 in Drosophila tissues by fluorescence microscopy and organelle fractionation, comparing mitochondrial versus peroxisomal markers.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Acat1 localizes to the mitochondrial matrix, and the peroxisomal prediction (PMID:22758915) is a targeting-signal artifact not realized in vivo.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9W3N9" data-a="EXPERIMENT: Determine the endogenous subcellular localization ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Metabolically profile ketone-body and isoleucine-pathway intermediates (acetoacetyl-CoA turnover, 2-methylacetoacetyl-CoA, tiglylglycine-equivalents) in Acat1-knockdown versus control flies under fed and starved conditions.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Acat1 loss impairs both neuronal ketolysis and the final thiolytic step of isoleucine catabolism, producing accumulation of 2-methyl-branched intermediates analogous to human beta-ketothiolase deficiency.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9W3N9" data-a="EXPERIMENT: Metabolically profile ketone-body and isoleucine-p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Acat1-hypotheses/function-hypothesis-go-0005777/openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9W3N9" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Final Report: Evaluation of Peroxisome (GO:0005777) Annotation for *Drosophila melanogaster* Acat1 (Q9W3N9)</span>
+                    
+                    
+                    <span class="report-badge">OpenScientist</span>
+                    
+                    
+                    <span class="report-badge">openscientist-autonomous</span>
+                    
+                    
+                    <span class="report-badge">13 citations</span>
+                    
+                    
+                    <span class="report-badge">14 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-07-01T03:36:18.190618</span>
+                    
+                    
+                    
+                    <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist.md.citations.md" class="term-link">citations file</a>
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_evidence_summary.json" class="term-link">OpenScientist evidence summary</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_evidence_summary.png" class="term-link">OpenScientist evidence summary</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_final_evidence_summary.json" class="term-link">OpenScientist final evidence summary</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_final_evidence_summary.png" class="term-link">OpenScientist final evidence summary</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_iteration2_evidence.json" class="term-link">OpenScientist iteration2 evidence</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_iteration2_evidence.png" class="term-link">OpenScientist iteration2 evidence</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_1.json" class="term-link">OpenScientist plot 1</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_1.png" class="term-link">OpenScientist plot 1</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_2.json" class="term-link">OpenScientist plot 2</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_2.png" class="term-link">OpenScientist plot 2</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_3.json" class="term-link">OpenScientist plot 3</a>
+                        <span>(application/json)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_3.png" class="term-link">OpenScientist plot 3</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <h1 id="final-report-evaluation-of-peroxisome-go0005777-annotation-for-drosophila-melanogaster-acat1-q9w3n9">Final Report: Evaluation of Peroxisome (GO:0005777) Annotation for <em>Drosophila melanogaster</em> Acat1 (Q9W3N9)</h1>
+<h2 id="executive-judgment">Executive Judgment</h2>
+<p><strong>Verdict: Over-annotated — removal recommended.</strong></p>
+<p>The peroxisome (GO:0005777) annotation for <em>Drosophila melanogaster</em> Acat1 (Q9W3N9) is over-annotated and should be removed. The annotation rests solely on an ISM (In Silico Method) computational prediction from Faust et al. 2012 (<a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>), and twelve converging lines of evidence refute peroxisomal localization while strongly supporting mitochondrial localization. Critically, Acat1 was <strong>not</strong> among the proteins whose peroxisomal localization was experimentally confirmed by Faust et al. — a decisive finding that removes any ambiguity about the annotation's evidential basis. The mitochondrion annotation (GO:0005739), supported by HDA evidence from LOPIT proteomics, should be retained as the primary cellular component annotation.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>This investigation evaluated whether the GO cellular component annotation "peroxisome" (GO:0005777) is justified for <em>Drosophila melanogaster</em> Acat1 (acetoacetyl-CoA thiolase, UniProt Q9W3N9). The annotation was assigned via ISM (In Silico Method) evidence from <a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a> (Faust et al. 2012), a study that computationally predicted peroxisomal proteins in <em>Drosophila</em> and experimentally confirmed only a subset.</p>
+<p>Through three iterations of systematic investigation — encompassing evidence audit, sequence analysis, structural modeling, cross-species ortholog comparison, and literature review — we assembled twelve independent lines of evidence that collectively refute peroxisomal localization for Acat1. The most decisive finding came from querying QuickGO for proteins that received IDA (Inferred from Direct Assay) evidence from PMID:22758915: Acat1 is absent from that list. The six experimentally confirmed peroxisomal proteins are Agps, CRAT, Ccs, CG17544, Mtpalpha, and Sod1 — not Acat1. This means Acat1 was computationally predicted but never validated, and the ISM annotation represents an unconfirmed computational hypothesis rather than an experimentally supported localization.</p>
+<p>Supporting this conclusion, LOPIT proteomics (<a href="https://pubmed.ncbi.nlm.nih.gov/19317464/">PMID: 19317464</a>) experimentally maps Acat1 to mitochondria (HDA evidence). Sequence analysis reveals Acat1's C-terminal tripeptide (-EKL) is non-canonical for PTS1 targeting, is structurally embedded in the thiolase catalytic fold (AlphaFold pLDDT &gt;97), and is conserved across 94% of insect ACAT1 orthologs as a catalytic motif — not a targeting signal. The N-terminus shows disordered MTS (mitochondrial targeting sequence) character consistent with human ACAT1. Furthermore, <em>Drosophila</em> is a cholesterol auxotroph, eliminating the cholesterol biosynthesis pathway that provides the mammalian rationale for dual peroxisomal/mitochondrial thiolase targeting.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-the-peroxisome-annotation-rests-on-ism-only-evidence-while-mitochondrial-localization-has-experimental-support">Finding 1: The Peroxisome Annotation Rests on ISM-Only Evidence While Mitochondrial Localization Has Experimental Support</h3>
+<p>Systematic audit of the evidence basis in QuickGO revealed a stark asymmetry. The peroxisome annotation (GO:0005777) for Acat1 is supported by a single line of evidence: ISM (In Silico Method) from <a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>, dated 2013-08-15. In contrast, the mitochondrion annotation (GO:0005739) has three independent lines of evidence: <strong>HDA</strong> (High-throughput Direct Assay) from <a href="https://pubmed.ncbi.nlm.nih.gov/19317464/">PMID: 19317464</a> based on LOPIT proteomics of <em>Drosophila</em> embryos, <strong>IBA</strong> (Inferred from Biological Ancestor) from GO_Central, and ISM from <a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>. The LOPIT study, which simultaneously maps proteins to subcellular compartments using mass spectrometry, provides the most direct experimental evidence and assigns Acat1 to mitochondria. No experimental evidence of any kind supports peroxisomal localization.</p>
+<p>{{figure:evidence_summary.png|caption=Evidence comparison for mitochondrial vs. peroxisomal localization of Acat1, showing the asymmetry between ISM-only peroxisomal evidence and multi-evidence mitochondrial support}}</p>
+<h3 id="finding-2-acat1s-c-terminal-ekl-is-non-canonical-pts1-and-lacks-targeting-potential">Finding 2: Acat1's C-Terminal -EKL Is Non-Canonical PTS1 and Lacks Targeting Potential</h3>
+<p>Peroxisomal matrix protein import in <em>Drosophila</em> relies exclusively on the PTS1 pathway, as Faust et al. 2012 noted: <em>"Similar to Caenorhabditis elegans, Drosophila appears to only utilize the peroxisome targeting signal type 1 system for matrix protein import"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>). The canonical PTS1 consensus is -[SACGP][KRH][LM]. Acat1's C-terminal tripeptide is <strong>-EKL</strong> (Glu-Lys-Leu), where glutamic acid at position -3 is negatively charged and strongly disfavors PTS1 function. By comparison, <em>Drosophila</em> ScpX (Q24506) — the likely peroxisomal thiolase for fatty acid β-oxidation — terminates in the canonical <strong>-SKL</strong>. Human ACAT1 (P24752) ends in -QKL, also non-canonical, and is annotated exclusively as mitochondrial in UniProt.</p>
+<p>No PTS2 motif (consensus: -R[LIV]x₅[HQ][LA]-) was identified in the Acat1 N-terminal sequence, and since <em>Drosophila</em> appears to lack the PTS2 import pathway entirely, this eliminates the alternative peroxisomal import mechanism observed in organisms like <em>Dictyostelium</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/25911059/">PMID: 25911059</a>), where ACAT can use PTS2 for dual localization.</p>
+<h3 id="finding-3-functional-context-places-acat1-in-the-mitochondrial-matrix">Finding 3: Functional Context Places Acat1 in the Mitochondrial Matrix</h3>
+<p>Acat1's GO annotations for molecular function and biological process include acetyl-CoA C-acetyltransferase activity, ketone body catabolic process, L-isoleucine catabolic process, and acetyl-CoA biosynthetic process (all ISS evidence). These are characteristic of <strong>thiolase II</strong> (biosynthetic/acetoacetyl-CoA thiolase), which functions in the mitochondrial matrix for ketone body metabolism and branched-chain amino acid catabolism. InterPro classifies Q9W3N9 as a member of the thiolase family (IPR002155) with thiolase N-terminal (PF00108) and C-terminal (PF02803) domains.</p>
+<p>The peroxisomal thiolase involved in fatty acid β-oxidation is a distinct enzyme type (thiolase I / 3-ketoacyl-CoA thiolase), represented in <em>Drosophila</em> by ScpX. In mammals, the dual localization of ACAT1 to both mitochondria and peroxisomes is linked to cholesterol biosynthesis (<a href="https://pubmed.ncbi.nlm.nih.gov/11108725/">PMID: 11108725</a>). However, <em>Drosophila melanogaster</em> is a <strong>cholesterol auxotroph</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/18682733/">PMID: 18682733</a>): <em>"we provide evidence for a preservation of the corresponding genes in two animals unable to synthesize cholesterol de novo (auxotrophs): Drosophila melanogaster and Caenorhabditis elegans."</em> This eliminates the metabolic rationale for peroxisomal ACAT1 in flies.</p>
+<h3 id="finding-4-alphafold-structure-confirms-mts-like-n-terminus-and-embedded-c-terminal-ekl">Finding 4: AlphaFold Structure Confirms MTS-Like N-Terminus and Embedded C-Terminal -EKL</h3>
+<p>Analysis of the AlphaFold structure (AF-Q9W3N9-F1, v6) provided structural evidence consistent with mitochondrial, not peroxisomal, targeting:</p>
+<ul>
+<li><strong>N-terminus (residues 1–20):</strong> Very low pLDDT confidence (44–64), indicating disorder consistent with a cleavable mitochondrial targeting sequence (MTS). The structured domain begins at ~residue 21–23 (pLDDT transition from 77 to &gt;96). The mature protein shares the conserved 'VVVVSAARTPIG' motif with human ACAT1, which has a known MTS at positions 1–33.</li>
+<li><strong>C-terminus (residues 408–410, -EKL):</strong> Very high pLDDT (&gt;97), indicating this tripeptide is part of the structured catalytic fold, not a flexible appended targeting peptide. Contact analysis showed Leu410 has 8 Cα neighbors within 8 Å (moderately embedded in the structure), compared to Met1 with only 2 neighbors (disordered/exposed). Functional PTS1 signals must be surface-exposed C-terminal extensions to bind the Pex5p receptor (<a href="https://pubmed.ncbi.nlm.nih.gov/8858167/">PMID: 8858167</a>); a structured, embedded -EKL cannot serve this function.</li>
+</ul>
+<p>{{figure:iteration2_evidence.png|caption=AlphaFold pLDDT analysis of Acat1 showing disordered N-terminal MTS region (pLDDT 44–64) and high-confidence structured C-terminal -EKL (pLDDT &gt;97), alongside insect ortholog conservation data}}</p>
+<h3 id="finding-5-ekl-is-a-conserved-catalytic-motif-across-insect-acat1-orthologs">Finding 5: -EKL Is a Conserved Catalytic Motif Across Insect ACAT1 Orthologs</h3>
+<p>Analysis of 16 insect ACAT1 orthologs spanning five orders (Diptera, Hymenoptera, Lepidoptera, Hemiptera, and Coleoptera), representing over 350 million years of divergence, revealed striking conservation: <strong>15 of 16 orthologs (94%) terminate in -EKL</strong>, with one ending in -ERL. The extended motif ...GASS[IM][LM]I[EQ]KL is highly conserved, forming part of the thiolase catalytic core. No insect ACAT1 ortholog has a canonical PTS1 motif (e.g., -SKL, -AKL, -SRL). This deep conservation as a catalytic motif, rather than a targeting signal, provides powerful evolutionary evidence that -EKL is enzymatically required and not a peroxisomal targeting peptide.</p>
+<h3 id="finding-6-acat1-was-not-experimentally-confirmed-as-peroxisomal-by-faust-et-al-2012">Finding 6: Acat1 Was NOT Experimentally Confirmed as Peroxisomal by Faust et al. 2012</h3>
+<p>This was the decisive finding that closed the key knowledge gap. Querying QuickGO for all <em>Drosophila</em> proteins with IDA (ECO:0000314) evidence for GO:0005777 (peroxisome) from <a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a> identified <strong>six experimentally confirmed proteins</strong>: Agps, CRAT, Ccs, CG17544, Mtpalpha, and Sod1. <strong>Acat1 (Q9W3N9) is not among them.</strong> This is consistent with the paper's own statement: <em>"The subcellular localization of five of these predicted peroxisomal proteins was confirmed"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>).</p>
+<p>Acat1 received only the ISM annotation — it was computationally predicted as potentially peroxisomal but its localization was never experimentally verified. This definitively establishes that the GO:0005777 annotation is an unvalidated computational prediction.</p>
+<p>{{figure:final_evidence_summary.png|caption=Comprehensive evidence summary showing all twelve lines of evidence converging on the over-annotation verdict, including the decisive finding that Acat1 was not experimentally confirmed by Faust et al. 2012}}</p>
+<hr />
+<h2 id="evidence-matrix">Evidence Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Citation</th>
+<th>Evidence Type</th>
+<th>Direction</th>
+<th>Claim Tested</th>
+<th>Key Finding</th>
+<th>Context</th>
+<th>Confidence &amp; Limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a></td>
+<td>Computational (ISM)</td>
+<td>Source / qualifies</td>
+<td>Acat1 is peroxisomal</td>
+<td>Computational prediction only; Acat1 NOT among 5–6 experimentally confirmed proteins</td>
+<td><em>Drosophila</em> proteome analysis</td>
+<td>Low for Acat1: prediction-only, unvalidated</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19317464/">PMID: 19317464</a></td>
+<td>Direct assay (HDA, LOPIT)</td>
+<td>Supports mitochondrial</td>
+<td>Acat1 subcellular localization</td>
+<td>LOPIT mass spectrometry maps Acat1 to mitochondria</td>
+<td><em>Drosophila</em> embryos</td>
+<td>High: direct experimental organelle mapping</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18682733/">PMID: 18682733</a></td>
+<td>Computational/review</td>
+<td>Supports removal</td>
+<td>Metabolic rationale for dual targeting</td>
+<td><em>Drosophila</em> is cholesterol auxotroph; no cholesterol biosynthesis pathway</td>
+<td><em>Drosophila</em>, <em>C. elegans</em></td>
+<td>High: eliminates mammalian dual-targeting rationale</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25911059/">PMID: 25911059</a></td>
+<td>Direct assay (GFP)</td>
+<td>Competing</td>
+<td>Dual localization precedent</td>
+<td><em>Dictyostelium</em> ACAT uses PTS2 for dual localization</td>
+<td><em>Dictyostelium</em></td>
+<td>Moderate: organism differs; <em>Drosophila</em> lacks PTS2 pathway</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11108725/">PMID: 11108725</a></td>
+<td>Direct assay</td>
+<td>Competing</td>
+<td>Mammalian ACAT1 has PTS1</td>
+<td>Mammalian thiolase has both MTS and PTS1 for cholesterol biosynthesis</td>
+<td>Mammalian cells</td>
+<td>Not applicable to <em>Drosophila</em>; cholesterol synthesis absent</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8858167/">PMID: 8858167</a></td>
+<td>Direct assay</td>
+<td>Qualifies</td>
+<td>PTS1 receptor mechanism</td>
+<td>Pex13p/Pex5p require accessible C-terminal PTS1</td>
+<td><em>S. cerevisiae</em></td>
+<td>High: conserved mechanism</td>
+</tr>
+<tr>
+<td>AlphaFold AF-Q9W3N9-F1</td>
+<td>Structural/computational</td>
+<td>Supports removal</td>
+<td>C-terminal accessibility</td>
+<td>-EKL has pLDDT &gt;97 and is buried; N-terminus disordered (MTS-like)</td>
+<td>Computational prediction</td>
+<td>Moderate: predicted structure, not experimental</td>
+</tr>
+<tr>
+<td>Ortholog analysis (16 spp.)</td>
+<td>Evolutionary/computational</td>
+<td>Supports removal</td>
+<td>-EKL as targeting vs. catalytic</td>
+<td>94% of insect ACAT1 orthologs share -EKL; none has canonical PTS1</td>
+<td>Insects, &gt;350 MY divergence</td>
+<td>High: deep conservation as enzymatic motif</td>
+</tr>
+<tr>
+<td>QuickGO IDA query</td>
+<td>Database/direct assay</td>
+<td>Refutes peroxisome</td>
+<td>Whether Acat1 was confirmed</td>
+<td>6 proteins confirmed by IDA from PMID:22758915; Acat1 is NOT among them</td>
+<td>QuickGO database</td>
+<td>High: definitively closes key knowledge gap</td>
+</tr>
+<tr>
+<td>Active site analysis</td>
+<td>Structural/evolutionary</td>
+<td>Supports thiolase II</td>
+<td>Catalytic residue conservation</td>
+<td>Acat1 and human ACAT1 share VCCTTVNK and CASICNGGGG catalytic motifs</td>
+<td>Sequence computation</td>
+<td>High: diagnostic for enzyme class</td>
+</tr>
+<tr>
+<td>UniProt P24752</td>
+<td>Database record</td>
+<td>Refutes by analogy</td>
+<td>Human ACAT1 localization</td>
+<td>Human ortholog annotated as mitochondrial ONLY; C-terminal -QKL</td>
+<td>Database level</td>
+<td>High: well-characterized ortholog</td>
+</tr>
+<tr>
+<td>GO_Central (IBA)</td>
+<td>Phylogenetic/evolutionary</td>
+<td>Supports mitochondrial</td>
+<td>Conservation of localization</td>
+<td>Orthologous proteins across species are mitochondrial</td>
+<td>Phylogenetic inference</td>
+<td>Moderate: phylogenetic, not direct</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="go-curation-implications">GO Curation Implications</h2>
+<h3 id="recommended-action-remove-go0005777-peroxisome">Recommended Action: Remove GO:0005777 (peroxisome)</h3>
+<p>The peroxisome CC annotation for Acat1 should be <strong>removed</strong>. The evidence supporting this recommendation is:</p>
+<ol>
+<li><strong>ISM-only evidence with no experimental validation</strong>: The annotation derives from a computational screen in Faust et al. 2012 (<a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>), and Acat1 was NOT among the proteins whose peroxisomal localization was experimentally confirmed.</li>
+<li><strong>Contradicted by direct experimental evidence</strong>: LOPIT proteomics (HDA from <a href="https://pubmed.ncbi.nlm.nih.gov/19317464/">PMID: 19317464</a>) maps Acat1 to mitochondria.</li>
+<li><strong>No viable targeting signal</strong>: The C-terminal -EKL is non-canonical PTS1, structurally embedded, and conserved as a catalytic motif. No PTS2 motif exists, and <em>Drosophila</em> lacks PTS2 import.</li>
+<li><strong>No metabolic rationale</strong>: <em>Drosophila</em> is a cholesterol auxotroph, eliminating the pathway context for peroxisomal thiolase.</li>
+<li><strong>Ortholog consistency</strong>: Human ACAT1 (P24752) is not annotated as peroxisomal in UniProt.</li>
+</ol>
+<h3 id="retain-go0005739-mitochondrion">Retain GO:0005739 (mitochondrion)</h3>
+<p>The mitochondrion CC annotation should be <strong>retained</strong>. It is supported by HDA evidence from LOPIT proteomics (<a href="https://pubmed.ncbi.nlm.nih.gov/19317464/">PMID: 19317464</a>), IBA evidence from GO_Central, and is consistent with the functional context of thiolase II activity (ketone body catabolism, isoleucine catabolism) in the mitochondrial matrix.</p>
+<h3 id="term-specificity-consideration">Term Specificity Consideration</h3>
+<p>A curator may also consider whether "mitochondrial matrix" (GO:0005759) would be a more specific and accurate CC term than "mitochondrion" (GO:0005739), given that thiolase II functions in the matrix. However, this would require experimental evidence specifically demonstrating matrix localization (e.g., protease protection assay, submitochondrial fractionation), which is not currently available for <em>Drosophila</em> Acat1.</p>
+<h3 id="evidence-code-note">Evidence Code Note</h3>
+<p>The ISM evidence code from PMID:22758915 was applied computationally and has not been curated with experimental validation. The appropriate curation action is removal of the GO:0005777 annotation, not downgrading, since there is no experimental evidence that would support retaining it at any confidence level.</p>
+<hr />
+<h2 id="mechanistic-scope">Mechanistic Scope</h2>
+<h3 id="direct-gene-product-activity">Direct Gene-Product Activity</h3>
+<p>Acat1 (acetoacetyl-CoA thiolase / thiolase II) catalyzes the reversible Claisen condensation of two acetyl-CoA molecules to form acetoacetyl-CoA (EC 2.3.1.9). This reaction is central to:</p>
+<ul>
+<li><strong>Ketone body catabolism</strong> (ketolysis): cleaving acetoacetyl-CoA in extrahepatic tissues</li>
+<li><strong>Isoleucine catabolism</strong>: degradation of branched-chain amino acids</li>
+<li><strong>Acetyl-CoA biosynthesis</strong>: condensation reaction</li>
+</ul>
+<p>All of these processes occur in the <strong>mitochondrial matrix</strong>.</p>
+<h3 id="pathway-context">Pathway Context</h3>
+<div class="codehilite"><pre><span></span><code><span class="nv">Mitochondrial</span><span class="w"> </span><span class="nv">matrix</span>:
+
+<span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="nv">Acetyl</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span>←→<span class="w"> </span><span class="nv">Acetoacetyl</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nv">CoA</span><span class="o">-</span><span class="nv">SH</span>
+<span class="w">    </span><span class="ss">(</span><span class="nv">Acat1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nv">thiolase</span><span class="w"> </span><span class="nv">II</span><span class="ss">)</span>
+<span class="w">         </span>↓
+<span class="w">    </span><span class="nv">HMG</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span>→<span class="w"> </span><span class="nv">Acetoacetate</span><span class="w"> </span>→<span class="w"> </span>β<span class="o">-</span><span class="nv">hydroxybutyrate</span>
+<span class="w">    </span><span class="ss">(</span><span class="nv">ketogenesis</span>,<span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nv">applicable</span><span class="ss">)</span>
+
+<span class="w">  </span><span class="nv">Isoleucine</span><span class="w"> </span>→<span class="w"> </span>...<span class="w"> </span>→<span class="w"> </span><span class="mi">2</span><span class="o">-</span><span class="nv">methylacetoacetyl</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span>→<span class="w"> </span><span class="nv">Acetyl</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nv">Propionyl</span><span class="o">-</span><span class="nv">CoA</span>
+<span class="w">         </span><span class="ss">(</span><span class="nv">Acat1</span>,<span class="w"> </span><span class="nv">thiolytic</span><span class="w"> </span><span class="nv">cleavage</span><span class="ss">)</span>
+</code></pre></div>
+
+<h3 id="distinction-from-peroxisomal-thiolases">Distinction From Peroxisomal Thiolases</h3>
+<p>The peroxisomal thiolase involved in fatty acid β-oxidation is a distinct enzyme type (thiolase I / 3-ketoacyl-CoA thiolase). In <em>Drosophila</em>, this function is performed by <strong>ScpX</strong> (Q24506), which has the canonical PTS1 signal -SKL. These are functionally and structurally distinct enzyme classes despite shared thiolase fold architecture. Active site analysis confirmed complete conservation of thiolase II diagnostic catalytic motifs (VCCTTVNK nucleophilic Cys, CASICNGGGG C-terminal catalytic Cys) between <em>Drosophila</em> Acat1 and human ACAT1, confirming orthology to the mitochondrial enzyme class.</p>
+<h3 id="direct-activity-vs-downstream-effects">Direct Activity vs. Downstream Effects</h3>
+<p>The hypothesis tests a <strong>cellular component</strong> (localization) annotation, not a molecular function or biological process. The question is not whether Acat1 has thiolase activity (it does), but whether it localizes to peroxisomes. All evidence points to the mitochondrial matrix as the sole site of Acat1 activity in <em>Drosophila</em>, with the peroxisomal prediction arising from computational inference that was not experimentally validated.</p>
+<hr />
+<h2 id="conflicts-and-alternatives">Conflicts and Alternatives</h2>
+<h3 id="dual-localization-precedent-in-other-organisms">Dual Localization Precedent in Other Organisms</h3>
+<p>The most significant competing evidence comes from studies in other organisms. In <em>Dictyostelium discoideum</em>, acetoacetyl-CoA thiolase (DdAcat) is a dual-localizing enzyme that localizes to peroxisomes, mitochondria, and the cytosol (<a href="https://pubmed.ncbi.nlm.nih.gov/25911059/">PMID: 25911059</a>). The abstract states: <em>"Subcellular localization of DdAcat was investigated using a fusion protein with GFP, and it was found to be localized to peroxisomes. The findings showed that the targeting signal of DdAcat to peroxisomes is a unique nonapeptide sequence (15RMYTTAKNL23) similar to the conserved peroxisomal targeting signal-2 (PTS-2)."</em> DdAcat uses overlapping PTS2 and MTS signals near the N-terminus, with alternative start codon usage determining the ratio of peroxisomal vs. cytosolic forms.</p>
+<p>In mammals, AA-CoA thiolase (ACAT1) has been shown to contain both a mitochondrial targeting signal and a PTS1 at the C-terminus, with dual localization linked to cholesterol biosynthesis in peroxisomes (<a href="https://pubmed.ncbi.nlm.nih.gov/11108725/">PMID: 11108725</a>).</p>
+<p><strong>However, these precedents do not apply to <em>Drosophila</em> Acat1 for three critical reasons:</strong></p>
+<ol>
+<li><em>Drosophila</em> appears to lack the PTS2 import pathway entirely (<a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>): <em>"Similar to Caenorhabditis elegans, Drosophila appears to only utilize the peroxisome targeting signal type 1 system for matrix protein import."</em> The <em>Dictyostelium</em> PTS2-based dual-localization mechanism is therefore unavailable.</li>
+<li><em>Drosophila</em> Acat1's C-terminal -EKL is non-canonical for PTS1, structurally embedded, and conserved as an enzymatic motif across insects — it cannot function as a PTS1 targeting signal.</li>
+<li><em>Drosophila</em> is a cholesterol auxotroph (<a href="https://pubmed.ncbi.nlm.nih.gov/18682733/">PMID: 18682733</a>), eliminating the cholesterol biosynthesis pathway that drives mammalian ACAT1 dual localization.</li>
+</ol>
+<h3 id="potential-paralog-confusion">Potential Paralog Confusion</h3>
+<p>The <em>Drosophila</em> genome contains multiple thiolase-family genes:</p>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>UniProt</th>
+<th>Type</th>
+<th>PTS1</th>
+<th>Localization (evidence)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Acat1</strong></td>
+<td>Q9W3N9</td>
+<td>Thiolase II</td>
+<td>-EKL (non-canonical)</td>
+<td>Mitochondrion (HDA)</td>
+</tr>
+<tr>
+<td><strong>Acat2</strong></td>
+<td>Q9W0H6</td>
+<td>Thiolase II</td>
+<td>—</td>
+<td>Cytoplasmic (ISS)</td>
+</tr>
+<tr>
+<td><strong>ScpX</strong></td>
+<td>Q24506</td>
+<td>Thiolase I</td>
+<td><strong>-SKL (canonical)</strong></td>
+<td>Peroxisome (ISM)</td>
+</tr>
+<tr>
+<td><strong>Mtpβ</strong></td>
+<td>—</td>
+<td>Thiolase I</td>
+<td>—</td>
+<td>Mitochondrion (HDA)</td>
+</tr>
+</tbody>
+</table>
+<p>The ISM computational prediction may have partially conflated thiolase family members, predicting peroxisomal localization based on family membership rather than individual sequence features. ScpX, with its canonical -SKL PTS1, is the likely peroxisomal thiolase in <em>Drosophila</em>.</p>
+<h3 id="database-carry-over-risk">Database Carry-Over Risk</h3>
+<p>The ISM annotation from 2012 has persisted in GO databases for over a decade without experimental validation. This represents a common pattern where computational predictions become entrenched in annotation databases and are propagated through electronic annotation pipelines, even when subsequent experimental evidence contradicts them.</p>
+<hr />
+<h2 id="knowledge-gaps">Knowledge Gaps</h2>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>What Was Checked</th>
+<th>Why It Matters</th>
+<th>What Would Resolve It</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No direct fluorescence/immunolocalization in <em>Drosophila</em></td>
+<td>Literature search; only LOPIT proteomics available</td>
+<td>LOPIT provides compartment-level resolution but co-purification artifacts are possible</td>
+<td>GFP-tagged Acat1 in <em>Drosophila</em> S2 cells, co-stained with MitoTracker and peroxisomal markers</td>
+</tr>
+<tr>
+<td>No submitochondrial localization data</td>
+<td>UniProt, GO annotations</td>
+<td>Thiolase II should be in the matrix; confirmation would enable more specific CC annotation</td>
+<td>Protease protection assay on isolated <em>Drosophila</em> mitochondria</td>
+</tr>
+<tr>
+<td>ISM prediction algorithm details unknown</td>
+<td>PMID:22758915 abstract</td>
+<td>Understanding why Acat1 was predicted might reveal threshold issues</td>
+<td>Review full text and supplementary methods of Faust et al. 2012</td>
+</tr>
+<tr>
+<td>No functional complementation data</td>
+<td>Literature search</td>
+<td>Would confirm Acat1 cannot replace peroxisomal thiolase</td>
+<td>Express Acat1 in ScpX-null <em>Drosophila</em>; test peroxisomal β-oxidation</td>
+</tr>
+<tr>
+<td>Possible low-level dual localization below LOPIT detection</td>
+<td>LOPIT is bulk proteomics</td>
+<td>Minor dual localization (&lt;5%) might be real but functionally insignificant</td>
+<td>Quantitative immunoelectron microscopy; proximity labeling (BioID/APEX) in peroxisomes</td>
+</tr>
+<tr>
+<td>Whether -EKL functions as PTS1 in any organism</td>
+<td>PubMed search (no results found)</td>
+<td>Would establish whether this variant can mediate import</td>
+<td>Reporter assay with -EKL C-terminal peptide</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="discriminating-tests">Discriminating Tests</h2>
+<h3 id="highest-priority-experiments">Highest-Priority Experiments</h3>
+<ol>
+<li>
+<p><strong>GFP-Acat1 localization in S2 cells</strong>: Express Acat1-GFP (or GFP-Acat1) in <em>Drosophila</em> S2 cells with simultaneous MitoTracker and peroxisomal marker (anti-Pmp70 or SKL-RFP) staining. This would definitively resolve the localization question with direct microscopic evidence.</p>
+</li>
+<li>
+<p><strong>C-terminal swap experiment</strong>: Replace Acat1's -EKL with canonical -SKL and test whether the mutant acquires peroxisomal localization. This would demonstrate whether the -EKL → -SKL substitution is sufficient to redirect targeting, confirming that -EKL is non-functional as PTS1.</p>
+</li>
+<li>
+<p><strong>Pex5p binding assay</strong>: Test whether Acat1's C-terminal peptide binds Pex5p (PTS1 receptor) in vitro. Compare with ScpX C-terminal peptide (-SKL) as positive control. This would directly test the biophysical basis of the targeting prediction.</p>
+</li>
+</ol>
+<h3 id="computational-analyses">Computational Analyses</h3>
+<ol>
+<li>
+<p><strong>PTS1 prediction scoring</strong>: Run Acat1 through established PTS1 prediction tools (e.g., PTS1 Predictor from Neuberger et al.) to obtain a quantitative score. Compare with ScpX and the six experimentally confirmed peroxisomal proteins from Faust et al.</p>
+</li>
+<li>
+<p><strong>Proximity labeling proteomics</strong>: Perform APEX2 or BioID labeling of <em>Drosophila</em> peroxisomal matrix using a PTS1-tagged proximity labeling enzyme. Check whether Acat1 peptides are detected above background.</p>
+</li>
+</ol>
+<hr />
+<h2 id="curation-leads">Curation Leads</h2>
+<h3 id="lead-1-remove-go0005777-peroxisome-ism-annotation-high-confidence">Lead 1: Remove GO:0005777 (peroxisome) ISM annotation — HIGH CONFIDENCE</h3>
+<ul>
+<li><strong>Action</strong>: Remove CC annotation GO:0005777 for Q9W3N9</li>
+<li><strong>Rationale</strong>: ISM-only evidence; protein was NOT experimentally validated by Faust et al.; non-canonical PTS1; experimental evidence supports mitochondrial localization; human ortholog not annotated as peroxisomal</li>
+<li><strong>Key reference to verify</strong>: <a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a> — <em>"The subcellular localization of five of these predicted peroxisomal proteins was confirmed"</em> — Acat1 was not among them (confirmed via QuickGO IDA query showing confirmed proteins are Agps, CRAT, Ccs, CG17544, Mtpalpha, Sod1)</li>
+<li><strong>Supporting reference</strong>: <a href="https://pubmed.ncbi.nlm.nih.gov/19317464/">PMID: 19317464</a> — <em>"Here, we apply LOPIT, a mass-spectrometry based technique that simultaneously maps proteins to specific subcellular compartments, to Drosophila embryos"</em> — LOPIT maps Acat1 to mitochondria (HDA evidence)</li>
+</ul>
+<h3 id="lead-2-retain-go0005739-mitochondrion-annotation-high-confidence">Lead 2: Retain GO:0005739 (mitochondrion) annotation — HIGH CONFIDENCE</h3>
+<ul>
+<li><strong>Action</strong>: Retain CC annotation GO:0005739 for Q9W3N9</li>
+<li><strong>Evidence codes</strong>: HDA (<a href="https://pubmed.ncbi.nlm.nih.gov/19317464/">PMID: 19317464</a>), IBA (GO_Central)</li>
+<li><strong>Note</strong>: Consider whether upgrading to GO:0005759 (mitochondrial matrix) is warranted if additional evidence becomes available</li>
+</ul>
+<h3 id="lead-3-verify-scpx-as-the-true-peroxisomal-thiolase-moderate-confidence">Lead 3: Verify ScpX as the true peroxisomal thiolase — MODERATE CONFIDENCE</h3>
+<ul>
+<li><strong>Action</strong>: Confirm that ScpX (Q24506) with -SKL PTS1 is properly annotated as the peroxisomal thiolase in <em>Drosophila</em></li>
+<li><strong>Rationale</strong>: Ensures the peroxisomal fatty acid β-oxidation pathway is correctly attributed</li>
+<li><strong>Suggested question</strong>: Does ScpX have GO:0005777 with appropriate experimental evidence?</li>
+</ul>
+<h3 id="lead-4-audit-other-faust-et-al-ism-only-predictions-low-priority">Lead 4: Audit other Faust et al. ISM-only predictions — LOW PRIORITY</h3>
+<ul>
+<li><strong>Action</strong>: Check other proteins that received ISM-only annotations from PMID:22758915 but were not among the IDA-confirmed set</li>
+<li><strong>Rationale</strong>: Similar over-annotation patterns may exist for other computationally predicted but unvalidated proteins</li>
+<li><strong>Suggested query</strong>: QuickGO search for all GO:0005777 ISM annotations from PMID:22758915, cross-referenced against IDA annotations</li>
+</ul>
+<h3 id="key-snippets-to-verify">Key Snippets to Verify</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>: <em>"We have analyzed the proteome of Drosophila to identify the proteins involved in peroxisomal biogenesis and homeostasis as well as metabolic enzymes that function within the organelle. The subcellular localization of five of these predicted peroxisomal proteins was confirmed."</em></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>: <em>"Similar to Caenorhabditis elegans, Drosophila appears to only utilize the peroxisome targeting signal type 1 system for matrix protein import."</em></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19317464/">PMID: 19317464</a>: <em>"Here, we apply LOPIT, a mass-spectrometry based technique that simultaneously maps proteins to specific subcellular compartments, to Drosophila embryos. We determine the subcellular distribution of hundreds of proteins, and protein complexes."</em></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18682733/">PMID: 18682733</a>]: <em>"we provide evidence for a preservation of the corresponding genes in two animals unable to synthesize cholesterol de novo (auxotrophs): Drosophila melanogaster and Caenorhabditis elegans."</em></li>
+</ul>
+<hr />
+<h2 id="evidence-base-key-literature">Evidence Base: Key Literature</h2>
+<h3 id="primary-evidence">Primary Evidence</h3>
+<ol>
+<li><strong>Faust et al. 2012</strong> — <em>An inventory of peroxisomal proteins and pathways in Drosophila melanogaster</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>)</li>
+<li>Source of the ISM prediction for Acat1 peroxisomal localization</li>
+<li>Key quote: <em>"We have analyzed the proteome of Drosophila to identify the proteins involved in peroxisomal biogenesis and homeostasis as well as metabolic enzymes that function within the organelle. The subcellular localization of five of these predicted peroxisomal proteins was confirmed."</em></li>
+<li>
+<p><strong>Critical finding</strong>: Acat1 was NOT among the experimentally confirmed proteins (verified via QuickGO IDA query)</p>
+</li>
+<li>
+<p><strong>Tan et al. 2009</strong> — <em>Mapping organelle proteins and protein complexes in Drosophila melanogaster</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19317464/">PMID: 19317464</a>)</p>
+</li>
+<li>LOPIT mass spectrometry proteomics provided HDA evidence mapping Acat1 to mitochondria</li>
+<li>Key quote: <em>"Here, we apply LOPIT, a mass-spectrometry based technique that simultaneously maps proteins to specific subcellular compartments, to Drosophila embryos."</em></li>
+</ol>
+<h3 id="supporting-evidence">Supporting Evidence</h3>
+<ol>
+<li><strong>Vinci et al. 2008</strong> — <em>Preservation of genes involved in sterol metabolism in cholesterol auxotrophs</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/18682733/">PMID: 18682733</a>)</li>
+<li>
+<p>Establishes <em>Drosophila</em> as cholesterol auxotroph, eliminating the metabolic rationale for peroxisomal ACAT1</p>
+</li>
+<li>
+<p><strong>Ishibashi et al. 2015</strong> — <em>Dictyostelium acetoacetyl-CoA thiolase is a dual-localizing enzyme</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/25911059/">PMID: 25911059</a>)</p>
+</li>
+<li>
+<p>Demonstrates dual localization in <em>Dictyostelium</em> via PTS2/MTS overlap — a mechanism unavailable to <em>Drosophila</em></p>
+</li>
+<li>
+<p><strong>Olivier &amp; Krisans 2000</strong> — <em>Identification of peroxisomal targeting signals in cholesterol biosynthetic enzymes</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11108725/">PMID: 11108725</a>)</p>
+</li>
+<li>Shows mammalian ACAT1 has both MTS and PTS1 for dual targeting — context-specific to cholesterol-synthesizing organisms</li>
+</ol>
+<h3 id="pts1pts2-import-mechanism-references">PTS1/PTS2 Import Mechanism References</h3>
+<ol>
+<li><strong>Elgersma et al. 1996</strong> — <em>Identification of Pex13p, a peroxisomal membrane receptor for PTS1</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/8858167/">PMID: 8858167</a>)</li>
+<li><strong>Rehling et al. 1996</strong> — <em>The import receptor for PTS2 in S. cerevisiae</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/8670791/">PMID: 8670791</a>)</li>
+<li><strong>McCollum et al. 1993</strong> — <em>PAS8 protein binds to the C-terminal PTS1</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/8098333/">PMID: 8098333</a>)</li>
+<li><strong>Shimozawa et al. 1992</strong> — <em>Differential protein import deficiencies in human peroxisome assembly disorders</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7910611/">PMID: 7910611</a>)</li>
+<li><strong>Lametschwandtner et al. 2001</strong> — <em>PTS2 protein import into mammalian peroxisomes</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11285135/">PMID: 11285135</a>)</li>
+<li><strong>Soto et al. 2000</strong> — <em>Biogenesis of nsLTP and SCPx</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11042217/">PMID: 11042217</a>)</li>
+<li><strong>Hettema et al. 1995</strong> — <em>Function of N-terminal import signals in trypanosome microbodies</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7883054/">PMID: 7883054</a>)</li>
+<li><strong>Tao et al. 2022</strong> — <em>Identification of six thiolases in yeast</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/35138925/">PMID: 35138925</a>)</li>
+</ol>
+<hr />
+<h2 id="limitations-and-caveats">Limitations and Caveats</h2>
+<ol>
+<li>
+<p><strong>No direct microscopy for <em>Drosophila</em> Acat1</strong>: The strongest experimental evidence (LOPIT) is proteomics-based; fluorescence or immunogold EM localization would be more definitive but is not available.</p>
+</li>
+<li>
+<p><strong>AlphaFold is a prediction</strong>: The structural analysis of -EKL accessibility and N-terminal disorder is based on a computational model (AF-Q9W3N9-F1, v6), not an experimental crystal or cryo-EM structure.</p>
+</li>
+<li>
+<p><strong>Low-level dual localization cannot be excluded</strong>: It remains formally possible that a small fraction of Acat1 localizes to peroxisomes below the detection threshold of LOPIT. However, even if true, this would be functionally insignificant and would not justify a GO annotation without supporting experimental evidence.</p>
+</li>
+<li>
+<p><strong>ISM algorithm not fully characterized</strong>: Without access to the full prediction method used by Faust et al. 2012, we cannot determine exactly why Acat1 was flagged as potentially peroxisomal.</p>
+</li>
+<li>
+<p><strong>Negative evidence limitations</strong>: The absence of Acat1 from the IDA-confirmed set does not prove it is NOT peroxisomal — it proves only that Faust et al. did not experimentally confirm it. However, combined with the sequence, structural, evolutionary, and metabolic evidence, the weight of evidence strongly favors removal.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<h3 id="immediate-curation-actions">Immediate Curation Actions</h3>
+<ol>
+<li><strong>Remove GO:0005777</strong> (peroxisome) ISM annotation from Q9W3N9</li>
+<li><strong>Retain GO:0005739</strong> (mitochondrion) HDA annotation</li>
+<li><strong>Audit other ISM-only predictions</strong> from PMID:22758915 for similar over-annotation</li>
+</ol>
+<h3 id="experimental-priorities">Experimental Priorities</h3>
+<ol>
+<li><strong>GFP-Acat1 co-localization</strong> in S2 cells with mitochondrial and peroxisomal markers (would provide definitive IDA evidence)</li>
+<li><strong>PTS1 reporter assay</strong> with Acat1's C-terminal peptide (-EKL) vs. ScpX C-terminal (-SKL) to quantify any import capacity</li>
+<li><strong>Submitochondrial fractionation</strong> to support potential upgrade to GO:0005759 (mitochondrial matrix)</li>
+</ol>
+<h3 id="computational-follow-up">Computational Follow-up</h3>
+<ol>
+<li>Run Acat1 through PTS1 Predictor and DeepLoc for quantitative localization scores</li>
+<li>Systematic audit of all ISM-only GO:0005777 annotations from PMID:22758915 against IDA confirmations</li>
+<li>Verify ScpX (Q24506) peroxisome annotation status and evidence quality</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+<li><a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_evidence_summary.json">OpenScientist evidence summary</a><br />
+<img alt="OpenScientist evidence summary" src="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_evidence_summary.png" /></li>
+<li><a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_final_evidence_summary.json">OpenScientist final evidence summary</a><br />
+<img alt="OpenScientist final evidence summary" src="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_final_evidence_summary.png" /></li>
+<li><a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_iteration2_evidence.json">OpenScientist iteration2 evidence</a><br />
+<img alt="OpenScientist iteration2 evidence" src="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_iteration2_evidence.png" /></li>
+<li><a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_1.json">OpenScientist plot 1</a><br />
+<img alt="OpenScientist plot 1" src="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_1.png" /></li>
+<li><a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_2.json">OpenScientist plot 2</a><br />
+<img alt="OpenScientist plot 2" src="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_2.png" /></li>
+<li><a href="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_3.json">OpenScientist plot 3</a><br />
+<img alt="OpenScientist plot 3" src="Acat1-hypotheses/function-hypothesis-go-0005777/openscientist_artifacts/provenance_plot_3.png" /></li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Acat1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9W3N9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="acat1-drosophila-melanogaster-research-notes">Acat1 (Drosophila melanogaster) research notes</h1>
+<p>UniProt: Q9W3N9 (unreviewed / TrEMBL). Gene: Acat1 / CG10932 / FBgn0029969, X chromosome.<br />
+Protein: 410 aa, thiolase-like superfamily (Thiolase family). EC 2.3.1.9 asserted.<br />
+Ortholog of human ACAT1 (P24752), mitochondrial acetoacetyl-CoA thiolase ("T2").</p>
+<h2 id="identity-and-orthology">Identity and orthology</h2>
+<ul>
+<li>UniProt SubName: "Acetyl-CoA acetyltransferase 1, isoform A/B"; EC=2.3.1.9 (and generic 2.3.1.-, 2.3.-.-)<br />
+  asserted from EMBL translation. [file:Acat1-uniprot.txt lines 6-10]</li>
+<li>SIMILARITY: "Belongs to the thiolase-like superfamily. Thiolase family." (ARBA/RuleBase).<br />
+  [file:Acat1-uniprot.txt line 185-186]</li>
+<li>Two thiolase Pfam domains: Thiolase N-terminal (PF00108, 25..281) and Thiolase C-terminal<br />
+  (PF02803, 290..409). CDD cd00751 thiolase; TIGR01930 AcCoA-C-Actrans. FunFam matches<br />
+  "acetyl-CoA acetyltransferase, mitochondrial". PANTHER PTHR18919:SF156 "ACETYL-COA<br />
+  ACETYLTRANSFERASE, MITOCHONDRIAL". [file:Acat1-uniprot.txt lines 224-241]</li>
+<li>Active-site residues annotated (PIRSR): Cys109 (acyl-thioester intermediate), His368 and Cys396<br />
+  (proton acceptors) — the canonical thiolase Cys-His-Cys catalytic triad. [file:Acat1-uniprot.txt<br />
+  lines 256-264]</li>
+<li>DIOPT: Silva et al. 2022 call CG10932 "the orthologue of the human mitochondrial acetoacetyl-CoA<br />
+  thiolase ACAT1, CG10932 (DIOPT score level of homology and conservation: 15 of 15)".<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/35177854" title="the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932   (DIOPT score level of homology and conservation: 15 of 15">PMID:35177854</a></li>
+<li>Reactome (fly): R-DME-70895 Branched-chain amino acid catabolism; R-DME-77108 Utilization of Ketone<br />
+  Bodies; R-DME-77111 Synthesis of Ketone Bodies. [file:Acat1-uniprot.txt lines 209-211]</li>
+</ul>
+<h2 id="key-experimental-fly-paper-silva-et-al-2022-nat-metab-pmid35177854-full-text-available">Key experimental fly paper: Silva et al. 2022, Nat Metab (PMID:35177854, full text available)</h2>
+<p>This is the only substantive functional study in Drosophila. It uses fly Acat1 (CG10932) directly:</p>
+<ul>
+<li>Acat1 is "a key enzyme of KB oxidation", the fly ACAT1 ortholog; RNAi knockdown in adult mushroom<br />
+  body (MB) neurons was used. <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" title="we targeted a key enzyme of KB oxidation17,18, the   orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932">PMID:35177854</a></li>
+<li>Function in vivo: "In neurons, during starvation, KBs are used by ACAT1 to generate acetyl-CoA in<br />
+  the mitochondria for energy". <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" title="In neurons, during starvation, KBs are used by ACAT1   to generate acetyl-CoA in the mitochondria for energy">PMID:35177854</a> =&gt; this is ketone-body CATABOLISM / ketolysis<br />
+  (acetoacetyl-CoA -&gt; 2 acetyl-CoA), i.e. the OXIDATION direction, consistent with human T2 ketolysis.</li>
+<li>Phenotype: "Downregulation of ACAT1 expression in the adult MB induced a strong memory impairment in<br />
+  starved flies". <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" title="Downregulation of ACAT1 expression in the adult MB induced a strong   memory impairment in starved flies">PMID:35177854</a> Confirmed with a second non-overlapping RNAi.</li>
+<li>Expression: "the expression levels of ACAT1 and Sln, the genes required for K-AM in neurons, did not<br />
+  change in the heads of starved wild-type flies". <a href="https://pubmed.ncbi.nlm.nih.gov/35177854" title="the expression levels of ACAT1 and   Sln, the genes required for K-AM in neurons, did not change in the heads of starved wild-type flies">PMID:35177854</a></li>
+</ul>
+<p>IMPORTANT curation note: In this paper, ketone-body <em>synthesis</em> (ketogenesis) in cortex glia is<br />
+attributed to "the successive actions of a thiolase, the HMGS and the HMG-CoA lyase" — the thiolase<br />
+step of ketogenesis is described generically, and the gene tested/assayed as ACAT1/CG10932 is the<br />
+NEURONAL KB-OXIDATION (catabolism) enzyme, not a demonstrated ketogenic enzyme. So the GOA NAS<br />
+annotations (PMID:35177854) to "ketone body biosynthetic process" (GO:0046951) and "ketone<br />
+biosynthetic process" (GO:0042181) are, if anything, the LESS well-supported reading of this paper for<br />
+Acat1; the paper's direct evidence for CG10932 is ketone-body OXIDATION/catabolism. (Thiolase chemistry<br />
+is reversible, so the enzyme can in principle act in both ketogenesis and ketolysis, as in mammals; but<br />
+the fly experimental evidence here is for the catabolic/oxidation role.)</p>
+<h2 id="goa-annotations-to-review-acat1-goatsv">GOA annotations to review (Acat1-goa.tsv)</h2>
+<p>MF:<br />
+- GO:0003985 acetyl-CoA C-acetyltransferase activity — IBA (GO_REF:0000033); IEA (EC:2.3.1.9,<br />
+  GO_REF:0000003); ISS from human P24752 (GO_REF:0000024). CORE. Multiple concordant lines.<br />
+- GO:0016453 C-acetyltransferase activity — ISS (parent of GO:0003985). Non-core (less specific).<br />
+- GO:0016746 acyltransferase activity — IEA InterPro (broad parent). Non-core.<br />
+- GO:0016747 acyltransferase activity, transferring groups other than amino-acyl groups — IEA InterPro.<br />
+  Non-core.<br />
+(metal ion binding GO:0046872 IEA-UniProtKB-KW appears in the UniProt DR block but NOT in goa.tsv, so<br />
+it is not in existing_annotations to review. T2 is K+-activated; a "potassium ion binding" would be more<br />
+apt than generic metal binding, but neither is in the GOA set here.)</p>
+<p>CC:<br />
+- GO:0005739 mitochondrion — IBA (is_active_in), HDA (PMID:19317464 LOPIT organelle proteomics), ISM<br />
+  (PMID:22758915 peroxisome-inventory prediction). CORE localization. Human T2 is mitochondrial matrix;<br />
+  fly ortholog expected same. LOPIT (PMID:19317464) is direct MS-based organelle mapping in embryos.<br />
+- GO:0005777 peroxisome — ISM (PMID:22758915). This is a computational targeting-signal prediction from<br />
+  a Drosophila peroxisomal-proteome inventory. The human ortholog is exclusively mitochondrial matrix;<br />
+  no experimental support for peroxisomal Acat1 in fly. Some thiolases (ACAA1) are peroxisomal, but the<br />
+  ACAT1/T2 subfamily is mitochondrial. Treat as low-confidence prediction -&gt; KEEP_AS_NON_CORE or<br />
+  MARK_AS_OVER_ANNOTATED. The paper is abstract-only; it says "The subcellular localization of five of<br />
+  these predicted peroxisomal proteins was confirmed" — not stated whether Acat1 was among the confirmed<br />
+  five, so verification is not possible from cache -&gt; lean UNDECIDED/over-annotated. Choosing<br />
+  MARK_AS_OVER_ANNOTATED given strong contrary evidence for mitochondrial matrix localization of the T2<br />
+  subfamily.</p>
+<p>BP:<br />
+- GO:0042182 ketone catabolic process — ISS from P24752. Correct direction (ketolysis). Non-core parent<br />
+  of ketone body catabolic process.<br />
+- GO:0046952 ketone body catabolic process — ISS from P24752. CORE (ketolysis; matches Silva 2022 neuronal<br />
+  KB oxidation).<br />
+- GO:0006550 L-isoleucine catabolic process — ISS from P24752. CORE (T2 uniquely cleaves 2-methyl-branched<br />
+  2-methylacetoacetyl-CoA, final step of Ile catabolism).<br />
+- GO:0006085 acetyl-CoA biosynthetic process — ISS from P24752. Reaction-level product (thiolysis yields<br />
+  acetyl-CoA); non-core. Matches Silva 2022 "to generate acetyl-CoA".<br />
+- GO:0046951 ketone body biosynthetic process — NAS (PMID:35177854). Ketogenesis direction. Weakly<br />
+  supported for Acat1 specifically by this paper (see note above); thiolase can act in ketogenesis in<br />
+  mammals. KEEP_AS_NON_CORE (plausible but not the direct evidence).<br />
+- GO:0042181 ketone biosynthetic process — NAS (PMID:35177854). Broad parent of GO:0046951. Same as above,<br />
+  KEEP_AS_NON_CORE.</p>
+<h2 id="synthesis">Synthesis</h2>
+<p>Acat1 (CG10932) is the single Drosophila ortholog of human mitochondrial acetoacetyl-CoA thiolase (T2,<br />
+ACAT1, EC 2.3.1.9). It is a thiolase-family enzyme with the canonical Cys-His-Cys catalytic triad,<br />
+predicted mitochondrial, that catalyzes the reversible acetoacetyl-CoA &lt;-&gt; 2 acetyl-CoA thiolysis/<br />
+condensation at the heart of ketone-body metabolism and the final thiolytic step of L-isoleucine<br />
+catabolism. Direct fly evidence (Silva et al. 2022) shows it is required in mushroom body neurons for<br />
+ketone-body oxidation to generate acetyl-CoA for energy, sustaining memory under starvation.</p>
+<p>It is NOT the cholesterol-esterifying sterol O-acyltransferase (SOAT1/SOAT2, EC 2.3.1.26, "ACAT" in the<br />
+cholesterol-metabolism literature). No cholesterol/sterol O-acyltransferase or ER-localization<br />
+annotations are present in the fly GOA set (unlike the human record, where a SOAT1 name-collision<br />
+mis-annotation had to be removed) — so no SOAT/cholesterol flag is needed here, but I note the distinction<br />
+in the description per the ortholog convention.</p>
+<p>Core functions:<br />
+1. MF GO:0003985 acetyl-CoA C-acetyltransferase activity; directly_involved_in GO:0046952 ketone body<br />
+   catabolic process; location GO:0005739 mitochondrion.<br />
+2. MF GO:0003985; directly_involved_in GO:0006550 L-isoleucine catabolic process; location GO:0005739.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9W3N9
+gene_symbol: Acat1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: &gt;-
+  Acat1 (CG10932) is the single Drosophila melanogaster ortholog of human mitochondrial
+  acetoacetyl-CoA thiolase (ACAT1 / &#34;T2&#34;; EC 2.3.1.9), a member of the thiolase family with
+  the canonical Cys-His-Cys catalytic triad. It is a mitochondrial, CoA-dependent thiolase
+  that catalyzes the reversible Claisen condensation/thiolysis at the acetoacetyl-CoA node
+  (2 acetyl-CoA &lt;-&gt; acetoacetyl-CoA + CoA), placing it centrally in ketone body metabolism
+  (both ketolysis and ketogenesis). By analogy to human T2 it also cleaves the 2-methyl-branched
+  intermediate 2-methylacetoacetyl-CoA, the final thiolytic step of L-isoleucine catabolism.
+  In vivo, Acat1 is required in adult mushroom body neurons for the mitochondrial oxidation of
+  imported ketone bodies to acetyl-CoA, supplying energy that sustains associative memory during
+  starvation. Despite the shared historical nickname &#34;ACAT1&#34;, this mitochondrial thiolase is
+  distinct from the endoplasmic-reticulum cholesterol-esterifying sterol O-acyltransferase
+  (SOAT1/SOAT2, EC 2.3.1.26, also called &#34;ACAT&#34;); Acat1 has no cholesterol O-acyltransferase
+  activity.
+existing_annotations:
+# ============================================================================
+# MOLECULAR FUNCTION - THIOLASE / ACETYL-CoA C-ACETYLTRANSFERASE (CORE)
+# ============================================================================
+- term:
+    id: GO:0003985
+    label: acetyl-CoA C-acetyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of the acetyl-CoA C-acetyltransferase (acetoacetyl-CoA
+      thiolase, EC 2.3.1.9) activity across the ACAT1/T2 orthology group. This is the core
+      catalytic function of Acat1, concordant with the thiolase-family domain architecture and
+      the DIOPT 15/15 orthology to human ACAT1.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function, supported by IBA, EC-based IEA, ISS from human T2, and the
+      canonical thiolase catalytic triad (Cys109/His368/Cys396) in the UniProt record.
+    supported_by:
+    - reference_id: PMID:35177854
+      supporting_text: &gt;-
+        the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932
+- term:
+    id: GO:0003985
+    label: acetyl-CoA C-acetyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the core acetyl-CoA C-acetyltransferase activity via EC 2.3.1.9
+      mapping. Redundant with the IBA and ISS annotations but correct.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly captures the core catalytic function; EC 2.3.1.9 is asserted in the UniProt record.
+- term:
+    id: GO:0003985
+    label: acetyl-CoA C-acetyltransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Curator ISS transfer of the acetyl-CoA C-acetyltransferase activity from the experimentally
+      characterized human ortholog ACAT1 (UniProtKB:P24752). Concordant with the IBA/IEA
+      annotations and the shared thiolase catalytic machinery.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function; ortholog transfer from human T2 is appropriate given the 15/15 DIOPT
+      orthology and conserved catalytic residues.
+    supported_by:
+    - reference_id: PMID:35177854
+      supporting_text: &gt;-
+        the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932
+- term:
+    id: GO:0016453
+    label: C-acetyltransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ISS annotation to the more general parent term C-acetyltransferase activity. Correct but less
+      informative than the specific child GO:0003985.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct parent term; the specific acetyl-CoA C-acetyltransferase activity (GO:0003985) is the
+      preferred core molecular-function annotation.
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based assignment of the broad acyltransferase-activity parent term from the thiolase
+      domain signatures.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Technically correct but uninformative; superseded by the specific thiolase term GO:0003985.
+- term:
+    id: GO:0016747
+    label: acyltransferase activity, transferring groups other than amino-acyl groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based assignment of an intermediate acyltransferase parent term from the thiolase
+      InterPro signatures.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct parent term; the specific acetyl-CoA C-acetyltransferase activity better captures the
+      molecular function.
+# ============================================================================
+# CELLULAR COMPONENT - MITOCHONDRION (CORE) / PEROXISOME (PREDICTION)
+# ============================================================================
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic localization of Acat1 to the mitochondrion across the ACAT1/T2 orthology group.
+      Concordant with the direct organelle-proteomics evidence and with the mitochondrial-matrix
+      localization of human T2.
+    action: ACCEPT
+    reason: &gt;-
+      Core cellular localization; the mitochondrion is the compartment where this thiolase acts, and
+      the fly experimental study describes Acat1 generating acetyl-CoA &#34;in the mitochondria&#34;.
+    supported_by:
+    - reference_id: PMID:35177854
+      supporting_text: &gt;-
+        KBs are used by ACAT1 to generate acetyl-CoA in the mitochondria for energy
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:19317464
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput organelle-proteomics (LOPIT) mapping of Drosophila embryo proteins assigns
+      Acat1 to the mitochondrion. Direct mass-spectrometry-based localization consistent with the
+      IBA annotation and the mitochondrial identity of the ACAT1/T2 subfamily.
+    action: ACCEPT
+    reason: &gt;-
+      Core mitochondrial localization supported by an experimental (HDA) organelle-mapping dataset.
+    supported_by:
+    - reference_id: PMID:19317464
+      supporting_text: &gt;-
+        we apply LOPIT, a mass-spectrometry based technique that simultaneously maps proteins to
+        specific subcellular compartments, to Drosophila embryos
+      full_text_unavailable: true
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: ISM
+  original_reference_id: PMID:22758915
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Sequence-model (ISM) mitochondrial prediction. Redundant with the direct HDA and phylogenetic
+      mitochondrial annotations and consistent with them; the mitochondrion is the core localization
+      of this thiolase.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core compartment, agreeing with the HDA (LOPIT) and IBA mitochondrial annotations for the
+      same term.
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: ISM
+  original_reference_id: PMID:22758915
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Sequence-model (ISM) peroxisomal prediction from a Drosophila peroxisomal-proteome inventory.
+      This conflicts with the mitochondrial identity of the ACAT1/T2 subfamily (human T2 is a
+      mitochondrial-matrix protein) and with the direct LOPIT and phylogenetic mitochondrial
+      annotations for Acat1. The cited paper is abstract-only and states only that &#34;five of these
+      predicted peroxisomal proteins&#34; had their localization confirmed, without indicating whether
+      Acat1 was among them, so the prediction cannot be verified and is contradicted by stronger
+      mitochondrial evidence.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Computational targeting-signal prediction with no verification for Acat1 and contradicted by the
+      mitochondrial localization of the ACAT1/T2 thiolase subfamily; peroxisomal thiolase activity in
+      flies belongs to distinct ACAA1-type thiolases, not the ACAT1/T2 ortholog.
+    supported_by:
+    - reference_id: PMID:22758915
+      supporting_text: &gt;-
+        The subcellular localization of five of these predicted peroxisomal proteins was confirmed.
+      full_text_unavailable: true
+# ============================================================================
+# BIOLOGICAL PROCESS - KETONE BODY CATABOLISM / KETOLYSIS (CORE)
+# ============================================================================
+- term:
+    id: GO:0046952
+    label: ketone body catabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS transfer from human ACAT1 (P24752) placing Acat1 in ketone body catabolism (ketolysis:
+      acetoacetyl-CoA + CoA -&gt; 2 acetyl-CoA). Directly corroborated in Drosophila by the demonstration
+      that Acat1 is required in mushroom body neurons for mitochondrial oxidation of imported ketone
+      bodies to acetyl-CoA.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process. The single experimental fly study identifies Acat1 as a key enzyme of
+      ketone-body oxidation, matching this catabolic term.
+    supported_by:
+    - reference_id: PMID:35177854
+      supporting_text: &gt;-
+        KBs are used by ACAT1 to generate acetyl-CoA in the mitochondria for energy
+    - reference_id: PMID:35177854
+      supporting_text: &gt;-
+        we targeted a key enzyme of KB oxidation
+- term:
+    id: GO:0042182
+    label: ketone catabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS annotation to the broader parent &#34;ketone catabolic process&#34;. Correct in direction (ketolysis)
+      but less specific than ketone body catabolic process (GO:0046952).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but superseded by the more specific ketone body catabolic process for the core role.
+# ============================================================================
+# BIOLOGICAL PROCESS - L-ISOLEUCINE CATABOLISM (CORE)
+# ============================================================================
+- term:
+    id: GO:0006550
+    label: L-isoleucine catabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS transfer from human ACAT1 (P24752). Human T2 uniquely cleaves the 2-methyl-branched
+      intermediate 2-methylacetoacetyl-CoA, the final thiolytic step of L-isoleucine catabolism; the
+      conserved fly ortholog is expected to perform the same step. Reactome (fly) places Acat1 in
+      &#34;Branched-chain amino acid catabolism&#34; (R-DME-70895), consistent with this assignment.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process inferred from the well-characterized substrate specificity of the human
+      ortholog and supported by fly pathway curation, though no direct fly isoleucine-flux assay exists.
+    supported_by:
+    - reference_id: PMID:35177854
+      supporting_text: &gt;-
+        the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932
+# ============================================================================
+# BIOLOGICAL PROCESS - ACETYL-CoA BIOSYNTHESIS (REACTION-LEVEL, NON-CORE)
+# ============================================================================
+- term:
+    id: GO:0006085
+    label: acetyl-CoA biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS annotation reflecting that thiolytic cleavage of acetoacetyl-CoA yields acetyl-CoA. This is a
+      reaction-level restatement of the thiolase chemistry (and matches the fly observation that Acat1
+      generates acetyl-CoA in neurons) rather than a distinct physiological process.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Chemically defensible product of the reaction, but the physiological process core is ketone body
+      catabolism / isoleucine catabolism rather than generic acetyl-CoA biosynthesis.
+    supported_by:
+    - reference_id: PMID:35177854
+      supporting_text: &gt;-
+        KBs are used by ACAT1 to generate acetyl-CoA in the mitochondria for energy
+# ============================================================================
+# BIOLOGICAL PROCESS - KETONE BODY BIOSYNTHESIS (KETOGENESIS DIRECTION, NON-CORE)
+# ============================================================================
+- term:
+    id: GO:0046951
+    label: ketone body biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:35177854
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAS annotation to ketogenesis. The reversible thiolase can in principle contribute the
+      acetoacetyl-CoA-forming (condensation) step of ketone-body synthesis, and Silva et al. describe
+      ketogenesis via &#34;the successive actions of a thiolase, the HMGS and the HMG-CoA lyase&#34;. However,
+      the direct experimental evidence in that paper for Acat1/CG10932 is its neuronal ketone-body
+      OXIDATION (catabolic) role; the ketogenic (biosynthetic) direction is inferred rather than
+      demonstrated for this gene.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Biologically plausible via the reversible thiolase chemistry, but not the direction directly
+      demonstrated for Acat1 in the fly; the well-supported core is ketone body catabolism.
+    supported_by:
+    - reference_id: PMID:35177854
+      supporting_text: &gt;-
+        acetyl-CoA that will be used to generate acetoacetate by the successive actions of a thiolase,
+        the HMGS and the HMG-CoA lyase
+- term:
+    id: GO:0042181
+    label: ketone biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:35177854
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAS annotation to the broader parent &#34;ketone biosynthetic process&#34; (ketogenesis direction). Same
+      considerations as GO:0046951: plausible for a reversible thiolase but not the direction directly
+      demonstrated for Acat1 in the fly study.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Broad parent of ketone body biosynthetic process; inferred ketogenic direction, non-core relative
+      to the demonstrated catabolic role.
+    supported_by:
+    - reference_id: PMID:35177854
+      supporting_text: &gt;-
+        acetyl-CoA that will be used to generate acetoacetate by the successive actions of a thiolase,
+        the HMGS and the HMG-CoA lyase
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:19317464
+  title: Mapping organelle proteins and protein complexes in Drosophila melanogaster.
+  findings:
+  - statement: &gt;-
+      LOPIT mass-spectrometry organelle mapping of Drosophila embryos assigns Acat1 to the
+      mitochondrion, providing direct (HDA) subcellular-localization support.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache (full_text_available: false); the LOPIT method and mitochondrial
+      assignment underpin the HDA mitochondrion annotation. Method is verifiable from the abstract.
+- id: PMID:22758915
+  title: An inventory of peroxisomal proteins and pathways in Drosophila melanogaster.
+  findings:
+  - statement: &gt;-
+      Computational peroxisomal-proteome inventory (targeting-signal prediction) that is the source of
+      both the ISM mitochondrion and ISM peroxisome predictions for Acat1. Only five predicted
+      peroxisomal proteins were experimentally confirmed, and the abstract does not indicate whether
+      Acat1 was among them.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache. Citation is correct, but the peroxisomal prediction it supports is
+      contradicted by the mitochondrial identity of the ACAT1/T2 subfamily and the direct LOPIT
+      mitochondrial assignment; the peroxisome annotation is marked over-annotated.
+- id: PMID:35177854
+  title: Glia fuel neurons with locally synthesized ketone bodies to sustain memory
+    under starvation.
+  findings:
+  - statement: &gt;-
+      Identifies CG10932 as the Drosophila ortholog of human mitochondrial acetoacetyl-CoA thiolase
+      ACAT1 (DIOPT 15/15) and shows by RNAi that Acat1 is required in adult mushroom body neurons for
+      ketone-body oxidation, generating acetyl-CoA in mitochondria to sustain memory under starvation.
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      Describes ketogenesis in cortex glia as proceeding via a thiolase, HMGS and HMG-CoA lyase; the
+      thiolase step of ketogenesis is stated generically rather than assigned to CG10932, whereas the
+      gene experimentally assayed as ACAT1 is the neuronal ketone-body-oxidation enzyme.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available and read; directly establishes the fly Acat1 ortholog identity and its
+      neuronal ketone-body catabolic (oxidation) role. Supports the ketone-body-catabolism core; the
+      GOA NAS annotations to ketone-body BIOSYNTHESIS from this paper are the weaker reading for Acat1
+      and are kept as non-core.
+core_functions:
+- description: &gt;-
+    Mitochondrial acetoacetyl-CoA thiolase (EC 2.3.1.9) catalyzing the reversible thiolytic
+    cleavage/condensation at the acetoacetyl-CoA node (acetoacetyl-CoA + CoA &lt;-&gt; 2 acetyl-CoA). In
+    Drosophila neurons this activity oxidizes imported ketone bodies to acetyl-CoA for mitochondrial
+    energy production, the ketolytic role of ketone body catabolism.
+  supported_by:
+  - reference_id: PMID:35177854
+    supporting_text: &gt;-
+      KBs are used by ACAT1 to generate acetyl-CoA in the mitochondria for energy
+  - reference_id: PMID:35177854
+    supporting_text: &gt;-
+      the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932
+  molecular_function:
+    id: GO:0003985
+    label: acetyl-CoA C-acetyltransferase activity
+  directly_involved_in:
+  - id: GO:0046952
+    label: ketone body catabolic process
+  locations:
+  - id: GO:0005739
+    label: mitochondrion
+- description: &gt;-
+    Acetoacetyl-CoA thiolase acting in the final thiolytic step of L-isoleucine catabolism, cleaving
+    the 2-methyl-branched intermediate 2-methylacetoacetyl-CoA into propionyl-CoA and acetyl-CoA
+    (inferred from the well-characterized substrate specificity of the conserved human ACAT1/T2
+    ortholog and fly branched-chain-amino-acid-catabolism pathway curation).
+  supported_by:
+  - reference_id: PMID:35177854
+    supporting_text: &gt;-
+      the orthologue of the human mitochondrial acetoacetyl-CoA thiolase ACAT1, CG10932
+  molecular_function:
+    id: GO:0003985
+    label: acetyl-CoA C-acetyltransferase activity
+  directly_involved_in:
+  - id: GO:0006550
+    label: L-isoleucine catabolic process
+  locations:
+  - id: GO:0005739
+    label: mitochondrion
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    In Drosophila, does Acat1 act physiologically in the ketogenic (acetoacetyl-CoA condensation)
+    direction as well as the demonstrated ketolytic (oxidation) direction, i.e. is the thiolase step of
+    glial ketogenesis in Silva et al. 2022 actually catalyzed by CG10932 or by a different thiolase?
+- question: &gt;-
+    Is the peroxisomal localization prediction for Acat1 (ISM, PMID:22758915) ever experimentally
+    realized, or is Acat1 exclusively mitochondrial as expected for the ACAT1/T2 subfamily?
+suggested_experiments:
+- description: &gt;-
+    Assay recombinant Drosophila Acat1 for acetoacetyl-CoA thiolase (EC 2.3.1.9) activity in both
+    directions and test cleavage of 2-methylacetoacetyl-CoA, alongside a negative control for cholesterol
+    O-acyltransferase (EC 2.3.1.26) activity.
+  hypothesis: &gt;-
+    Acat1 has bidirectional acetoacetyl-CoA thiolase activity and can cleave the 2-methyl-branched
+    isoleucine intermediate, but has no cholesterol-esterifying (SOAT) activity.
+- description: &gt;-
+    Determine the endogenous subcellular localization of tagged Acat1 in Drosophila tissues by
+    fluorescence microscopy and organelle fractionation, comparing mitochondrial versus peroxisomal
+    markers.
+  hypothesis: &gt;-
+    Acat1 localizes to the mitochondrial matrix, and the peroxisomal prediction (PMID:22758915) is a
+    targeting-signal artifact not realized in vivo.
+- description: &gt;-
+    Metabolically profile ketone-body and isoleucine-pathway intermediates (acetoacetyl-CoA turnover,
+    2-methylacetoacetyl-CoA, tiglylglycine-equivalents) in Acat1-knockdown versus control flies under
+    fed and starved conditions.
+  hypothesis: &gt;-
+    Acat1 loss impairs both neuronal ketolysis and the final thiolytic step of isoleucine catabolism,
+    producing accumulation of 2-methyl-branched intermediates analogous to human beta-ketothiolase
+    deficiency.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
