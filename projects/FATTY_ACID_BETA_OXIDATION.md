@@ -90,11 +90,15 @@ comparison):
 | Gene | Peroxisome evidence tested | OpenScientist verdict | vs. our review |
 |------|---------------------------|-----------------------|----------------|
 | `DROME/Acat1` | ISM (PMID:22758915) | **Refuted / over-annotated → remove.** Acat1 is *not* among the six proteins Faust et al. 2012 experimentally confirmed peroxisomal; its C-terminal **-EKL** is a non-canonical, structurally-embedded catalytic motif (not a PTS1); *Drosophila* is PTS1-only and a cholesterol auxotroph; LOPIT maps it to mitochondria. | Agrees; strengthens `MARK_AS_OVER_ANNOTATED` → REMOVE |
-| `DROME/Mtpalpha` | IDA (PMID:22758915) | *run in progress* — note Mtpalpha **is** in Faust et al.'s experimentally-confirmed peroxisomal list, so a genuine dual localization is plausible | expected to confirm `KEEP_AS_NON_CORE` (real minor peroxisomal pool) |
+| `DROME/Mtpalpha` | IDA (PMID:22758915) | **Supported / retain.** Mtpalpha carries a **Drosophila-lineage-conserved C-terminal SKL PTS1** (absent from vertebrate HADHA, which ends FYQ), and targeting is **isoform-dependent**: the shorter Q8IPE8 isoform lacks the N-terminal mitochondrial presequence carried by the longer CG4389 isoform (Q9V397), so a genuine dual mitochondrial/peroxisomal localization is well-grounded. | Confirms `KEEP_AS_NON_CORE` (real, mechanistically-supported minor peroxisomal pool) |
 
 The dissociation is the point: two proteins annotated peroxisomal by the **same**
-inventory paper resolve oppositely — Acat1's call is computational-only, Mtpalpha's
-is experimentally confirmed.
+inventory paper (Faust et al. 2012) resolve oppositely under independent analysis —
+Acat1's call is refuted (computational-only, non-canonical -EKL motif, contradicted
+by LOPIT/subfamily mitochondrial evidence), while Mtpalpha's is supported (a
+Drosophila-conserved SKL PTS1 and isoform-resolved dual targeting). Both verdicts
+were produced by OpenScientist blinded to our review actions and agree with the
+conclusions we reached independently.
 
 ## Validating datasets
 
@@ -162,9 +166,9 @@ represented directly. Flagged here as a candidate improvement.
 - [x] 10 Drosophila ortholog reviews
 - [x] Cross-species module + reaction-chaining check (QC 20/20)
 - [x] OpenScientist organelle hypothesis: `DROME/Acat1` peroxisome (refuted)
+- [x] OpenScientist organelle hypothesis: `DROME/Mtpalpha` peroxisome (supported — conserved SKL PTS1, isoform-dependent dual targeting)
 
 ## In progress / open
-- [ ] OpenScientist organelle hypothesis: `DROME/Mtpalpha` peroxisome (running)
 - [ ] Fly medium/short-chain 3-hydroxyacyl-CoA dehydrogenase ortholog (HADH) — unresolved ("?")
 - [ ] FlyBase curation-gap candidates from PMID:40519079 (above)
 - [ ] Negation-representation gap (NOT+NEW vs existing positive term)
