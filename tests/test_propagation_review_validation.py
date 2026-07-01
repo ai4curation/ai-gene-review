@@ -6,10 +6,10 @@ import tempfile
 import yaml
 
 from ai_gene_review.datamodel.gene_review_model import Review
-from ai_gene_review.validation import validate_gene_review
+from ai_gene_review.validation import ValidationReport, validate_gene_review
 
 
-def _validate(yaml_data: dict) -> object:
+def _validate(yaml_data: dict) -> ValidationReport:
     """Validate a minimal gene review YAML from a temporary file."""
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / "TEST-ai-review.yaml"
@@ -51,7 +51,7 @@ def _base_yaml(annotation: dict) -> dict:
     }
 
 
-def _has_missing_propagation_review_warning(report: object) -> bool:
+def _has_missing_propagation_review_warning(report: ValidationReport) -> bool:
     """Return whether the propagation-review best-practice warning fired."""
     return any(
         issue.check_type == "missing_propagation_review"
