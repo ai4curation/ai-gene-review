@@ -172,6 +172,32 @@ class VariantSelectionEnum(str, Enum):
     """
 
 
+class ChainingStatusEnum(str, Enum):
+    """
+    Curator adjudication of reaction continuity across a module connection (whether the upstream reaction's product is consumed as the downstream reaction's substrate). Used as an explicit override for the advisory, non-blocking automated chaining check.
+    """
+    VERIFIED = "VERIFIED"
+    """
+    The upstream product is confirmed to be the downstream substrate (curator-confirmed continuity).
+    """
+    KNOWLEDGE_GAP = "KNOWLEDGE_GAP"
+    """
+    The connecting intermediate or enzyme is genuinely not known; the break reflects missing biological knowledge, not a modelling error.
+    """
+    MAPPING_GAP = "MAPPING_GAP"
+    """
+    The chemistry is known but the GO/RHEA (or GO/ChEBI) mapping does not yet capture the link, so the automated check cannot see the continuity.
+    """
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+    """
+    Chaining does not apply to this connection (e.g. a regulatory or non-metabolic edge, or a spiral re-entry handled elsewhere).
+    """
+    UNVERIFIED = "UNVERIFIED"
+    """
+    Continuity has not been assessed (explicitly, as opposed to simply leaving the field unset).
+    """
+
+
 class ConformanceStatusEnum(str, Enum):
     """
     How closely a module node matches a template motif it conforms to.
@@ -3737,6 +3763,8 @@ class ModuleConnection(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
+    chaining_status: Optional[ChainingStatusEnum] = Field(default=None, description="""Curator adjudication of reaction continuity across this connection: whether the upstream reaction's product is the downstream reaction's substrate. This is an explicit override for the (advisory, non-blocking) automated chaining check, so a known gap can be acknowledged rather than re-reported each run. Leave unset to let the automated check report its finding.""", json_schema_extra = { "linkml_meta": {'alias': 'chaining_status', 'domain_of': ['ModuleConnection']} })
+    chaining_note: Optional[str] = Field(default=None, description="""Free-text explanation for the chaining_status, e.g. why a break is a genuine knowledge gap, or which GO/RHEA mapping is missing.""", json_schema_extra = { "linkml_meta": {'alias': 'chaining_note', 'domain_of': ['ModuleConnection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'notes',
          'domain_of': ['EvidenceItem',
                        'Descriptor',

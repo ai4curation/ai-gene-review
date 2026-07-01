@@ -323,7 +323,112 @@ def test_collect_module_qc_smoke():
         "data_qc",
         "leaf_nodes_missing_representatives",
         "conformance_violations",
+        "reaction_chaining",
         "gene_reviews",
         "module_deep_research",
     }
     assert qc["module_deep_research"]["has_deep_research"] is False
+
+
+# ---------------------------------------------------------------------------
+# Reaction chaining check (advisory; GO MF -> RHEA -> equation)
+# ---------------------------------------------------------------------------
+
+from ai_gene_review.module_qc import reaction_chaining_findings  # noqa: E402
+
+
+def _chain_module(connection_extra: dict | None = None) -> dict:
+    """A 3-step linear pathway: s1 -> s2 -> s3, each a one-annoton reaction."""
+    conn12 = {"source": "s1", "target": "s2", "connection_type": "PRECEDES"}
+    if connection_extra:
+        conn12.update(connection_extra)
+    return {
+        "module": {
+            "parts": [
+                {"order": 1, "node": {"id": "s1", "annotons": [
+                    {"function": {"term": {"id": "GO:1"}}}]}},
+                {"order": 2, "node": {"id": "s2", "annotons": [
+                    {"function": {"term": {"id": "GO:2"}}}]}},
+                {"order": 3, "node": {"id": "s3", "annotons": [
+                    {"function": {"term": {"id": "GO:3"}}}]}},
+            ],
+            "connections": [
+                conn12,
+                {"source": "s2", "target": "s3", "connection_type": "PRECEDES"},
+            ],
+        }
+    }
+
+
+# GO:1 makes (2E)-enoyl-CoA; GO:2 consumes it -> (3S)-3-hydroxyacyl-CoA;
+# GO:3 deliberately does NOT consume that intermediate (a real break s2->s3).
+_EQS = {
+    "R:1": "an acyl-CoA = a (2E)-enoyl-CoA",
+    "R:2": "a (2E)-enoyl-CoA + H2O = a (3S)-3-hydroxyacyl-CoA",
+    "R:3": "acetoacetyl-CoA + CoA = 2 acetyl-CoA",
+}
+_MF = {"GO:1": ["R:1"], "GO:2": ["R:2"], "GO:3": ["R:3"]}
+
+
+def _resolvers():
+    return (lambda g: _MF.get(g, []), lambda r: _EQS.get(r))
+
+
+def test_chaining_detects_shared_intermediate():
+    mf, eq = _resolvers()
+    findings = reaction_chaining_findings(_chain_module(), mf, eq)
+    by_edge = {(f["source"], f["target"]): f for f in findings}
+    ok = by_edge[("s1", "s2")]
+    assert ok["severity"] == "info"
+    assert "2eenoylcoa" in ok["shared"]
+
+
+def test_chaining_warns_on_unacknowledged_break():
+    mf, eq = _resolvers()
+    findings = reaction_chaining_findings(_chain_module(), mf, eq)
+    by_edge = {(f["source"], f["target"]): f for f in findings}
+    broken = by_edge[("s2", "s3")]
+    assert broken["severity"] == "warning"
+    assert broken["status"] == "UNVERIFIED"
+
+
+@pytest.mark.parametrize("status", ["KNOWLEDGE_GAP", "MAPPING_GAP", "NOT_APPLICABLE"])
+def test_chaining_override_suppresses_warning(status):
+    """An acknowledged break is reported as info, not warning."""
+    mf, eq = _resolvers()
+    # Put the override on the s2->s3 break by swapping which edge carries it:
+    data = _chain_module()
+    for c in data["module"]["connections"]:
+        if (c["source"], c["target"]) == ("s2", "s3"):
+            c["chaining_status"] = status
+            c["chaining_note"] = "known gap"
+    findings = reaction_chaining_findings(data, mf, eq)
+    broken = {(f["source"], f["target"]): f for f in findings}[("s2", "s3")]
+    assert broken["severity"] == "info"
+    assert broken["status"] == status
+
+
+def test_chaining_verified_override_suppresses_warning():
+    """A curator VERIFIED is trusted over the string matcher (it cannot see
+    ChEBI class subsumption, e.g. acetoacetyl-CoA is a 3-oxoacyl-CoA), so an
+    explicit VERIFIED suppresses the advisory warning."""
+    mf, eq = _resolvers()
+    data = _chain_module()
+    for c in data["module"]["connections"]:
+        if (c["source"], c["target"]) == ("s2", "s3"):
+            c["chaining_status"] = "VERIFIED"
+    findings = reaction_chaining_findings(data, mf, eq)
+    broken = {(f["source"], f["target"]): f for f in findings}[("s2", "s3")]
+    assert broken["severity"] == "info"
+    assert broken["status"] == "VERIFIED"
+
+
+def test_chaining_unresolvable_mf_is_not_a_warning():
+    """If a GO MF has no RHEA mapping, the edge is 'not checked', not a warning."""
+    mf = lambda g: [] if g == "GO:2" else _MF.get(g, [])  # noqa: E731
+    eq = lambda r: _EQS.get(r)  # noqa: E731
+    findings = reaction_chaining_findings(_chain_module(), mf, eq)
+    for f in findings:
+        if "s2" in (f["source"], f["target"]):
+            assert f["severity"] == "info"
+            assert f["status"] == "NOT_CHECKED"

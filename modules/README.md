@@ -40,6 +40,31 @@ Each rendered module page carries a **Derived QC** panel (computed by
   joined against `genes/**/*-ai-review.yaml`: whether the gene has a review,
   whether that review is complete (no PENDING/UNDECIDED annotations), and
   whether it has its own deep research.
+- **Reaction chaining (advisory)** — for every `PRECEDES` connection, each
+  reaction's GO molecular-function term is resolved to RHEA (via the GO→RHEA
+  mapping in the local OAK databases) and the upstream reaction's CoA-bearing
+  products are compared with the downstream reaction's substrates. An
+  unacknowledged break (no shared CoA intermediate) is a **warning, never an
+  error** — this check is deliberately soft. A curator acknowledges a break (or
+  overrides the matcher, which cannot see ChEBI class subsumption such as
+  *acetoacetyl-CoA* ⊑ *3-oxoacyl-CoA*) with `chaining_status` +
+  `chaining_note` on the connection:
+
+  ```yaml
+  connections:
+    - source: acad_step
+      target: ech_step
+      connection_type: PRECEDES
+      chaining_status: MAPPING_GAP   # VERIFIED | KNOWLEDGE_GAP | MAPPING_GAP | NOT_APPLICABLE | UNVERIFIED
+      chaining_note: >-
+        Chemistry is correct; GO:0004300 maps to RHEA:20724 (the (3E) variant)
+        rather than the canonical (2E) crotonase RHEA:16105.
+  ```
+
+  Any explicit `chaining_status` suppresses the warning; the enum value and note
+  record *why*. Leave it unset to let the check report. (Only CoA-carrier
+  continuity is checked, so steps connected by non-CoA intermediates are
+  reported as "not checked" rather than warned.)
 
 The module index (`pages/modules/index.html`) surfaces the headline figures
 (reviewed-gene count, leaf-grounding gaps, module deep-research presence) as

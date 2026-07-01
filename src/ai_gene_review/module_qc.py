@@ -657,6 +657,294 @@ def module_deep_research(yaml_path: Path) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Reaction chaining (advisory): does an upstream reaction's product feed the
+# downstream reaction's substrate? GO molecular-function terms are already
+# mapped to RHEA, so the substrate (chain-length) specificity and the balanced
+# equation can be pulled from the GO->RHEA mapping. This is a SOFT check: it
+# never raises errors, and a curator can acknowledge a real break with a
+# ``chaining_status`` override on the connection.
+# ---------------------------------------------------------------------------
+
+# Resolver answering "GO MF curie -> list of RHEA curies" (from the GO ontology).
+MFToReactions = Callable[[str], list[str]]
+# Resolver answering "RHEA curie -> balanced-equation label" (from RHEA).
+ReactionEquation = Callable[[str], Optional[str]]
+
+# Chain-length / saturation qualifiers stripped so naming variants of the same
+# intermediate collapse (a "medium-chain (2E)-enoyl-CoA" and a "very-long-chain
+# (2E)-enoyl-CoA" are the same intermediate for chaining purposes); the
+# chain-length specificity itself is reported from the raw equation.
+_CHAIN_QUALIFIERS = (
+    "very-long-chain",
+    "long-chain",
+    "medium-chain",
+    "short-chain",
+    "2,3-saturated",
+    "4-saturated",
+)
+
+def _strip_article(token: str) -> str:
+    """Drop a leading article and stoichiometric coefficient from a participant.
+
+    >>> _strip_article("a (2E)-enoyl-CoA")
+    '(2E)-enoyl-CoA'
+    >>> _strip_article("2 acetyl-CoA")
+    'acetyl-CoA'
+    """
+    token = re.sub(r"^(a|an)\s+", "", token.strip())
+    token = re.sub(r"^\d+\s+", "", token)
+    return token.strip()
+
+
+def normalize_species(token: str) -> str:
+    """Canonicalize a reaction participant name for cross-reaction comparison.
+
+    Strips chain-length/saturation qualifiers and ``fatty``, then reduces to
+    alphanumerics so naming variants of the *same* intermediate collapse while
+    genuinely different species stay distinct.
+
+    >>> normalize_species("a long-chain (3S)-3-hydroxy fatty acyl-CoA")
+    '3s3hydroxyacylcoa'
+    >>> normalize_species("a (3S)-3-hydroxyacyl-CoA")
+    '3s3hydroxyacylcoa'
+    >>> normalize_species("a (2E)-enoyl-CoA") == normalize_species("a (3E)-enoyl-CoA")
+    False
+    """
+    t = _strip_article(token).lower()
+    for qualifier in _CHAIN_QUALIFIERS:
+        t = t.replace(qualifier, "")
+    t = t.replace("fatty", "")
+    return re.sub(r"[^a-z0-9]", "", t)
+
+
+def parse_equation(equation: str) -> tuple[list[str], list[str]]:
+    """Split a RHEA ``L = R`` equation into (left, right) participant lists.
+
+    >>> parse_equation("a (3S)-3-hydroxyacyl-CoA + NAD(+) = a 3-oxoacyl-CoA + NADH")
+    (['(3S)-3-hydroxyacyl-CoA', 'NAD(+)'], ['3-oxoacyl-CoA', 'NADH'])
+    >>> parse_equation("no equals sign")
+    ([], [])
+    """
+    if "=" not in equation:
+        return [], []
+    left, right = equation.split("=", 1)
+    lhs = [_strip_article(x) for x in left.split(" + ") if x.strip()]
+    rhs = [_strip_article(x) for x in right.split(" + ") if x.strip()]
+    return lhs, rhs
+
+
+def coa_species(participants: list[str]) -> set[str]:
+    """Normalized CoA-bearing species (the carbon carriers threading the spiral).
+
+    >>> sorted(coa_species(["a (2E)-enoyl-CoA", "H2O", "NAD(+)"]))
+    ['2eenoylcoa']
+    """
+    return {normalize_species(p) for p in participants if "coa" in p.lower()}
+
+
+def _pick_representative_reaction(
+    rhea_ids: list[str], reaction_equation: ReactionEquation
+) -> Optional[str]:
+    """Pick a representative class-level reaction from a GO MF's RHEA set.
+
+    Prefer a reaction whose equation uses a generic ``acyl-CoA`` class over
+    chain-specific instances; among candidates, the lowest-numbered (RHEA
+    master) reaction.
+    """
+    if not rhea_ids:
+        return None
+    generic = [r for r in rhea_ids if "acyl-coa" in (reaction_equation(r) or "").lower()]
+    pool = generic or rhea_ids
+    return sorted(pool, key=lambda r: int(r.split(":")[1]))[0]
+
+
+def _iter_reaction_annotons(data: dict[str, Any]):
+    """Yield ``(step_id, order, annoton)`` for every reaction annoton, in order.
+
+    Walks ``parts -> node -> (annotons | variant_sets -> variants -> annotons)``.
+    """
+    module = data.get("module", {})
+    for part in sorted(as_list(module.get("parts")), key=lambda p: p.get("order", 0)):
+        node = part.get("node", {})
+        step_id = node.get("id")
+        order = part.get("order")
+        for ann in as_list(node.get("annotons")):
+            yield step_id, order, ann
+        for vs in as_list(node.get("variant_sets")):
+            for variant in as_list(vs.get("variants")):
+                for ann in as_list(variant.get("annotons")):
+                    yield step_id, order, ann
+
+
+def _step_coa_species(
+    data: dict[str, Any],
+    mf_to_reactions: MFToReactions,
+    reaction_equation: ReactionEquation,
+) -> dict[str, set[str]]:
+    """Map each step id to the union of CoA species across its reaction annotons.
+
+    Both sides of each representative RHEA master equation are included, because
+    RHEA writes reactions in a single canonical direction.
+    """
+    species: dict[str, set[str]] = {}
+    for step_id, _order, ann in _iter_reaction_annotons(data):
+        term = (ann.get("function") or {}).get("term") or {}
+        go_id = term.get("id")
+        if not go_id:
+            continue
+        rep = _pick_representative_reaction(mf_to_reactions(go_id), reaction_equation)
+        if rep is None:
+            continue
+        equation = reaction_equation(rep)
+        if not equation:
+            continue
+        lhs, rhs = parse_equation(equation)
+        species.setdefault(step_id, set()).update(coa_species(lhs) | coa_species(rhs))
+    return species
+
+
+def _default_chaining_resolvers() -> Optional[tuple[MFToReactions, ReactionEquation]]:
+    """Build OAK-backed resolvers from the local GO and RHEA databases.
+
+    Returns ``None`` if OAK or the ontology databases are unavailable, so the
+    chaining check degrades to "not checked" rather than crashing a render.
+    """
+    try:  # external system: ontology DBs may be unavailable
+        from oaklib import get_adapter
+
+        go = get_adapter("sqlite:obo:go")
+        rhea = get_adapter("sqlite:obo:rhea")
+    except Exception:  # noqa: BLE001 - external system
+        return None
+
+    def mf_to_reactions(go_id: str) -> list[str]:
+        try:  # external system
+            return [
+                str(m.object_id)
+                for m in go.sssom_mappings([go_id])
+                if str(m.object_id).startswith("RHEA:")
+            ]
+        except Exception:  # noqa: BLE001
+            return []
+
+    def reaction_equation(rhea_id: str) -> Optional[str]:
+        try:  # external system
+            return rhea.label(rhea_id)
+        except Exception:  # noqa: BLE001
+            return None
+
+    return mf_to_reactions, reaction_equation
+
+
+def reaction_chaining_findings(
+    data: dict[str, Any],
+    mf_to_reactions: Optional[MFToReactions] = None,
+    reaction_equation: Optional[ReactionEquation] = None,
+) -> list[dict[str, Any]]:
+    """Advisory check: does each ``PRECEDES`` edge chain product -> substrate?
+
+    For every ``PRECEDES`` connection, compares the CoA-bearing species of the
+    source and target reactions (resolved GO MF -> RHEA -> equation). Returns one
+    finding per connection. **This never errors**; severities are ``info`` or
+    ``warning`` only, and a ``chaining_status`` override on the connection
+    suppresses a warning for a known gap.
+
+    Resolvers are injectable for testing; by default they are built from the
+    local OAK GO/RHEA databases. If resolvers are unavailable, returns ``[]``.
+
+    >>> data = {
+    ...   "module": {
+    ...     "parts": [
+    ...       {"order": 1, "node": {"id": "s1", "annotons": [
+    ...         {"function": {"term": {"id": "GO:1"}}}]}},
+    ...       {"order": 2, "node": {"id": "s2", "annotons": [
+    ...         {"function": {"term": {"id": "GO:2"}}}]}},
+    ...     ],
+    ...     "connections": [
+    ...       {"source": "s1", "target": "s2", "connection_type": "PRECEDES"}],
+    ...   }
+    ... }
+    >>> eqs = {"R:1": "a acyl-CoA = a (2E)-enoyl-CoA",
+    ...        "R:2": "a (2E)-enoyl-CoA + H2O = a (3S)-3-hydroxyacyl-CoA"}
+    >>> mf = {"GO:1": ["R:1"], "GO:2": ["R:2"]}
+    >>> f = reaction_chaining_findings(data, lambda g: mf[g], lambda r: eqs[r])
+    >>> f[0]["severity"], sorted(f[0]["shared"])
+    ('info', ['2eenoylcoa'])
+    """
+    if mf_to_reactions is None or reaction_equation is None:
+        resolvers = _default_chaining_resolvers()
+        if resolvers is None:
+            return []
+        mf_to_reactions, reaction_equation = resolvers
+
+    module = data.get("module", {})
+    species = _step_coa_species(data, mf_to_reactions, reaction_equation)
+    order_of = {
+        part.get("node", {}).get("id"): part.get("order")
+        for part in as_list(module.get("parts"))
+    }
+
+    findings: list[dict[str, Any]] = []
+    for conn in as_list(module.get("connections")):
+        if conn.get("connection_type") != "PRECEDES":
+            continue
+        src, tgt = conn.get("source"), conn.get("target")
+        override = conn.get("chaining_status")
+        note = conn.get("chaining_note")
+        src_species = species.get(src, set())
+        tgt_species = species.get(tgt, set())
+        shared = sorted(src_species & tgt_species)
+
+        finding: dict[str, Any] = {
+            "source": src,
+            "target": tgt,
+            "source_order": order_of.get(src),
+            "target_order": order_of.get(tgt),
+            "shared": shared,
+            "override": override,
+            "note": note,
+        }
+
+        if not src_species or not tgt_species:
+            # One side has no resolvable RHEA reaction (no GO->RHEA mapping, or
+            # the ontology DBs are unavailable): we cannot judge continuity.
+            finding["severity"] = "info"
+            finding["status"] = "NOT_CHECKED"
+            finding["message"] = (
+                f"{src} -> {tgt}: could not resolve a RHEA reaction for one side "
+                f"(no GO->RHEA mapping); chaining not checked."
+            )
+        elif shared:
+            finding["severity"] = "info"
+            finding["status"] = override or "VERIFIED"
+            finding["message"] = f"{src} -> {tgt}: shared intermediate(s) {shared}."
+        elif override:
+            # Any explicit curator adjudication suppresses the advisory warning;
+            # the enum value (KNOWLEDGE_GAP / MAPPING_GAP / NOT_APPLICABLE /
+            # VERIFIED / UNVERIFIED) and chaining_note record *why*. The string
+            # check cannot see ChEBI class subsumption (e.g. acetoacetyl-CoA is a
+            # 3-oxoacyl-CoA), so a curator VERIFIED is trusted over the matcher.
+            finding["severity"] = "info"
+            finding["status"] = override
+            suffix = f" {note}" if note else ""
+            finding["message"] = (
+                f"{src} -> {tgt}: no shared CoA intermediate found by string match, "
+                f"acknowledged as {override}.{suffix}"
+            )
+        else:
+            finding["severity"] = "warning"
+            finding["status"] = "UNVERIFIED"
+            finding["message"] = (
+                f"{src} -> {tgt}: no shared CoA intermediate between the reactions. "
+                f"If this is correct (or a known gap), set chaining_status "
+                f"(VERIFIED / KNOWLEDGE_GAP / MAPPING_GAP / NOT_APPLICABLE) with a "
+                f"chaining_note."
+            )
+        findings.append(finding)
+    return findings
+
+
+# ---------------------------------------------------------------------------
 # linkml-data-qc compliance
 # ---------------------------------------------------------------------------
 
@@ -716,6 +1004,7 @@ def collect_module_qc(
         "conformance_violations": conformance_violations(
             data, modules_dir=yaml_path.parent
         ),
+        "reaction_chaining": reaction_chaining_findings(data),
         "gene_reviews": module_gene_review_summary(
             data, gene_index=gene_index, genes_dir=genes_dir
         ),
