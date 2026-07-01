@@ -7,52 +7,39 @@ autolink_gene_symbols: false
 
 # Pathway satisfiability
 
-**A pathway module is a boolean formula over steps; a *context* (tissue, cell zone,
-genome) supplies the truth values. The same engine then answers "is this pathway wired
-up *here*?" — and, when a pathway is independently known to run but the logic says no,
-turns the gap into a reviewable hypothesis.**
+**We ask not "does this genome have the pathway?" but "is the pathway wired up *here* — in
+this tissue, this cell zone, this genome?" A curation module is read as a boolean formula
+over steps; a context (expression, genome content) supplies the truth values. When a pathway
+is independently known to run but the logic says it can't, the gap becomes a reviewable,
+gene-localised hypothesis.**
 
-## Motivation
+## Bottom line
 
-Pathway-completeness tools (KEGG/Reactome module coverage) ask a genome-level question:
-does the organism *have* the pathway? That is the right question for a microbe but the
-wrong one for a metazoan, where every cell carries the whole genome and the discriminating
-variable is **which isozyme is expressed in which context**. Gluconeogenesis is "present"
-in every human cell, yet free-glucose output is restricted to a few tissues — and, within
-the liver, to a few cell layers.
+- **It recovers textbook biology from data alone.** Across GTEx's 54 tissues the human
+  gluconeogenesis module lights up in exactly **liver, kidney cortex, small intestine** — no
+  false positives, no misses — and every other tissue fails at the *same* gate step
+  (gluconeogenic glucose-6-phosphatase), resisting the ubiquitous non-gluconeogenic paralog.
+- **It resolves *within* an organ, not just between organs.** With a liver-zonation oracle the
+  route is satisfiable at the **periportal** pole and blocked at the **pericentral** pole — the
+  metazoan question ("which isozyme, in which context") that genome-level tools can't ask.
+- **One engine, many contexts.** The same logic reconstructs L-methionine biosynthesis across
+  microbial genomes from KEGG orthologs (picking the encoded route per organism), i.e. it
+  reproduces GapMind-style step-finding as a special case.
+- **A gap is a hypothesis, not just a hole.** Crossing satisfiability with an *independent*
+  activity claim turns unexplained gaps into structured leads: **intestinal gluconeogenesis →
+  G6PC1**, **liver ketolysis → OXCT1/SCOT**, plus microbial "metabolic dark matter" targets
+  (*Synechocystis*, *M. jannaschii*) that make methionine with no canonical enzyme for a step.
 
-This project treats a curation **module** (`modules/*.yaml`, the `ModuleReview` schema) as
-a monotone boolean circuit and evaluates it against a *context oracle*:
+Why this matters: pathway-completeness tools (KEGG/Reactome coverage) ask a genome-level
+question — right for a microbe, wrong for a metazoan, where every cell carries the whole
+genome and the discriminating variable is **which isozyme is expressed in which context**.
+Gluconeogenesis is "present" in every human cell, yet glucose output is restricted to a few
+tissues and, within the liver, to a few cell layers. This project resolves the pathway *into*
+that context.
 
-- a module's **parts / annotons are AND**; its **variant_sets are OR**;
-- a leaf **annoton (a step) is an atom** whose truth value comes from the oracle;
-- the engine enumerates **routes** (one branch per variant set), tests **satisfiability**
-  in a context, finds the **gate** atoms required by every route, and reports the
-  **unsatisfied steps** (gaps).
-
-The logic core carries no biological data; only the oracle changes between contexts. This
-is deliberately the eukaryotic analogue of GapMind's prokaryotic step-finding.
-
-## Architecture
-
-```mermaid
-flowchart LR
-  M[Module YAML\nparts=AND, variant_sets=OR] --> C[compile_module\n→ boolean circuit]
-  C --> E{module_logic engine\nroutes · gate · gaps · abduction}
-  O1[GTEx bulk tissue] --> E
-  O2[Halpern liver zonation] --> E
-  O3[GTEx substrate entry] --> E
-  O4[KEGG genome presence] --> E
-  E --> R[per-context result:\nsatisfiable? which route?\nwhich gate / gap?]
-  P[independent activity\nphenotype / flux] --> A[abduce] 
-  E --> A
-  A --> H[reviewable gap hypothesis]
-```
-
-The engine lives at `src/ai_gene_review/module_logic.py` (frozen `Atom`; `compile_module`,
-`enumerate_routes`, `is_satisfied`, `core_atoms`, `unsatisfied_steps`, `abduce`; doctested,
-mypy-clean) with `tests/test_module_logic.py`. The oracles and per-context resolvers are in
-`modules/experimental/gluconeogenesis-context/` (see its `RESULTS.md` for full output).
+> **How it works** (model, engine, `src` paths, and commands to reproduce every result) lives
+> in the companion notebook: **[Methods & reproduction](PATHWAY_SATISFIABILITY/methods.md)**.
+> It is the eukaryotic analogue of GapMind's prokaryotic step-finding.
 
 ## Results
 
@@ -125,29 +112,11 @@ form a reviewer can act on.
   ortholog oracle, so a scored gap is a genuine prediction, and "the assertion is wrong" is
   always retained as an explicit hypothesis.
 
-## Reproduce
+## Methods & reproduction
 
-```bash
-# engine + tests
-uv run pytest tests/test_module_logic.py -q
-uv run pytest --doctest-modules src/ai_gene_review/module_logic.py
-
-# per-context resolvers (from modules/experimental/gluconeogenesis-context/)
-uv run python resolve_context.py       # between organs (GTEx)
-uv run python resolve_zonation.py      # within liver (Halpern zonation)
-uv run python resolve_substrates.py    # which precursor per tissue
-uv run python resolve_genomes.py       # methionine across genomes (KEGG)
-uv run python resolve_abduction.py     # microbial gaps vs phenotype → leads / auxotrophy
-uv run python resolve_eukaryotic_abduction.py   # tissue gaps vs function (ketolysis, gluconeogenesis)
-```
-
-## Artifacts
-
-- Engine: `src/ai_gene_review/module_logic.py`; tests: `tests/test_module_logic.py`
-- Modules: `modules/gluconeogenesis_human.yaml`, `modules/gluconeogenesis_human_substrates.yaml`,
-  `modules/methionine_biosynthesis.yaml`, `modules/ketone_body_oxidation.yaml`
-- Oracles & resolvers + full results: `modules/experimental/gluconeogenesis-context/`
-  (`RESULTS.md`)
+The model, engine internals (`module_logic.py`), architecture diagram, source paths, and the
+exact commands to reproduce every result above are in the companion notebook:
+**[Methods & reproduction](PATHWAY_SATISFIABILITY/methods.md)**.
 
 ## Next steps
 
