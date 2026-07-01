@@ -31,7 +31,7 @@ derived QC reports 20/20 grounded genes reviewed.
 |------|----------|-------|------------|
 | ① dehydrogenase | acyl-CoA → (2E)-enoyl-CoA | ACADVL, ACAD9 (VLC/LC); ACADM (MC); ACADS (SC) | `DROME/Acadvl`, `DROME/Egm`; `DROME/Mcad`; `DROME/Arc42`, `DROME/CG4860` |
 | ② hydratase | enoyl-CoA → (3S)-3-hydroxyacyl-CoA | HADHA (LC, MTP); ECHS1 (S/MC) | `DROME/Mtpalpha`; `DROME/Echs1` |
-| ③ 3-OH-acyl-CoA DH | → 3-oxoacyl-CoA | HADHA (LC, MTP); HADH (S/MC) | `DROME/Mtpalpha`; (fly S/MC ortholog unresolved) |
+| ③ 3-OH-acyl-CoA DH | → 3-oxoacyl-CoA | HADHA (LC, MTP); HADH (S/MC) | `DROME/Mtpalpha` (LC); `DROME/scu` (scully, S/MC — HSD17B10-type; see below) |
 | ④ thiolase | → acetyl-CoA + acylₙ₋₂-CoA | HADHB (LC, MTP); ACAA2 (M/LC); ACAT1 (SC/ketone) | `DROME/Mtpbeta`; `DROME/Acaa`; `DROME/Acat1` |
 
 ## Curation findings and patterns
@@ -139,8 +139,27 @@ the chain-length / substrate-range calls our reviews made on enzymatic/genetic
 grounds. All six blinded runs to date (Acat1, Mtpalpha, ACAD9, CG4860, Echs1,
 Mcad) have agreed with the conclusions the reviews reached independently.
 
-One run remains in flight: the step-3 ortholog-resolution run for `DROME/scu`
-(scully), probing the pathway's one open gap (see below).
+### Resolving the step-3 fly ortholog gap (scully)
+
+The module long marked the fly short/medium-chain 3-hydroxyacyl-CoA dehydrogenase
+(human HADH step ③) as **unresolved**. It is unresolved for a real reason:
+*Drosophila* lacks a clean 1:1 ortholog of the **classical HADH1/SCHAD** (type-I,
+3HCDH fold, Pfam PF00725) — the FlyBase genes *named* Had1 (CG9914) and Had2
+(CG10131) are actually **CRYL1 / L-gulonate-3-dehydrogenase** orthologs
+(EC 1.1.1.45). The fly enzyme that covers this step is **scully (scu, O18404)**,
+the ortholog of human **HSD17B10** (type-II 3-hydroxyacyl-CoA dehydrogenase, SDR
+fold, Pfam PF00106; Torroja et al. 1998).
+
+A blinded OpenScientist run (narrowed to a single Foldseek/catalytic-residue
+analysis after a first attempt hit the 7200 s ceiling) returned **SUPPORTED**:
+orthology confirmed by PANTHER/OrthoDB/eggNOG, 73.1% identity with **100%
+conservation of all 11 catalytic/binding residues**, near-identical AlphaFold
+active-site geometry, and a **direct enzymatic assay** (PMID:12917011) confirming
+(3S)-3-hydroxyacyl-CoA dehydrogenase activity in the fly protein. Caveats it
+flags: scully is **type-II (HSD17B10), not classical HADH (type-I)**; it is
+multifunctional (also a steroid dehydrogenase and the **MRPP2** subunit of
+mitochondrial RNase P); and the long-chain step ③ is carried by MTP (Mtpalpha).
+scully is now the grounded fly S/MC representative for step ③ in the module.
 
 ## Validating datasets
 
@@ -211,7 +230,7 @@ represented directly. Flagged here as a candidate improvement.
 - [x] OpenScientist organelle hypothesis: `DROME/Mtpalpha` peroxisome (supported — conserved SKL PTS1, isoform-dependent dual targeting)
 
 ## In progress / open
-- [ ] Fly medium/short-chain 3-hydroxyacyl-CoA dehydrogenase ortholog (HADH) — unresolved ("?")
+- [x] Fly medium/short-chain 3-hydroxyacyl-CoA dehydrogenase ortholog (HADH step ③) — resolved: `DROME/scu` (scully), the HSD17B10 (type-II) ortholog; no classical HADH1 ortholog exists in fly. scully full review pending.
 - [ ] FlyBase curation-gap candidates from PMID:40519079 (above)
 - [ ] Negation-representation gap (NOT+NEW vs existing positive term)
 
