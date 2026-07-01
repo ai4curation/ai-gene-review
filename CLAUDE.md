@@ -348,6 +348,10 @@ other computational method that produces GO or EC predictions.
 - `FREQUENCY_BIAS` - Model defaults to high-frequency training labels
 - `IN_VITRO_NOT_IN_VIVO` - In vitro activity doesn't match biological function
 - `TRAINING_DATA_CONTAMINATION` - Prediction already in training data
+- `PSEUDOENZYME_OVERANNOTATION` - Ancestral catalytic activity assigned to a fold-retaining pseudoenzyme (lost catalytic residues)
+- `LOCALIZATION_DEFAULT` - Defaults to cytosol/cytoplasm when no TM/signal features, mislocalizing secreted/organellar/membrane proteins
+- `TAXON_CONSTRAINT_VIOLATION` - Term valid only in another lineage/kingdom (e.g. animal terms for a plant protein)
+- `WRONG_INPUT_SEQUENCE` - Pipeline fed the wrong protein sequence (data error, not model error)
 - See schema for full list
 
 ## Page rendering and deployment

@@ -1113,7 +1113,7 @@ class PredictionAssessmentEnum(str, Enum):
 
 class PredictionErrorTypeEnum(str, Enum):
     """
-    Types of errors that lead to incorrect functional predictions, based on Table 1 of de Crécy-Lagard et al. 2025 (PMID:40703034).
+    Types of errors that lead to incorrect functional predictions. The first block is based on Table 1 of de Crécy-Lagard et al. 2025 (PMID:40703034); the trailing values capture additional, recurrent failure patterns observed when evaluating sequence- and LLM-based function predictors (e.g. ProtNLM2, BioReason-Pro) that Table 1 does not name explicitly.
     """
     FAILURE_TO_CAPTURE_LITERATURE = "FAILURE_TO_CAPTURE_LITERATURE"
     """
@@ -1154,6 +1154,22 @@ class PredictionErrorTypeEnum(str, Enum):
     IN_VITRO_NOT_IN_VIVO = "IN_VITRO_NOT_IN_VIVO"
     """
     The predicted activity can be demonstrated in vitro but does not represent the in vivo biological function (e.g., promiscuous activity at orders of magnitude lower rate than the dedicated enzyme).
+    """
+    PSEUDOENZYME_OVERANNOTATION = "PSEUDOENZYME_OVERANNOTATION"
+    """
+    The model assigns the ancestral catalytic activity of a domain family to a member that retains the fold but has lost or degraded the catalytic residues (a pseudoenzyme), failing to detect substituted/missing active-site residues. E.g. predicting demethylase activity for a JmjC protein with a degenerate active site, chitinase activity for a member lacking the catalytic glutamate, or peroxidase activity for a peroxiredoxin that has lost its resolving cysteine and instead acts as a chaperone. A special case of MULTIPLE_FUNCTIONS / neofunctionalization where the divergence is specifically loss of catalysis.
+    """
+    LOCALIZATION_DEFAULT = "LOCALIZATION_DEFAULT"
+    """
+    The model defaults to a cytosolic/cytoplasmic subcellular localization when no transmembrane or signal-sequence features are detected, mislocalizing secreted, periplasmic, organellar (mitochondrial, ER, vacuolar), or membrane proteins. Tends to succeed only when a domain/family name explicitly encodes the compartment (e.g. BiP/KAR2 -> ER).
+    """
+    TAXON_CONSTRAINT_VIOLATION = "TAXON_CONSTRAINT_VIOLATION"
+    """
+    The predicted term is valid only in a lineage/kingdom different from the organism (e.g. animal-specific 'neuronal cell body' or adaptive-immune terms predicted for a plant or bacterial protein), reflecting homology transfer from a better-studied taxon. Distinct from PATHWAY_CONTEXT_IGNORED (a missing metabolic pathway) in that the violated constraint is taxonomic rather than pathway-level.
+    """
+    WRONG_INPUT_SEQUENCE = "WRONG_INPUT_SEQUENCE"
+    """
+    A data-pipeline error rather than a model-reasoning error: the predictor was supplied the wrong input (e.g. the sequence of a different gene), so every output describes the wrong protein. Recorded to distinguish upstream pipeline mistakes from genuine model mispredictions.
     """
 
 
