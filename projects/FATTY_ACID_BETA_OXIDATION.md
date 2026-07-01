@@ -100,6 +100,23 @@ Drosophila-conserved SKL PTS1 and isoform-resolved dual targeting). Both verdict
 were produced by OpenScientist blinded to our review actions and agree with the
 conclusions we reached independently.
 
+## Chain-length specificity — OpenScientist structural verdicts
+
+Chain-length specificity in the acyl-CoA dehydrogenase (ACAD) family is set by a
+**computable** feature: the depth and hydrophobic lining of the substrate-binding
+cavity. That makes the chain-length calls testable structurally (AlphaFold +
+sequence), not just from literature. We ran the two most decision-relevant
+specificity questions — both testing **our own `MODIFY` actions** — through
+OpenScientist, blinded to the prior review action (`--as-function-hypothesis`):
+
+| Gene | Blinded hypothesis | OpenScientist verdict | vs. our review |
+|------|--------------------|-----------------------|----------------|
+| `human/ACAD9` | ACAD9 has **very-long-chain** ACAD activity (`GO:0017099`) | **Over-annotated → long-chain (`GO:0004466`).** Substrate-channel residues Thr-139/Ala-143 are intermediate — larger than VLCAD's channel-opening glycines but smaller than MCAD's blocking Gln/Glu — giving a cavity open for C16–C18 but restricted for the >C22 chains that define very-long-chain. | Confirms our `MODIFY` `GO:0017099`→`GO:0004466`; adds the cavity-residue mechanism |
+| `DROME/CG4860` | CG4860 has **short-chain** ACAD activity (`GO:0016937`) | *run in progress* — tests whether the substrate cavity matches SCAD-like C4 specificity or diverges from paralog Arc42 | expected to bear on our `MODIFY` short-chain→general ACAD |
+
+The ACAD9 residue analysis is the value-add: it supplies an independent
+*mechanistic* basis for a call our review made on enzymatic/kinetic grounds.
+
 ## Validating datasets
 
 Independent, in-vivo data that reports each enzyme's substrate specificity
