@@ -114,11 +114,18 @@ OpenScientist, blinded to the prior review action (`--as-function-hypothesis`):
 | `human/ACAD9` | ACAD9 has **very-long-chain** ACAD activity (`GO:0017099`) | **Over-annotated → long-chain (`GO:0004466`).** Substrate-channel residues Thr-139/Ala-143 are intermediate — larger than VLCAD's channel-opening glycines but smaller than MCAD's blocking Gln/Glu — giving a cavity open for C16–C18 but restricted for the >C22 chains that define very-long-chain. | Confirms our `MODIFY` `GO:0017099`→`GO:0004466`; adds the cavity-residue mechanism |
 | `DROME/CG4860` | CG4860 has **short-chain** ACAD activity (`GO:0016937`) | **Over-specific → generalize to `GO:0003995`.** Re-derives the Arc42-vs-CG4860 split (Arc42 71% vs CG4860 57% identity to ACADS; only Arc42 KO mirrors SCAD deficiency) and finds a **Leu→Thr substitution at the RIGIA+8 pocket position** (CG4860 has small polar Thr; ACADS and Arc42 have bulky Leu) that could shift it off strict short-chain. | Confirms our `MODIFY` short-chain→general ACAD; adds the pocket-residue determinant |
 
-Both residue analyses are the value-add: OpenScientist supplies an independent
+| `DROME/Echs1` | Echs1's crotonase pocket has the same broad short/branched-chain enoyl-CoA range as human ECHS1 | **Strongly supported — substrate range conserved, not narrowed.** Both catalytic glutamates and the active-site/substrate-binding residues are 100% conserved with human ECHS1; in vivo, Echs1-loss flies accumulate the valine-pathway substrate methacrylyl-CoA. | Confirms the dual hydratase / valine-catabolism core functions |
+
+The residue analyses are the value-add: OpenScientist supplies an independent
 *structural* basis (ACAD9 Thr-139/Ala-143 channel geometry; CG4860 RIGIA+8
-Leu→Thr) for chain-length calls our reviews made on enzymatic/genetic grounds.
-All four blinded runs to date (Acat1, Mtpalpha, ACAD9, CG4860) have agreed with
+Leu→Thr; Echs1 fully-conserved crotonase pocket) for the chain-length /
+substrate-range calls our reviews made on enzymatic/genetic grounds. All five
+blinded runs to date (Acat1, Mtpalpha, ACAD9, CG4860, Echs1) have agreed with
 the conclusions the reviews reached independently.
+
+Two more runs are in flight: `DROME/Mcad` (medium-chain cavity) and the
+step-3 ortholog-resolution run for `DROME/scu` (scully), the latter probing the
+pathway's one open gap.
 
 ## Validating datasets
 
