@@ -112,10 +112,13 @@ OpenScientist, blinded to the prior review action (`--as-function-hypothesis`):
 | Gene | Blinded hypothesis | OpenScientist verdict | vs. our review |
 |------|--------------------|-----------------------|----------------|
 | `human/ACAD9` | ACAD9 has **very-long-chain** ACAD activity (`GO:0017099`) | **Over-annotated → long-chain (`GO:0004466`).** Substrate-channel residues Thr-139/Ala-143 are intermediate — larger than VLCAD's channel-opening glycines but smaller than MCAD's blocking Gln/Glu — giving a cavity open for C16–C18 but restricted for the >C22 chains that define very-long-chain. | Confirms our `MODIFY` `GO:0017099`→`GO:0004466`; adds the cavity-residue mechanism |
-| `DROME/CG4860` | CG4860 has **short-chain** ACAD activity (`GO:0016937`) | *run in progress* — tests whether the substrate cavity matches SCAD-like C4 specificity or diverges from paralog Arc42 | expected to bear on our `MODIFY` short-chain→general ACAD |
+| `DROME/CG4860` | CG4860 has **short-chain** ACAD activity (`GO:0016937`) | **Over-specific → generalize to `GO:0003995`.** Re-derives the Arc42-vs-CG4860 split (Arc42 71% vs CG4860 57% identity to ACADS; only Arc42 KO mirrors SCAD deficiency) and finds a **Leu→Thr substitution at the RIGIA+8 pocket position** (CG4860 has small polar Thr; ACADS and Arc42 have bulky Leu) that could shift it off strict short-chain. | Confirms our `MODIFY` short-chain→general ACAD; adds the pocket-residue determinant |
 
-The ACAD9 residue analysis is the value-add: it supplies an independent
-*mechanistic* basis for a call our review made on enzymatic/kinetic grounds.
+Both residue analyses are the value-add: OpenScientist supplies an independent
+*structural* basis (ACAD9 Thr-139/Ala-143 channel geometry; CG4860 RIGIA+8
+Leu→Thr) for chain-length calls our reviews made on enzymatic/genetic grounds.
+All four blinded runs to date (Acat1, Mtpalpha, ACAD9, CG4860) have agreed with
+the conclusions the reviews reached independently.
 
 ## Validating datasets
 
