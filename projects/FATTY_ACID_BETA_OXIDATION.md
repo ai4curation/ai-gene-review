@@ -116,16 +116,17 @@ OpenScientist, blinded to the prior review action (`--as-function-hypothesis`):
 
 | `DROME/Echs1` | Echs1's crotonase pocket has the same broad short/branched-chain enoyl-CoA range as human ECHS1 | **Strongly supported — substrate range conserved, not narrowed.** Both catalytic glutamates and the active-site/substrate-binding residues are 100% conserved with human ECHS1; in vivo, Echs1-loss flies accumulate the valine-pathway substrate methacrylyl-CoA. | Confirms the dual hydratase / valine-catabolism core functions |
 
+| `DROME/Mcad` | Mcad substrate cavity matches medium-chain (C6-C12) like human MCAD | **Supported.** 20/21 active-site residues identical to human MCAD; the one substitution (F372 vs L376) is conservative; AlphaFold active-site geometry near-identical (r=1.0 CA-CA distances). No support for a different chain-length term. | Confirms our `ACCEPT` of medium-chain `GO:0070991` |
+
 The residue analyses are the value-add: OpenScientist supplies an independent
 *structural* basis (ACAD9 Thr-139/Ala-143 channel geometry; CG4860 RIGIA+8
-Leu→Thr; Echs1 fully-conserved crotonase pocket) for the chain-length /
-substrate-range calls our reviews made on enzymatic/genetic grounds. All five
-blinded runs to date (Acat1, Mtpalpha, ACAD9, CG4860, Echs1) have agreed with
-the conclusions the reviews reached independently.
+Leu→Thr; Echs1 fully-conserved crotonase pocket; Mcad 20/21 pocket identity) for
+the chain-length / substrate-range calls our reviews made on enzymatic/genetic
+grounds. All six blinded runs to date (Acat1, Mtpalpha, ACAD9, CG4860, Echs1,
+Mcad) have agreed with the conclusions the reviews reached independently.
 
-Two more runs are in flight: `DROME/Mcad` (medium-chain cavity) and the
-step-3 ortholog-resolution run for `DROME/scu` (scully), the latter probing the
-pathway's one open gap.
+One run remains in flight: the step-3 ortholog-resolution run for `DROME/scu`
+(scully), probing the pathway's one open gap (see below).
 
 ## Validating datasets
 
