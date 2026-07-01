@@ -179,3 +179,12 @@ Created the project to capture the cross-species FAO curation, the validating
 datasets (acylcarnitine + fly CRISPR + MTBLS636 + spatial proteomics), the
 OpenScientist organelle work, the FlyBase under-curation of PMID:40519079, and
 the NOT/NEW negation-representation gap surfaced by the CG4860 negative result.
+
+**Drosophila Echs1 accession/fetch-gap fix.** The PR review flagged fly `Echs1`
+as having only 2 (IEA) GOA annotations. Cause: `fetch-gene` resolved the gene to
+the isoform accession **Q0E987** (2 IEA terms) rather than the well-curated
+primary **Q7JR58** (12 annotations, including experimental IDA/HDA mitochondrion
+and IMP L-valine catabolic process from PMID:40056416 / PMID:39727068). Re-fetched
+with `-u Q7JR58 --force` (merged, preserving reviewed content), reviewed the 10
+newly-surfaced annotations, and re-aligned the review `id` and the module
+`representative_member` for the hydratase step to `Q7JR58`.
