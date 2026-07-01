@@ -78,6 +78,20 @@ MF `GO:0004300` maps only to **RHEA:20724** (the (3E) variant), not the canonica
 `GO:0004300 → RHEA` mapping. Recorded as a `MAPPING_GAP` override on the module
 connection; see [projects/RHEA](RHEA.html).
 
+### Reactome cross-check
+A pathway-level comparison against Reactome's mitochondrial β-oxidation reaction
+set — see [FAO module vs Reactome](FATTY_ACID_BETA_OXIDATION/reactome-comparison.md)
+— shows the module and Reactome **agree on the skeleton and on steps ①–③**
+(the same chain-length-specific dehydrogenases; the same ECHS1/HADH-vs-MTP split
+between short/medium and long chains; and Reactome models step ①→② with the
+correct (2E)/crotonyl substrate, independently confirming the RHEA gap above is a
+mapping artefact). The one substantive difference is **step ④**: Reactome routes
+the thiolase across the whole spiral (C6→C16) through the MTP complex and never
+invokes ACAA2 or ACAT1, whereas our reviews resolve it into ACAA2 (medium/long)
+and ACAT1 (short-chain/ketone). We consumed Reactome at the annotation level
+throughout (many `Reactome:R-HSA-…` TAS annotations adjudicated per gene); this
+is the pathway-level cross-check.
+
 ## Organelle specificity — mitochondrion vs peroxisome
 
 β-oxidation runs in **both** mitochondria (this gene set) and peroxisomes
