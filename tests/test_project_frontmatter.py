@@ -20,7 +20,14 @@ PROJECTS_DIR = Path(__file__).resolve().parents[1] / "projects"
 VALID_MATURITY = {"SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"}
 
 #: Controlled vocabulary for the project ``tags`` list.
-VALID_TAGS = {"FLAGSHIP", "OBSOLETION", "PIPELINE", "BIOLOGY_DOMAIN"}
+VALID_TAGS = {
+    "FLAGSHIP",
+    "OBSOLETION",
+    "PIPELINE",
+    "BIOLOGY_DOMAIN",
+    "EVALUATION",
+    "ML_PREDICTIONS",
+}
 
 #: Controlled vocabulary for a manual review's ``status``.
 VALID_REVIEW_STATUS = {"READY", "CHANGES_REQUESTED"}
