@@ -85,9 +85,12 @@ This project is an umbrella; it should reuse and link, not re-implement:
 Start bacterial, where the constraints are strongest and the gold standard is cleanest; the
 engine is organism-agnostic.
 
-1. **E. coli K-12 (gold standard).** Confirm curated annotations satisfy all three criteria and
-   that the few violations are explainable (e.g. host-specific functions on a pathogen). Aligns
-   with existing E. coli prediction work.
+1. **E. coli K-12 (gold standard) — [Pilot 1, first result](GENOME_WIDE_VALIDATION/pilot-ecoli/README.md).**
+   Coherence implemented end-to-end on the EcoCyc GAF using GO `has_part` axioms:
+   **86.8% coherence**, and the 17 violations triage into a genuine biological gap
+   (denitrification lacking nitrous-oxide reductase), annotation-granularity gaps (complex /
+   MF sub-terms), and probable over-annotations (eukaryote/viral terms on E. coli) — every one
+   a reviewable lead. Runs from public data; see the pilot README and its `RESULTS.md`.
 2. **A minimal genome (JCVI syn3.0 / *Mycoplasma*).** Small, tractable, and the natural source
    of the completeness essential-function set — a strong signal for completeness/coherence.
 3. **Predictor sweep.** Run one or more genome-scale prediction sets (e.g. InterPro2GO,
@@ -95,13 +98,14 @@ engine is organism-agnostic.
 
 ## Plan (scoping)
 
-- [ ] Extract the dependency set: enumerate GO `has_part` pairs (ELK/relation-graph) and the
-      MetaCyc-derived pathway routes; extract taxon-constraint pairs.
+- [x] Extract the dependency set (asserted GO `has_part` pairs) and score a genome's GAF for
+      coherence — done in [Pilot 1](GENOME_WIDE_VALIDATION/pilot-ecoli/README.md). *Next:* add
+      ELK/relation-graph inferred pairs and the MetaCyc-derived pathway routes.
 - [ ] Define the essential-function set from a minimal genome and map to GO classes.
-- [ ] Wrap the `module_logic` engine to score a whole genome's annotation set (from a GOA/GAF)
-      against completeness / coherence / consistency; emit per-genome scores + per-violation
-      leads.
-- [ ] Run the E. coli and minimal-genome pilots; sanity-check against expectations.
+- [ ] Score a whole genome's annotation set for completeness / consistency too (coherence done);
+      emit per-genome scores + per-violation leads.
+- [x] Run the E. coli coherence pilot; sanity-check against expectations (86.8% coherence,
+      violations interpretable). *Next:* the minimal-genome pilot.
 - [ ] Feed violations back as curation leads / prediction-review inputs.
 - [ ] Decide whether to interoperate with or reproduce GAEF
       (github.com/bio-ontology-research-group/GAEF) rather than reimplement.
