@@ -2,8 +2,8 @@
 title: "Mitochondrial Fatty Acid β-Oxidation (cross-species)"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [human, DROME]
-genes: [ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2]
+species: [human, DROME, mouse]
+genes: [ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2, Acadl, scu, Dci, Ech1, CG4592, CG4594, CG4598]
 ---
 
 # Mitochondrial Fatty Acid β-Oxidation (cross-species)
@@ -22,8 +22,11 @@ chain-length substrate specificity, cross-paralog/cross-gene mis-annotation,
 moonlighting functions, organelle (mitochondrion vs peroxisome) assignment, and
 GO↔RHEA reaction mapping.
 
-**Scope:** 20 grounded gene products (10 human + 10 Drosophila). The module's
-derived QC reports 20/20 grounded genes reviewed.
+**Scope:** the core saturated spiral is 20 grounded gene products (10 human + 10
+Drosophila; the module's derived QC reports 20/20 reviewed). The project has since
+been extended with the **fly step-3 enzyme** (`DROME/scu`), the **mouse** flagship
+`mouse/Acadl` (LCAD), and the **unsaturated-FAO auxiliary enzymes** (see the
+[cassette section](#unsaturated-fatty-acid-β-oxidation--the-auxiliary-enzyme-cassette) below).
 
 ## The gene set
 
@@ -33,6 +36,49 @@ derived QC reports 20/20 grounded genes reviewed.
 | ② hydratase | enoyl-CoA → (3S)-3-hydroxyacyl-CoA | HADHA (LC, MTP); ECHS1 (S/MC) | `DROME/Mtpalpha`; `DROME/Echs1` |
 | ③ 3-OH-acyl-CoA DH | → 3-oxoacyl-CoA | HADHA (LC, MTP); HADH (S/MC) | `DROME/Mtpalpha` (LC); `DROME/scu` (scully, S/MC — HSD17B10-type; see below) |
 | ④ thiolase | → acetyl-CoA + acylₙ₋₂-CoA | HADHB (LC, MTP); ACAA2 (M/LC); ACAT1 (SC/ketone) | `DROME/Mtpbeta`; `DROME/Acaa`; `DROME/Acat1` |
+
+## Unsaturated fatty acid β-oxidation — the auxiliary-enzyme cassette
+
+Saturated fatty acids are degraded by the four-step spiral above. **Unsaturated**
+fatty acids need **auxiliary enzymes** because their double bonds end up in
+positions the core enoyl-CoA hydratase cannot act on:
+
+- **Double bond at an odd-numbered carbon** (e.g. oleate 18:1Δ9) → after chain
+  shortening a (3Z)-enoyl-CoA forms, which a **Δ³,Δ²-enoyl-CoA isomerase**
+  (EC 5.3.3.8) converts to the (2E)-enoyl-CoA that rejoins the spiral.
+- **Double bond at an even-numbered carbon** (e.g. linoleate 18:2) → a
+  (2E,4Z)-dienoyl-CoA forms, which **2,4-dienoyl-CoA reductase** (NADPH,
+  EC 1.3.1.34) reduces to a (3E)-enoyl-CoA, then the Δ³,Δ²-isomerase re-isomerizes
+  it; a **Δ³,⁵,Δ²,⁴-dienoyl-CoA isomerase** (EC 5.3.3.21) handles the
+  conjugated-diene variant.
+
+This is the "cassette" Rossana's GO-CAM deck models on top of the saturated model.
+The fly auxiliary enzymes are now curated:
+
+| Auxiliary reaction | Human | Drosophila | Notes |
+|--------------------|-------|------------|-------|
+| Δ³,Δ²-enoyl-CoA isomerase (mitochondrial) | ECI1 | `DROME/CG4592`, `DROME/CG4594`, `DROME/CG4598` | tandem paralog cluster; mitochondrial matrix — **use these for a mitochondrial GO-CAM** |
+| Δ³,Δ²-enoyl-CoA isomerase (peroxisomal) | ECI2/PECI | `DROME/Dci` | peroxisomal-type; UniProt peroxisome (not the mito enzyme) |
+| Δ³,⁵,Δ²,⁴-dienoyl-CoA isomerase | ECH1 | `DROME/Ech1` | localization mito-vs-peroxisome unresolved (human ECH1 is peroxisomal) |
+| 2,4-dienoyl-CoA reductase (NADPH) | DECR1 | **— (no clean ortholog)** | see the gap below |
+
+**Mitochondrial vs peroxisomal isomerase.** For grounding the deck's *mitochondrial*
+cassette, the Δ³,Δ²-isomerase step maps to the mitochondrial **CG4592/CG4594/CG4598**
+cluster — **not** to `Dci`, which is the peroxisomal-type (PECI/ECI2) enzyme. This
+resolves the mito-vs-peroxisome ambiguity noted on the `Dci` review.
+
+### Curation-model gap: no fly 2,4-dienoyl-CoA reductase (DECR1)
+
+The reductase step of the **even-position** unsaturated cassette has **no
+confidently-assignable Drosophila ortholog**. Four ortholog resources converge:
+NCBI Datasets (841 DECR1 orthologs, **zero** in *Drosophila*), UniProt (no DROME
+protein named 2,4-dienoyl-CoA reductase or EC 1.3.1.34), Ensembl (none), and
+OrthoDB — whose only fly candidate, **CG3603**, is PANTHER-classified as a
+**(3R)-3-hydroxyacyl-CoA dehydrogenase / mitochondrial FAS-II 3-oxoacyl-ACP
+reductase** (fatty-acid *biosynthesis*), not DECR1, so it was **not** curated as
+the reductase. A GO-CAM of the even-position PUFA cassette therefore cannot
+currently ground the reductase node in the fly; the enzyme is likely divergent or
+unannotated (a candidate for reciprocal-BLAST / experimental resolution).
 
 ## Curation findings and patterns
 
@@ -228,9 +274,15 @@ represented directly. Flagged here as a candidate improvement.
 - [x] Cross-species module + reaction-chaining check (QC 20/20)
 - [x] OpenScientist organelle hypothesis: `DROME/Acat1` peroxisome (refuted)
 - [x] OpenScientist organelle hypothesis: `DROME/Mtpalpha` peroxisome (supported — conserved SKL PTS1, isoform-dependent dual targeting)
+- [x] OpenScientist chain-length/substrate specificity runs (ACAD9, CG4860, Mcad, Echs1) — all confirmed our reviews; see [Chain-length specificity](#chain-length-specificity--openscientist-structural-verdicts)
+- [x] Fly step-3 ortholog resolved + reviewed: `DROME/scu` (scully, HSD17B10 type-II); no classical HADH1 ortholog in fly
+- [x] Pathway-level Reactome cross-check ([sub-page](FATTY_ACID_BETA_OXIDATION/reactome-comparison.md))
+- [x] Mouse arm started: `mouse/Acadl` (LCAD) — homes the ACADVL cross-paralog cleanup
+- [x] Unsaturated-FAO auxiliary-enzyme cassette curated: `DROME/Dci`, `DROME/Ech1`, `DROME/CG4592`, `DROME/CG4594`, `DROME/CG4598`
 
 ## In progress / open
-- [x] Fly medium/short-chain 3-hydroxyacyl-CoA dehydrogenase ortholog (HADH step ③) — resolved: `DROME/scu` (scully), the HSD17B10 (type-II) ortholog; no classical HADH1 ortholog exists in fly. scully full review pending.
+- [ ] 2,4-dienoyl-CoA reductase (DECR1) fly ortholog — no clean ortholog found (see cassette gap above); needs reciprocal-BLAST / experimental resolution
+- [ ] Remaining mouse FAO orthologs (Acadvl, Acad9, Acadm, Acads, Hadha, Hadhb, Echs1, Hadh, Acat1, Acaa2); then rat and worm arms
 - [ ] FlyBase curation-gap candidates from PMID:40519079 (above)
 - [ ] Negation-representation gap (NOT+NEW vs existing positive term)
 
