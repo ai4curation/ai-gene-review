@@ -2,6 +2,71 @@
 title: "IBA Annotation Quality Project"
 maturity: COMPLETE
 tags: [PIPELINE, FLAGSHIP]
+species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE]
+genes:
+  - Epe1
+  - cds1
+  - LPL1
+  - UBA7
+  - RIMBP2
+  - arnF
+  - DPYSL2
+  - CRMP1
+  - DPYSL3
+  - AGO4
+  - UBAC2
+  - CAPG
+  - CRYAA
+  - BCL2
+  - Bcl2
+  - BCL2L1
+  - EIF4E2
+  - Aldh1l1
+  - Hmgcs2
+  - PEX2
+  - AGK
+  - AKTIP
+  - DPYSL4
+  - SAMD8
+  - CPT1C
+  - NTN1
+  - NTN3
+  - NOTCH1
+  - IL23R
+  - ABRAXAS1
+  - PIWIL1
+  - prg-1
+  - wago-1
+  - EIF2AK3
+  - BIRC6
+  - SSB2
+  - SSZ1
+  - BAIAP2L2
+  - PIK3C3
+  - SCGB1A1
+  - rqh1
+  - HDA1
+  - TOLL9
+  - ndhA
+  - ndhD
+  - ndhK
+  - che-3
+  - D7r2
+  - D7r4
+  - D7r5
+  - D7L1
+  - sta-2
+  - fshr-1
+  - opa1
+  - eat-3
+  - hsp-12.3
+  - hsp-12.6
+  - YAR1
+  - ACL4
+  - SIR3
+  - lys-7
+  - UBP3
+  - CASP12
 ---
 
 # IBA Annotation Quality Project
@@ -24,6 +89,81 @@ where IBA is *wrong* (over-annotation, patterns 1–15), while
 quantifies where IBA *under-calls* established biology — 511 curated human core
 molecular functions that IBA alone would miss.
 
+## Propagation Taxonomy and Checklist
+
+The patterns below are biological failure modes, but IBA review also needs a
+root-cause call: is the source annotation bad, or is the propagation bad? Use the
+same `review.propagation_review` structure as the
+[ISO review project](ISO.md#failure-taxonomy): `root_cause`, optional
+`failure_modes`, and per-source `source_entities` with short source-specific
+comments.
+
+### Root-cause classes
+
+These are the schema values for `propagation_review.root_cause`.
+
+| Code | IBA interpretation |
+|---|---|
+| `NO_FAILURE_CORE` | The ancestral/family inference is correct and core for the target. |
+| `NO_FAILURE_NON_CORE` | The inference is defensible but contextual, secondary, or generic. |
+| `SOURCE_BAD` | A seed/source annotation or family-node assertion is itself wrong, miscited, homonym-confused, or contradicted. |
+| `SOURCE_STALE_OR_MISSING` | The transferred term no longer appears on the current source record, or the donor trace cannot recover it. |
+| `SOURCE_WEAK_OR_INFERRED` | The source exists but is only inferred, statement-level, or otherwise weak for confident propagation. |
+| `EVIDENCE_CIRCULAR_OR_REDUNDANT` | The chain transfers from another transfer, or the target already has stronger direct evidence. |
+| `PROPAGATION_BAD` | The source biology is real, but the PANTHER node propagated it to the wrong target, subfamily, lineage, compartment, or role. |
+| `TERM_SCOPING_PROBLEM` | The propagated biology is related, but the GO term is too broad, too specific, or has the wrong role/qualifier. |
+| `UNRESOLVED` | The propagation issue was investigated but cannot yet be classified confidently. |
+
+### Biological subtypes
+
+These are the schema values for `propagation_review.failure_modes`.
+
+| Code | IBA signal |
+|---|---|
+| `WRONG_ORTHOLOG_OR_PARALOG` | Donor/source is a paralog, expanded family member, or wrong subfamily. |
+| `FUNCTIONAL_DIVERGENCE` | Target retained fold or orthology but changed substrate, product, activity, or pathway role. |
+| `PSEUDO_OR_SUBACTIVITY_LOSS` | Catalytic residues or a specific sub-activity are lost even though the domain remains. |
+| `CONTEXT_OR_TISSUE_MISMATCH` | Donor evidence is tissue, developmental, organismal, or disease-context specific. |
+| `LINEAGE_OR_TAXON_MISMATCH` | Process does not occur in the target lineage or organelle system. |
+| `COMPARTMENT_OR_COMPLEX_MISMATCH` | Localization, complex membership, or pathway compartment does not transfer. |
+| `REGULATORY_SIGN_INVERSION` | Family contains activators and inhibitors, and a positive/negative regulatory term leaks across members. |
+| `ROLE_CONFLATION` | Substrate, regulator, effector, or specificity subunit is annotated as the agent or core machinery. |
+| `GRANULARITY_MISMATCH` | Parent term is true but uninformative, or child term overstates specificity. |
+| `SOURCE_MISCITATION` | Source evidence points to the wrong gene, organism, publication, or homonym. |
+| `SOURCE_EVIDENCE_WEAK` | Source evidence is inferred, statement-level, stale, or otherwise too weak for confident propagation. |
+| `CIRCULAR_PROPAGATION` | Propagation chain depends on another propagated annotation rather than independent source evidence. |
+
+### Source status values
+
+These are the schema values for `propagation_review.source_entities[].source_status`.
+
+| Code | Source-level interpretation |
+|---|---|
+| `SUPPORTS_TRANSFER` | Source evidence supports the term and the transfer to the target. |
+| `SUPPORTS_SOURCE_BUT_NOT_TARGET` | Source evidence supports the source annotation, but propagation to the target is unsafe. |
+| `SOURCE_BAD` | Source annotation or source citation is itself wrong. |
+| `SOURCE_STALE_OR_MISSING` | Current source record no longer carries the transferred term, or tracing cannot recover it. |
+| `SOURCE_WEAK_OR_INFERRED` | Source exists but is only inferred, statement-level, or otherwise weak. |
+| `CIRCULAR_OR_REDUNDANT` | Source participates in a circular transfer chain or adds no independent support. |
+| `NOT_RELEVANT` | Source was inspected but is not relevant to the target annotation. |
+| `UNRESOLVED` | Source could not be classified confidently. |
+
+Before a strong `REMOVE` on an IBA row, record that these checks were done:
+
+- The GO term definition, aspect, qualifier, and taxon constraints were checked.
+- The GOA `WITH/FROM` field was read and the PANTHER `PTN...` node and seed
+  proteins were recorded.
+- The target and seed proteins were placed in their PANTHER family/subfamily
+  context. Cross-subfamily propagation is triage evidence, not a verdict.
+- The source annotation or family-node assertion was checked separately from the
+  propagation decision.
+- Target-specific evidence was checked where relevant: direct experiments,
+  curated `NOT` rows, active-site residues, domain architecture, localization,
+  isoforms, organismal context, and lineage constraints.
+- `review.reason` states the biological rationale, while
+  `review.propagation_review` records the mechanical root cause, failure modes,
+  and source entities.
+
 ## Slides
 
 - [Slides](IBA_REVIEW/slides/IBA_REVIEW-slides.html) (Marp source: [IBA_REVIEW-slides.md](IBA_REVIEW/slides/IBA_REVIEW-slides.md)) — AI generated
@@ -40,16 +180,27 @@ molecular functions that IBA alone would miss.
 - Reality: Epe1 has degenerate active site (HVD vs HXD), no detectable activity
 - **Impact**: Misleading annotation propagated via phylogenetic inference
 
-### 2. Ubiquitin-Like Modifier Confusion
+### 2. Ubiquitin-Like Modifier Specificity: IBA as a Positive Control
 
-**The Problem**: Function from ubiquitin E1 transferred to ISG15-specific E1.
+**The contrast**: UBA7 shows the opposite of an IBA failure. The IBA rows correctly
+capture the conserved ISGylation pathway, while naive domain propagation and some
+non-IBA annotations blur ISG15-specific E1 activity into generic ubiquitin-like or
+ubiquitin terms.
 
 **Example - UBA7 (human)**:
-- IBA annotations from ubiquitin pathway:
-  - `GO:0008641` (ubiquitin-like modifier activating enzyme activity) - too general
-  - Various ubiquitin-related terms
-- Reality: UBA7 specifically activates ISG15, not ubiquitin, in mammals
-- **Impact**: Generic terms obscure specific function
+- Correct IBA annotations:
+  - `GO:0019782` (ISG15 activating enzyme activity)
+  - `GO:0032020` (ISG15-protein conjugation)
+  - `GO:0045087` (innate immune response)
+- Over-generic or wrong non-IBA rows:
+  - `GO:0008641` (ubiquitin-like modifier activating enzyme activity) - `IEA`
+    from InterPro2GO; technically related but too general.
+  - `GO:0004842` (ubiquitin-protein transferase activity) and
+    `GO:0016567` (protein ubiquitination) - non-IBA ubiquitin terms that should
+    be redirected to ISG15 activation/conjugation.
+- Reality: UBA7 specifically activates ISG15, not ubiquitin, in mammals.
+- **Impact**: IBA provides a useful specific annotation that corrects the less
+  discriminating domain/keyword propagation.
 
 ### 3. Substrate Specificity Transfer
 
@@ -84,14 +235,23 @@ molecular functions that IBA alone would miss.
 
 The subfamily SF135 shares only 24% identity with synthases - less than synthases share with each other (43%). The longest branch length indicates maximum divergence and neo-functionalization.
 
-### 5. Secondary Activity Promotion
+### 5. Paralog/Secondary Activity Transfer
 
-**The Problem**: Non-core activities from well-characterized orthologs promoted to uncharacterized proteins.
+**The Problem**: A real activity in one paralog or source subfamily can be
+promoted to a related but distinct target whose closest characterized comparator
+supports a different substrate class. This should not be called
+`KEEP_AS_NON_CORE` unless there is evidence the target actually has the activity
+as a secondary function.
 
 **Example - LPL1 (C. albicans)**:
 - IBA annotation: `GO:0047372` (monoacylglycerol lipase activity)
-- This is likely substrate promiscuity, not core function
-- **Action**: KEEP_AS_NON_CORE rather than ACCEPT
+- Source trace: `PANTHER:PTN000773837|SGD:S000003112`, corresponding to the
+  S. cerevisiae ROG1 monoacylglycerol lipase source
+- Closest characterized LPL1 comparator: S. cerevisiae LPL1, a lipid-droplet
+  phospholipase B acting on glycerophospholipids
+- **Action**: UNDECIDED for C. albicans LPL1 pending source-tree and substrate
+  review; do not mark as non-core without evidence that Candida LPL1 hydrolyzes
+  monoacylglycerols
 
 ### 6. Organism/Tissue Context Transfer
 
@@ -251,16 +411,21 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 **Species**: human
 **Status**: COMPLETE
 
-**IBA Annotations Flagged**:
+**Annotations reviewed**:
 | Term | Issue | Action |
 |------|-------|--------|
-| GO:0005737 cytoplasm | Correct | ACCEPT |
-| GO:0019782 ISG15 activating enzyme activity | Correct, specific | ACCEPT |
-| GO:0032020 ISG15-protein conjugation | Correct | ACCEPT |
-| GO:0045087 innate immune response | Correct | ACCEPT |
-| GO:0006974 DNA damage response | Correct | ACCEPT |
+| GO:0005737 cytoplasm | IBA, correct | ACCEPT |
+| GO:0019782 ISG15 activating enzyme activity | IBA, correct and specific | ACCEPT |
+| GO:0032020 ISG15-protein conjugation | IBA, correct | ACCEPT |
+| GO:0045087 innate immune response | IBA, correct | ACCEPT |
+| GO:0006974 DNA damage response | IBA, correct | ACCEPT |
+| GO:0008641 ubiquitin-like modifier activating enzyme activity | InterPro2GO IEA, too general | MODIFY to GO:0019782 |
+| GO:0004842 ubiquitin-protein transferase activity | Non-IBA ubiquitin term, wrong activity class | MODIFY to GO:0019782 |
+| GO:0016567 protein ubiquitination | UniPathway IEA, wrong modifier process | MODIFY to GO:0032020 |
 
-**Note**: UBA7 IBA annotations are largely correct because the ISGylation pathway is conserved.
+**Lesson**: UBA7 should be highlighted as a positive-control case for IBA
+specificity. The bad rows are not IBA propagation errors; they are generic or
+ubiquitin-biased non-IBA mappings that the IBA annotations help correct.
 
 ### LPL1 - Phospholipase Specificity
 
@@ -273,7 +438,7 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 | GO:0006629 lipid metabolic process | Correct | ACCEPT |
 | GO:0004622 PC lysophospholipase activity | Too narrow | MODIFY |
 | GO:0005811 lipid droplet | Correct | ACCEPT |
-| GO:0047372 monoacylglycerol lipase activity | Secondary activity | KEEP_AS_NON_CORE |
+| GO:0047372 monoacylglycerol lipase activity | ROG1-paralog/substrate-specificity transfer; target evidence absent | UNDECIDED |
 
 ### RIMBP2 - Context-Specific Term Transfer
 
@@ -402,7 +567,7 @@ See detailed family analysis: `families/PTHR48034/PTHR48034-review.md`
 | Epe1 | pombe | Pseudo-enzyme propagation | HIGH | COMPLETE |
 | cds1 | MYCTU, VIBCH | **Neo-functionalization (opposite reaction)** | **CRITICAL** | COMPLETE |
 | LPL1 | CANAL | Substrate specificity | MEDIUM | COMPLETE |
-| UBA7 | human | Generic vs specific terms | LOW | COMPLETE |
+| UBA7 | human | Positive control: IBA corrects generic/domain propagation | N/A | COMPLETE |
 | RIMBP2 | human | Context-specific term transfer | MEDIUM | COMPLETE |
 | arnF | ECOLI | Functional divergence within SMR superfamily | MEDIUM | COMPLETE |
 | DPYSL2/CRMP1/DPYSL3 | human | Pseudo-enzyme (UniProt CAUTION: metallo-hydrolase residues absent) | HIGH | COMPLETE |

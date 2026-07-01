@@ -148,6 +148,15 @@ def _frontmatter_bool(value: Any, default: bool) -> bool:
     return default
 
 
+def _as_string_list(value: Any) -> List[str]:
+    """Normalize a frontmatter scalar/list to a list of strings."""
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple, set)):
+        return [str(v) for v in value]
+    return [str(value)]
+
+
 def should_autolink_gene_symbols(frontmatter: Dict[str, Any]) -> bool:
     """Return whether automatic prose gene-symbol linking should run.
 
@@ -166,6 +175,70 @@ def should_autolink_gene_symbols(frontmatter: Dict[str, Any]) -> bool:
             default=False,
         )
     return True
+
+
+def resolve_frontmatter_gene_links(
+    genes_value: Any,
+    symbol_index: Dict[str, List[str]],
+    species_hints: Optional[List[str]] = None,
+    genes_dir: Path = Path("genes"),
+    base_path: str = "../../genes",
+) -> Tuple[List[Dict[str, str]], List[str]]:
+    """Resolve ``genes:`` frontmatter entries to gene-review links.
+
+    Bare symbols use the same priority-ordered ``species:`` hint semantics as
+    prose autolinking. Entries may also be species-qualified as ``CODE/symbol``
+    to target a specific review in multispecies projects.
+    """
+    species_hints = species_hints or []
+    links: List[Dict[str, str]] = []
+    warnings: List[str] = []
+
+    for raw_gene in _as_string_list(genes_value):
+        label = raw_gene
+        species = ""
+        symbol = raw_gene
+        url = ""
+
+        if "/" in raw_gene:
+            code, candidate_symbol = raw_gene.split("/", 1)
+            if (genes_dir / code / candidate_symbol).is_dir():
+                species = code
+                symbol = candidate_symbol
+                url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
+            elif (genes_dir / code).is_dir():
+                warnings.append(
+                    f"Frontmatter gene '{raw_gene}' not found "
+                    f"(no genes/{code}/{candidate_symbol})."
+                )
+        else:
+            species_list = symbol_index.get(raw_gene, [])
+            if len(species_list) == 1:
+                species = species_list[0]
+                url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
+            elif species_list:
+                for hint in species_hints:
+                    if hint in species_list:
+                        species = hint
+                        url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
+                        break
+                if not url:
+                    warnings.append(
+                        f"Ambiguous frontmatter gene '{raw_gene}' found in species: "
+                        f"{', '.join(species_list)}. Add a matching species hint "
+                        "or use CODE/symbol in genes: to resolve."
+                    )
+
+        links.append(
+            {
+                "label": label,
+                "species": species,
+                "symbol": symbol,
+                "url": url,
+            }
+        )
+
+    return links, warnings
 
 
 def replace_gene_symbols(
@@ -1072,6 +1145,17 @@ def render_project(
     if isinstance(species_hints, str):
         species_hints = [species_hints]
 
+    frontmatter = dict(frontmatter)
+    gene_links, frontmatter_gene_warnings = resolve_frontmatter_gene_links(
+        frontmatter.get("genes"),
+        symbol_index,
+        species_hints=species_hints,
+        genes_dir=genes_dir,
+        base_path=genes_base_path,
+    )
+    if gene_links:
+        frontmatter["gene_links"] = gene_links
+
     # Replace explicit gene tags first. The generated markdown links are then
     # preserved by the ordinary auto-linker.
     content, tag_warnings = replace_gene_tags(
@@ -1100,7 +1184,9 @@ def render_project(
         )
     else:
         linked_content, symbol_warnings = content, []
-    warnings = tag_warnings + qualified_warnings + symbol_warnings
+    warnings = (
+        frontmatter_gene_warnings + tag_warnings + qualified_warnings + symbol_warnings
+    )
 
     # Link raw SPKW sample rows such as `MCP/P06491` to UniProt. Local review
     # links are already explicit via <gene> tags or ordinary symbol autolinks.
@@ -1145,6 +1231,7 @@ def render_project(
         warnings=warnings,
         frontmatter=frontmatter,
     )
+    html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 
     # Create output directory and write file, mirroring subfolder structure
     output_path = output_dir / rel_path.with_suffix(".html")
@@ -1379,6 +1466,7 @@ def render_projects_table(
         all_species=all_species,
         all_review_statuses=all_review_statuses,
     )
+    html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "all-projects.html"

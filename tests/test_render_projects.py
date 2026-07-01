@@ -14,6 +14,7 @@ from ai_gene_review.render_projects import (
     replace_species_qualified_symbols,
     render_project,
     render_project_bundle,
+    resolve_frontmatter_gene_links,
     should_autolink_gene_symbols,
 )
 
@@ -408,6 +409,52 @@ class TestReplaceGeneSymbols:
 
         assert "[ManY](../../genes/ECOLI/manY/manY-ai-review.html)" in result
         assert warnings == []
+
+
+class TestFrontmatterGeneLinks:
+    """Tests for resolving ``genes:`` frontmatter into project-page links."""
+
+    def test_priority_ordered_species_hints(self, tmp_path):
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "human" / "CRYAA").mkdir(parents=True)
+        (genes_dir / "BOVIN" / "CRYAA").mkdir(parents=True)
+
+        index = build_symbol_to_species_index(genes_dir)
+        links, warnings = resolve_frontmatter_gene_links(
+            ["CRYAA"],
+            index,
+            species_hints=["human", "BOVIN"],
+            genes_dir=genes_dir,
+            base_path="../../genes",
+        )
+
+        assert warnings == []
+        assert links == [
+            {
+                "label": "CRYAA",
+                "species": "human",
+                "symbol": "CRYAA",
+                "url": "../../genes/human/CRYAA/CRYAA-ai-review.html",
+            }
+        ]
+
+    def test_species_qualified_entry(self, tmp_path):
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "MYCTU" / "cds1").mkdir(parents=True)
+        (genes_dir / "VIBCH" / "cds1").mkdir(parents=True)
+
+        index = build_symbol_to_species_index(genes_dir)
+        links, warnings = resolve_frontmatter_gene_links(
+            ["VIBCH/cds1"],
+            index,
+            species_hints=["MYCTU"],
+            genes_dir=genes_dir,
+            base_path="../../genes",
+        )
+
+        assert warnings == []
+        assert links[0]["label"] == "VIBCH/cds1"
+        assert links[0]["url"] == "../../genes/VIBCH/cds1/cds1-ai-review.html"
 
 
 class TestReplaceGeneTags:

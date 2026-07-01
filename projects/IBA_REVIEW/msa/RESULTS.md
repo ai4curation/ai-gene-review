@@ -1,3 +1,9 @@
+---
+title: "IBA Pseudo-Enzyme MSA Checks"
+species: [human]
+genes: [AGO1, AGO2, AGO3, AGO4, DPYSL2, CRMP1, DPYSL3, DPYSL4]
+---
+
 # MSA check of two pseudo-enzyme claims
 
 Reproducible alignment-level verification of catalytic-residue loss for two of the

@@ -410,6 +410,140 @@ class EvidenceType(str, Enum):
     """
 
 
+class PropagationRootCauseEnum(str, Enum):
+    """
+    Mechanical root-cause classification for propagated or inferred annotations. This distinguishes bad source annotations from bad propagation decisions and term-scoping issues.
+    """
+    NO_FAILURE_CORE = "NO_FAILURE_CORE"
+    """
+    The propagated annotation is correct and core for the target.
+    """
+    NO_FAILURE_NON_CORE = "NO_FAILURE_NON_CORE"
+    """
+    The propagated annotation is biologically defensible but contextual, secondary, or generic.
+    """
+    SOURCE_BAD = "SOURCE_BAD"
+    """
+    The source annotation is wrong, miscited, homonym-confused, or contradicted.
+    """
+    SOURCE_STALE_OR_MISSING = "SOURCE_STALE_OR_MISSING"
+    """
+    The transferred term no longer appears on the current source record, or donor tracing cannot recover it.
+    """
+    SOURCE_WEAK_OR_INFERRED = "SOURCE_WEAK_OR_INFERRED"
+    """
+    The source exists but is only inferred, statement-level, or otherwise weak for propagation.
+    """
+    EVIDENCE_CIRCULAR_OR_REDUNDANT = "EVIDENCE_CIRCULAR_OR_REDUNDANT"
+    """
+    The propagation chain transfers from another transfer, or the target already has stronger direct evidence.
+    """
+    PROPAGATION_BAD = "PROPAGATION_BAD"
+    """
+    The source annotation is sound, but the term should not propagate to this target.
+    """
+    TERM_SCOPING_PROBLEM = "TERM_SCOPING_PROBLEM"
+    """
+    The biology is related, but the GO term is too broad, too specific, or has the wrong role or qualifier.
+    """
+    UNRESOLVED = "UNRESOLVED"
+    """
+    The propagation issue was investigated but could not be classified confidently.
+    """
+
+
+class PropagationFailureModeEnum(str, Enum):
+    """
+    Biological subtype for a propagation or inference issue.
+    """
+    WRONG_ORTHOLOG_OR_PARALOG = "WRONG_ORTHOLOG_OR_PARALOG"
+    """
+    Donor/source is a paralog, expanded family member, or wrong subfamily.
+    """
+    FUNCTIONAL_DIVERGENCE = "FUNCTIONAL_DIVERGENCE"
+    """
+    Target retained fold or orthology but changed substrate, product, activity, or pathway role.
+    """
+    PSEUDO_OR_SUBACTIVITY_LOSS = "PSEUDO_OR_SUBACTIVITY_LOSS"
+    """
+    Catalytic residues or a specific sub-activity are lost even though the domain remains.
+    """
+    CONTEXT_OR_TISSUE_MISMATCH = "CONTEXT_OR_TISSUE_MISMATCH"
+    """
+    Donor evidence is tissue, developmental, organismal, or disease-context specific.
+    """
+    LINEAGE_OR_TAXON_MISMATCH = "LINEAGE_OR_TAXON_MISMATCH"
+    """
+    Process does not occur in the target lineage or organelle system.
+    """
+    COMPARTMENT_OR_COMPLEX_MISMATCH = "COMPARTMENT_OR_COMPLEX_MISMATCH"
+    """
+    Localization, complex membership, or pathway compartment does not transfer.
+    """
+    REGULATORY_SIGN_INVERSION = "REGULATORY_SIGN_INVERSION"
+    """
+    Family contains activators and inhibitors, and a positive/negative regulatory term leaks across members.
+    """
+    ROLE_CONFLATION = "ROLE_CONFLATION"
+    """
+    Substrate, regulator, effector, or specificity subunit is annotated as the agent or core machinery.
+    """
+    GRANULARITY_MISMATCH = "GRANULARITY_MISMATCH"
+    """
+    Parent term is true but uninformative, or child term overstates specificity.
+    """
+    SOURCE_MISCITATION = "SOURCE_MISCITATION"
+    """
+    Source evidence points to the wrong gene, organism, publication, or homonym.
+    """
+    SOURCE_EVIDENCE_WEAK = "SOURCE_EVIDENCE_WEAK"
+    """
+    Source evidence is inferred, statement-level, stale, or otherwise too weak for confident propagation.
+    """
+    CIRCULAR_PROPAGATION = "CIRCULAR_PROPAGATION"
+    """
+    Propagation chain depends on another propagated annotation rather than independent source evidence.
+    """
+
+
+class PropagationSourceStatusEnum(str, Enum):
+    """
+    Mechanical status of a source entity with respect to a propagated target annotation.
+    """
+    SUPPORTS_TRANSFER = "SUPPORTS_TRANSFER"
+    """
+    Source evidence supports the term and the transfer to the target.
+    """
+    SUPPORTS_SOURCE_BUT_NOT_TARGET = "SUPPORTS_SOURCE_BUT_NOT_TARGET"
+    """
+    Source evidence supports the source annotation, but propagation to the target is unsafe.
+    """
+    SOURCE_BAD = "SOURCE_BAD"
+    """
+    Source annotation or source citation is itself wrong.
+    """
+    SOURCE_STALE_OR_MISSING = "SOURCE_STALE_OR_MISSING"
+    """
+    Current source record no longer carries the transferred term, or tracing cannot recover it.
+    """
+    SOURCE_WEAK_OR_INFERRED = "SOURCE_WEAK_OR_INFERRED"
+    """
+    Source exists but is only inferred, statement-level, or otherwise weak.
+    """
+    CIRCULAR_OR_REDUNDANT = "CIRCULAR_OR_REDUNDANT"
+    """
+    Source participates in a circular transfer chain or adds no independent support.
+    """
+    NOT_RELEVANT = "NOT_RELEVANT"
+    """
+    Source was inspected but is not relevant to the target annotation.
+    """
+    UNRESOLVED = "UNRESOLVED"
+    """
+    Source could not be classified confidently.
+    """
+
+
 class ActionEnum(str, Enum):
     ACCEPT = "ACCEPT"
     """
@@ -1852,7 +1986,7 @@ class EvidenceItem(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    source_id: str = Field(default=..., description="""Identifier for the evidence source, e.g. PMID:123456, DOI:..., Reactome:R-HSA-..., MetaCyc:..., file:...""", json_schema_extra = { "linkml_meta": {'alias': 'source_id', 'domain_of': ['EvidenceItem']} })
+    source_id: str = Field(default=..., description="""Identifier for the evidence source, e.g. PMID:123456, DOI:..., Reactome:R-HSA-..., MetaCyc:..., file:...""", json_schema_extra = { "linkml_meta": {'alias': 'source_id', 'domain_of': ['EvidenceItem', 'PropagationSource']} })
     title: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'title',
          'domain_of': ['Reference',
                        'EvidenceItem',
@@ -3851,6 +3985,30 @@ class Review(ConfiguredBaseModel):
                        'ModuleNode',
                        'Review',
                        'CoreFunction']} })
+    propagation_review: Optional[PropagationReview] = Field(default=None, description="""Mechanical review metadata for annotations whose evidence depends on propagation or inference from source genes, family nodes, orthogroups, or other non-target evidence. Use this to classify source-side vs propagation-side failure modes without duplicating the prose rationale in review.reason.""", json_schema_extra = { "linkml_meta": {'alias': 'propagation_review', 'domain_of': ['Review']} })
+
+
+class PropagationReview(ConfiguredBaseModel):
+    """
+    Structured, mechanical assessment of a propagated or inferred annotation. The detailed biological rationale remains in review.reason; this object records the reusable taxonomy and optional per-source-gene/node comments.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    root_cause: PropagationRootCauseEnum = Field(default=..., description="""Where the issue lies, or that no issue was found: source annotation, propagation decision, term scoping, circular/redundant evidence, or no propagation failure.""", json_schema_extra = { "linkml_meta": {'alias': 'root_cause', 'domain_of': ['PropagationReview']} })
+    failure_modes: Optional[list[PropagationFailureModeEnum]] = Field(default=None, description="""Biological shape of the propagation issue. Multiple values are allowed when a case combines, for example, paralog transfer and functional divergence.""", json_schema_extra = { "linkml_meta": {'alias': 'failure_modes', 'domain_of': ['PropagationReview']} })
+    source_entities: Optional[list[PropagationSource]] = Field(default=None, description="""Source genes, gene products, PANTHER nodes, family nodes, or other source entities inspected for the propagated annotation.""", json_schema_extra = { "linkml_meta": {'alias': 'source_entities', 'domain_of': ['PropagationReview']} })
+
+
+class PropagationSource(ConfiguredBaseModel):
+    """
+    A source entity considered while reviewing an inferred annotation. This is intentionally compact: use comment for source-specific caveats, not for restating the whole review rationale.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    source_id: str = Field(default=..., description="""Identifier for the source entity, e.g. UniProtKB:P03950, MGI:MGI:104579, PANTHER:PTN002745520, or a GO_REF/source label when no gene product identifier is available.""", json_schema_extra = { "linkml_meta": {'alias': 'source_id', 'domain_of': ['EvidenceItem', 'PropagationSource']} })
+    source_label: Optional[str] = Field(default=None, description="""Human-readable source label, such as a gene symbol or node label.""", json_schema_extra = { "linkml_meta": {'alias': 'source_label', 'domain_of': ['PropagationSource']} })
+    source_status: Optional[PropagationSourceStatusEnum] = Field(default=None, description="""Mechanical status of this source with respect to the target annotation.""", json_schema_extra = { "linkml_meta": {'alias': 'source_status', 'domain_of': ['PropagationSource']} })
+    comment: Optional[str] = Field(default=None, description="""Short source-specific comment, e.g. \"human ANG supports angiogenesis, but mouse Ang2/Angrp is non-angiogenic\" or \"seed is inferred-only\".""", json_schema_extra = { "linkml_meta": {'alias': 'comment', 'domain_of': ['PropagationSource']} })
 
 
 class CoreFunction(ConfiguredBaseModel):
@@ -4711,6 +4869,8 @@ ModuleContext.model_rebuild()
 ModuleConnection.model_rebuild()
 ExistingAnnotation.model_rebuild()
 Review.model_rebuild()
+PropagationReview.model_rebuild()
+PropagationSource.model_rebuild()
 CoreFunction.model_rebuild()
 AnnotationExtension.model_rebuild()
 TermMapping.model_rebuild()

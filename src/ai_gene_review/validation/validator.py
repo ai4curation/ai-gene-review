@@ -32,6 +32,15 @@ from ai_gene_review.validation.validation_report import (
 from ai_gene_review.validation.goa_validator import GOAValidator
 
 
+PROPAGATION_REVIEW_EVIDENCE_TYPES = {"IBA", "ISO"}
+PROPAGATION_REVIEW_ACTIONS = {
+    "REMOVE",
+    "MODIFY",
+    "MARK_AS_OVER_ANNOTATED",
+    "UNDECIDED",
+}
+
+
 @contextmanager
 def timer(name: str, callback: Optional[Callable] = None):
     """Context manager for timing operations with optional progress callback."""
@@ -225,6 +234,38 @@ def check_best_practices_rules(
                         path=f"existing_annotations[{i}].original_reference_id",
                         suggestion=f"Add a reference with ID '{ref_id}' to the references section or correct the reference ID",
                     )
+
+    # Check for structured propagation reviews on corrective IBA/ISO decisions.
+    # These annotations depend on source genes/nodes; corrective calls should
+    # distinguish source-side defects from propagation-side defects mechanically.
+    if "existing_annotations" in data and data["existing_annotations"]:
+        for i, annotation in enumerate(data["existing_annotations"]):
+            if not isinstance(annotation, dict):
+                continue
+            evidence_type = annotation.get("evidence_type")
+            review = annotation.get("review")
+            if not isinstance(review, dict):
+                continue
+            action = review.get("action")
+            if (
+                evidence_type in PROPAGATION_REVIEW_EVIDENCE_TYPES
+                and action in PROPAGATION_REVIEW_ACTIONS
+                and not review.get("propagation_review")
+            ):
+                report.add_issue(
+                    ValidationSeverity.WARNING,
+                    (
+                        f"{evidence_type} annotation with action {action} is missing "
+                        "structured propagation_review metadata"
+                    ),
+                    path=f"existing_annotations[{i}].review.propagation_review",
+                    suggestion=(
+                        "Add propagation_review with root_cause, failure_modes, "
+                        "and source_entities when source genes/nodes were inspected"
+                    ),
+                    validation_category="BestPractices",
+                    check_type="missing_propagation_review",
+                )
 
     # Helper function to validate file references
     def validate_file_reference(ref_id: str, path: str) -> None:
