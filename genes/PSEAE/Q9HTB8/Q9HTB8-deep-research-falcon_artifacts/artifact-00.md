@@ -1,0 +1,18 @@
+| Property | Details |
+|---|---|
+| Gene name/locus | **wzm**; ordered locus **PA5451** in *Pseudomonas aeruginosa* PAO1 (from the target UniProt record; gene-function linkage to CPA export supported in *P. aeruginosa*) (pqac-00000001, pqac-00000002) |
+| UniProt ID | **Q9HTB8** (target UniProt accession provided by user) |
+| Protein name | Transport permease protein; functionally the **integral membrane permease (TMD) subunit** of the Wzm-Wzt ABC transporter for O-polysaccharide export (pqac-00000001, pqac-00000002) |
+| Protein family | **ABC-2 integral membrane protein family** / O-antigen polysaccharide ABC transporter permease; Wzm is the membrane component of a two-subunit ABC exporter (pqac-00000000, pqac-00000001) |
+| Organism | *Pseudomonas aeruginosa* strain PAO1 (ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101) |
+| Substrate transported | **UndPP-linked common polysaccharide antigen (CPA; formerly A-band)**, a **D-rhamnose homopolymer/rhamnan O-polysaccharide** assembled on the cytosolic face of the inner membrane before export to the periplasmic side (pqac-00000012, pqac-00000014, pqac-00000017) |
+| Transport partner | **Wzt**, the cytosolic ATP-binding/nucleotide-binding domain partner; together Wzm-Wzt form the ABC transporter required for CPA export (pqac-00000001, pqac-00000002, pqac-00000003) |
+| Localization | **Inner membrane** integral membrane protein; exports substrate from the **cytoplasmic side** to the **periplasmic side** for subsequent ligation to lipid A-core (pqac-00000001, pqac-00000003, pqac-00000017) |
+| Topology (number of TM helices) | Wzm homologs form the transporter TMD with **6 transmembrane helices per protomer**, plus an N-terminal amphipathic/interface helix and periplasmic gate helices in structural studies of homologous Wzm-Wzt systems (pqac-00000004, pqac-00000006, pqac-00000007) |
+| Biosynthetic pathway | **ABC transporter-dependent CPA/A-band O-antigen biosynthesis pathway**; distinct from the **Wzy-dependent** pathway used for O-specific antigen (OSA/B-band). CPA is synthesized on a lipid carrier in the cytoplasm, exported by Wzm-Wzt, then ligated to lipid A-core in the periplasm (pqac-00000013, pqac-00000017) |
+| Biological function | Required for **export of CPA to the cell surface**. Loss of **wzm** blocks export and core ligation but not polymer synthesis, causing CPA to accumulate intracellularly on lipid carrier and preventing surface display (pqac-00000001, pqac-00000002, pqac-00000019) |
+| Key structural features (gate helices, aromatic belt, channel) | Structural studies of Wzm-Wzt homologs show Wzm forms a **continuous transmembrane channel** wide enough for linear polysaccharides; contains **cytosolic and periplasmic gate helices**, **aromatic residues/aromatic belt** near the periplasmic exit, and channel-lining aromatic/hydrophilic residues that coordinate the polymer during translocation (pqac-00000004, pqac-00000008, pqac-00000009) |
+| Transport mechanism | Best-supported current model is an **ATP-driven processive channel mechanism**, not classical alternating access: the lipid-linked O-polysaccharide is recruited, loaded into a continuous Wzm channel, and moved stepwise across the membrane as ATP binding/hydrolysis at Wzt drives conformational changes (pqac-00000028, pqac-00000030, pqac-00000031, pqac-00000034) |
+
+
+*Table: This table summarizes the core identity, function, localization, substrate, and mechanism of the Wzm permease encoded by PA5451 in *Pseudomonas aeruginosa* PAO1. It is useful as a compact reference linking the PAO1 gene to the CPA/A-band O-antigen export pathway and to modern structural models of Wzm-Wzt transport.*
