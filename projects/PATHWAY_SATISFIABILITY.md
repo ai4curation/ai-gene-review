@@ -41,6 +41,28 @@ that context.
 > in the companion notebook: **[Methods & reproduction](PATHWAY_SATISFIABILITY/methods.md)**.
 > It is the eukaryotic analogue of GapMind's prokaryotic step-finding.
 
+## Background: pathway hole filling
+
+"Pathway hole filling" — a pathway looks like it should run but a step has no gene assigned, so
+what fills it? — is a mature field for **microbial genomes** and essentially silent on the
+**metazoan** version of the question. The prior art splits into three problems: (1) **step-finding**,
+does a genome encode the pathway (GapMind — of which this project is the eukaryotic analogue;
+KEGG module completeness; MinPath; SEED subsystems); (2) **hole-filling proper**, nominate the
+gene for a known-but-unassigned step — the origin of the term, in Pathway Tools' Bayesian
+**Pathway Hole Filler** (Green & Karp 2004) and IMG's "Find Candidate Genes for Missing
+Function," both leaning on genome context (operons, occurrence profiles); and (3) **network
+gap-filling**, add reactions so a flux model balances (GapFind/GapFill, ModelSEED, gapseq).
+
+Every one of these answers a **genome-level** presence/absence question — right for a microbe,
+where a genome roughly *is* an organism. It is the wrong question for a metazoan, where every
+cell carries the whole genome and the discriminating variable is not presence but **which
+isozyme is expressed where**. This project keeps GapMind's logic and swaps the oracle from
+genome gene-content to **context expression**, so a "hole" becomes "this pathway cannot be wired
+up *in this context*, and here is the gene and place where it fails."
+
+> Full landscape, citations, and a comparison table:
+> **[Background: pathway hole filling](PATHWAY_SATISFIABILITY/background.md)**.
+
 ## Results
 
 ### Between organs (GTEx bulk tissue)
