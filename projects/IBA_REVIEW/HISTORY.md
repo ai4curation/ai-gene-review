@@ -1,5 +1,27 @@
 ---
 title: "IBA Annotation Quality — History, Methodology & Lessons"
+species: [human, MYCTU, VIBCH, SCHPO, ECOLI, CANAL, worm, yeast, ANOGA, POPTR, DANRE]
+genes:
+  - DPYSL2
+  - CRMP1
+  - DPYSL3
+  - AGO4
+  - UBAC2
+  - CAPG
+  - CRYAA
+  - CRY1
+  - CRY2
+  - BCL2
+  - EIF4E2
+  - AGK
+  - PIWIL1
+  - cds1
+  - RIMBP2
+  - arnF
+  - ndhA
+  - ndhD
+  - ndhK
+  - rpoB
 ---
 
 # IBA Annotation Quality — History, Methodology & Lessons

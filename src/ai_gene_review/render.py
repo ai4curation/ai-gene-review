@@ -651,7 +651,7 @@ def render_html(
     template = env.get_template(template_path.name)
     html = template.render(gene=data, yaml_content=yaml_content)
 
-    return html
+    return "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 
 
 def render_gene_review(

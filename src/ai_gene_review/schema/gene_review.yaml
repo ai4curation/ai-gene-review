@@ -291,6 +291,14 @@ slots:
       everywhere else the schema records what IS known; here it records, with the
       same evidentiary discipline, what is not. See the Function Knowledge Gaps
       project (projects/FUNCTION_KNOWLEDGE_GAPS.md).
+  propagation_review:
+    range: PropagationReview
+    description: >-
+      Mechanical review metadata for annotations whose evidence depends on
+      propagation or inference from source genes, family nodes, orthogroups, or
+      other non-target evidence. Use this to classify source-side vs
+      propagation-side failure modes without duplicating the prose rationale in
+      review.reason.
   status:
     range: GeneReviewStatusEnum
     description: Overall status of the gene review
@@ -1225,6 +1233,7 @@ classes:
       - additional_reference_ids
       - supported_by
       - knowledge_gaps
+      - propagation_review
     rules:
       - preconditions:
           slot_conditions:
@@ -1234,6 +1243,59 @@ classes:
           slot_conditions:
             proposed_replacement_terms:
               required: true
+
+  PropagationReview:
+    description: >-
+      Structured, mechanical assessment of a propagated or inferred annotation.
+      The detailed biological rationale remains in review.reason; this object
+      records the reusable taxonomy and optional per-source-gene/node comments.
+    attributes:
+      root_cause:
+        range: PropagationRootCauseEnum
+        required: true
+        description: >-
+          Where the issue lies, or that no issue was found: source annotation,
+          propagation decision, term scoping, circular/redundant evidence, or no
+          propagation failure.
+      failure_modes:
+        range: PropagationFailureModeEnum
+        multivalued: true
+        description: >-
+          Biological shape of the propagation issue. Multiple values are allowed
+          when a case combines, for example, paralog transfer and functional
+          divergence.
+      source_entities:
+        range: PropagationSource
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Source genes, gene products, PANTHER nodes, family nodes, or other
+          source entities inspected for the propagated annotation.
+
+  PropagationSource:
+    description: >-
+      A source entity considered while reviewing an inferred annotation. This is
+      intentionally compact: use comment for source-specific caveats, not for
+      restating the whole review rationale.
+    attributes:
+      source_id:
+        range: string
+        required: true
+        description: >-
+          Identifier for the source entity, e.g. UniProtKB:P03950,
+          MGI:MGI:104579, PANTHER:PTN002745520, or a GO_REF/source label when
+          no gene product identifier is available.
+      source_label:
+        range: string
+        description: Human-readable source label, such as a gene symbol or node label.
+      source_status:
+        range: PropagationSourceStatusEnum
+        description: Mechanical status of this source with respect to the target annotation.
+      comment:
+        range: string
+        description: >-
+          Short source-specific comment, e.g. "human ANG supports angiogenesis,
+          but mouse Ang2/Angrp is non-angiogenic" or "seed is inferred-only".
         
   CoreFunction:
     description: A core function is a GO-CAM-like annotation of the core evolved functions of a gene.
@@ -2325,6 +2387,78 @@ enums:
         description: Inferred from Electronic Annotation
         meaning: ECO:0000501
 
+  PropagationRootCauseEnum:
+    description: >-
+      Mechanical root-cause classification for propagated or inferred
+      annotations. This distinguishes bad source annotations from bad
+      propagation decisions and term-scoping issues.
+    permissible_values:
+      NO_FAILURE_CORE:
+        description: The propagated annotation is correct and core for the target.
+      NO_FAILURE_NON_CORE:
+        description: The propagated annotation is biologically defensible but contextual, secondary, or generic.
+      SOURCE_BAD:
+        description: The source annotation is wrong, miscited, homonym-confused, or contradicted.
+      SOURCE_STALE_OR_MISSING:
+        description: The transferred term no longer appears on the current source record, or donor tracing cannot recover it.
+      SOURCE_WEAK_OR_INFERRED:
+        description: The source exists but is only inferred, statement-level, or otherwise weak for propagation.
+      EVIDENCE_CIRCULAR_OR_REDUNDANT:
+        description: The propagation chain transfers from another transfer, or the target already has stronger direct evidence.
+      PROPAGATION_BAD:
+        description: The source annotation is sound, but the term should not propagate to this target.
+      TERM_SCOPING_PROBLEM:
+        description: The biology is related, but the GO term is too broad, too specific, or has the wrong role or qualifier.
+      UNRESOLVED:
+        description: The propagation issue was investigated but could not be classified confidently.
+
+  PropagationFailureModeEnum:
+    description: Biological subtype for a propagation or inference issue.
+    permissible_values:
+      WRONG_ORTHOLOG_OR_PARALOG:
+        description: Donor/source is a paralog, expanded family member, or wrong subfamily.
+      FUNCTIONAL_DIVERGENCE:
+        description: Target retained fold or orthology but changed substrate, product, activity, or pathway role.
+      PSEUDO_OR_SUBACTIVITY_LOSS:
+        description: Catalytic residues or a specific sub-activity are lost even though the domain remains.
+      CONTEXT_OR_TISSUE_MISMATCH:
+        description: Donor evidence is tissue, developmental, organismal, or disease-context specific.
+      LINEAGE_OR_TAXON_MISMATCH:
+        description: Process does not occur in the target lineage or organelle system.
+      COMPARTMENT_OR_COMPLEX_MISMATCH:
+        description: Localization, complex membership, or pathway compartment does not transfer.
+      REGULATORY_SIGN_INVERSION:
+        description: Family contains activators and inhibitors, and a positive/negative regulatory term leaks across members.
+      ROLE_CONFLATION:
+        description: Substrate, regulator, effector, or specificity subunit is annotated as the agent or core machinery.
+      GRANULARITY_MISMATCH:
+        description: Parent term is true but uninformative, or child term overstates specificity.
+      SOURCE_MISCITATION:
+        description: Source evidence points to the wrong gene, organism, publication, or homonym.
+      SOURCE_EVIDENCE_WEAK:
+        description: Source evidence is inferred, statement-level, stale, or otherwise too weak for confident propagation.
+      CIRCULAR_PROPAGATION:
+        description: Propagation chain depends on another propagated annotation rather than independent source evidence.
+
+  PropagationSourceStatusEnum:
+    description: Mechanical status of a source entity with respect to a propagated target annotation.
+    permissible_values:
+      SUPPORTS_TRANSFER:
+        description: Source evidence supports the term and the transfer to the target.
+      SUPPORTS_SOURCE_BUT_NOT_TARGET:
+        description: Source evidence supports the source annotation, but propagation to the target is unsafe.
+      SOURCE_BAD:
+        description: Source annotation or source citation is itself wrong.
+      SOURCE_STALE_OR_MISSING:
+        description: Current source record no longer carries the transferred term, or tracing cannot recover it.
+      SOURCE_WEAK_OR_INFERRED:
+        description: Source exists but is only inferred, statement-level, or otherwise weak.
+      CIRCULAR_OR_REDUNDANT:
+        description: Source participates in a circular transfer chain or adds no independent support.
+      NOT_RELEVANT:
+        description: Source was inspected but is not relevant to the target annotation.
+      UNRESOLVED:
+        description: Source could not be classified confidently.
 
   ActionEnum:
     permissible_values:
