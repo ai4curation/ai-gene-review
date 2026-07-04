@@ -86,21 +86,15 @@ def fig_lobule() -> Path:
     fig, ax = plt.subplots(figsize=(7.2, 3.6))
     ax.bar(xs, [rel[i] for i in range(len(layers))],
            color=[SAT if s else BLOCK for s in sat], edgecolor="none", width=0.82)
-    for row in layers:
-        if not row["satisfiable"]:
-            ax.text(row["layer"], 0.03, "blocked\n(no G6PC1)", ha="center", va="bottom",
-                    fontsize=7, color=GATE)
     ax.set_xticks(xs)
     ax.set_xticklabels([f"L{i}" for i in xs])
     ax.set_ylabel("G6pc expression\n(fraction of its peak)")
-    ax.set_xlabel("liver lobule layer")
     ax.set_ylim(0, 1.05)
-    ax.annotate("pericentral", xy=(1, -0.22), xycoords=("data", "axes fraction"),
-                ha="left", fontsize=8, color="#555")
-    ax.annotate("periportal", xy=(9, -0.22), xycoords=("data", "axes fraction"),
-                ha="right", fontsize=8, color="#555")
-    ax.set_title("The same gate resolves within the liver: gluconeogenesis is periportal",
-                 fontsize=12, loc="left", pad=10)
+    ax.annotate("pericentral", xy=(1, -0.2), xycoords=("data", "axes fraction"),
+                ha="left", fontsize=9, color="#555")
+    ax.annotate("periportal", xy=(9, -0.2), xycoords=("data", "axes fraction"),
+                ha="right", fontsize=9, color="#555")
+    ax.set_title("Gluconeogenesis along the porto-central axis", fontsize=12.5, loc="left", pad=8)
     fig.tight_layout()
     path = OUT / "fig-lobule.svg"
     fig.savefig(path, format="svg", bbox_inches="tight")
@@ -156,15 +150,10 @@ def fig_spatial() -> Path:
         ax.set_ylim(-1.3, 1.25)
         ax.set_aspect("equal")
         ax.axis("off")
-    axes[0].annotate("central vein\n(pericentral)", xy=(0, 0), xytext=(0, -1.22),
-                     ha="center", va="top", fontsize=7, color="#5b6b8c")
-    axes[-1].annotate("portal / periportal", xy=(0.75, 0.75), xytext=(0.2, 1.16),
-                      ha="center", fontsize=7, color="#555")
-    fig.suptitle("Gluconeogenesis retreats to the periportal rim as the gate tightens",
+    axes[0].annotate("central vein", xy=(0, 0), xytext=(0, -1.22),
+                     ha="center", va="top", fontsize=8, color="#5b6b8c")
+    fig.suptitle("The same axis projected onto the lobule",
                  fontsize=12.5, x=0.02, ha="left", y=1.02)
-    fig.text(0.02, -0.02, "Canonical lobule geometry (schematic); spot colour = engine "
-             "satisfiability verdict per Halpern-2017 zonation layer. Green = satisfiable.",
-             fontsize=7, color="#777")
     fig.tight_layout()
     path = OUT / "fig-spatial.svg"
     fig.savefig(path, format="svg", bbox_inches="tight")
@@ -267,6 +256,5 @@ def fig_abduction() -> Path:
 
 
 if __name__ == "__main__":
-    # fig_lobule() (bar chart) is kept as an alternative but superseded by fig_spatial().
-    for p in (fig_tissues(), fig_spatial(), fig_genomes(), fig_abduction()):
+    for p in (fig_tissues(), fig_lobule(), fig_spatial(), fig_genomes(), fig_abduction()):
         print("wrote", p.relative_to(ROOT))

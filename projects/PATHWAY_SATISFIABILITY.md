@@ -94,18 +94,24 @@ the satisfiability engine, not annotated by hand.*
 ### Within an organ (Halpern 2017 liver zonation)
 Reusing the same engine with a liver-lobule zonation oracle, the gluconeogenesis route is
 satisfiable only toward the **periportal** pole and is blocked at the **pericentral** pole —
-at the same gate atom (Figure 2). The porto-central orientation is inferred from landmark genes
+at the same gate atom (Figures 2–3). The porto-central orientation is inferred from landmark genes
 (not assumed), so the periportal restriction is a derivation, not a restatement.
 
-![Three liver-lobule hex-spot grids; as the expression gate tightens the satisfiable zone retreats from the pericentral core to the periportal rim](PATHWAY_SATISFIABILITY/fig-spatial.svg)
+![G6pc expression across the nine porto-central zonation layers, the pericentral layer blocked](PATHWAY_SATISFIABILITY/fig-lobule.svg)
 
-*Figure 2. The same engine, one scale down — the liver lobule as a spatial grid (Halpern 2017).
-Each Visium-style spot is coloured by the engine's satisfiability verdict for its zonation layer;
-as the expression gate tightens (left → right) the satisfiable zone (**green**) retreats from the
-pericentral core (blocked at the very same gate atom, `G6PC1`) to the **periportal** rim. The
-porto-central axis is oriented from independent landmark genes, so the periportal restriction is a
-result, not an assumption — the identical gate operates between organs (Figure 1) and within one.
-Geometry is the canonical lobule idealisation; the colour is the real per-layer result.*
+*Figure 2. The measured axis. `G6pc` expression across Halpern 2017's nine porto-central zonation
+layers (L1 pericentral → L9 periportal), each bar coloured by whether gluconeogenesis is
+satisfiable there. The pericentral layer is blocked at the very same gate atom, `G6PC1`, that
+separates organs in Figure 1. This is a one-dimensional measurement — expression along a single
+axis, not a tissue image.*
+
+![The nine-layer axis wrapped onto the canonical liver-lobule shape as three hex-spot grids](PATHWAY_SATISFIABILITY/fig-spatial.svg)
+
+*Figure 3. The same axis projected onto the lobule. Figure 2's nine layers are wrapped onto the
+**canonical lobule diagram** (central vein at the centre, portal rim outside) and tiled as
+spots; as the expression gate tightens (left → right) the satisfiable zone (**green**) retreats to
+the periportal rim. The **geometry is a schematic** — a standard anatomical diagram, not measured
+2-D coordinates — while each spot's **colour is the real per-layer result** from Figure 2.*
 
 ### Which precursor? (substrate-entry routes)
 A precursor-resolved module makes lactate / alanine (via pyruvate) and glycerol (bypassing
@@ -116,14 +122,14 @@ lactate-dominant; liver highest alanine capacity).
 
 ### Across genomes (KEGG genome presence) — the GapMind reproduction
 The *same* engine reconstructs L-methionine biosynthesis from KEGG orthologs across genomes
-(Figure 3). It selects the encoded route per organism (succinyl vs acetyl acylation;
+(Figure 4). It selects the encoded route per organism (succinyl vs acetyl acylation;
 trans-sulfuration vs direct sulfhydrylation; cobalamin-dependent vs -independent methylation),
 completes *C. glutamicum* through the alternative branch despite a missing trans-sulfuration
 enzyme, and flags genome-reduced organisms as gaps.
 
 ![Presence matrix of methionine-biosynthesis orthologs across eight genomes with per-genome FOUND/GAP status](PATHWAY_SATISFIABILITY/fig-genomes.svg)
 
-*Figure 3. Methionine biosynthesis reconstructed across eight genomes. Green = the ortholog is
+*Figure 4. Methionine biosynthesis reconstructed across eight genomes. Green = the ortholog is
 encoded (KEGG); columns are grouped by pathway stage (acylation `metA`/`metX`; sulfur
 incorporation `metB`+`metC` trans-sulfuration or `metY` direct; methylation `metE`/`metH`). Each
 genome uses a different encoded route — `E. coli` succinyl (`metA`), `H. influenzae` acetyl
@@ -132,7 +138,7 @@ genome uses a different encoded route — `E. coli` succinyl (`metA`), `H. influ
 identical.*
 
 ### Abduction — a gap is a hypothesis
-Crossing satisfiability with an **independent** activity phenotype (Figure 4):
+Crossing satisfiability with an **independent** activity phenotype (Figure 5):
 
 | outcome | meaning | example |
 |---|---|---|
@@ -147,7 +153,7 @@ machinery does *not* over-call *Rickettsia*, whose gap is correctly read as its 
 
 ![Two-by-two of engine satisfiability against independent methionine phenotype, with Synechocystis and M. jannaschii as abduction targets](PATHWAY_SATISFIABILITY/fig-abduction.svg)
 
-*Figure 4. A gap becomes a hypothesis. Each genome placed by the **engine's** verdict (can the
+*Figure 5. A gap becomes a hypothesis. Each genome placed by the **engine's** verdict (can the
 pathway be reconstructed? — horizontal) against an **independent** phenotype (does the organism
 actually make methionine? — vertical). The dangerous, interesting quadrant is top-left: organisms
 that demonstrably make methionine yet have no candidate for a step — `Synechocystis`,
