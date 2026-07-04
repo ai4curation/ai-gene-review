@@ -106,10 +106,17 @@ Proposed new term candidate: a specific MF for "dihydroxyphenyl/hydroxyphenyllac
 
 ## Deep research provenance
 
-Automated deep research could not be generated: `just deep-research-falcon` (Edison/falcon)
-timed out at 600s on both the initial run and a retry, and the perplexity-lite fallback
-returned HTTP 401 (API quota exhausted). No `-deep-research-*.md` file was fabricated (per
-policy). This review is therefore grounded directly in the two primary papers
-(PMID:25086774 full text; PMID:22090488 abstract) plus the UniProt/InterPro/PANTHER records.
-All supporting_text quotes were verified as verbatim (whitespace-normalized) substrings of
-the cached publications before use.
+The `just deep-research-falcon` recipe reported a 600s timeout on both the initial run and
+the retry (and the perplexity-lite fallback returned HTTP 401, quota exhausted). However the
+underlying Edison/falcon client kept running and, on the retry, DID write a genuine report
+(`dcar-1-deep-research-falcon.md`, ~1005s runtime, 19 citations, 2 artifacts) after the
+recipe's wrapper had already exited. That file was inspected and is authentic Edison output:
+it correctly identifies DCAR-1, HPLA as the DAMP ligand, apical hyp7 epidermal localization,
+and the full GPA-12 -> PLC/DAG -> TPA-1(PKC) -> TIR-1 -> NSY-1/SEK-1/PMK-1(p38) -> STA-2/ELT-3
+-> nlp-29 pathway, plus the neuronal DHCA-avoidance origin. It is included in the commit and
+referenced. No `-deep-research-*.md` file was fabricated.
+
+All annotation/core-function `supporting_text` quotes are PMID-anchored (verified as verbatim
+whitespace-normalized substrings of PMID:25086774 full text and PMID:22090488 abstract). The
+single `file:` deep-research quote used was grep-verified against the falcon report (the
+reference validator skips `file:` prefixes).
