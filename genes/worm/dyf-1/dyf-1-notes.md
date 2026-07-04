@@ -4,6 +4,17 @@ UniProt: Q8I7G4 (TTC30_CAEEL) · WormBase: WBGene00001117 / F54C1.5 · Gene: dyf
 ("abnormal **dy**e **f**illing protein 1"). Member of the CAEEL_CILIOPATHY / IFT flagship
 project (anterograde IFT-B).
 
+## Provenance note: automated deep research unavailable
+
+Automated deep research did not complete for this gene. `just deep-research-falcon worm dyf-1
+--fallback perplexity-lite` ran but **both** providers failed: falcon (Edison) **timed out**
+after 600 s ("Verbose Edison response has no answer. Status: in progress"), and the
+perplexity-lite fallback returned **HTTP 401 – insufficient_quota** ("You exceeded your current
+quota"). No `-deep-research-*.md` file was generated, and none was fabricated. This review is
+therefore grounded directly in the UniProt entry, the GOA table, and the cached primary
+publications (PMID:16049494, PMID:28479320, PMID:22922713, PMID:17761526, PMID:15916950), with
+every `supporting_text` verbatim-verified against those cached publications.
+
 ## Summary / standalone picture
 
 DYF-1 is a ~656-aa tetratricopeptide-repeat (TPR) protein (9 TPR repeats; TTC30/DYF-1/fleer
