@@ -114,14 +114,24 @@ then reports which precursors are usable, with physiologically faithful skews (k
 lactate-dominant; liver highest alanine capacity).
 
 ### Across genomes (KEGG genome presence) — the GapMind reproduction
-The *same* engine reconstructs L-methionine biosynthesis from KEGG orthologs across genomes.
-It selects the encoded route per organism (succinyl vs acetyl acylation; trans-sulfuration vs
-direct sulfhydrylation; cobalamin-dependent vs -independent methylation), completes
-*C. glutamicum* through the alternative branch despite a missing trans-sulfuration enzyme, and
-flags genome-reduced organisms as gaps.
+The *same* engine reconstructs L-methionine biosynthesis from KEGG orthologs across genomes
+(Figure 3). It selects the encoded route per organism (succinyl vs acetyl acylation;
+trans-sulfuration vs direct sulfhydrylation; cobalamin-dependent vs -independent methylation),
+completes *C. glutamicum* through the alternative branch despite a missing trans-sulfuration
+enzyme, and flags genome-reduced organisms as gaps.
+
+![Presence matrix of methionine-biosynthesis orthologs across eight genomes with per-genome FOUND/GAP status](PATHWAY_SATISFIABILITY/fig-genomes.svg)
+
+*Figure 3. Methionine biosynthesis reconstructed across eight genomes. Green = the ortholog is
+encoded (KEGG); columns are grouped by pathway stage (acylation `metA`/`metX`; sulfur
+incorporation `metB`+`metC` trans-sulfuration or `metY` direct; methylation `metE`/`metH`). Each
+genome uses a different encoded route — `E. coli` succinyl (`metA`), `H. influenzae` acetyl
+(`metX`), `C. glutamicum` direct sulfhydrylation (`metY`, no `metC`) — and the engine reports
+**FOUND** or a **GAP** accordingly. Only the oracle changed from the tissue results; the logic is
+identical.*
 
 ### Abduction — a gap is a hypothesis
-Crossing satisfiability with an **independent** activity phenotype:
+Crossing satisfiability with an **independent** activity phenotype (Figure 4):
 
 | outcome | meaning | example |
 |---|---|---|
@@ -133,6 +143,16 @@ The two abduction targets are real metabolic dark matter: both are autotrophs th
 methionine yet encode none of the canonical acylation/sulfur enzymes, so the engine emits a
 structured lead ("an unannotated / non-orthologous enzyme must fill this step"). The same
 machinery does *not* over-call *Rickettsia*, whose gap is correctly read as its auxotrophy.
+
+![Two-by-two of engine satisfiability against independent methionine phenotype, with Synechocystis and M. jannaschii as abduction targets](PATHWAY_SATISFIABILITY/fig-abduction.svg)
+
+*Figure 4. A gap becomes a hypothesis. Each genome placed by the **engine's** verdict (can the
+pathway be reconstructed? — horizontal) against an **independent** phenotype (does the organism
+actually make methionine? — vertical). The dangerous, interesting quadrant is top-left: organisms
+that demonstrably make methionine yet have no candidate for a step — `Synechocystis`,
+`M. jannaschii` — flagged as leads. `Rickettsia` (a genuine auxotroph) is correctly *not* flagged,
+and the "encoded but not realised" quadrant is empty. The phenotype axis is independent of the
+gene content, so a flagged gap is a real prediction, not a restatement.*
 
 The same `abduce()` runs on the **eukaryotic** side against GTEx, with the independent claim
 now a documented tissue function (and an extra "not cell-autonomous" explanation, since a
