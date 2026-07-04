@@ -118,8 +118,16 @@ Implications for the GO annotations:
 
 ## Deep research
 
-- Falcon deep research (`just deep-research-falcon worm hsp-110 --fallback perplexity-lite`) was
-  launched foreground; the batch of concurrent worm falcon jobs was slow. See
-  `hsp-110-deep-research-falcon.md` if present. The review is grounded in the primary literature
-  (PMID:19165329, PMID:22242008, PMID:14668486) plus family-level NEF mechanism papers
-  (PMID:16688211, PMID:18555782); no claims depend on unverified deep-research text.
+- Falcon (Edison Scientific Literature) deep research completed after a ~29-min run
+  (`hsp-110-deep-research-falcon.md`, 23 citations). It independently reaches the same
+  conclusions used here: HSP-110 is the cytosolic HSP110-family **NEF for Hsp70** and a component
+  of the **metazoan Hsp70–Hsp40–Hsp110 protein-disaggregation machine**. It surfaces two
+  directly relevant papers for the knowledge gaps — Rampelt et al. 2012 EMBO J "Metazoan Hsp70
+  machines use Hsp110 to power protein disaggregation" and, crucially for the worm, Kirstein et
+  al. 2017 Aging Cell "In vivo properties of the disaggregase function of J-proteins and Hsc70 in
+  Caenorhabditis elegans stress and aging" — that establish the C. elegans disaggregase context
+  against which HSP-110's specific in-vivo requirement (knowledge gap #1) is defined.
+- The falcon report uses DOI-keyed citations (no PMIDs); per repo experience the reference
+  validator does not check `file:`/DOI quotes, so NONE of the falcon text is used verbatim in the
+  review. All `supporting_text` in the review is PMID-anchored and verified against the cached
+  publications (PMID:19165329, PMID:22242008, PMID:14668486, PMID:16688211, PMID:18555782).
