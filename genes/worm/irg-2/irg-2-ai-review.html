@@ -1,0 +1,2842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>irg-2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>irg-2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O16224" target="_blank" class="term-link">
+                        O16224
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "irg-2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O16224" data-a="DESCRIPTION: irg-2 (infection response gene 2; ORF C49G7.5) enc..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>irg-2 (infection response gene 2; ORF C49G7.5) encodes a 278-residue Caenorhabditis elegans protein of unknown molecular function. Its mRNA is a transcriptional readout of the intestinal innate immune response: it is strongly and specifically induced upon infection with the virulent Gram-negative pathogen Pseudomonas aeruginosa (strain PA14) but not by an attenuated (gacA) mutant, and its induction requires the bZIP transcription factor ZIP-2 while being independent of the PMK-1/p38 MAPK, DBL-1/TGF-beta and KGB-1/JNK immune pathways. Induction is triggered by pathogen-imposed blockade of host mRNA translation (surveillance immunity) — for example via endocytosed P. aeruginosa Exotoxin A or the chemical translation inhibitor cycloheximide — and irg-2 is co-regulated with the paralogous marker gene irg-1. Beyond acute infection, irg-2 mRNA accumulates with age in a ZIP-2-dependent manner and correlates with mitochondrial damage. The IRG-2 protein carries no recognizable catalytic domain or characterized motif (only a short disordered, polar-residue region near its C-terminus), has evidence only at the transcript level, and has no demonstrated biochemical activity, interacting partner, or subcellular localization. Whether the protein itself contributes to pathogen resistance, as opposed to serving as a downstream reporter of ZIP-2 activation, is not established.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140367" target="_blank" class="term-link">
+                                    GO:0140367
+                                </a>
+                            </span>
+                            <span class="term-label">antibacterial innate immune response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20133860
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor zip-2 mediates an early response t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16224" data-a="GO:0140367" data-r="PMID:20133860" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEP (inferred from expression pattern) annotation: irg-2 is a member of the &#34;infection response gene&#34; class defined by Estes et al. 2010 as genes specifically induced by virulent P. aeruginosa but not by an attenuated gacA mutant. Troemel et al. 2006 independently place irg-2 (as C49G7.5) among the top P. aeruginosa-induced genes at 4 h. The evidence is transcriptional induction during bacterial infection, which the IEP code accurately reflects.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation correctly captures irg-2&#39;s defining, well-replicated property — strong and specific transcriptional induction during antibacterial (P. aeruginosa) infection — and the IEP evidence code is appropriate for an expression-based inference. Retained as a core aspect of the gene. Note the boundary of this evidence: it demonstrates induction, not that the IRG-2 protein is functionally required for the response (see knowledge_gaps).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                                        PMID:20133860
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We focused on genes that are induced in C. elegans by infection with the bacterial pathogen Pseudomonas aeruginosa, but are not induced by an isogenic attenuated gacA mutant.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17096597" target="_blank" class="term-link">
+                                        PMID:17096597
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We tested induction of the top five genes upregulated by P. aeruginosa versus E. coli at 4 h</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16224" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ND (no data) annotation at the molecular_function root: no molecular function has been experimentally determined for IRG-2. The protein has no recognizable catalytic domain or characterized motif, and — unlike its co-regulated paralog irg-1 (which carries a predicted NADAR/YbiA-like domain) — offers no sequence feature from which to even hypothesize an activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ND annotation honestly reflects the current state of knowledge: IRG-2 is molecular-function dark. This is a genuine biology knowledge gap (see knowledge_gaps), not a curation defect to be repaired by asserting an unsupported activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20133860
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor zip-2 mediates an early response t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16224" data-a="GO:0050829" data-r="PMID:20133860" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEP annotation specifying that irg-2&#39;s induction occurs in response to a Gram-negative bacterium. P. aeruginosa, the pathogen that induces irg-2, is Gram-negative, so this is a more specific and appropriate child of the antibacterial response term, supported by the same expression evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate and appropriately specific: irg-2 is induced by the Gram-negative pathogen P. aeruginosa, and the IEP evidence code matches the expression-based source. As with the other IEP term, this reflects induction rather than a demonstrated protein-level effector requirement.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                                        PMID:20133860
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This screen identified zip-2, a bZIP transcription factor that is required for inducing irg-1, as well as several other genes, and is important for defense against infection by P. aeruginosa.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16968778" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16968778
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A conserved role for a GATA transcription factor in regulati...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16224" data-a="GO:0045087" data-r="PMID:16968778" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEP (inferred from high-throughput expression pattern) annotation from the Shapira et al. 2006 genome-wide study of intestinal infection responses, in which the endodermal GATA factor ELT-2 governs a suite of P. aeruginosa-induced genes. This is a broader parent of the antibacterial-response terms and provides independent high-throughput expression support that irg-2 is part of the intestinal innate immune transcriptional program.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Valid and appropriate. C. elegans has only innate immunity, so this general term correctly classifies irg-2&#39;s immune involvement, and the HEP evidence code matches the high-throughput expression source. It is retained as a higher-level classification alongside the more specific antibacterial terms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16968778" target="_blank" class="term-link">
+                                        PMID:16968778
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Gene expression and functional RNAi-based analyses identified the tissue-specific GATA transcription factor ELT-2 as a major regulator of an early intestinal protective response to infection with the human bacterial pathogen Pseudomonas aeruginosa.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>irg-2 acts as a downstream transcriptional effector of the ZIP-2 branch of C. elegans surveillance immunity. Its mRNA is a specific, PMK-1-independent readout of the intestinal antibacterial defense response, induced when virulent P. aeruginosa (or other insults that block host translation) is detected. Its role is defined by this regulated expression; the biochemical activity of the IRG-2 protein and whether it is itself required for pathogen resistance remain undetermined.</h3>
+                <span class="vote-buttons" data-g="O16224" data-a="FUNCTION: irg-2 acts as a downstream transcriptional effecto..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140367" target="_blank" class="term-link">
+                                antibacterial innate immune response
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                defense response to Gram-negative bacterium
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                                PMID:20133860
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We focused on genes that are induced in C. elegans by infection with the bacterial pathogen Pseudomonas aeruginosa, but are not induced by an isogenic attenuated gacA mutant.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32350153" target="_blank" class="term-link">
+                                PMID:32350153
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the expression of the ZIP-2 targets irg-1 (Figure 2A) and irg-2 (Figure 2B) increased 24.0-fold and 15.5-fold, respectively, from day 1 to day 8 of adulthood</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Standard GO reference for No Data (ND) annotations, used when no experimental or computational evidence is available for a given aspect of gene function. Applied here to the molecular_function root for irg-2.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                            PMID:20133860
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">bZIP transcription factor zip-2 mediates an early response to Pseudomonas aeruginosa infection in Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Defines the &#34;infection response gene&#34; (irg) class as genes specifically induced by virulent P. aeruginosa but not by an attenuated gacA mutant; irg-2 is a member of this class.</div>
+
+                        <div class="finding-text">"We focused on genes that are induced in C. elegans by infection with the bacterial pathogen Pseudomonas aeruginosa, but are not induced by an isogenic attenuated gacA mutant."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The bZIP transcription factor ZIP-2 is required for inducing irg-1 and several other infection-response genes and is important for defense against P. aeruginosa.</div>
+
+                        <div class="finding-text">"This screen identified zip-2, a bZIP transcription factor that is required for inducing irg-1, as well as several other genes, and is important for defense against infection by P. aeruginosa."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17096597" target="_blank" class="term-link">
+                            PMID:17096597
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">p38 MAPK regulates expression of immune response genes and contributes to longevity in C. elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">irg-2 (C49G7.5) is among the top P. aeruginosa-induced genes and is induced via a PMK-1 (p38 MAPK)-independent pathway.</div>
+
+                        <div class="finding-text">"The remaining two genes (C49G7.5 and F53E10.4) must therefore be induced via a PMK-1–independent pathway"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22520465" target="_blank" class="term-link">
+                            PMID:22520465
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">C. elegans detects pathogen-induced translational inhibition to activate immune signaling.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The zip-2/irg surveillance pathway is activated by pathogen-induced inhibition of host mRNA translation, sensed via endocytosed Exotoxin A, which raises ZIP-2 protein levels.</div>
+
+                        <div class="finding-text">"P. aeruginosa infection inhibits mRNA translation in the intestine via the endocytosed translation inhibitor Exotoxin A, which leads to an increase in ZIP-2 protein levels."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The zip-2/irg-1 pathway is also induced by disruption of core host processes including translational inhibition, independent of infection.</div>
+
+                        <div class="finding-text">"In the absence of infection we find that the zip-2/irg-1 pathway is upregulated following disruption of several core host processes, including inhibition of mRNA translation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32350153" target="_blank" class="term-link">
+                            PMID:32350153
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A cellular surveillance and defense system that delays aging phenotypes in C. elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">irg-2 is a bona fide ZIP-2 target whose expression rises strongly with age; the age-dependent increase is largely ZIP-2-dependent.</div>
+
+                        <div class="finding-text">"the expression of the ZIP-2 targets irg-1 (Figure 2A) and irg-2 (Figure 2B) increased 24.0-fold and 15.5-fold, respectively, from day 1 to day 8 of adulthood"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The age-dependent increases in irg-1 and irg-2 depend on ZIP-2.</div>
+
+                        <div class="finding-text">"indicating that the age-dependent increases in irg-1 and irg-2 expression were largely dependent on ZIP-2."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16968778" target="_blank" class="term-link">
+                            PMID:16968778
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A conserved role for a GATA transcription factor in regulating epithelial innate immune responses.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide study identifying the endodermal GATA factor ELT-2 as a major regulator of the intestinal infection-response transcriptional program that includes irg-2.</div>
+
+                        <div class="finding-text">"Gene expression and functional RNAi-based analyses identified the tissue-specific GATA transcription factor ELT-2 as a major regulator of an early intestinal protective response to infection with the human bacterial pathogen Pseudomonas aeruginosa."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the IRG-2 protein have any enzymatic or direct antimicrobial activity, or is it an inert transcriptional reporter of ZIP-2 activation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O16224" data-a="Q: Does the IRG-2 protein have any enzymatic or direc..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is irg-2 loss-of-function associated with any measurable susceptibility to P. aeruginosa (survival or bacterial burden)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O16224" data-a="Q: Is irg-2 loss-of-function associated with any meas..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Where does IRG-2 protein localize within intestinal (and pharyngeal) cells, and is it secreted?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O16224" data-a="Q: Where does IRG-2 protein localize within intestina..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do irg-1 and irg-2 act redundantly or on distinct targets within the ZIP-2 surveillance program?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O16224" data-a="Q: Do irg-1 and irg-2 act redundantly or on distinct ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate an irg-2 deletion (and irg-1;irg-2 double) and assay survival and intestinal bacterial burden on P. aeruginosa PA14 versus control bacteria, with transgenic rescue, to test whether IRG-2 protein is required for defense.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: IRG-2 is a functional effector required for wild-type resistance to P. aeruginosa, not merely a downstream reporter.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="O16224" data-a="EXPERIMENT: Generate an irg-2 deletion (and irg-1;irg-2 double..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant IRG-2 and screen for candidate biochemical activities and for direct antibacterial activity against P. aeruginosa in vitro; determine its structure (experimental or from AlphaFold) to search for cryptic active-site or fold features.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: IRG-2 possesses a discrete molecular activity (enzymatic or antimicrobial) that its lack of an annotated domain has obscured.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="O16224" data-a="EXPERIMENT: Express and purify recombinant IRG-2 and screen fo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use endogenous fluorescent tagging plus affinity/proximity proteomics (AP-MS) of IRG-2 in infected animals to determine subcellular localization and physical interaction partners.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: IRG-2 localizes to a defined compartment (e.g. secretory/apical intestinal) and acts through specific protein partners.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="O16224" data-a="EXPERIMENT: Use endogenous fluorescent tagging plus affinity/p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular function of IRG-2 is undetermined. No catalytic, binding, or antimicrobial activity has been demonstrated, no physical interaction partner is known, and — unlike its co-regulated paralog irg-1, which carries a predicted NADAR/YbiA-like domain — the protein has no recognizable domain from which to even hypothesize an activity.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> irg-2 is a well-established transcriptional readout of the ZIP-2 surveillance-immunity pathway: strongly and specifically induced by virulent P. aeruginosa (PMID:20133860), by translational inhibition (Exotoxin A / cycloheximide; PMID:22520465), and with age in a ZIP-2-dependent manner (PMID:32350153), independent of PMK-1 p38 MAPK (PMID:17096597). The 278-aa protein has only a short disordered/polar-residue region and no catalytic motif, and evidence exists solely at the transcript level (UniProt PE=2).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> irg-2 is one of the canonical downstream effectors invoked to define the ZIP-2 arm of C. elegans surveillance immunity, yet what its protein product actually does — enzyme, antimicrobial effector, or inert reporter — is entirely unknown, leaving the effector output of this well-studied pathway mechanistically blank.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Recombinant-protein biochemistry and/or structure determination to test for an enzymatic or antimicrobial activity; affinity/proximity proteomics (AP-MS) or yeast two-hybrid to identify partners; endogenous tagging for subcellular localization.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"GO:0003674	molecular_function	molecular_function	ECO:0000307	ND"</em> — file:worm/irg-2/irg-2-goa.tsv</li>
+
+                <li><em>"No enzymatic activity has been assigned to the protein."</em> — file:worm/irg-2/irg-2-deep-research-falcon.md</li>
+
+                <li><em>"the expression of the ZIP-2 targets irg-1 (Figure 2A) and irg-2 (Figure 2B)"</em> — PMID:32350153</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether the IRG-2 protein is functionally required for defense against P. aeruginosa. All evidence linking irg-2 to immunity is transcriptional (IEP/HEP); no irg-2 loss-of-function survival, colonization, or immune phenotype has been reported, so whether IRG-2 is a causal effector or a passive reporter of ZIP-2 activation is unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The regulator ZIP-2 is required for defense against P. aeruginosa (PMID:20133860), and irg-2 is a ZIP-2-dependent target (PMID:32350153); but requirement of the regulator does not establish requirement of this particular target. irg-2&#39;s association with defense rests entirely on expression correlation, not on perturbation of irg-2 itself.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing effector from reporter is essential before irg-2 can be assigned a causal role in innate immunity, and would clarify whether the ZIP-2 pathway&#39;s protective output runs through irg-2 or through other, as-yet-unidentified effectors.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Loss-of-function (deletion/RNAi) and overexpression of irg-2 with quantitative survival and bacterial-burden assays on P. aeruginosa PA14, ideally with rescue, to test whether IRG-2 protein is required for or sufficient to enhance resistance.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"is important for defense against infection by P. aeruginosa."</em> — PMID:20133860</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+
+            <span class="badge">caeel-surveillance-immunity</span>
+
+        </div>
+    </div>
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(irg-2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O16224" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: *irg-2* (Infection Response Gene 2, C49G7.5) in *Caenorhabditis elegans*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">39 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-03T20:36:38.824210</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="irg-2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-irg-2-infection-response-gene-2-c49g75-in-caenorhabditis-elegans">Comprehensive Research Report: <em>irg-2</em> (Infection Response Gene 2, C49G7.5) in <em>Caenorhabditis elegans</em></h1>
+<h2 id="1-gene-identity-and-overview">1. Gene Identity and Overview</h2>
+<p>The gene <em>irg-2</em> (ORF name C49G7.5; UniProt accession O16224) encodes Infection Response Protein 2 in <em>Caenorhabditis elegans</em>. It was originally identified as one of the most strongly pathogen-induced genes in genome-wide transcriptomic analyses of <em>C. elegans</em> exposed to the human pathogen <em>Pseudomonas aeruginosa</em> (troemel2006p38mapkregulates pages 8-9, troemel2006p38mapkregulates pages 7-8). The gene is classified as an immunity-linked gene (ILG), a group first named based on their upregulation following pathogen challenge (fanelli2023immunitylinkedgenesare pages 1-2). <em>irg-2</em> belongs to the core host immune response gene set in <em>C. elegans</em> and is induced by exposure to diverse bacterial and fungal pathogens (simonsen2012strengthinnumbers pages 5-6).</p>
+<h2 id="2-transcriptional-regulation-and-signaling-pathway-context">2. Transcriptional Regulation and Signaling Pathway Context</h2>
+<h3 id="21-pmk-1-independent-induction-class-d-pathogen-response-gene">2.1 PMK-1-Independent Induction (Class D Pathogen Response Gene)</h3>
+<p>A seminal study by Troemel et al. (2006) classified pathogen-responsive genes into five classes (A–E) based on their dependence on the PMK-1 p38 MAPK pathway for basal and induced expression. <em>irg-2</em>/C49G7.5 was designated a <strong>Class D gene</strong>, meaning it is induced by <em>P. aeruginosa</em> infection but does <strong>not</strong> require PMK-1 for either its basal expression on <em>E. coli</em> or its induction upon pathogen exposure (troemel2006p38mapkregulates pages 8-9, troemel2006p38mapkregulates pages 7-8). This classification indicated early on that <em>irg-2</em> is regulated by an alternative, PMK-1-independent immune signaling mechanism. Approximately 75% of <em>P. aeruginosa</em>-induced genes were found to be independent of PMK-1, pointing to the existence of additional immune pathways (troemel2006p38mapkregulates pages 9-11, troemel2006p38mapkregulates pages 7-8).</p>
+<h3 id="22-zip-2-bzip-transcription-factor-pathway">2.2 ZIP-2 bZIP Transcription Factor Pathway</h3>
+<p>The PMK-1-independent pathway regulating <em>irg-2</em> was subsequently identified as the ZIP-2 pathway. ZIP-2 is a bZIP transcription factor that, together with its heterodimeric partner CEBP-2, activates transcription of immune effector genes including <em>irg-1</em> and <em>irg-2</em> in the intestine (vasquezrifo2020pseudomonasaeruginosacleaves pages 7-9, kniazeva2025translationelongationdefects pages 1-2). ZIP-2 functions as a sensor of translational elongation defects — a form of surveillance immunity. When pathogens such as <em>P. aeruginosa</em> deploy ribosome-targeting toxins (e.g., exotoxin A), host translational elongation is inhibited, triggering a +1 frameshift in the <em>zip-2</em> mRNA that converts an upstream overlapping open reading frame (oORF) into a functional bZIP transcription factor (kniazeva2025translationelongationdefects pages 3-5, kniazeva2025translationelongationdefects pages 5-6). This mechanism enables rapid, transcription-independent immune activation; the <em>zip-2</em> mRNA is already transcribed and being translated, so the frameshift produces the functional protein without the delays of new transcription, splicing, or ribosome recruitment (kniazeva2025translationelongationdefects pages 1-2).</p>
+<p><em>irg-2</em> is strongly induced (over 100-fold) by <em>P. aeruginosa</em> carrying exotoxin A and by various translational elongation inhibitors including hygromycin B, anisomycin, blasticidin S, and fusidic acid (kniazeva2025translationelongationdefects pages 2-3, kniazeva2025translationelongationdefects pages 1-2). This induction requires ZIP-2, as it is abolished by <em>zip-2</em> mutation or RNAi knockdown (kniazeva2025translationelongationdefects pages 1-2). The ZIP-2 pathway functions independently of the PMK-1/p38 MAPK pathway, consistent with the Class D designation of <em>irg-2</em> (afridi2025therolesof pages 6-7).</p>
+<h3 id="23-tgf-dbl-1-signaling-pathway">2.3 TGF-β/DBL-1 Signaling Pathway</h3>
+<p><em>irg-2</em> expression is also regulated by the TGF-β signaling pathway in <em>C. elegans</em>, mediated by the ligand DBL-1, the receptors DAF-4/SMA-6, and downstream SMAD transcription factors. This positions <em>irg-2</em> within the broader core host immune response that includes C-type lectins and other immune effectors (simonsen2012strengthinnumbers pages 5-6).</p>
+<h3 id="24-arf-1-gtpase-and-golgi-membrane-stress-pathway">2.4 ARF-1 GTPase and Golgi Membrane Stress Pathway</h3>
+<p>A 2023 study by Fanelli et al. demonstrated that <em>irg-2</em> is robustly activated when Golgi function is disrupted through knockdown of the ADP-ribosylation factor <em>arf-1</em> or the coatomer component <em>copa-1</em> (fanelli2023immunitylinkedgenesare pages 7-9, fanelli2023immunitylinkedgenesare pages 5-7). This activation occurs independently of direct pathogen exposure and is linked to changes in phosphatidylcholine (PC) levels in secretory organelle membranes. Low PC limits ARF-1 function at the Golgi, providing a mechanistic link between lipid metabolism perturbations and ILG activation (fanelli2023immunitylinkedgenesare pages 5-7, fanelli2023immunitylinkedgenesare pages 1-2). This finding helps explain the longstanding observation that ILGs are upregulated both by pathogen attack and by metabolic stress — both converge on disruption of secretory pathway function.</p>
+<h3 id="25-oleate-requirement">2.5 Oleate Requirement</h3>
+<p>The monounsaturated fatty acid oleate, synthesized by the stearoyl-CoA desaturases FAT-6 and FAT-7, is required for pathogen-induced induction of <em>irg-2</em>. Anderson et al. (2019) showed that the fold induction of <em>irg-2</em> during <em>P. aeruginosa</em> infection was significantly attenuated in <em>fat-6(tm331);fat-7(wa36)</em> double-mutant animals compared to wild-type (anderson2019thefattyacid pages 6-8). This requirement is specific to oleate and not downstream polyunsaturated fatty acids.</p>
+<h3 id="26-negative-regulation-by-rnp-6puf60">2.6 Negative Regulation by RNP-6/PUF60</h3>
+<p>The splicing factor RNP-6 (ortholog of mammalian PUF60) functions as a negative regulator of <em>irg-2</em> expression. Knockdown of <em>rnp-6</em> by RNAi significantly elevates <em>irg-2</em> levels (p&lt;0.0001) under non-infected conditions (kew2020evolutionarilyconservedregulation pages 8-10, kew2020evolutionarilyconservedregulation pages 6-8). RNP-6 suppresses immunity through inhibition of PMK-1 MAPK signaling activity and represents an evolutionarily conserved mechanism balancing immune activation with longevity (kew2020evolutionarilyconservedregulation pages 1-2, kew2020evolutionarilyconservedregulation pages 10-12).</p>
+<h3 id="27-endu-2-mediated-post-heat-stress-regulation">2.7 ENDU-2-Mediated Post-Heat Stress Regulation</h3>
+<p><em>irg-2</em> is classified as a Class III post-heat stress (post-HS) responsive gene, upregulated specifically during the recovery phase after hormetic heat stress rather than during the acute stress itself (xu2023reprogrammingofthe pages 5-6, xu2023reprogrammingofthe pages 3-5). The endoribonuclease ENDU-2 binds directly to the <em>irg-2</em> promoter and facilitates RNA polymerase II recruitment, promoting <em>irg-2</em> transcription after heat stress. This involves cooperation with the SWI/SNF chromatin remodeling complex (xu2023reprogrammingofthe pages 7-9, xu2023reprogrammingofthe pages 11-12, xu2023reprogrammingofthe pages 6-7). RNAi knockdown of <em>irg-2</em> abolished the beneficial effects of hormetic heat stress, including resistance to subsequent heat and cadmium stress (xu2023reprogrammingofthe pages 5-6).</p>
+<p>The following table summarizes the key regulatory pathways controlling <em>irg-2</em>:</p>
+<table>
+<thead>
+<tr>
+<th>Pathway/Regulator</th>
+<th>Effect on irg-2 Expression</th>
+<th>Stimulus/Context</th>
+<th>Key Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ZIP-2 bZIP transcription factor</td>
+<td>Positive regulator; required for induction of irg-2 downstream of translational inhibition</td>
+<td>Activated during <em>Pseudomonas aeruginosa</em> infection and by translation-elongation defects/ribosome damage caused by bacterial toxins</td>
+<td>Vasquez-Rifo et al. 2020; Kniazeva &amp; Ruvkun 2025 (vasquezrifo2020pseudomonasaeruginosacleaves pages 7-9, kniazeva2025translationelongationdefects pages 1-2, kniazeva2025translationelongationdefects pages 3-5, kniazeva2025translationelongationdefects pages 5-6)</td>
+</tr>
+<tr>
+<td>PMK-1 p38 MAPK</td>
+<td>Largely independent; irg-2/C49G7.5 is a Class D pathogen-response gene not requiring PMK-1 for induction</td>
+<td><em>P. aeruginosa</em> infection; induced despite PMK-1 loss, indicating alternative immune signaling</td>
+<td>Troemel et al. 2006 (troemel2006p38mapkregulates pages 8-9, troemel2006p38mapkregulates pages 7-8)</td>
+</tr>
+<tr>
+<td>TGF-β/DBL-1 pathway</td>
+<td>Positive regulator of irg-2 as part of core host immune response</td>
+<td>Pathogen-responsive immune transcriptional program; linked to DBL-1, DAF-4/SMA-6, and SMAD signaling</td>
+<td>Simonsen et al. 2012 review summarizing primary studies (simonsen2012strengthinnumbers pages 5-6)</td>
+</tr>
+<tr>
+<td>ENDU-2</td>
+<td>Positive regulator; promotes irg-2 transcription by binding its promoter and facilitating Pol II recruitment</td>
+<td>Post-heat-stress recovery / heat hormesis; irg-2 is a Class III post-heat-stress responsive gene</td>
+<td>Xu et al. 2023 (xu2023reprogrammingofthe pages 7-9, xu2023reprogrammingofthe pages 9-11, xu2023reprogrammingofthe pages 11-12, xu2023reprogrammingofthe pages 5-6, xu2023reprogrammingofthe pages 6-7, xu2023reprogrammingofthe pages 3-5)</td>
+</tr>
+<tr>
+<td>RNP-6/PUF60 splicing factor</td>
+<td>Negative/suppressive regulator; loss of RNP-6 elevates irg-2 expression</td>
+<td>Basal immune homeostasis and infection-responsive splicing/PMK-1-linked immune regulation</td>
+<td>Kew et al. 2020 (kew2020evolutionarilyconservedregulation pages 8-10, kew2020evolutionarilyconservedregulation pages 6-8, kew2020evolutionarilyconservedregulation pages 1-2, kew2020evolutionarilyconservedregulation pages 10-12)</td>
+</tr>
+<tr>
+<td>Oleate / fat-6 / fat-7</td>
+<td>Required for full pathogen-induced irg-2 induction; deficiency attenuates induction</td>
+<td><em>P. aeruginosa</em> infection; oleate biosynthesis supports immune effector induction</td>
+<td>Anderson et al. 2019 (anderson2019thefattyacid pages 6-8)</td>
+</tr>
+<tr>
+<td>ARF-1 / Golgi membrane stress pathway</td>
+<td>irg-2 is activated when ARF-1 or Golgi trafficking is disrupted</td>
+<td>Membrane lipid imbalance, compromised Golgi/secretory function, or increased secretory load; arf-1 or copa-1 knockdown robustly activates irg-2</td>
+<td>Fanelli et al. 2023 (fanelli2023immunitylinkedgenesare pages 7-9, fanelli2023immunitylinkedgenesare pages 5-7, fanelli2023immunitylinkedgenesare pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main signaling pathways and cellular stress mechanisms reported to control irg-2 expression in </em>C. elegans<em>. It highlights where evidence supports positive regulation, negative regulation, or pathway independence, which is useful for interpreting irg-2 as an infection- and stress-responsive gene.</em></p>
+<h2 id="3-tissue-expression-and-subcellular-localization">3. Tissue Expression and Subcellular Localization</h2>
+<p><em>irg-2</em> is predominantly expressed in the <strong>intestine</strong> of <em>C. elegans</em>, consistent with the intestine's central role as the primary site of pathogen encounter and innate immune activation in this organism (kim2018signalinginthe pages 14-16, xu2023reprogrammingofthe pages 5-6). The intestinal epithelium is the tissue where <em>P. aeruginosa</em> toxins exert their translational inhibition effects, and where the ZIP-2 surveillance pathway operates (vasquezrifo2020pseudomonasaeruginosacleaves pages 7-9, balasubramaniam2025unzippingthedefense pages 15-16). An <em>irg-2p::mCherry</em> transcriptional reporter has been used to monitor its expression pattern, confirming dominant intestinal expression, particularly among post-heat-stress responsive genes (xu2023reprogrammingofthe pages 5-6).</p>
+<p>At the subcellular level, functional studies indicate that IRG-2 protein operates within or in association with the <strong>secretory pathway</strong>. RNAi knockdown of <em>irg-2</em> causes increased puncta size and aggregation of secreted GFP reporters (ssGFP) in both body wall muscle cells and intestinal cells, phenocopying the effects of <em>arf-1</em> RNAi knockdown (fanelli2023immunitylinkedgenesare pages 9-12). These findings suggest that IRG-2 functions at the level of Golgi/ER trafficking and protein secretion.</p>
+<h2 id="4-molecular-function-and-protein-characteristics">4. Molecular Function and Protein Characteristics</h2>
+<p>The precise biochemical function of IRG-2 remains incompletely characterized. Unlike many well-annotated immune effectors in <em>C. elegans</em> (e.g., C-type lectins, CUB-domain proteins, lysozymes, or ShK toxin-like proteins), IRG-2 <strong>lacks clearly recognizable domains</strong> associated with antimicrobial peptide function. It is categorized in the "STRESS RESPONSE: Pathogen: unassigned" WormCat category (fanelli2023immunitylinkedgenesare pages 13-14). No enzymatic activity has been assigned to the protein.</p>
+<p>However, the functional evidence from Fanelli et al. (2023) provides important insight. Rather than acting as a conventional antimicrobial effector that directly kills or neutralizes pathogens, IRG-2 appears to function in <strong>supporting and protecting the secretory pathway</strong> during conditions of membrane stress or immune activation. When <em>irg-2</em> is knocked down, secreted protein reporters aggregate and pool abnormally, and the accumulation of a pathogen-responsive CUB-domain fusion protein is disrupted (fanelli2023immunitylinkedgenesare pages 9-12, fanelli2023immunitylinkedgenesare pages 13-14). The authors propose that IRG-2 may function as part of a "multi-membrane" stress response encompassing both the ER and the Golgi in trafficking, helping to counteract stress on secretory function that occurs after both pathogen exposure and broad membrane lipid disruption (fanelli2023immunitylinkedgenesare pages 12-13, fanelli2023immunitylinkedgenesare pages 13-14).</p>
+<p>This model is consistent with the observation that pathogen responses depend heavily on ER stress pathways to manage the increased demands of immune protein trafficking and secretion (fanelli2023immunitylinkedgenesare pages 12-13). Thus, IRG-2 may be classified as a secretory pathway support factor that is coordinately upregulated during immune activation to ensure efficient production and delivery of antimicrobial effectors.</p>
+<h2 id="5-induction-specificity">5. Induction Specificity</h2>
+<p><em>irg-2</em> expression is induced by live <em>P. aeruginosa</em> (strain PA14) and by the attenuated <em>gacA</em> mutant strain of PA14, but <strong>not</strong> by dead <em>P. aeruginosa</em> (kim2018signalinginthe pages 51-52, kim2018signalinginthe pages 46-51). This pattern indicates that <em>irg-2</em> responds to active bacterial factors — likely virulence effectors such as toxins that inhibit translation — rather than to conserved microbial structural components (pathogen-associated molecular patterns). This is consistent with the surveillance immunity model whereby the host detects the <em>effects</em> of pathogen virulence factors (e.g., translational inhibition) rather than the pathogen molecules themselves (vasquezrifo2020pseudomonasaeruginosacleaves pages 7-9, kniazeva2025translationelongationdefects pages 1-2).</p>
+<h2 id="6-broader-biological-roles">6. Broader Biological Roles</h2>
+<h3 id="61-heat-hormesis-and-stress-resistance">6.1 Heat Hormesis and Stress Resistance</h3>
+<p>Beyond its role in pathogen defense, <em>irg-2</em> plays a functional role in heat hormesis — the phenomenon whereby brief heat stress during early adulthood extends lifespan and improves stress resistance in <em>C. elegans</em>. As a Class III post-HS gene, <em>irg-2</em> is essential for the protective effects of hormetic heat stress. Its transcriptional activation after heat stress is mediated by ENDU-2 and requires chromatin remodeling via the SWI/SNF complex (xu2023reprogrammingofthe pages 11-12, xu2023reprogrammingofthe pages 6-7). Failure to induce <em>irg-2</em> after heat stress eliminates the beneficial hormetic effects (xu2023reprogrammingofthe pages 5-6).</p>
+<h3 id="62-integration-with-metabolic-regulation">6.2 Integration with Metabolic Regulation</h3>
+<p>The requirement for oleate in <em>irg-2</em> induction (anderson2019thefattyacid pages 6-8) and the activation of <em>irg-2</em> by membrane lipid perturbations affecting Golgi function (fanelli2023immunitylinkedgenesare pages 7-9, fanelli2023immunitylinkedgenesare pages 5-7) place this gene at the intersection of metabolism and immunity — a concept now termed immunometabolism. These connections suggest that <em>irg-2</em> expression may serve as an integrating readout of both metabolic state and immune challenge.</p>
+<h2 id="7-summary">7. Summary</h2>
+<p><em>irg-2</em> (C49G7.5) encodes a pathogen-responsive, immunity-linked protein in <em>C. elegans</em> that is principally regulated by the ZIP-2 bZIP transcription factor pathway in response to translational elongation defects caused by pathogen-derived toxins. It is induced independently of the canonical PMK-1 p38 MAPK pathway and is additionally regulated by the TGF-β/DBL-1 pathway, the ARF-1/Golgi membrane stress pathway, the ENDU-2-mediated post-heat stress pathway, and is negatively modulated by the splicing factor RNP-6/PUF60. The protein is predominantly expressed in intestinal epithelial cells and functions within the secretory pathway, where it appears to support protein trafficking and secretion during conditions of immune activation or membrane stress. While IRG-2 lacks recognizable antimicrobial domains, its loss compromises secretory function, suggesting it facilitates the efficient delivery of immune effectors during pathogen challenge. Its involvement in both pathogen defense and heat hormesis illustrates the integrated nature of stress and immune responses in <em>C. elegans</em>.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(troemel2006p38mapkregulates pages 8-9): Emily R. Troemel, Stephanie W. Chu, Valerie Reinke, Siu Sylvia Lee, Frederick M. Ausubel, and Dennis H. Kim. P38 mapk regulates expression of immune response genes and contributes to longevity in c. elegans. PLoS Genetics, 2:e183, Sep 2006. URL: https://doi.org/10.1371/journal.pgen.0020183, doi:10.1371/journal.pgen.0020183. This article has 831 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(troemel2006p38mapkregulates pages 7-8): Emily R. Troemel, Stephanie W. Chu, Valerie Reinke, Siu Sylvia Lee, Frederick M. Ausubel, and Dennis H. Kim. P38 mapk regulates expression of immune response genes and contributes to longevity in c. elegans. PLoS Genetics, 2:e183, Sep 2006. URL: https://doi.org/10.1371/journal.pgen.0020183, doi:10.1371/journal.pgen.0020183. This article has 831 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fanelli2023immunitylinkedgenesare pages 1-2): Matthew J. Fanelli, Christofer M. Welsh, Dominique S. Lui, Lorissa J. Smulan, and Amy K. Walker. Immunity-linked genes are stimulated by a membrane stress pathway linked to golgi function and the arf-1 gtpase. Science Advances, Dec 2023. URL: https://doi.org/10.1126/sciadv.adi5545, doi:10.1126/sciadv.adi5545. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(simonsen2012strengthinnumbers pages 5-6): Karina T. Simonsen, Sandra F. Gallego, Nils J. Færgeman, and Birgitte H. Kallipolitis. Strength in numbers. Virulence, 3:477-484, Oct 2012. URL: https://doi.org/10.4161/viru.21906, doi:10.4161/viru.21906. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(troemel2006p38mapkregulates pages 9-11): Emily R. Troemel, Stephanie W. Chu, Valerie Reinke, Siu Sylvia Lee, Frederick M. Ausubel, and Dennis H. Kim. P38 mapk regulates expression of immune response genes and contributes to longevity in c. elegans. PLoS Genetics, 2:e183, Sep 2006. URL: https://doi.org/10.1371/journal.pgen.0020183, doi:10.1371/journal.pgen.0020183. This article has 831 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vasquezrifo2020pseudomonasaeruginosacleaves pages 7-9): Alejandro Vasquez-Rifo, Emiliano P. Ricci, and Victor Ambros. Pseudomonas aeruginosa cleaves the decoding center of caenorhabditis elegans ribosomes. PLoS Biology, 18:e3000969, Dec 2020. URL: https://doi.org/10.1371/journal.pbio.3000969, doi:10.1371/journal.pbio.3000969. This article has 24 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kniazeva2025translationelongationdefects pages 1-2): Marina Kniazeva and Gary Ruvkun. Translation elongation defects activate the caenorhabditis elegans zip-2 bzip transcription factor–mediated toxin defense. Proceedings of the National Academy of Sciences of the United States of America, Feb 2025. URL: https://doi.org/10.1073/pnas.2423578122, doi:10.1073/pnas.2423578122. This article has 6 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kniazeva2025translationelongationdefects pages 3-5): Marina Kniazeva and Gary Ruvkun. Translation elongation defects activate the caenorhabditis elegans zip-2 bzip transcription factor–mediated toxin defense. Proceedings of the National Academy of Sciences of the United States of America, Feb 2025. URL: https://doi.org/10.1073/pnas.2423578122, doi:10.1073/pnas.2423578122. This article has 6 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kniazeva2025translationelongationdefects pages 5-6): Marina Kniazeva and Gary Ruvkun. Translation elongation defects activate the caenorhabditis elegans zip-2 bzip transcription factor–mediated toxin defense. Proceedings of the National Academy of Sciences of the United States of America, Feb 2025. URL: https://doi.org/10.1073/pnas.2423578122, doi:10.1073/pnas.2423578122. This article has 6 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kniazeva2025translationelongationdefects pages 2-3): Marina Kniazeva and Gary Ruvkun. Translation elongation defects activate the caenorhabditis elegans zip-2 bzip transcription factor–mediated toxin defense. Proceedings of the National Academy of Sciences of the United States of America, Feb 2025. URL: https://doi.org/10.1073/pnas.2423578122, doi:10.1073/pnas.2423578122. This article has 6 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(afridi2025therolesof pages 6-7): Muhammad Irfan Afridi and Haijun Tu. The roles of distinct transcriptional factors in the innate immunity of c. elegans. Cells, 14:327, Feb 2025. URL: https://doi.org/10.3390/cells14050327, doi:10.3390/cells14050327. This article has 4 citations.</p>
+</li>
+<li>
+<p>(fanelli2023immunitylinkedgenesare pages 7-9): Matthew J. Fanelli, Christofer M. Welsh, Dominique S. Lui, Lorissa J. Smulan, and Amy K. Walker. Immunity-linked genes are stimulated by a membrane stress pathway linked to golgi function and the arf-1 gtpase. Science Advances, Dec 2023. URL: https://doi.org/10.1126/sciadv.adi5545, doi:10.1126/sciadv.adi5545. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fanelli2023immunitylinkedgenesare pages 5-7): Matthew J. Fanelli, Christofer M. Welsh, Dominique S. Lui, Lorissa J. Smulan, and Amy K. Walker. Immunity-linked genes are stimulated by a membrane stress pathway linked to golgi function and the arf-1 gtpase. Science Advances, Dec 2023. URL: https://doi.org/10.1126/sciadv.adi5545, doi:10.1126/sciadv.adi5545. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(anderson2019thefattyacid pages 6-8): Sarah M. Anderson, Hilary K. Cheesman, Nicholas D. Peterson, J. Elizabeth Salisbury, Alexander A. Soukas, and Read Pukkila-Worley. The fatty acid oleate is required for innate immune activation and pathogen defense in caenorhabditis elegans. PLOS Pathogens, 15:e1007893, Jun 2019. URL: https://doi.org/10.1371/journal.ppat.1007893, doi:10.1371/journal.ppat.1007893. This article has 92 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kew2020evolutionarilyconservedregulation pages 8-10): Chun Kew, Wenming Huang, Julia Fischer, Raja Ganesan, Nirmal Robinson, and Adam Antebi. Evolutionarily conserved regulation of immunity by the splicing factor rnp-6/puf60. eLife, Jun 2020. URL: https://doi.org/10.7554/elife.57591, doi:10.7554/elife.57591. This article has 29 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kew2020evolutionarilyconservedregulation pages 6-8): Chun Kew, Wenming Huang, Julia Fischer, Raja Ganesan, Nirmal Robinson, and Adam Antebi. Evolutionarily conserved regulation of immunity by the splicing factor rnp-6/puf60. eLife, Jun 2020. URL: https://doi.org/10.7554/elife.57591, doi:10.7554/elife.57591. This article has 29 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kew2020evolutionarilyconservedregulation pages 1-2): Chun Kew, Wenming Huang, Julia Fischer, Raja Ganesan, Nirmal Robinson, and Adam Antebi. Evolutionarily conserved regulation of immunity by the splicing factor rnp-6/puf60. eLife, Jun 2020. URL: https://doi.org/10.7554/elife.57591, doi:10.7554/elife.57591. This article has 29 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kew2020evolutionarilyconservedregulation pages 10-12): Chun Kew, Wenming Huang, Julia Fischer, Raja Ganesan, Nirmal Robinson, and Adam Antebi. Evolutionarily conserved regulation of immunity by the splicing factor rnp-6/puf60. eLife, Jun 2020. URL: https://doi.org/10.7554/elife.57591, doi:10.7554/elife.57591. This article has 29 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2023reprogrammingofthe pages 5-6): Fan Xu, Ruoyao Li, Erika D. von Gromoff, Friedel Drepper, Bettina Knapp, Bettina Warscheid, Ralf Baumeister, and Wenjing Qi. Reprogramming of the transcriptome after heat stress mediates heat hormesis in caenorhabditis elegans. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-39882-8, doi:10.1038/s41467-023-39882-8. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2023reprogrammingofthe pages 3-5): Fan Xu, Ruoyao Li, Erika D. von Gromoff, Friedel Drepper, Bettina Knapp, Bettina Warscheid, Ralf Baumeister, and Wenjing Qi. Reprogramming of the transcriptome after heat stress mediates heat hormesis in caenorhabditis elegans. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-39882-8, doi:10.1038/s41467-023-39882-8. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2023reprogrammingofthe pages 7-9): Fan Xu, Ruoyao Li, Erika D. von Gromoff, Friedel Drepper, Bettina Knapp, Bettina Warscheid, Ralf Baumeister, and Wenjing Qi. Reprogramming of the transcriptome after heat stress mediates heat hormesis in caenorhabditis elegans. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-39882-8, doi:10.1038/s41467-023-39882-8. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2023reprogrammingofthe pages 11-12): Fan Xu, Ruoyao Li, Erika D. von Gromoff, Friedel Drepper, Bettina Knapp, Bettina Warscheid, Ralf Baumeister, and Wenjing Qi. Reprogramming of the transcriptome after heat stress mediates heat hormesis in caenorhabditis elegans. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-39882-8, doi:10.1038/s41467-023-39882-8. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2023reprogrammingofthe pages 6-7): Fan Xu, Ruoyao Li, Erika D. von Gromoff, Friedel Drepper, Bettina Knapp, Bettina Warscheid, Ralf Baumeister, and Wenjing Qi. Reprogramming of the transcriptome after heat stress mediates heat hormesis in caenorhabditis elegans. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-39882-8, doi:10.1038/s41467-023-39882-8. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2023reprogrammingofthe pages 9-11): Fan Xu, Ruoyao Li, Erika D. von Gromoff, Friedel Drepper, Bettina Knapp, Bettina Warscheid, Ralf Baumeister, and Wenjing Qi. Reprogramming of the transcriptome after heat stress mediates heat hormesis in caenorhabditis elegans. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-39882-8, doi:10.1038/s41467-023-39882-8. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2018signalinginthe pages 14-16): Dennis H. Kim and J. Ewbank. Signaling in the innate immune response. WormBook : the online review of C. elegans biology, 2018:1-35, Aug 2018. URL: https://doi.org/10.1895/wormbook.1.83.2, doi:10.1895/wormbook.1.83.2. This article has 152 citations.</p>
+</li>
+<li>
+<p>(balasubramaniam2025unzippingthedefense pages 15-16): Boopathi Balasubramaniam, Ashley V. Veatch, and Ransome van der Hoeven. Unzipping the defense: a comprehensive review on bzip transcription factors in caenorhabditis elegans. Frontiers in Cellular and Infection Microbiology, Oct 2025. URL: https://doi.org/10.3389/fcimb.2025.1673469, doi:10.3389/fcimb.2025.1673469. This article has 2 citations.</p>
+</li>
+<li>
+<p>(fanelli2023immunitylinkedgenesare pages 9-12): Matthew J. Fanelli, Christofer M. Welsh, Dominique S. Lui, Lorissa J. Smulan, and Amy K. Walker. Immunity-linked genes are stimulated by a membrane stress pathway linked to golgi function and the arf-1 gtpase. Science Advances, Dec 2023. URL: https://doi.org/10.1126/sciadv.adi5545, doi:10.1126/sciadv.adi5545. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fanelli2023immunitylinkedgenesare pages 13-14): Matthew J. Fanelli, Christofer M. Welsh, Dominique S. Lui, Lorissa J. Smulan, and Amy K. Walker. Immunity-linked genes are stimulated by a membrane stress pathway linked to golgi function and the arf-1 gtpase. Science Advances, Dec 2023. URL: https://doi.org/10.1126/sciadv.adi5545, doi:10.1126/sciadv.adi5545. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fanelli2023immunitylinkedgenesare pages 12-13): Matthew J. Fanelli, Christofer M. Welsh, Dominique S. Lui, Lorissa J. Smulan, and Amy K. Walker. Immunity-linked genes are stimulated by a membrane stress pathway linked to golgi function and the arf-1 gtpase. Science Advances, Dec 2023. URL: https://doi.org/10.1126/sciadv.adi5545, doi:10.1126/sciadv.adi5545. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2018signalinginthe pages 51-52): Dennis H. Kim and J. Ewbank. Signaling in the innate immune response. WormBook : the online review of C. elegans biology, 2018:1-35, Aug 2018. URL: https://doi.org/10.1895/wormbook.1.83.2, doi:10.1895/wormbook.1.83.2. This article has 152 citations.</p>
+</li>
+<li>
+<p>(kim2018signalinginthe pages 46-51): Dennis H. Kim and J. Ewbank. Signaling in the innate immune response. WormBook : the online review of C. elegans biology, 2018:1-35, Aug 2018. URL: https://doi.org/10.1895/wormbook.1.83.2, doi:10.1895/wormbook.1.83.2. This article has 152 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="irg-2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>fanelli2023immunitylinkedgenesare pages 1-2</li>
+<li>simonsen2012strengthinnumbers pages 5-6</li>
+<li>kniazeva2025translationelongationdefects pages 1-2</li>
+<li>afridi2025therolesof pages 6-7</li>
+<li>anderson2019thefattyacid pages 6-8</li>
+<li>xu2023reprogrammingofthe pages 5-6</li>
+<li>fanelli2023immunitylinkedgenesare pages 9-12</li>
+<li>fanelli2023immunitylinkedgenesare pages 13-14</li>
+<li>fanelli2023immunitylinkedgenesare pages 12-13</li>
+<li>vasquezrifo2020pseudomonasaeruginosacleaves pages 7-9</li>
+<li>kniazeva2025translationelongationdefects pages 3-5</li>
+<li>kniazeva2025translationelongationdefects pages 5-6</li>
+<li>kniazeva2025translationelongationdefects pages 2-3</li>
+<li>fanelli2023immunitylinkedgenesare pages 7-9</li>
+<li>fanelli2023immunitylinkedgenesare pages 5-7</li>
+<li>kew2020evolutionarilyconservedregulation pages 8-10</li>
+<li>kew2020evolutionarilyconservedregulation pages 6-8</li>
+<li>kew2020evolutionarilyconservedregulation pages 1-2</li>
+<li>kew2020evolutionarilyconservedregulation pages 10-12</li>
+<li>xu2023reprogrammingofthe pages 3-5</li>
+<li>xu2023reprogrammingofthe pages 7-9</li>
+<li>xu2023reprogrammingofthe pages 11-12</li>
+<li>xu2023reprogrammingofthe pages 6-7</li>
+<li>xu2023reprogrammingofthe pages 9-11</li>
+<li>kim2018signalinginthe pages 14-16</li>
+<li>balasubramaniam2025unzippingthedefense pages 15-16</li>
+<li>kim2018signalinginthe pages 51-52</li>
+<li>kim2018signalinginthe pages 46-51</li>
+<li>https://doi.org/10.1371/journal.pgen.0020183,</li>
+<li>https://doi.org/10.1126/sciadv.adi5545,</li>
+<li>https://doi.org/10.4161/viru.21906,</li>
+<li>https://doi.org/10.1371/journal.pbio.3000969,</li>
+<li>https://doi.org/10.1073/pnas.2423578122,</li>
+<li>https://doi.org/10.3390/cells14050327,</li>
+<li>https://doi.org/10.1371/journal.ppat.1007893,</li>
+<li>https://doi.org/10.7554/elife.57591,</li>
+<li>https://doi.org/10.1038/s41467-023-39882-8,</li>
+<li>https://doi.org/10.1895/wormbook.1.83.2,</li>
+<li>https://doi.org/10.3389/fcimb.2025.1673469,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(irg-2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O16224" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="irg-2-c49g75-wbgene00016783-research-notes">irg-2 (C49G7.5, WBGene00016783) — research notes</h1>
+<p>UniProt: O16224 (IRG2_CAEEL). 278 aa. Chromosome V. Gene name irg-2 = "infection<br />
+response gene 2". ORF C49G7.5. This is a research journal; provenance is recorded<br />
+inline as <code>[PMID:xxxx "verbatim quote"]</code>.</p>
+<h2 id="identity-disambiguation">Identity / disambiguation</h2>
+<ul>
+<li>irg-2 = C49G7.5 = WBGene00016783. Confirmed across sources:</li>
+<li>UniProt: <code>GN Name=irg-2 {ECO:0000312|WormBase:C49G7.5}; ORFNames=C49G7.5</code>.</li>
+<li>Irazoqui et al. 2010 gene table lists <code>[PMID:20617181](https://pubmed.ncbi.nlm.nih.gov/20617181 "C49G7.5, WBGene00016783, AF016418")</code>.</li>
+<li>Note the paralogous ORFs in the same cosmid (C49G7.7, C49G7.10) are DIFFERENT<br />
+    genes and must not be conflated with irg-2 (=C49G7.5). Several microarray tables<br />
+    list C49G7.7 / C49G7.10 separately, so string-matching "C49G7" alone is unsafe.</li>
+</ul>
+<h2 id="protein-level-facts-what-the-sequence-tells-us">Protein-level facts (what the sequence tells us)</h2>
+<ul>
+<li>278 aa, 33 kDa, single CHAIN, no signal peptide, no transmembrane region.</li>
+<li>UniProt annotates only a disordered REGION (152–179) with a polar-residue<br />
+  compositional bias (163–179); no catalytic motif, no recognizable domain.</li>
+<li>No PANTHER family assigned at fetch time; UniProt "protein family" field is empty.</li>
+<li>Contrast with the paralog-in-name irg-1, which at least carries a predicted<br />
+  NADAR/YbiA-like domain (IPR012816). irg-2 has NO such domain prediction — it is<br />
+  even darker at the sequence level than irg-1.</li>
+<li>PE=2 (evidence at transcript level): the protein itself has never been detected;<br />
+  everything known about irg-2 concerns its <em>mRNA</em> induction, not its protein.</li>
+</ul>
+<h2 id="known-established-cited">KNOWN (established, cited)</h2>
+<h3 id="1-irg-2-is-a-transcriptional-infection-response-gene-induced-by-p-aeruginosa">1. irg-2 is a transcriptional infection-response gene induced by P. aeruginosa</h3>
+<ul>
+<li>Estes et al. 2010 defined the "infection response gene" (irg) class as genes<br />
+  "induced in C. elegans by infection with the bacterial pathogen Pseudomonas<br />
+  aeruginosa, but ... not induced by an isogenic attenuated gacA mutant"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20133860" title="We focused on genes that are induced in C. elegans by infection with the bacterial pathogen Pseudomonas aeruginosa, but are not induced by an isogenic attenuated gacA mutant.">PMID:20133860</a>.<br />
+  irg-1 is the named reporter of that class; irg-2 is one of the additional class<br />
+  members induced by the same virulent-PA14 program. This is the basis of the GOA<br />
+  IEP annotations (GO:0140367, GO:0050829), both attributed to PMID:20133860.</li>
+<li>Troemel et al. 2006 (p38 MAPK microarray study) independently place irg-2 (as<br />
+  C49G7.5) among the top P. aeruginosa-induced genes at 4 h<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17096597" title="We tested induction of the top five genes upregulated by P. aeruginosa versus E. coli at 4 h">PMID:17096597</a>.</li>
+</ul>
+<h3 id="2-induction-is-via-the-zip-2-bzip-surveillance-pathway">2. Induction is via the ZIP-2 bZIP surveillance pathway</h3>
+<ul>
+<li>Estes et al. 2010: the RNAi TF screen "identified zip-2, a bZIP transcription<br />
+  factor that is required for inducing irg-1, as well as several other genes"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20133860" title="This screen identified zip-2, a bZIP transcription factor that is required for inducing irg-1, as well as several other genes, and is important for defense against infection by P. aeruginosa.">PMID:20133860</a>.</li>
+<li>Hahm et al. 2020 directly measured irg-2 as a ZIP-2 target: it rises with age and<br />
+  the rise is ZIP-2-dependent<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/32350153" title="the expression of the ZIP-2 targets irg-1 (Figure 2A) and irg-2 (Figure 2B) increased 24.0-fold and 15.5-fold, respectively, from day 1 to day 8 of adulthood">PMID:32350153</a>,<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/32350153" title="indicating that the age-dependent increases in irg-1 and irg-2 expression were largely dependent on ZIP-2.">PMID:32350153</a>.<br />
+  This is the strongest single-gene, full-text-verified statement about irg-2:<br />
+  irg-2 is a bona fide ZIP-2 transcriptional target, not merely a co-regulated<br />
+  bystander.</li>
+</ul>
+<h3 id="3-induction-is-pmk-1-p38-mapk-independent">3. Induction is PMK-1 (p38 MAPK) INDEPENDENT</h3>
+<ul>
+<li>Troemel et al. 2006 tested PMK-1-dependence of the top PA-induced genes and found<br />
+  irg-2 (C49G7.5) is in the PMK-1-independent set<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17096597" title="The remaining two genes (C49G7.5 and F53E10.4) must therefore be induced via a PMK-1">PMID:17096597</a>.</li>
+<li>Consistent with UniProt INDUCTION: dependent on zip-2, independent of pmk-1<br />
+  p38MAPK, dbl-1 TGF-beta, and kgb-1 JNK pathways (ECO:0000269|PubMed:20133860).</li>
+</ul>
+<h3 id="4-induction-is-triggered-by-translational-inhibition-surveillance-immunity">4. Induction is triggered by translational inhibition (surveillance immunity)</h3>
+<ul>
+<li>Dunbar et al. 2012 showed the zip-2/irg pathway is switched on by pathogen-induced<br />
+  block of translation, sensed via endocytosed Exotoxin A<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22520465" title="P. aeruginosa infection inhibits mRNA translation in the intestine via the endocytosed translation inhibitor Exotoxin A, which leads to an increase in ZIP-2 protein levels.">PMID:22520465</a>,<br />
+  and more generally by "disruption of several core host processes, including<br />
+  inhibition of mRNA translation"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22520465" title="In the absence of infection we find that the zip-2/irg-1 pathway is upregulated following disruption of several core host processes, including inhibition of mRNA translation.">PMID:22520465</a>.<br />
+  UniProt attributes irg-2 FUNCTION/INDUCTION by ToxA and cycloheximide to this<br />
+  paper (ECO:0000269|PubMed:22520465). NOTE: the cached PMID_22520465.md is<br />
+  ABSTRACT-ONLY (full_text_available: false); the abstract names irg-1, not irg-2,<br />
+  but UniProt curators read the full text and attributed irg-2 to it. Per repo<br />
+  policy I do not overturn that; I cite the abstract-level surveillance mechanism<br />
+  and defer irg-2-specific detail to the curator.</li>
+</ul>
+<h3 id="5-broader-expression-context">5. Broader expression context</h3>
+<ul>
+<li>HEP annotation (GO:0045087) traces to Shapira et al. 2006, a genome-wide screen<br />
+  that found endodermal GATA factor ELT-2 governs intestinal infection responses<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16968778" title="Gene expression and functional RNAi-based analyses identified the tissue-specific GATA transcription factor ELT-2 as a major regulator of an early intestinal protective response to infection with the human bacterial pathogen Pseudomonas aeruginosa.">PMID:16968778</a>.<br />
+  irg-2 is one of the ELT-2/infection-responsive transcripts in that dataset — hence<br />
+  the HEP (high-throughput expression pattern) evidence code. This ties irg-2 to the<br />
+  intestinal epithelium as the likely site of expression.</li>
+<li>Bgee (via UniProt) reports expression in pharyngeal muscle cell and 2 other cell<br />
+  types — consistent with a low-level, tissue-restricted transcript that is<br />
+  strongly infection-inducible.</li>
+<li>irg-2 recurs in later P. aeruginosa / mitochondrial-UPR immunity expression<br />
+  datasets (Irazoqui et al. 2010, PMID:20617181; the mitochondrial-UPR immunity<br />
+  study, PMID:25274306) as an infection-responsive transcript, reinforcing that its<br />
+  signature is transcriptional induction, not a measured activity.</li>
+</ul>
+<h2 id="not-known-the-deliverable-for-this-dark-gene">NOT KNOWN (the deliverable for this dark gene)</h2>
+<ol>
+<li><strong>Molecular function — entirely unknown.</strong> No catalytic activity, no binding<br />
+   partner, no biochemical assay. GOA carries GO:0003674 (molecular_function) as ND.<br />
+   Unlike irg-1, irg-2 has no domain prediction to even hypothesize an activity.</li>
+<li><strong>Is the IRG-2 protein required for defense?</strong> Every claim is expression-based<br />
+   (IEP/HEP). No irg-2 loss-of-function survival phenotype on P. aeruginosa has been<br />
+   reported; whether IRG-2 protein contributes to resistance vs. is a passive readout<br />
+   of ZIP-2 activation is undetermined. (Estes 2010 shows zip-2 — the regulator — is<br />
+   needed for defense; that is not the same as showing irg-2 the effector is.)</li>
+<li><strong>Subcellular localization</strong> of IRG-2 protein — unknown. It is intestinally<br />
+   expressed at the tissue level but the protein has never been localized (PE=2).</li>
+<li><strong>Direct antimicrobial activity</strong> — untested. It is grouped with "antimicrobial<br />
+   effectors" by pathway position, not by any demonstrated bactericidal/bacteriostatic<br />
+   activity.</li>
+<li><strong>Regulatory logic beyond ZIP-2</strong> — the ZIP-2/CEBP-2 cis-elements in the irg-2<br />
+   promoter, and whether irg-2 and irg-1 are co-regulated identically, are not mapped.</li>
+<li><strong>Conservation / orthology</strong> — eggNOG ENOG502TKK2 (Eukaryota) and OrthoDB group<br />
+   exist, but no functionally characterized ortholog anchors a function; effectively<br />
+   a nematode-restricted sequence orphan for functional purposes.</li>
+</ol>
+<h2 id="annotation-by-annotation-plan-goa-has-4">Annotation-by-annotation plan (GOA has 4)</h2>
+<ol>
+<li>GO:0140367 antibacterial innate immune response — IEP, PMID:20133860 → ACCEPT<br />
+   (BP-level, expression-based; the defining role). Non-core caveat: functional<br />
+   requirement unproven.</li>
+<li>GO:0003674 molecular_function — ND, GO_REF:0000015 → ACCEPT (honestly reflects an<br />
+   MF-dark gene; this IS the knowledge gap, not a curation defect).</li>
+<li>GO:0050829 defense response to Gram-negative bacterium — IEP, PMID:20133860 →<br />
+   ACCEPT (P. aeruginosa is Gram-negative; specific and expression-supported).</li>
+<li>GO:0045087 innate immune response — HEP, PMID:16968778 → ACCEPT (broader parent;<br />
+   independent high-throughput expression support; C. elegans immunity is all innate).</li>
+</ol>
+<p>No REMOVE/MODIFY warranted: all four are expression-based BP/ND annotations that are<br />
+internally consistent with the literature. The honest gap is the missing MF, captured<br />
+in <code>knowledge_gaps</code>, not fixable by re-labeling an existing annotation.</p>
+<h2 id="deep-research-provenance-note">Deep research provenance note</h2>
+<ul>
+<li><code>just deep-research-falcon worm irg-2 --fallback perplexity-lite</code>: the first falcon<br />
+  attempt timed out (Edison API saturated by many concurrent jobs) and the<br />
+  perplexity-lite fallback 401'd on quota; the falcon RETRY then succeeded and wrote a<br />
+  genuine <code>irg-2-deep-research-falcon.md</code> (Edison Scientific Literature, 39 citations,<br />
+  ~1300s). It is committed and cited only for its high-level synthesis that IRG-2 is<br />
+  functionally uncharacterized ("No enzymatic activity has been assigned to the<br />
+  protein"), which independently corroborates the GOA ND molecular_function.</li>
+<li>IMPORTANT: the falcon report also makes specific claims via unverifiable PMID-token<br />
+  citations — notably an ENDU-2/heat-stress transcriptional-regulation model (Xu 2023)<br />
+  and a WormCat/immunity-linked-genes framing (Fanelli 2023), and it alludes to<br />
+  loss-of-function phenotypes. None of these token citations could be resolved to<br />
+  cached, PubMed-verified papers, so they are DELIBERATELY NOT imported into the<br />
+  review. If those papers are later located and verified, the "effector-vs-reporter"<br />
+  knowledge gap (gap 2) should be revisited. The review otherwise rests on UniProt<br />
+  (O16224), the GOA TSV, and the six cached publications below, all quote-verified<br />
+  against the local <code>publications/</code> cache.</li>
+</ul>
+<h2 id="references-gathered-verified-against-cache">References gathered (verified against cache)</h2>
+<ul>
+<li>PMID:20133860 Estes 2010 PNAS — irg class definition, zip-2 (abstract-only). HIGH.</li>
+<li>PMID:22520465 Dunbar 2012 Cell Host Microbe — translational-inhibition surveillance<br />
+  (abstract-only; UniProt attributes irg-2 induction). HIGH.</li>
+<li>PMID:17096597 Troemel 2006 PLoS Genet — C49G7.5=irg-2 PMK-1-independent (full text). HIGH.</li>
+<li>PMID:32350153 Hahm 2020 Aging — irg-2 ZIP-2 target, aging/mito surveillance (full text). HIGH.</li>
+<li>PMID:16968778 Shapira 2006 PNAS — ELT-2/intestinal immunity, HEP source (abstract-only). MEDIUM.</li>
+<li>(Context only, not added as review refs: PMID:20617181 Irazoqui 2010 gene table;<br />
+  PMID:25274306 mito-UPR immunity table.)</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O16224
+gene_symbol: irg-2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  irg-2 (infection response gene 2; ORF C49G7.5) encodes a 278-residue
+  Caenorhabditis elegans protein of unknown molecular function. Its mRNA is a
+  transcriptional readout of the intestinal innate immune response: it is strongly
+  and specifically induced upon infection with the virulent Gram-negative pathogen
+  Pseudomonas aeruginosa (strain PA14) but not by an attenuated (gacA) mutant, and
+  its induction requires the bZIP transcription factor ZIP-2 while being independent
+  of the PMK-1/p38 MAPK, DBL-1/TGF-beta and KGB-1/JNK immune pathways. Induction is
+  triggered by pathogen-imposed blockade of host mRNA translation (surveillance
+  immunity) — for example via endocytosed P. aeruginosa Exotoxin A or the chemical
+  translation inhibitor cycloheximide — and irg-2 is co-regulated with the
+  paralogous marker gene irg-1. Beyond acute infection, irg-2 mRNA accumulates with
+  age in a ZIP-2-dependent manner and correlates with mitochondrial damage. The
+  IRG-2 protein carries no recognizable catalytic domain or characterized motif
+  (only a short disordered, polar-residue region near its C-terminus), has evidence
+  only at the transcript level, and has no demonstrated biochemical activity,
+  interacting partner, or subcellular localization. Whether the protein itself
+  contributes to pathogen resistance, as opposed to serving as a downstream reporter
+  of ZIP-2 activation, is not established.
+existing_annotations:
+  - term:
+      id: GO:0140367
+      label: antibacterial innate immune response
+    evidence_type: IEP
+    original_reference_id: PMID:20133860
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        IEP (inferred from expression pattern) annotation: irg-2 is a member of the
+        &#34;infection response gene&#34; class defined by Estes et al. 2010 as genes
+        specifically induced by virulent P. aeruginosa but not by an attenuated gacA
+        mutant. Troemel et al. 2006 independently place irg-2 (as C49G7.5) among the
+        top P. aeruginosa-induced genes at 4 h. The evidence is transcriptional
+        induction during bacterial infection, which the IEP code accurately reflects.
+      action: ACCEPT
+      reason: &gt;-
+        The annotation correctly captures irg-2&#39;s defining, well-replicated property
+        — strong and specific transcriptional induction during antibacterial (P.
+        aeruginosa) infection — and the IEP evidence code is appropriate for an
+        expression-based inference. Retained as a core aspect of the gene. Note the
+        boundary of this evidence: it demonstrates induction, not that the IRG-2
+        protein is functionally required for the response (see knowledge_gaps).
+      supported_by:
+        - reference_id: PMID:20133860
+          supporting_text: &gt;-
+            We focused on genes that are induced in C. elegans by infection with the
+            bacterial pathogen Pseudomonas aeruginosa, but are not induced by an
+            isogenic attenuated gacA mutant.
+        - reference_id: PMID:17096597
+          supporting_text: &gt;-
+            We tested induction of the top five genes upregulated by P. aeruginosa
+            versus E. coli at 4 h
+  - term:
+      id: GO:0003674
+      label: molecular_function
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: enables
+    review:
+      summary: &gt;-
+        ND (no data) annotation at the molecular_function root: no molecular function
+        has been experimentally determined for IRG-2. The protein has no recognizable
+        catalytic domain or characterized motif, and — unlike its co-regulated
+        paralog irg-1 (which carries a predicted NADAR/YbiA-like domain) — offers no
+        sequence feature from which to even hypothesize an activity.
+      action: ACCEPT
+      reason: &gt;-
+        The ND annotation honestly reflects the current state of knowledge: IRG-2 is
+        molecular-function dark. This is a genuine biology knowledge gap (see
+        knowledge_gaps), not a curation defect to be repaired by asserting an
+        unsupported activity.
+      supported_by: []
+  - term:
+      id: GO:0050829
+      label: defense response to Gram-negative bacterium
+    evidence_type: IEP
+    original_reference_id: PMID:20133860
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        IEP annotation specifying that irg-2&#39;s induction occurs in response to a
+        Gram-negative bacterium. P. aeruginosa, the pathogen that induces irg-2, is
+        Gram-negative, so this is a more specific and appropriate child of the
+        antibacterial response term, supported by the same expression evidence.
+      action: ACCEPT
+      reason: &gt;-
+        Accurate and appropriately specific: irg-2 is induced by the Gram-negative
+        pathogen P. aeruginosa, and the IEP evidence code matches the expression-based
+        source. As with the other IEP term, this reflects induction rather than a
+        demonstrated protein-level effector requirement.
+      supported_by:
+        - reference_id: PMID:20133860
+          supporting_text: &gt;-
+            This screen identified zip-2, a bZIP transcription factor that is required
+            for inducing irg-1, as well as several other genes, and is important for
+            defense against infection by P. aeruginosa.
+  - term:
+      id: GO:0045087
+      label: innate immune response
+    evidence_type: HEP
+    original_reference_id: PMID:16968778
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        HEP (inferred from high-throughput expression pattern) annotation from the
+        Shapira et al. 2006 genome-wide study of intestinal infection responses, in
+        which the endodermal GATA factor ELT-2 governs a suite of P. aeruginosa-induced
+        genes. This is a broader parent of the antibacterial-response terms and
+        provides independent high-throughput expression support that irg-2 is part of
+        the intestinal innate immune transcriptional program.
+      action: ACCEPT
+      reason: &gt;-
+        Valid and appropriate. C. elegans has only innate immunity, so this general
+        term correctly classifies irg-2&#39;s immune involvement, and the HEP evidence
+        code matches the high-throughput expression source. It is retained as a
+        higher-level classification alongside the more specific antibacterial terms.
+      supported_by:
+        - reference_id: PMID:16968778
+          supporting_text: &gt;-
+            Gene expression and functional RNAi-based analyses identified the
+            tissue-specific GATA transcription factor ELT-2 as a major regulator of an
+            early intestinal protective response to infection with the human bacterial
+            pathogen Pseudomonas aeruginosa.
+references:
+  - id: GO_REF:0000015
+    title: Use of the ND evidence code for Gene Ontology (GO) terms
+    findings:
+      - statement: &gt;-
+          Standard GO reference for No Data (ND) annotations, used when no
+          experimental or computational evidence is available for a given aspect of
+          gene function. Applied here to the molecular_function root for irg-2.
+  - id: PMID:20133860
+    title: &gt;-
+      bZIP transcription factor zip-2 mediates an early response to Pseudomonas
+      aeruginosa infection in Caenorhabditis elegans.
+    findings:
+      - statement: &gt;-
+          Defines the &#34;infection response gene&#34; (irg) class as genes specifically
+          induced by virulent P. aeruginosa but not by an attenuated gacA mutant;
+          irg-2 is a member of this class.
+        supporting_text: &gt;-
+          We focused on genes that are induced in C. elegans by infection with the
+          bacterial pathogen Pseudomonas aeruginosa, but are not induced by an
+          isogenic attenuated gacA mutant.
+      - statement: &gt;-
+          The bZIP transcription factor ZIP-2 is required for inducing irg-1 and
+          several other infection-response genes and is important for defense against
+          P. aeruginosa.
+        supporting_text: &gt;-
+          This screen identified zip-2, a bZIP transcription factor that is required
+          for inducing irg-1, as well as several other genes, and is important for
+          defense against infection by P. aeruginosa.
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified founding paper for the irg class and the ZIP-2 pathway;
+        source of the two IEP annotations. Cached record is abstract-only, but the
+        irg-2 (=C49G7.5) membership of the induced set is corroborated by full-text
+        PMID:17096597 and PMID:32350153.
+  - id: PMID:17096597
+    title: &gt;-
+      p38 MAPK regulates expression of immune response genes and contributes to
+      longevity in C. elegans.
+    findings:
+      - statement: &gt;-
+          irg-2 (C49G7.5) is among the top P. aeruginosa-induced genes and is induced
+          via a PMK-1 (p38 MAPK)-independent pathway.
+        supporting_text: &gt;-
+          The remaining two genes (C49G7.5 and F53E10.4) must therefore be induced via
+          a PMK-1–independent pathway
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Full-text-verified. Establishes by ORF name (C49G7.5 = irg-2) that irg-2 is a
+        top P. aeruginosa-induced gene whose induction does not require PMK-1,
+        independently corroborating the ZIP-2/PMK-1-independent regulatory logic in
+        UniProt and PMID:20133860.
+  - id: PMID:22520465
+    title: &gt;-
+      C. elegans detects pathogen-induced translational inhibition to activate immune
+      signaling.
+    full_text_unavailable: true
+    findings:
+      - statement: &gt;-
+          The zip-2/irg surveillance pathway is activated by pathogen-induced
+          inhibition of host mRNA translation, sensed via endocytosed Exotoxin A,
+          which raises ZIP-2 protein levels.
+        supporting_text: &gt;-
+          P. aeruginosa infection inhibits mRNA translation in the intestine via the
+          endocytosed translation inhibitor Exotoxin A, which leads to an increase in
+          ZIP-2 protein levels.
+      - statement: &gt;-
+          The zip-2/irg-1 pathway is also induced by disruption of core host
+          processes including translational inhibition, independent of infection.
+        supporting_text: &gt;-
+          In the absence of infection we find that the zip-2/irg-1 pathway is
+          upregulated following disruption of several core host processes, including
+          inhibition of mRNA translation.
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified. Establishes the surveillance-immunity trigger (translational
+        inhibition) for the zip-2/irg pathway. UniProt attributes irg-2 induction by
+        ToxA and cycloheximide to this paper; the cached record is abstract-only (the
+        abstract names irg-1), so irg-2-specific detail is deferred to the curator per
+        repository policy — not overturned.
+  - id: PMID:32350153
+    title: A cellular surveillance and defense system that delays aging phenotypes in C. elegans.
+    findings:
+      - statement: &gt;-
+          irg-2 is a bona fide ZIP-2 target whose expression rises strongly with age;
+          the age-dependent increase is largely ZIP-2-dependent.
+        supporting_text: &gt;-
+          the expression of the ZIP-2 targets irg-1 (Figure 2A) and irg-2 (Figure 2B)
+          increased 24.0-fold and 15.5-fold, respectively, from day 1 to day 8 of
+          adulthood
+      - statement: &gt;-
+          The age-dependent increases in irg-1 and irg-2 depend on ZIP-2.
+        supporting_text: &gt;-
+          indicating that the age-dependent increases in irg-1 and irg-2 expression
+          were largely dependent on ZIP-2.
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Full-text-verified qRT-PCR data explicitly naming irg-2 as a ZIP-2 target.
+        Strongest single-gene confirmation that irg-2 is a genuine ZIP-2 pathway
+        readout (not just a co-regulated bystander) and extends its context to aging
+        and mitochondrial surveillance.
+  - id: PMID:16968778
+    title: &gt;-
+      A conserved role for a GATA transcription factor in regulating epithelial innate
+      immune responses.
+    findings:
+      - statement: &gt;-
+          Genome-wide study identifying the endodermal GATA factor ELT-2 as a major
+          regulator of the intestinal infection-response transcriptional program that
+          includes irg-2.
+        supporting_text: &gt;-
+          Gene expression and functional RNAi-based analyses identified the
+          tissue-specific GATA transcription factor ELT-2 as a major regulator of an
+          early intestinal protective response to infection with the human bacterial
+          pathogen Pseudomonas aeruginosa.
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified; source of the HEP annotation. Provides the tissue context
+        (intestinal epithelium) and high-throughput expression support, but does not
+        address IRG-2 protein function. Cached record is abstract-only.
+core_functions:
+  - description: &gt;-
+      irg-2 acts as a downstream transcriptional effector of the ZIP-2 branch of C.
+      elegans surveillance immunity. Its mRNA is a specific, PMK-1-independent readout
+      of the intestinal antibacterial defense response, induced when virulent P.
+      aeruginosa (or other insults that block host translation) is detected. Its role
+      is defined by this regulated expression; the biochemical activity of the IRG-2
+      protein and whether it is itself required for pathogen resistance remain
+      undetermined.
+    directly_involved_in:
+      - id: GO:0140367
+        label: antibacterial innate immune response
+      - id: GO:0050829
+        label: defense response to Gram-negative bacterium
+    supported_by:
+      - reference_id: PMID:20133860
+        supporting_text: &gt;-
+          We focused on genes that are induced in C. elegans by infection with the
+          bacterial pathogen Pseudomonas aeruginosa, but are not induced by an
+          isogenic attenuated gacA mutant.
+      - reference_id: PMID:32350153
+        supporting_text: &gt;-
+          the expression of the ZIP-2 targets irg-1 (Figure 2A) and irg-2 (Figure 2B)
+          increased 24.0-fold and 15.5-fold, respectively, from day 1 to day 8 of
+          adulthood
+knowledge_gaps:
+  - gap_statement: &gt;-
+      The molecular function of IRG-2 is undetermined. No catalytic, binding, or
+      antimicrobial activity has been demonstrated, no physical interaction partner is
+      known, and — unlike its co-regulated paralog irg-1, which carries a predicted
+      NADAR/YbiA-like domain — the protein has no recognizable domain from which to
+      even hypothesize an activity.
+    boundary: &gt;-
+      irg-2 is a well-established transcriptional readout of the ZIP-2
+      surveillance-immunity pathway: strongly and specifically induced by virulent P.
+      aeruginosa (PMID:20133860), by translational inhibition (Exotoxin A /
+      cycloheximide; PMID:22520465), and with age in a ZIP-2-dependent manner
+      (PMID:32350153), independent of PMK-1 p38 MAPK (PMID:17096597). The 278-aa
+      protein has only a short disordered/polar-residue region and no catalytic motif,
+      and evidence exists solely at the transcript level (UniProt PE=2).
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      irg-2 is one of the canonical downstream effectors invoked to define the ZIP-2
+      arm of C. elegans surveillance immunity, yet what its protein product actually
+      does — enzyme, antimicrobial effector, or inert reporter — is entirely unknown,
+      leaving the effector output of this well-studied pathway mechanistically blank.
+    resolution: &gt;-
+      Recombinant-protein biochemistry and/or structure determination to test for an
+      enzymatic or antimicrobial activity; affinity/proximity proteomics (AP-MS) or
+      yeast two-hybrid to identify partners; endogenous tagging for subcellular
+      localization.
+    provenance:
+      - reference_id: file:worm/irg-2/irg-2-goa.tsv
+        supporting_text: &#34;GO:0003674\tmolecular_function\tmolecular_function\tECO:0000307\tND&#34;
+      - reference_id: file:worm/irg-2/irg-2-deep-research-falcon.md
+        supporting_text: &gt;-
+          No enzymatic activity has been assigned to the protein.
+      - reference_id: PMID:32350153
+        supporting_text: &gt;-
+          the expression of the ZIP-2 targets irg-1 (Figure 2A) and irg-2 (Figure 2B)
+  - gap_statement: &gt;-
+      It is unknown whether the IRG-2 protein is functionally required for defense
+      against P. aeruginosa. All evidence linking irg-2 to immunity is transcriptional
+      (IEP/HEP); no irg-2 loss-of-function survival, colonization, or immune phenotype
+      has been reported, so whether IRG-2 is a causal effector or a passive reporter of
+      ZIP-2 activation is unresolved.
+    boundary: &gt;-
+      The regulator ZIP-2 is required for defense against P. aeruginosa
+      (PMID:20133860), and irg-2 is a ZIP-2-dependent target (PMID:32350153); but
+      requirement of the regulator does not establish requirement of this particular
+      target. irg-2&#39;s association with defense rests entirely on expression
+      correlation, not on perturbation of irg-2 itself.
+    gap_kind:
+      - BIOLOGY
+    status: OPEN
+    significance: &gt;-
+      Distinguishing effector from reporter is essential before irg-2 can be assigned a
+      causal role in innate immunity, and would clarify whether the ZIP-2 pathway&#39;s
+      protective output runs through irg-2 or through other, as-yet-unidentified
+      effectors.
+    resolution: &gt;-
+      Loss-of-function (deletion/RNAi) and overexpression of irg-2 with quantitative
+      survival and bacterial-burden assays on P. aeruginosa PA14, ideally with rescue,
+      to test whether IRG-2 protein is required for or sufficient to enhance resistance.
+    provenance:
+      - reference_id: PMID:20133860
+        supporting_text: &gt;-
+          is important for defense against infection by P. aeruginosa.
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;-
+      Does the IRG-2 protein have any enzymatic or direct antimicrobial activity, or
+      is it an inert transcriptional reporter of ZIP-2 activation?
+  - question: &gt;-
+      Is irg-2 loss-of-function associated with any measurable susceptibility to P.
+      aeruginosa (survival or bacterial burden)?
+  - question: &gt;-
+      Where does IRG-2 protein localize within intestinal (and pharyngeal) cells, and
+      is it secreted?
+  - question: &gt;-
+      Do irg-1 and irg-2 act redundantly or on distinct targets within the ZIP-2
+      surveillance program?
+suggested_experiments:
+  - description: &gt;-
+      Generate an irg-2 deletion (and irg-1;irg-2 double) and assay survival and
+      intestinal bacterial burden on P. aeruginosa PA14 versus control bacteria, with
+      transgenic rescue, to test whether IRG-2 protein is required for defense.
+    hypothesis: &gt;-
+      IRG-2 is a functional effector required for wild-type resistance to P.
+      aeruginosa, not merely a downstream reporter.
+  - description: &gt;-
+      Express and purify recombinant IRG-2 and screen for candidate biochemical
+      activities and for direct antibacterial activity against P. aeruginosa in vitro;
+      determine its structure (experimental or from AlphaFold) to search for cryptic
+      active-site or fold features.
+    hypothesis: &gt;-
+      IRG-2 possesses a discrete molecular activity (enzymatic or antimicrobial) that
+      its lack of an annotated domain has obscured.
+  - description: &gt;-
+      Use endogenous fluorescent tagging plus affinity/proximity proteomics (AP-MS) of
+      IRG-2 in infected animals to determine subcellular localization and physical
+      interaction partners.
+    hypothesis: &gt;-
+      IRG-2 localizes to a defined compartment (e.g. secretory/apical intestinal) and
+      acts through specific protein partners.
+tags: [caeel-surveillance-immunity]
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
