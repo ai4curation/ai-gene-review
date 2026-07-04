@@ -1,0 +1,3203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fis-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fis-1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q20291" target="_blank" class="term-link">
+                        Q20291
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fis-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q20291" data-a="DESCRIPTION: fis-1 (F41G3.4) is the Caenorhabditis elegans orth..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>fis-1 (F41G3.4) is the Caenorhabditis elegans ortholog of FIS1, a small (143 aa) tail-anchored protein of the mitochondrial outer membrane. Like other FIS1-family members it has a cytosol-facing tetratricopeptide-repeat (TPR) fold and a single C-terminal transmembrane helix that anchors it in the outer membrane, with the TPR body exposed to the cytosol. C. elegans has a second FIS1 homolog, fis-2, which acts partly redundantly with fis-1. In mammals and fungi FIS1 proteins are receptor/adaptor factors that participate in recruiting the dynamin-related GTPase DRP1 to the outer membrane during mitochondrial (and peroxisomal) fission. In C. elegans, however, loss of fis-1 (and fis-2) does not detectably impair mitochondrial or peroxisomal fission or morphology; instead FIS-1 acts downstream of the DRP-1/MFF fission step to promote the orderly disposal of damaged mitochondria. Loss of fis-1/fis-2 causes stress-induced accumulation of large autophagic (LGG-1/LC3-positive) aggregates containing mitochondrial remnants, and fis-1 is required for removal of UV-C-induced mitochondrial DNA damage. FIS-1 thus couples stress-induced mitochondrial fission to mitophagic quality control at the mitochondrial outer membrane / ER-mitochondrial interface.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008289" target="_blank" class="term-link">
+                                    GO:0008289
+                                </a>
+                            </span>
+                            <span class="term-label">lipid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0008289" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-level phylogenetic (IBA) inference of a generic &#34;lipid binding&#34; molecular function. There is no C. elegans-specific evidence that FIS-1 binds lipid; its C-terminal transmembrane helix mediates membrane anchoring, which is not the same as a lipid-binding molecular function. This is a weak, uninformative over-propagation for this gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No experimental support in worm; the informative molecular function of FIS-1 is adaptor/receptor activity (GO:0060090), not lipid binding. Membrane anchoring via the tail-anchor TM helix does not justify a lipid-binding MF.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000326738</span>
+
+                                    &middot; FIS1 family node
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                                    GO:0060090
+                                </a>
+                            </span>
+                            <span class="term-label">molecular adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0060090" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Captures the core, informative molecular function of FIS1-family proteins: an outer-membrane receptor/adaptor that helps bring the fission GTPase DRP-1 into the fission/degradation machinery. Consistent with C. elegans data showing FIS-1 is part of the DRP-1/MAM fission complex that couples fission to mitophagic disposal.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Best-supported and most informative MF term for this gene; consistent with the family function (Drp1 recruitment/adaptor) and with worm FIS-1 acting within the DRP-1-containing MAM fission complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link">
+                                        PMID:24196833
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Recruitment of Drp1 to mitochondria is mediated by proteins that are anchored in the mitochondrial outer membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link">
+                                        PMID:24196833
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Fis1 is part of the MAM complex and contributes to a late stage of the removal process but is not required for entry of Drp1 into the MAM or fission</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0005741" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial outer membrane is the well-established site of FIS-1 action, supported by direct C. elegans evidence (YFP::FIS-1 used as an OM marker), ISS from human FIS1, and the tail-anchor topology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strongly supported localization; core to FIS-1 function. Corroborated by the IDA annotation (PMID:21248201).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21248201" target="_blank" class="term-link">
+                                        PMID:21248201
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Fluorescence labeling showed a pattern similar to patterns observed with YFP fused to a bona fide mitochondrial OM protein (YFP::FIS-1)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                    GO:0005778
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0005778" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Peroxisomal membrane localization is inferred from mammalian/plant FIS1 homologs, which act in peroxisome fission. It is plausible for worm FIS-1 by homology but has not been directly demonstrated in C. elegans, and fis-1 mutants have normal (punctate) peroxisomes. Retain as a non-core, homology-based localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No direct worm evidence for peroxisomal localization or a peroxisomal role; family-level propagation. Not a core function of C. elegans fis-1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link">
+                                        PMID:24196833
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showing punctate peroxisomes in wild-type and Fis1 mutants</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000266" target="_blank" class="term-link">
+                                    GO:0000266
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial fission</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0000266" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial fission is the ancestral FIS1-family process, and worm FIS-1 is part of the fission machinery (overexpression drives fragmentation; FIS-1 is in the DRP-1/MAM fission complex). However, loss of fis-1/fis-2 in C. elegans does NOT impair mitochondrial fission or morphology, so this is not the core, essential fission determinant in worm (mff-1/mff-2 + drp-1 are). Retain as non-core: FIS-1 participates in, but is not required for, fission.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Defensible at the family/machinery level and via overexpression, but loss-of- function is phenotypically silent for fission in worm; the more specific, experimentally supported role is coupling fission to mitophagic disposal.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link">
+                                        PMID:24196833
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results show that fis-1 and fis-2 single and double mutants have wild-type mitochondrial morphologies, as also shown by others</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link">
+                                        PMID:24196833
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These dominant effects show that overexpressed Fis1 can affect mitochondrial fission even though C. elegans Fis1 proteins are not required for fission</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016559" target="_blank" class="term-link">
+                                    GO:0016559
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome fission</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0016559" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Peroxisome fission is a documented FIS1 function in mammals and plants, but in C. elegans fis-1 mutants have normal punctate peroxisomes and only Mff/Drp1 loss produces tubular (fission-defective) peroxisomes. Family-level propagation not supported by direct worm evidence; retain as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No demonstrated peroxisome-fission role for worm fis-1; the worm data show normal peroxisomes in fis-1 mutants. Keep as homology-based, non-core.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000326738</span>
+
+                                    &middot; FIS1 family node
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link">
+                                        PMID:24196833
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showing punctate peroxisomes in wild-type and Fis1 mutants</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000266" target="_blank" class="term-link">
+                                    GO:0000266
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial fission</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0000266" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic InterPro2GO mapping of the Fis1 domain (IPR016543) to mitochondrial fission. Same considerations as the IBA mitochondrial-fission annotation: defensible at the family level but not the core essential fission role in worm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA mitochondrial-fission annotation; family/domain-level inference. Non-core given the loss-of-function-silent fission phenotype in worm.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0005741" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping to mitochondrial outer membrane. Correct and corroborated by IDA and ISS evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported core localization; redundant with IDA/ISS annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                    GO:0005778
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0005778" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping to peroxisomal membrane, transferred from the mammalian FIS1 dual localization. Not directly shown in worm; non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homology-based peroxisomal localization; no direct C. elegans evidence. Retain as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0005741" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer of mitochondrial outer membrane localization from human FIS1 (Q9Y3D6). Consistent with worm IDA evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported core localization; consistent with experimental worm data.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                    GO:0005778
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0005778" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer of peroxisomal membrane localization from human FIS1. Plausible by homology but not demonstrated in worm; non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homology-based; no direct worm evidence for peroxisomal localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21248201" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21248201
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel mitochondrial outer membrane protein, MOMA-1, that a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0005741" data-r="PMID:21248201" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) evidence: YFP::FIS-1 localizes to the mitochondrial outer membrane and is used as a reference OM marker in C. elegans muscle cells. This is the strongest evidence for FIS-1 localization and anchors the core cellular component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct assay in C. elegans; the experimental basis for FIS-1 mitochondrial outer membrane localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21248201" target="_blank" class="term-link">
+                                        PMID:21248201
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Fluorescence labeling showed a pattern similar to patterns observed with YFP fused to a bona fide mitochondrial OM protein (YFP::FIS-1)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000423" target="_blank" class="term-link">
+                                    GO:0000423
+                                </a>
+                            </span>
+                            <span class="term-label">mitophagy</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24196833
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in Fis1 disrupt orderly disposal of defective mito...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q20291" data-a="GO:0000423" data-r="PMID:24196833" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation (not currently in GOA). Genetic loss of fis-1 (with fis-2) disrupts the orderly disposal of defective mitochondria: mitochondrial stress induces accumulation of large LGG-1/LC3-positive autophagic aggregates containing mitochondrial remnants and DRP-1, and these aggregates are suppressed by pink-1, mff, and drp-1 mutations. FIS-1 therefore acts within the mitophagy pathway, downstream of DRP-1/MFF-mediated fission, to guide fragmented mitochondria into autophagic degradation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Captures the core, experimentally supported biological process of C. elegans fis-1 (coupling stress-induced fission to mitophagic disposal), which is absent from the current GOA annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link">
+                                        PMID:24196833
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">causing the formation of large aggregates containing LGG-1, DRP-1, and remnants of mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FIS-1 is a tail-anchored mitochondrial outer membrane protein that acts as a receptor/adaptor coupling stress-induced mitochondrial fission to the orderly disposal (mitophagy) of damaged mitochondria. It functions downstream of the DRP-1/MFF fission step, within a DRP-1-containing complex at the ER-mitochondrial interface (MAM), to guide fragmented, defective mitochondria into autophagic (LGG-1/LC3-positive) degradation. Loss of fis-1 (with the paralog fis-2) does not impair fission but causes stalled, enlarged autophagic aggregates and blocks removal of UV-C-induced mitochondrial DNA damage.</h3>
+                <span class="vote-buttons" data-g="Q20291" data-a="FUNCTION: FIS-1 is a tail-anchored mitochondrial outer membr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                            molecular adaptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000423" target="_blank" class="term-link">
+                                mitophagy
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link">
+                                PMID:24196833
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Fis1 is part of the MAM complex and contributes to a late stage of the removal process but is not required for entry of Drp1 into the MAM or fission</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link">
+                                PMID:24196833
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">causing the formation of large aggregates containing LGG-1, DRP-1, and remnants of mitochondria</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24058863" target="_blank" class="term-link">
+                                PMID:24058863
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">RNAi knockdown of fis-1 inhibited mtDNA damage removal similarly to drp-1</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21248201" target="_blank" class="term-link">
+                            PMID:21248201
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A novel mitochondrial outer membrane protein, MOMA-1, that affects cristae morphology in Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">YFP::FIS-1 is used as a reference marker for a bona fide mitochondrial outer membrane protein in C. elegans muscle cells, supporting mitochondrial outer membrane localization of FIS-1.</div>
+
+                        <div class="finding-text">"Fluorescence labeling showed a pattern similar to patterns observed with YFP fused to a bona fide mitochondrial OM protein (YFP::FIS-1)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24196833" target="_blank" class="term-link">
+                            PMID:24196833
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in Fis1 disrupt orderly disposal of defective mitochondria.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">C. elegans fis-1/fis-2 single and double mutants have wild-type mitochondrial morphology; Fis1 homologs have no obvious effect on mitochondrial or peroxisomal fission, unlike Mff/Drp1.</div>
+
+                        <div class="finding-text">"Our results show that fis-1 and fis-2 single and double mutants have wild-type mitochondrial morphologies, as also shown by others"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of fis-1/fis-2 causes accumulation of large LGG-1 (LC3) autophagic aggregates containing mitochondrial remnants and DRP-1; FIS-1 acts downstream of DRP-1/MFF fission to guide mitophagic disposal.</div>
+
+                        <div class="finding-text">"causing the formation of large aggregates containing LGG-1, DRP-1, and remnants of mitochondria"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24058863" target="_blank" class="term-link">
+                            PMID:24058863
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Effects of mutations in mitochondrial dynamics-related genes on the mitochondrial response to ultraviolet C radiation in developing Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RNAi knockdown of fis-1 blocks removal of UV-C-induced mitochondrial DNA damage, similarly to drp-1, whereas fis-1 knockout alone does not affect mitochondrial morphology or development.</div>
+
+                        <div class="finding-text">"RNAi knockdown of fis-1 inhibited mtDNA damage removal similarly to drp-1"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18722182" target="_blank" class="term-link">
+                            PMID:18722182
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Caenorhabditis elegans drp-1 and fis-2 regulate distinct cell-death execution pathways downstream of ced-3 and independent of ced-9.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In C. elegans, minor pro-apoptotic roles for drp-1 and fis-2 (a FIS1 homolog) are revealed in sensitized backgrounds, acting downstream of the CED-3 caspase to promote elimination of mitochondria in dying cells.</div>
+
+                        <div class="finding-text">"minor proapoptotic roles for drp-1 and fis-2, a homolog of human Fis1, are revealed in sensitized genetic backgrounds"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does endogenous C. elegans FIS-1 physically interact with DRP-1 (directly or via an adaptor) during stress-induced fission, and what are its other outer-membrane or MAM partners?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q20291" data-a="Q: Does endogenous C. elegans FIS-1 physically intera..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the fis-1 requirement for removal of UV-C-induced mtDNA damage a consequence of its mitophagy-coupling role, or a separable function?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q20291" data-a="Q: Is the fis-1 requirement for removal of UV-C-induc..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform stage-resolved mitophagy flux assays (e.g. mito-Rosella / mtKeima or LGG-1 puncta maturation) in fis-1, fis-2, fis-1;fis-2, mff, and drp-1 mutants after Paraquat or antimycin A, to place the fis-1-dependent step relative to autophagosome formation, cargo engulfment, and lysosomal fusion.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FIS-1 acts at a late, degradation-committing step of mitophagy downstream of DRP-1/MFF-mediated fission.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q20291" data-a="EXPERIMENT: Perform stage-resolved mitophagy flux assays (e.g...." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use proximity labeling (TurboID) or co-immunoprecipitation of tagged FIS-1 from C. elegans under basal and stress conditions to identify DRP-1 and MAM/autophagy interactors and test for adaptor intermediates.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Worm FIS-1 has direct or adaptor-mediated protein partners at the ER-mitochondrial interface.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q20291" data-a="EXPERIMENT: Use proximity labeling (TurboID) or co-immunopreci..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular mechanism by which FIS-1 couples completed mitochondrial fission to mitophagic disposal is undefined. In C. elegans FIS-1 is not the essential Drp1 receptor for fission (MFF is), yet its loss stalls a late intermediate step of orderly mitochondrial disposal, and it is unknown whether it acts by a direct downstream autophagy/MAM partner, by remodeling the ER-mitochondrial interface, or by handing off DRP-1.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: FIS-1 localizes to the mitochondrial outer membrane, is part of the DRP-1-containing MAM fission complex, and is required (redundantly with fis-2) for orderly disposal of defective mitochondria downstream of DRP-1/MFF and PINK-1. Unknown: the specific molecular activity/partner through which it enables the late degradation step.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> FIS1 has long been assumed to be a fission receptor; the worm (and mammalian) data reassign it to a mitophagy-coupling role whose mechanism is unresolved, directly relevant to PINK1/Parkin quality-control biology and neurodegeneration.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Fis1 is part of the MAM complex and contributes to a late stage of the removal process but is not required for entry of Drp1 into the MAM or fission"</em> — PMID:24196833</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether C. elegans fis-1 has any endogenous loss-of-function role in mitochondrial or peroxisomal fission is unresolved: loss of fis-1/fis-2 is phenotypically silent for organelle morphology, while FIS-1 overexpression is sufficient to fragment mitochondria.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: fis-1/fis-2 mutants have wild-type mitochondrial and peroxisomal morphology; overexpressed FIS-1 drives fragmentation. Unknown: whether endogenous FIS-1 contributes measurably to fission under any physiological condition, or is entirely dispensable for fission with a dedicated role only in disposal.</p>
+
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"These dominant effects show that overexpressed Fis1 can affect mitochondrial fission even though C. elegans Fis1 proteins are not required for fission"</em> — PMID:24196833</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct binding partners of C. elegans FIS-1 are unmapped. It is unknown whether worm FIS-1 uses adaptor proteins analogous to the yeast Mdv1/Caf4 proteins, whether it binds DRP-1 directly under stress, and which downstream autophagy or MAM factors it engages to promote degradation.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established (in mammals): stress induces a Drp1-Fis1 co-immunoprecipitable complex that also contains ER/MAM proteins. Unknown (in worm): the direct FIS-1 interactome and whether adaptor intermediates are required.</p>
+
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Recruitment of Drp1 to mitochondria is mediated by proteins that are anchored in the mitochondrial outer membrane"</em> — PMID:24196833</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fis-1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q20291" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fis-1-c-elegans-gene-review-notes">fis-1 (C. elegans) — Gene Review Notes</h1>
+<p>UniProt: Q20291 (FIS11_CAEEL); WormBase F41G3.4 / WBGene00001424; ORF F41G3.4.<br />
+Human ortholog: FIS1 (Q9Y3D6). Paralog in worm: fis-2 (a second FIS1 homologue).<br />
+Part of the flagship <code>projects/CAEEL_MITOPHAGY.md</code> project.</p>
+<p>143 aa tail-anchored protein: cytosol-facing TPR-fold body + a single C-terminal<br />
+transmembrane helix (residues ~121–141) that anchors it in the mitochondrial outer<br />
+membrane. Belongs to the FIS1 family (PIRSF008835; CDD cd12212; PANTHER PTHR13247:SF1).</p>
+<h2 id="deep-research-provenance">Deep research provenance</h2>
+<p>Falcon deep research (<code>just deep-research-falcon worm fis-1 --fallback perplexity-lite</code>) was<br />
+attempted TWICE (initial run stalled &gt;15 min with zero output under heavy concurrent Edison<br />
+load; a bounded retry was killed by a 6-min timeout, exit 143). No <code>-deep-research-falcon.md</code><br />
+file was produced, and the perplexity-lite fallback also did not yield a file. This review is<br />
+therefore grounded directly in UniProt (Q20291), GOA, and cached FULL-TEXT primary literature<br />
+(PMID:24196833, PMID:24058863, PMID:21248201 all have full text; PMID:18722182 abstract-only).<br />
+Because every existing annotation could be adjudicated from the cached full text, no UNDECIDED<br />
+calls were required.</p>
+<h2 id="provenance-sources">Provenance sources</h2>
+<ul>
+<li>UniProt Q20291 record (<code>fis-1-uniprot.txt</code>)</li>
+<li>GOA (<code>fis-1-goa.tsv</code>) — 12 annotations</li>
+<li>Primary literature (cached, full text unless noted):</li>
+<li>PMID:24196833 Shen et al. 2014 Mol Biol Cell — "Mutations in Fis1 disrupt orderly disposal of defective mitochondria" (full text; studies BOTH C. elegans fis-1/fis-2 AND mammalian FIS1)</li>
+<li>PMID:24058863 Bess et al. 2013 Worm — UVC / mtDNA damage removal (full text)</li>
+<li>PMID:21248201 Head et al. 2011 Mol Biol Cell — MOMA-1 paper (full text; uses YFP::FIS-1 as a bona fide mito OM marker)</li>
+<li>PMID:18722182 Breckenridge et al. 2008 Mol Cell — drp-1/fis-2 cell-death (ABSTRACT ONLY in cache; abstract foregrounds fis-2)</li>
+</ul>
+<h2 id="known-well-supported">KNOWN (well supported)</h2>
+<h3 id="localization-mitochondrial-outer-membrane-known">Localization: mitochondrial outer membrane (KNOWN)</h3>
+<ul>
+<li>YFP::FIS-1 is used as a reference mitochondrial outer-membrane marker in C. elegans.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21248201" title="Fluorescence labeling showed a pattern similar to patterns observed with YFP fused to a bona fide mitochondrial OM protein (YFP::FIS-1)">PMID:21248201</a></li>
+<li>Tail-anchored topology: cytosolic TPR body + single C-terminal TM helix (UniProt FT TRANSMEM 121..141; DOMAIN "The C-terminus is required for mitochondrial or peroxisomal localization, while the N-terminus is necessary for mitochondrial or peroxisomal fission").</li>
+<li>This underpins the IDA (PMID:21248201), ISS (from human Q9Y3D6), and IEA(SubCell) mito-OM annotations. Peroxisomal-membrane localization is by ISS/IBA from mammalian/plant homologues; NOT directly demonstrated in worm.</li>
+</ul>
+<h3 id="molecular-function-adaptorreceptor-in-the-fission-machinery-known-at-family-level-consistent-in-worm">Molecular function: adaptor/receptor in the fission machinery (KNOWN at family level, consistent in worm)</h3>
+<ul>
+<li>FIS1 family proteins are Drp1 recruitment/adaptor factors anchored in the OMM.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24196833" title="Recruitment of Drp1 to mitochondria is mediated by proteins that are anchored in the mitochondrial outer membrane">PMID:24196833</a></li>
+<li>In worm, fission-inducing stress drives Drp1 into a complex with Fis1 (shown for mammalian cells; worm Fis1 is part of the MAM fission complex).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24196833" title="Fis1 is part of the MAM complex and contributes to a late stage of the removal process but is not required for entry of Drp1 into the MAM or fission">PMID:24196833</a></li>
+<li>Supports GOA IBA GO:0060090 molecular adaptor activity (core MF).</li>
+</ul>
+<h3 id="core-role-in-c-elegans-orderly-disposal-of-defective-mitochondria-stress-induced-mitophagy-known">Core role in C. elegans: orderly disposal of defective mitochondria / stress-induced mitophagy (KNOWN)</h3>
+<ul>
+<li>fis-1;fis-2 (Fis1) mutants accumulate LGG-1 (worm LC3) autophagic aggregates, enlarged by mitochondrial stress (Paraquat/ROS, antimycin A).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24196833" title="Fis1 mutants showed a modest but consistent increase in the number and size of LGG-1::CFP clusters when compared with wild type or Mff mutants">PMID:24196833</a></li>
+<li>Aggregates contain remnants of mitochondria + DRP-1 (and Parkin/ER).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24196833" title="We conclude that mutations in Fis1 affect autophagy in C. elegans, causing the formation of large aggregates containing LGG-1, DRP-1, and remnants of mitochondria">PMID:24196833</a></li>
+<li>Aggregate formation requires upstream Mff/Drp1 fission and Pink1 → fis-1 acts downstream, coupling fission to mitophagy. Model:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24196833" title="Fis1 acts after Drp1 and Mff initiate mitochondrial fission, guiding this process toward major cellular stress response pathways">PMID:24196833</a></li>
+<li>pink-1 fis-1 fis-2 triple mutant loses colocalizing mitophagosome spots ("as expected for a complete block of mitophagy") and has fewer/smaller LGG-1 aggregates than the Fis1 double.</li>
+</ul>
+<h3 id="role-in-removal-of-uvc-induced-mtdna-damage-known">Role in removal of UVC-induced mtDNA damage (KNOWN)</h3>
+<ul>
+<li>RNAi knockdown of fis-1 blocks removal of UVC-induced mtDNA damage, like drp-1.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24058863" title="RNAi knockdown of fis-1 inhibited mtDNA damage removal similarly to drp-1">PMID:24058863</a></li>
+<li>fis-1 knockout does not exacerbate UVC-induced larval arrest (redundancy/buffering by fusion).<br />
+  Figure legend: <a href="https://pubmed.ncbi.nlm.nih.gov/24058863" title="fis-1 is required for removal of UVC-induced mtDNA damage but not recovery from larval arrest">PMID:24058863</a></li>
+<li>This is the experimental basis for the UniProt "DNA damage" keyword (GO:0006974 DNA damage response, IEA-KW; no GOA annotation for it directly).</li>
+</ul>
+<h2 id="not-known-important-negatives">NOT known / important negatives</h2>
+<h3 id="fis-1-is-not-required-for-mitochondrial-fission-in-c-elegans-organism-specific-negative">fis-1 is NOT required for mitochondrial fission in C. elegans (organism-specific negative)</h3>
+<ul>
+<li>fis-1 and fis-2 single/double mutants have WILD-TYPE mitochondrial morphology; loss of function has no obvious fission defect.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24196833" title="Our results show that fis-1 and fis-2 single and double mutants have wild-type mitochondrial morphologies, as also shown by others">PMID:24196833</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24196833" title="whereas Fis1 homologues have no obvious effects">PMID:24196833</a></li>
+<li>Corroborated by UVC paper: <a href="https://pubmed.ncbi.nlm.nih.gov/24058863" title="While knockout of these genes alone does not affect mitochondrial morphology or development">PMID:24058863</a></li>
+<li>BUT overexpressed FIS-1 can drive fragmentation, and it is part of the fission complex → the GO:0000266 "mitochondrial fission" IBA/IEA is defensible at the family/machinery level but is NOT the core essential fission determinant in worm (that is mff-1/mff-2 + drp-1). Treat as non-core.</li>
+</ul>
+<h3 id="fis-1-is-not-required-for-peroxisome-fission-in-c-elegans-organism-specific-negative">fis-1 is NOT required for peroxisome fission in C. elegans (organism-specific negative)</h3>
+<ul>
+<li>fis-1 mutants have normal (punctate) peroxisomes; only Mff/Drp1 loss gives tubular peroxisomes.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24196833" title="showing punctate peroxisomes in wild-type and Fis1 mutants and tubular peroxisomes in drp-1 mutant and Mff double mutants">PMID:24196833</a></li>
+<li>So GO:0016559 peroxisome fission (IBA) is a family-level propagation not supported by direct worm evidence; non-core.</li>
+</ul>
+<h3 id="lipid-binding-go0008289-iba-weakly-supported">lipid binding (GO:0008289, IBA) — weakly supported</h3>
+<ul>
+<li>No worm-specific evidence that fis-1 binds lipid. The tail anchor inserts into membrane but that is membrane anchoring, not a "lipid binding" molecular function. Likely a generic family-level over-propagation; non-core / over-annotated.</li>
+</ul>
+<h2 id="unknowns-candidate-knowledge-gaps">Unknowns (candidate knowledge gaps)</h2>
+<ol>
+<li>The precise molecular activity by which Fis1 couples completed fission to the mitophagy/degradation machinery is undefined. It is not a Drp1 receptor essential for fission in worm (Mff is), yet its loss stalls an intermediate step of orderly disposal. Whether it acts by a direct partner (a downstream autophagy/MAM factor), by remodeling the ER–mitochondrial interface, or by handing off DRP-1, is unresolved.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24196833" title="Fis1 is part of the MAM complex and contributes to a late stage of the removal process but is not required for entry of Drp1 into the MAM or fission">PMID:24196833</a></li>
+<li>Whether C. elegans fis-1 has any endogenous (loss-of-function) role in mitochondrial or peroxisome fission at all, versus being entirely dispensable, is unresolved: LOF is phenotypically silent for morphology while overexpression is sufficient to fragment.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24196833" title="These dominant effects show that overexpressed Fis1 can affect mitochondrial fission even though C. elegans Fis1 proteins are not required for fission">PMID:24196833</a></li>
+<li>The direct binding partners of worm FIS-1 (does it use adaptor proteins analogous to yeast Mdv1/Caf4? does it bind DRP-1 directly under stress?) have not been mapped in C. elegans.</li>
+</ol>
+<h2 id="curation-decisions-summary-see-fis-1-ai-reviewyaml">Curation decisions summary (see fis-1-ai-review.yaml)</h2>
+<ul>
+<li>ACCEPT (core): GO:0060090 molecular adaptor activity (IBA); GO:0005741 mitochondrial outer membrane (IDA/ISS/IEA/IBA).</li>
+<li>KEEP_AS_NON_CORE: GO:0000266 mitochondrial fission (IBA, IEA); GO:0005778 peroxisomal membrane (IBA/ISS/IEA); GO:0016559 peroxisome fission (IBA).</li>
+<li>MARK_AS_OVER_ANNOTATED: GO:0008289 lipid binding (IBA).</li>
+<li>Core biological role captured in core_functions = orderly disposal of defective mitochondria (stress-induced mitophagy coupling), MF = molecular adaptor activity at the mito OM.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q20291
+gene_symbol: fis-1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  fis-1 (F41G3.4) is the Caenorhabditis elegans ortholog of FIS1, a small (143 aa)
+  tail-anchored protein of the mitochondrial outer membrane. Like other FIS1-family
+  members it has a cytosol-facing tetratricopeptide-repeat (TPR) fold and a single
+  C-terminal transmembrane helix that anchors it in the outer membrane, with the
+  TPR body exposed to the cytosol. C. elegans has a second FIS1 homolog, fis-2,
+  which acts partly redundantly with fis-1. In mammals and fungi FIS1 proteins are
+  receptor/adaptor factors that participate in recruiting the dynamin-related GTPase
+  DRP1 to the outer membrane during mitochondrial (and peroxisomal) fission. In
+  C. elegans, however, loss of fis-1 (and fis-2) does not detectably impair
+  mitochondrial or peroxisomal fission or morphology; instead FIS-1 acts downstream
+  of the DRP-1/MFF fission step to promote the orderly disposal of damaged
+  mitochondria. Loss of fis-1/fis-2 causes stress-induced accumulation of large
+  autophagic (LGG-1/LC3-positive) aggregates containing mitochondrial remnants, and
+  fis-1 is required for removal of UV-C-induced mitochondrial DNA damage. FIS-1 thus
+  couples stress-induced mitochondrial fission to mitophagic quality control at the
+  mitochondrial outer membrane / ER-mitochondrial interface.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:21248201
+  title: A novel mitochondrial outer membrane protein, MOMA-1, that affects cristae
+    morphology in Caenorhabditis elegans.
+  findings:
+  - statement: &gt;-
+      YFP::FIS-1 is used as a reference marker for a bona fide mitochondrial outer
+      membrane protein in C. elegans muscle cells, supporting mitochondrial outer
+      membrane localization of FIS-1.
+    supporting_text: &gt;-
+      Fluorescence labeling showed a pattern similar to patterns observed with YFP
+      fused to a bona fide mitochondrial OM protein (YFP::FIS-1)
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text confirmed. The paper is about MOMA-1, but it experimentally uses
+      YFP::FIS-1 as an established mitochondrial outer-membrane marker, which is the
+      basis of the IDA localization annotation (assigned by WormBase).
+- id: PMID:24196833
+  title: Mutations in Fis1 disrupt orderly disposal of defective mitochondria.
+  findings:
+  - statement: &gt;-
+      C. elegans fis-1/fis-2 single and double mutants have wild-type mitochondrial
+      morphology; Fis1 homologs have no obvious effect on mitochondrial or
+      peroxisomal fission, unlike Mff/Drp1.
+    supporting_text: &gt;-
+      Our results show that fis-1 and fis-2 single and double mutants have wild-type
+      mitochondrial morphologies, as also shown by others
+  - statement: &gt;-
+      Loss of fis-1/fis-2 causes accumulation of large LGG-1 (LC3) autophagic
+      aggregates containing mitochondrial remnants and DRP-1; FIS-1 acts downstream
+      of DRP-1/MFF fission to guide mitophagic disposal.
+    supporting_text: &gt;-
+      causing the formation of large aggregates containing LGG-1, DRP-1, and remnants
+      of mitochondria
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text confirmed. Although the title emphasizes mammalian Fis1, the
+      paper directly characterizes C. elegans fis-1 and fis-2 (deletion alleles,
+      overexpression, LGG-1 aggregate assays, pink-1 epistasis). Establishes that
+      worm FIS-1 is dispensable for fission but required for orderly disposal of
+      defective mitochondria (mitophagy coupling).
+- id: PMID:24058863
+  title: Effects of mutations in mitochondrial dynamics-related genes on the mitochondrial
+    response to ultraviolet C radiation in developing Caenorhabditis elegans.
+  findings:
+  - statement: &gt;-
+      RNAi knockdown of fis-1 blocks removal of UV-C-induced mitochondrial DNA
+      damage, similarly to drp-1, whereas fis-1 knockout alone does not affect
+      mitochondrial morphology or development.
+    supporting_text: &gt;-
+      RNAi knockdown of fis-1 inhibited mtDNA damage removal similarly to drp-1
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text confirmed. Provides the experimental basis for a role of fis-1
+      in removal of UV-C-induced mtDNA damage (UniProt DNA-damage keyword), using
+      the fis-1(tm1867) allele and RNAi.
+- id: PMID:18722182
+  title: Caenorhabditis elegans drp-1 and fis-2 regulate distinct cell-death execution
+    pathways downstream of ced-3 and independent of ced-9.
+  findings:
+  - statement: &gt;-
+      In C. elegans, minor pro-apoptotic roles for drp-1 and fis-2 (a FIS1 homolog)
+      are revealed in sensitized backgrounds, acting downstream of the CED-3 caspase
+      to promote elimination of mitochondria in dying cells.
+    supporting_text: &gt;-
+      minor proapoptotic roles for drp-1 and fis-2, a homolog of human Fis1, are
+      revealed in sensitized genetic backgrounds
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record is abstract-only (full_text_available: false). The abstract
+      foregrounds the fis-1 paralog fis-2, not fis-1 itself; UniProt cites this paper
+      for the fis-1 disruption phenotype (normal mitochondrial connectivity). Used
+      here only as background context for the family&#39;s redundant, non-core roles in
+      cell death; not used to support a specific fis-1 GO annotation.
+existing_annotations:
+- term:
+    id: GO:0008289
+    label: lipid binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Family-level phylogenetic (IBA) inference of a generic &#34;lipid binding&#34;
+      molecular function. There is no C. elegans-specific evidence that FIS-1 binds
+      lipid; its C-terminal transmembrane helix mediates membrane anchoring, which is
+      not the same as a lipid-binding molecular function. This is a weak,
+      uninformative over-propagation for this gene.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      No experimental support in worm; the informative molecular function of FIS-1 is
+      adaptor/receptor activity (GO:0060090), not lipid binding. Membrane anchoring
+      via the tail-anchor TM helix does not justify a lipid-binding MF.
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN000326738
+        source_label: FIS1 family node
+        source_status: SOURCE_WEAK_OR_INFERRED
+- term:
+    id: GO:0060090
+    label: molecular adaptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Captures the core, informative molecular function of FIS1-family proteins:
+      an outer-membrane receptor/adaptor that helps bring the fission GTPase DRP-1
+      into the fission/degradation machinery. Consistent with C. elegans data showing
+      FIS-1 is part of the DRP-1/MAM fission complex that couples fission to
+      mitophagic disposal.
+    action: ACCEPT
+    reason: &gt;-
+      Best-supported and most informative MF term for this gene; consistent with the
+      family function (Drp1 recruitment/adaptor) and with worm FIS-1 acting within the
+      DRP-1-containing MAM fission complex.
+    supported_by:
+    - reference_id: PMID:24196833
+      supporting_text: &gt;-
+        Recruitment of Drp1 to mitochondria is mediated by proteins that are anchored
+        in the mitochondrial outer membrane
+    - reference_id: PMID:24196833
+      supporting_text: &gt;-
+        Fis1 is part of the MAM complex and contributes to a late stage of the removal
+        process but is not required for entry of Drp1 into the MAM or fission
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Mitochondrial outer membrane is the well-established site of FIS-1 action,
+      supported by direct C. elegans evidence (YFP::FIS-1 used as an OM marker),
+      ISS from human FIS1, and the tail-anchor topology.
+    action: ACCEPT
+    reason: &gt;-
+      Strongly supported localization; core to FIS-1 function. Corroborated by the
+      IDA annotation (PMID:21248201).
+    supported_by:
+    - reference_id: PMID:21248201
+      supporting_text: &gt;-
+        Fluorescence labeling showed a pattern similar to patterns observed with YFP
+        fused to a bona fide mitochondrial OM protein (YFP::FIS-1)
+- term:
+    id: GO:0005778
+    label: peroxisomal membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Peroxisomal membrane localization is inferred from mammalian/plant FIS1
+      homologs, which act in peroxisome fission. It is plausible for worm FIS-1 by
+      homology but has not been directly demonstrated in C. elegans, and fis-1
+      mutants have normal (punctate) peroxisomes. Retain as a non-core, homology-based
+      localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      No direct worm evidence for peroxisomal localization or a peroxisomal role;
+      family-level propagation. Not a core function of C. elegans fis-1.
+    supported_by:
+    - reference_id: PMID:24196833
+      supporting_text: showing punctate peroxisomes in wild-type and Fis1 mutants
+- term:
+    id: GO:0000266
+    label: mitochondrial fission
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mitochondrial fission is the ancestral FIS1-family process, and worm FIS-1 is
+      part of the fission machinery (overexpression drives fragmentation; FIS-1 is in
+      the DRP-1/MAM fission complex). However, loss of fis-1/fis-2 in C. elegans does
+      NOT impair mitochondrial fission or morphology, so this is not the core,
+      essential fission determinant in worm (mff-1/mff-2 + drp-1 are). Retain as
+      non-core: FIS-1 participates in, but is not required for, fission.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Defensible at the family/machinery level and via overexpression, but loss-of-
+      function is phenotypically silent for fission in worm; the more specific,
+      experimentally supported role is coupling fission to mitophagic disposal.
+    supported_by:
+    - reference_id: PMID:24196833
+      supporting_text: &gt;-
+        Our results show that fis-1 and fis-2 single and double mutants have wild-type
+        mitochondrial morphologies, as also shown by others
+    - reference_id: PMID:24196833
+      supporting_text: &gt;-
+        These dominant effects show that overexpressed Fis1 can affect mitochondrial
+        fission even though C. elegans Fis1 proteins are not required for fission
+- term:
+    id: GO:0016559
+    label: peroxisome fission
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Peroxisome fission is a documented FIS1 function in mammals and plants, but in
+      C. elegans fis-1 mutants have normal punctate peroxisomes and only Mff/Drp1
+      loss produces tubular (fission-defective) peroxisomes. Family-level propagation
+      not supported by direct worm evidence; retain as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      No demonstrated peroxisome-fission role for worm fis-1; the worm data show
+      normal peroxisomes in fis-1 mutants. Keep as homology-based, non-core.
+    supported_by:
+    - reference_id: PMID:24196833
+      supporting_text: showing punctate peroxisomes in wild-type and Fis1 mutants
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: PANTHER:PTN000326738
+        source_label: FIS1 family node
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+- term:
+    id: GO:0000266
+    label: mitochondrial fission
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic InterPro2GO mapping of the Fis1 domain (IPR016543) to mitochondrial
+      fission. Same considerations as the IBA mitochondrial-fission annotation:
+      defensible at the family level but not the core essential fission role in worm.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Redundant with the IBA mitochondrial-fission annotation; family/domain-level
+      inference. Non-core given the loss-of-function-silent fission phenotype in worm.
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping to mitochondrial outer membrane. Correct
+      and corroborated by IDA and ISS evidence.
+    action: ACCEPT
+    reason: Well-supported core localization; redundant with IDA/ISS annotations.
+- term:
+    id: GO:0005778
+    label: peroxisomal membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping to peroxisomal membrane, transferred from
+      the mammalian FIS1 dual localization. Not directly shown in worm; non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Homology-based peroxisomal localization; no direct C. elegans evidence. Retain
+      as non-core.
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ISS transfer of mitochondrial outer membrane localization from human FIS1
+      (Q9Y3D6). Consistent with worm IDA evidence.
+    action: ACCEPT
+    reason: Well-supported core localization; consistent with experimental worm data.
+- term:
+    id: GO:0005778
+    label: peroxisomal membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ISS transfer of peroxisomal membrane localization from human FIS1. Plausible by
+      homology but not demonstrated in worm; non-core.
+    action: KEEP_AS_NON_CORE
+    reason: Homology-based; no direct worm evidence for peroxisomal localization.
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IDA
+  original_reference_id: PMID:21248201
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) evidence: YFP::FIS-1 localizes to the mitochondrial
+      outer membrane and is used as a reference OM marker in C. elegans muscle cells.
+      This is the strongest evidence for FIS-1 localization and anchors the core
+      cellular component.
+    action: ACCEPT
+    reason: &gt;-
+      Direct assay in C. elegans; the experimental basis for FIS-1 mitochondrial
+      outer membrane localization.
+    supported_by:
+    - reference_id: PMID:21248201
+      supporting_text: &gt;-
+        Fluorescence labeling showed a pattern similar to patterns observed with YFP
+        fused to a bona fide mitochondrial OM protein (YFP::FIS-1)
+- term:
+    id: GO:0000423
+    label: mitophagy
+  evidence_type: IMP
+  original_reference_id: PMID:24196833
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed new annotation (not currently in GOA). Genetic loss of fis-1 (with
+      fis-2) disrupts the orderly disposal of defective mitochondria: mitochondrial
+      stress induces accumulation of large LGG-1/LC3-positive autophagic aggregates
+      containing mitochondrial remnants and DRP-1, and these aggregates are suppressed
+      by pink-1, mff, and drp-1 mutations. FIS-1 therefore acts within the mitophagy
+      pathway, downstream of DRP-1/MFF-mediated fission, to guide fragmented
+      mitochondria into autophagic degradation.
+    action: NEW
+    reason: &gt;-
+      Captures the core, experimentally supported biological process of C. elegans
+      fis-1 (coupling stress-induced fission to mitophagic disposal), which is absent
+      from the current GOA annotations.
+    supported_by:
+    - reference_id: PMID:24196833
+      supporting_text: &gt;-
+        causing the formation of large aggregates containing LGG-1, DRP-1, and remnants
+        of mitochondria
+core_functions:
+- description: &gt;-
+    FIS-1 is a tail-anchored mitochondrial outer membrane protein that acts as a
+    receptor/adaptor coupling stress-induced mitochondrial fission to the orderly
+    disposal (mitophagy) of damaged mitochondria. It functions downstream of the
+    DRP-1/MFF fission step, within a DRP-1-containing complex at the
+    ER-mitochondrial interface (MAM), to guide fragmented, defective mitochondria
+    into autophagic (LGG-1/LC3-positive) degradation. Loss of fis-1 (with the
+    paralog fis-2) does not impair fission but causes stalled, enlarged autophagic
+    aggregates and blocks removal of UV-C-induced mitochondrial DNA damage.
+  molecular_function:
+    id: GO:0060090
+    label: molecular adaptor activity
+  directly_involved_in:
+  - id: GO:0000423
+    label: mitophagy
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+  supported_by:
+  - reference_id: PMID:24196833
+    supporting_text: &gt;-
+      Fis1 is part of the MAM complex and contributes to a late stage of the removal
+      process but is not required for entry of Drp1 into the MAM or fission
+  - reference_id: PMID:24196833
+    supporting_text: &gt;-
+      causing the formation of large aggregates containing LGG-1, DRP-1, and remnants
+      of mitochondria
+  - reference_id: PMID:24058863
+    supporting_text: &gt;-
+      RNAi knockdown of fis-1 inhibited mtDNA damage removal similarly to drp-1
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular mechanism by which FIS-1 couples completed mitochondrial fission
+    to mitophagic disposal is undefined. In C. elegans FIS-1 is not the essential
+    Drp1 receptor for fission (MFF is), yet its loss stalls a late intermediate step
+    of orderly mitochondrial disposal, and it is unknown whether it acts by a direct
+    downstream autophagy/MAM partner, by remodeling the ER-mitochondrial interface,
+    or by handing off DRP-1.
+  boundary: &gt;-
+    Established: FIS-1 localizes to the mitochondrial outer membrane, is part of the
+    DRP-1-containing MAM fission complex, and is required (redundantly with fis-2)
+    for orderly disposal of defective mitochondria downstream of DRP-1/MFF and PINK-1.
+    Unknown: the specific molecular activity/partner through which it enables the late
+    degradation step.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    FIS1 has long been assumed to be a fission receptor; the worm (and mammalian)
+    data reassign it to a mitophagy-coupling role whose mechanism is unresolved,
+    directly relevant to PINK1/Parkin quality-control biology and neurodegeneration.
+  provenance:
+  - reference_id: PMID:24196833
+    supporting_text: &gt;-
+      Fis1 is part of the MAM complex and contributes to a late stage of the removal
+      process but is not required for entry of Drp1 into the MAM or fission
+- gap_statement: &gt;-
+    Whether C. elegans fis-1 has any endogenous loss-of-function role in
+    mitochondrial or peroxisomal fission is unresolved: loss of fis-1/fis-2 is
+    phenotypically silent for organelle morphology, while FIS-1 overexpression is
+    sufficient to fragment mitochondria.
+  boundary: &gt;-
+    Established: fis-1/fis-2 mutants have wild-type mitochondrial and peroxisomal
+    morphology; overexpressed FIS-1 drives fragmentation. Unknown: whether
+    endogenous FIS-1 contributes measurably to fission under any physiological
+    condition, or is entirely dispensable for fission with a dedicated role only in
+    disposal.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  provenance:
+  - reference_id: PMID:24196833
+    supporting_text: &gt;-
+      These dominant effects show that overexpressed Fis1 can affect mitochondrial
+      fission even though C. elegans Fis1 proteins are not required for fission
+- gap_statement: &gt;-
+    The direct binding partners of C. elegans FIS-1 are unmapped. It is unknown
+    whether worm FIS-1 uses adaptor proteins analogous to the yeast Mdv1/Caf4
+    proteins, whether it binds DRP-1 directly under stress, and which downstream
+    autophagy or MAM factors it engages to promote degradation.
+  boundary: &gt;-
+    Established (in mammals): stress induces a Drp1-Fis1 co-immunoprecipitable
+    complex that also contains ER/MAM proteins. Unknown (in worm): the direct FIS-1
+    interactome and whether adaptor intermediates are required.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: MF_DARK
+  status: OPEN
+  provenance:
+  - reference_id: PMID:24196833
+    supporting_text: &gt;-
+      Recruitment of Drp1 to mitochondria is mediated by proteins that are anchored
+      in the mitochondrial outer membrane
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does endogenous C. elegans FIS-1 physically interact with DRP-1 (directly or via
+    an adaptor) during stress-induced fission, and what are its other outer-membrane
+    or MAM partners?
+- question: &gt;-
+    Is the fis-1 requirement for removal of UV-C-induced mtDNA damage a consequence
+    of its mitophagy-coupling role, or a separable function?
+suggested_experiments:
+- hypothesis: &gt;-
+    FIS-1 acts at a late, degradation-committing step of mitophagy downstream of
+    DRP-1/MFF-mediated fission.
+  description: &gt;-
+    Perform stage-resolved mitophagy flux assays (e.g. mito-Rosella / mtKeima or
+    LGG-1 puncta maturation) in fis-1, fis-2, fis-1;fis-2, mff, and drp-1 mutants
+    after Paraquat or antimycin A, to place the fis-1-dependent step relative to
+    autophagosome formation, cargo engulfment, and lysosomal fusion.
+- hypothesis: &gt;-
+    Worm FIS-1 has direct or adaptor-mediated protein partners at the
+    ER-mitochondrial interface.
+  description: &gt;-
+    Use proximity labeling (TurboID) or co-immunoprecipitation of tagged FIS-1 from
+    C. elegans under basal and stress conditions to identify DRP-1 and MAM/autophagy
+    interactors and test for adaptor intermediates.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
