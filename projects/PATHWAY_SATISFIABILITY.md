@@ -40,6 +40,12 @@ that context.
 > **How it works** (model, engine, `src` paths, and commands to reproduce every result) lives
 > in the companion notebook: **[Methods & reproduction](PATHWAY_SATISFIABILITY/methods.md)**.
 > It is the eukaryotic analogue of GapMind's prokaryotic step-finding.
+>
+> **Try it live** — a reactive [marimo notebook](PATHWAY_SATISFIABILITY/demo.py) runs the engine
+> **offline** against committed GTEx/KEGG caches: drag one slider and watch the gluconeogenic
+> tissue set contract liver → kidney → intestine, then see the same engine reconstruct microbial
+> methionine biosynthesis. Run with `uv run --with marimo marimo edit
+> projects/PATHWAY_SATISFIABILITY/demo.py`.
 
 ## Background: pathway hole filling
 
