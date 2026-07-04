@@ -1,0 +1,3151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tomm-22 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tomm-22</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O17287" target="_blank" class="term-link">
+                        O17287
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tomm-22";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O17287" data-a="DESCRIPTION: tomm-22 encodes the C. elegans ortholog of TOM22 (..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>tomm-22 encodes the C. elegans ortholog of TOM22 (TOMM-22), a small single-pass integral protein of the mitochondrial outer membrane and a central receptor/scaffold subunit of the TOM complex (translocase of the outer mitochondrial membrane). The TOM complex is the main entry gate through which nucleus-encoded, cytosolically synthesized preproteins are imported into mitochondria. TOMM-22 exposes an N-terminal cytosolic domain that, together with the peripheral receptor TOMM-20, recognizes the N-terminal targeting presequences of incoming preproteins and helps transfer them toward the TOMM-40 import channel; its transmembrane segment and intermembrane-space tail help organize the dimeric TOM core and hand substrates to the inner-membrane TIM23 machinery. In C. elegans, reducing TOMM-22 lowers mitochondrial protein-import capacity; the resulting import stress activates the ATFS-1-dependent mitochondrial unfolded protein response (marked by hsp-6 induction) and impairs the food-coupled secretion of the insulin-like peptide DAF-28, while secretion of other neuropeptides is unaffected. Because mitochondrial import stress modulates the UPRmt and organismal aging, partial loss of tomm-22 is used experimentally to trigger import-associated UPRmt.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17287" data-a="GO:0005742" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core cellular-component annotation. TOMM-22 is a conserved receptor/scaffold subunit of the TOM complex (mitochondrial outer membrane translocase complex). Complex membership is supported by the Tom22 family assignment (IPR005683/PF04281), the UniProt SUBUNIT statement, and worm studies that treat tomm-22 as a TOM-complex component.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24662282" target="_blank" class="term-link">
+                                        PMID:24662282
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These included tomm-22, a component of the TOM complex which functions as a translocase in the outer mitochondrial membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35608535" target="_blank" class="term-link">
+                                        PMID:35608535
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Genes encoding TOM complex proteins, including tomm-20, tomm-22, and tomm-40, were enhanced one- to twofold</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17287" data-a="GO:0030150" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological-process annotation. As a TOM receptor/scaffold subunit, TOMM-22 functions in the import of nucleus-encoded, presequence-bearing preproteins destined for the matrix. Worm evidence shows tomm-22 is required for mitochondrial protein import capacity: its knockdown abolishes the import improvement seen on UPRmt activation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35608535" target="_blank" class="term-link">
+                                        PMID:35608535
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">knocking down TOM complex component tomm-22 abolished the effect of cco-1 RNAi on improving import capacity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21264209" target="_blank" class="term-link">
+                                        PMID:21264209
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">it acts along with other components, such as Tom20 and Tom22, to import proteins into the mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    GO:0008320
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane protein transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17287" data-a="GO:0008320" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept as a contribution (contributes_to) to the TOM complex&#39;s protein transmembrane transport activity. TOMM-22 is the presequence receptor/scaffold that recognizes targeting signals and hands preproteins to the TOMM-40 pore; it does not itself form the conducting channel, so the contributes_to qualifier is appropriate rather than asserting standalone transporter activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TOMM-40 is the beta-barrel conducting pore of the TOM complex; TOMM-22 provides the receptor/scaffold function needed for import. Retain only as a complex-level contribution.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35733257" target="_blank" class="term-link">
+                                        PMID:35733257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Tom20 and Tom22 are involved in targeting signal recognition during protein import</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40522955" target="_blank" class="term-link">
+                                        PMID:40522955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the primary role of tomm-22 is a mitochondrial outer membrane transporter rather than a mitochondrial UPR stress regulator</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17287" data-a="GO:0005741" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core subcellular location. TOMM-22 is a single-pass integral protein of the mitochondrial outer membrane (cytosolic N-terminus, single transmembrane helix, intermembrane-space C-terminus).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40522955" target="_blank" class="term-link">
+                                        PMID:40522955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TOMM-22 is involved in protein transport across the outer mitochondrial membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O17287
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion outer membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006886" target="_blank" class="term-link">
+                                    GO:0006886
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O17287" data-a="GO:0006886" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> True but over-general. This is an InterPro2GO inference from the Tom22 domain (IPR005683) and is a broad parent of the specific process the protein performs, protein import into mitochondria (GO:0030150), which is separately annotated and represents the core biological process. Kept as a correct but non-core annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic ancestor of the more informative GO:0030150 (protein import into mitochondrial matrix); does not add specificity beyond it.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17287" data-a="GO:0005741" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same mitochondrial-outer-membrane location as the IEA annotation, here transferred by sequence similarity from human TOMM22 (Q9NS69). Consistent with the conserved single-pass outer-membrane topology of the Tom22 family.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O17287
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion outer membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030943" target="_blank" class="term-link">
+                                    GO:0030943
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion targeting sequence binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35733257" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35733257
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis of Tom20 and Tom22 cytosolic domains as the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O17287" data-a="GO:0030943" data-r="PMID:35733257" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed molecular-function annotation capturing TOMM-22&#39;s core, evolutionarily conserved activity as a mitochondrial targeting-sequence (presequence) receptor that, together with TOMM-20, recognizes incoming preproteins. This activity is not currently represented in the worm GOA (which carries only the complex-level contributes_to transporter term); it is proposed here on the basis of the conserved Tom22 presequence-receptor function and the UniProt transit-peptide-receptor annotation. Note: GO:0030943 is slated for obsoletion in favor of a proposed &#34;mitochondrial signal sequence receptor activity&#34; receptor term; if that term is minted it should replace this one.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35733257" target="_blank" class="term-link">
+                                        PMID:35733257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Tom20 and Tom22 are involved in targeting signal recognition during protein import</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21264209" target="_blank" class="term-link">
+                                        PMID:21264209
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TOM20 and TOM22, are receptors that recognize different subgroups of mitochondria-destined preproteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Central receptor/scaffold subunit of the mitochondrial outer membrane TOM complex: recognizes the N-terminal targeting presequences of nucleus-encoded mitochondrial preproteins (together with the peripheral receptor TOMM-20) and contributes to their translocation across the outer membrane toward the TOMM-40 pore, while helping organize and stabilize the TOM complex. In C. elegans the receptor/chaperone-like biochemistry is inferred from conserved yeast/human orthologs; the direct worm evidence establishes that tomm-22 is required for mitochondrial protein-import capacity.</h3>
+                <span class="vote-buttons" data-g="O17287" data-a="FUNCTION: Central receptor/scaffold subunit of the mitochond..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030943" target="_blank" class="term-link">
+                            mitochondrion targeting sequence binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                protein import into mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                            mitochondrial outer membrane translocase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21264209" target="_blank" class="term-link">
+                                PMID:21264209
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">TOM20 and TOM22, are receptors that recognize different subgroups of mitochondria-destined preproteins</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35733257" target="_blank" class="term-link">
+                                PMID:35733257
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Tom20 and Tom22 are involved in targeting signal recognition during protein import</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35608535" target="_blank" class="term-link">
+                                PMID:35608535
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">knocking down TOM complex component tomm-22 abolished the effect of cco-1 RNAi on improving import capacity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21264209" target="_blank" class="term-link">
+                            PMID:21264209
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial function is required for secretion of DAF-28/insulin in C. elegans.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24662282" target="_blank" class="term-link">
+                            PMID:24662282
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Activation of the mitochondrial unfolded protein response does not predict longevity in Caenorhabditis elegans.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35608535" target="_blank" class="term-link">
+                            PMID:35608535
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The UPRmt preserves mitochondrial import to extend lifespan.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40522955" target="_blank" class="term-link">
+                            PMID:40522955
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Metformin modulates the unfolded protein responses, altering lifespan and health-promoting effects in UPR-activated worms.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35733257" target="_blank" class="term-link">
+                            PMID:35733257
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis of Tom20 and Tom22 cytosolic domains as the human TOM complex receptors.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14699115" target="_blank" class="term-link">
+                            PMID:14699115
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial import receptors Tom20 and Tom22 have chaperone-like activity.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        UniProt:O17287
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial import receptor subunit TOM22 homolog (tomm-22, C. elegans)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does C. elegans TOMM-22 bind mitochondrial targeting presequences directly at cis and trans sites, as demonstrated for yeast and human Tom22, and does it have the chaperone-like activity reported for mammalian Tom22?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O17287" data-a="Q: Does C. elegans TOMM-22 bind mitochondrial targeti..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is tomm-22 essential in C. elegans, and how does a genetic null differ from RNAi knockdown in developmental and mitochondrial-import phenotypes?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O17287" data-a="Q: Is tomm-22 essential in C. elegans, and how does a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which classes of C. elegans mitochondrial preproteins depend most on TOMM-22 versus the peripheral receptor TOMM-20?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O17287" data-a="Q: Which classes of C. elegans mitochondrial preprote..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify recombinant TOMM-22 cytosolic and IMS domains and measure binding to synthetic mitochondrial presequence peptides (e.g. by ITC/fluorescence anisotropy); test aggregation-suppression (chaperone-like) activity on a model preprotein substrate.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: C. elegans TOMM-22 is a bona fide presequence receptor with cis (cytosolic) and trans (IMS) binding sites.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical binding / chaperone assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O17287" data-a="EXPERIMENT: Purify recombinant TOMM-22 cytosolic and IMS domai..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate a tomm-22 null allele and quantify import of matrix-targeted reporters (e.g. an MTS::GFP) versus wild type and tomm-40 mutants, alongside viability and UPRmt (hsp-6p::gfp) readouts.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TOMM-22 is required for bulk mitochondrial protein import in C. elegans but less essential than the TOMM-40 channel.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetics / in vivo import assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O17287" data-a="EXPERIMENT: Generate a tomm-22 null allele and quantify import..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biochemical activity of C. elegans TOMM-22 itself has never been directly measured. Its presequence-binding (cis/trans receptor) function, its chaperone-like activity, and its preprotein substrate-class specificity are all inferred from yeast and human orthologs; every direct worm experiment assays loss-of-function phenotypes (UPRmt induction, DAF-28 secretion, import-capacity requirement) rather than the activity of the TOMM-22 protein.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that TOMM-22 is a Tom22-family single-pass outer-membrane subunit of the TOM complex, that reducing it activates the hsp-6/UPRmt response and impairs DAF-28/insulin secretion (Billing 2011), and that tomm-22 is required for mitochondrial import capacity in worm (Xin 2022). The conserved structural role (presequence receptor with cis and trans sites, chaperone-like activity, TOM-core scaffold) is well characterized in yeast and human Tom22.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> tomm-22 is routinely used as a generic &#34;import-defective&#34; RNAi background in worm UPRmt and aging studies, yet whether the worm protein reproduces the cis/trans presequence receptor and chaperone-like activities of its mammalian ortholog, or has organism-specific substrate preferences, is untested. Anchoring the molecular function in worm data would strengthen the interpretation of that large phenotypic literature.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> In vitro presequence/preprotein-binding and aggregation-suppression assays with recombinant C. elegans TOMM-22 cytosolic and IMS domains; structure-function analysis of a tagged worm TOMM-22; substrate-class profiling of import defects on tomm-22 loss.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"In C. elegans, there are few reports describing functions of putative TOM-complex subunit homologues"</em> — PMID:21264209</li>
+
+                <li><em>"The activation of hsp-6 response in tomm-22 RNAi worms in our study was likely a response to changes in the mitochondrial import machinery instead of a direct regulatory response to mitochondrial stress."</em> — PMID:40522955</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether tomm-22 is essential in C. elegans is unresolved. Only partial-knockdown (RNAi) data exist, and no null/deletion allele has been characterized, so it is unknown whether complete loss of TOMM-22 is lethal (as for TOM22 in mouse) or tolerated.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> tomm-22(RNAi) reproducibly activates UPRmt and impairs DAF-28 secretion but is much milder than tomm-40(RNAi): it does not cause the highly penetrant larval arrest seen on tomm-40 depletion. This is a knockdown, not a genetic null.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The severity gradient among TOM subunits (tomm-40 &gt;&gt; tomm-22/tomm-20) is used to argue that TOMM-22 is not as rate-limiting as the TOM40 channel; a defined null is needed to test essentiality and separate residual RNAi activity from a genuine partial requirement.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Characterize a tomm-22 deletion/null allele (e.g. CRISPR or an existing balanced deletion) for viability, developmental arrest, and mitochondrial import phenotypes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"did not produce the highly penetrant larval arrest phenotype seen in tomm-40(RNAi) worms"</em> — PMID:21264209</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The existence, expression, and function of the shorter tomm-22 isoform b (O17287-2), which lacks residues 1-94 and therefore essentially the entire cytosolic receptor domain and transmembrane anchor, are uncharacterized.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> UniProt annotates two alternative-splicing products of tomm-22; isoform b differs from the full-length isoform a by a large N-terminal deletion. No transcript-level, protein- level, or functional data distinguish the isoforms.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> An isoform lacking the receptor domain and membrane anchor could be non-functional, regulatory, or an annotation artifact; resolving this affects how TOMM-22 dosage and domain requirements are interpreted.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Isoform-specific RT-PCR / long-read transcriptomics to confirm isoform b, and isoform-specific rescue/localization to test whether it retains any activity.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Missing (in isoform b)"</em> — UniProt:O17287</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tomm-22-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O17287" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">42 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-03T19:39:44.850573</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="tomm-22-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-c-elegans-tomm-22-tomm-22-w10d95-uniprot-o17287">Comprehensive Research Report: <em>C. elegans</em> TOMM-22 (tomm-22 / W10D9.5; UniProt O17287)</h2>
+<h3 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h3>
+<p>The <em>C. elegans</em> gene <strong>tomm-22</strong> (systematic name W10D9.5) encodes a mitochondrial import receptor subunit TOM22 homolog (UniProt O17287). It belongs to the conserved Tom22 protein family (InterPro IPR005683; Pfam PF04281) and is a core component of the translocase of the outer mitochondrial membrane (TOM) complex. The protein is involved in protein transport across the outer mitochondrial membrane (tan2025metforminmodulatesthe pages 2-4, billing2011mitochondrialfunctionis pages 8-9). Orthologous Tom22 proteins have been extensively characterized in <em>Saccharomyces cerevisiae</em>, <em>Neurospora crassa</em>, and humans, and the high degree of functional conservation across eukaryotes permits confident inference of TOMM-22 function in <em>C. elegans</em> from these model systems.</p>
+<h3 id="2-primary-molecular-function-mitochondrial-preprotein-import-receptor">2. Primary Molecular Function: Mitochondrial Preprotein Import Receptor</h3>
+<p>TOMM-22 is not an enzyme; rather, it functions as a <strong>receptor and structural organizer</strong> within the TOM complex, which serves as the principal entry gate for the ~1,000 nuclear-encoded mitochondrial precursor proteins that must be imported from the cytosol into mitochondria.</p>
+<p><strong>Presequence recognition.</strong> Tom22 acts as a preprotein receptor on the cytosolic face of the mitochondrial outer membrane. Its N-terminal cytosolic domain is enriched in acidic (Glu/Asp) residues, enabling salt-sensitive binding of positively charged mitochondrial targeting presequences (endo2002functionsofouter pages 6-8, endo2010transportofproteins pages 3-4). Tom22 and Tom20 function cooperatively but recognize complementary features of amphipathic presequence helices: Tom20 binds the hydrophobic surface, while Tom22 recognizes the hydrophilic (positively charged) surface (endo2002functionsofouter pages 6-8, endo2010transportofproteins pages 3-4). This dual recognition mechanism ensures efficient and specific capture of presequence-containing precursor proteins at the mitochondrial surface.</p>
+<p><strong>Transfer to the Tom40 channel.</strong> After initial recognition at the cytosolic cis-site by Tom20 and Tom22, precursor proteins are handed off, likely via Tom5, to the Tom40 β-barrel channel for translocation across the outer membrane (jain2025investigatingmitochondrialpresequence pages 15-17, endo2010transportofproteins pages 2-3). The transition between Tom20/Tom22 receptors and the Tom40 channel is optimized through the physical organization of the TOM complex (lionaki2023mitochondrialproteinimport pages 2-2).</p>
+<p><strong>Trans-site function in the intermembrane space (IMS).</strong> Tom22 also functions on the IMS side of the outer membrane. Its C-terminal IMS domain contributes, together with Tom40 and Tom7, to a trans-site that binds presequences as they emerge from the Tom40 channel into the intermembrane space (endo2010transportofproteins pages 3-4, genge2022coordinatedtranslocationof pages 2-4, genge2022coordinatedtranslocationof pages 1-2). Critically, the IMS domain of Tom22 directly interacts with Tim50 and Tim21, key subunits of the TIM23 inner membrane translocase complex, thereby bridging the transfer of presequence-containing precursors from the outer to the inner membrane import machinery (genge2022coordinatedtranslocationof pages 2-4, araiso2022structuraloverviewof pages 5-7, laan2006mitochondrialpreproteintranslocases pages 5-7). Tim50 promotes presequence binding to Tom22 at the trans-site, and Tim21 subsequently displaces the presequence from Tom22 to facilitate its insertion into the Tim23 channel in a membrane potential-dependent manner (laan2006mitochondrialpreproteintranslocases pages 5-7).</p>
+<h3 id="3-structural-role-in-tom-complex-architecture">3. Structural Role in TOM Complex Architecture</h3>
+<p>Tom22 is not merely a receptor but a <strong>central structural organizer</strong> of the TOM complex. Studies in yeast have demonstrated that Tom22 is tightly associated with Tom40 and small Tom proteins (Tom5, Tom6, Tom7) to form the core GIP (general insertion pore) complex (model2002proteintranslocaseof pages 1-2). When Tom22 is deleted, Tom40 forms only small ~80 kDa functional units that behave as single channels, indicating that Tom22 is essential for organizing multiple Tom40 channels into the larger oligomeric TOM complex (model2002proteintranslocaseof pages 1-2, model2002proteintranslocaseof pages 5-7).</p>
+<p>Recent cryo-EM structures of both yeast and human TOM complexes at resolutions of 2.5–3.0 Å have revealed the detailed architecture. In the dimeric TOM core complex, <strong>two Tom22 molecules are symmetrically embedded between the two Tom40 β-barrels</strong>, physically tethering them together (araiso2022structuraloverviewof pages 3-5, guan2021structuralinsightsinto pages 1-3). Tom22 forms a kinked transmembrane helix with its N-terminal receptor domain on the cytosolic side (partially disordered) and its C-terminal IMS domain positioned in close proximity to the C-terminal helix of Tom40 at the center of the dimer (araiso2022structuraloverviewof pages 3-5, araiso2022structuraloverviewof pages 5-7). In the human TOM complex structure, the cytosolic domain of Tom22 contains a negatively charged glutamic acid/aspartic acid-rich segment (residues 29–42) with extended conformation serving as a preprotein retention platform, and an adjacent amphipathic region (residues 65–82) that facilitates binding to presequences through hydrophobic interactions (guan2021structuralinsightsinto pages 3-4). Phospholipid molecules participate in the Tom22–Tom40 interface, contributing to complex stability (guan2021structuralinsightsinto pages 3-4, guan2021structuralinsightsinto pages 1-3, nussberger2024newinsightsinto pages 2-4).</p>
+<h3 id="4-subcellular-localization">4. Subcellular Localization</h3>
+<p>TOMM-22 is localized to the <strong>mitochondrial outer membrane</strong>. It is a single-pass transmembrane protein anchored by a hydrophobic transmembrane segment, with its N-terminal domain exposed to the cytosol and its C-terminal domain exposed to the intermembrane space (perry2008structuretopologyand pages 3-5, endo2010transportofproteins pages 3-4). This dual topology is critical to its function as a receptor on both sides of the outer membrane.</p>
+<h3 id="5-biological-roles-in-c-elegans">5. Biological Roles in <em>C. elegans</em></h3>
+<h4 id="51-mitochondrial-protein-import-and-uprmt-activation">5.1 Mitochondrial Protein Import and UPRmt Activation</h4>
+<p>In <em>C. elegans</em>, RNAi knockdown of <strong>tomm-22</strong> robustly activates the <strong>mitochondrial unfolded protein response (UPRmt)</strong>, as measured by strong induction of the mitochondrial chaperone reporters Phsp-6::GFP and Phsp-60::GFP (billing2011mitochondrialfunctionis pages 8-9, billing2011mitochondrialfunctionis pages 7-8, bennett2014activationofthe pages 2-3). A genome-wide RNAi screen for negative regulators of the UPRmt identified tomm-22 as one of the genes whose knockdown induces the hsp-6p::gfp reporter (bennett2014activationofthe pages 2-3). The mechanism of UPRmt activation by tomm-22 depletion is consistent with the general model: under normal conditions, the transcription factor ATFS-1 is efficiently imported into mitochondria and degraded by the protease LONP-1; when mitochondrial import is compromised (as when TOM complex components are depleted), ATFS-1 accumulates in the cytosol and translocates to the nucleus, where it activates expression of mitochondrial chaperones and quality control genes (xin2022theuprmtpreserves pages 1-2, haynes2022mitochondrialdysfunctionaging pages 5-6).</p>
+<p>Notably, UPRmt activation also upregulates the expression of TOM/TIM complex components including tomm-22 itself (one- to twofold enhancement), creating a homeostatic feedback loop that preserves mitochondrial import capacity under stress (xin2022theuprmtpreserves pages 4-6).</p>
+<h4 id="52-phenotypic-consequences-of-tomm-22-knockdown">5.2 Phenotypic Consequences of tomm-22 Knockdown</h4>
+<p>Unlike depletion of the channel subunit TOMM-40, which causes severe larval arrest and sterility, <strong>tomm-22(RNAi) does not produce strong growth arrest or sterility</strong> in <em>C. elegans</em> (billing2011mitochondrialfunctionis pages 8-9). This suggests that TOMM-22 is important for mitochondrial homeostasis but is less limiting than the core channel subunit TOMM-40 under RNAi conditions. However, tomm-22 knockdown does cause:</p>
+<ul>
+<li><strong>DAF-28/insulin secretion defect</strong>: tomm-22(RNAi) animals show reduced secretion of the DAF-28::GFP insulin reporter, though to a lesser extent than tomm-40(RNAi) animals (billing2011mitochondrialfunctionis pages 8-9, billing2011mitochondrialfunctionis pages 7-8, billing2011mitochondrialfunctionis pages 9-10). The secretion defect is specific to DAF-28 and does not affect all neuropeptides.</li>
+<li><strong>Reduced lifespan</strong>: In a quantitative lifespan analysis, tomm-22(RNAi) significantly reduced mean lifespan by 14.5% relative to empty-vector controls (bennett2014activationofthe pages 2-3).</li>
+</ul>
+<h4 id="53-role-in-longevity-and-stress-biology">5.3 Role in Longevity and Stress Biology</h4>
+<p>The tomm-22 RNAi model has been used as a constitutive UPRmt activator in aging studies. Tan et al. (2025) demonstrated that metformin treatment of short-lived tomm-22(RNAi) worms could suppress the UPRmt and extend lifespan, indicating that the lifespan shortening caused by tomm-22 depletion is at least partially independent of UPRmt activation status (tan2025metforminmodulatesthe pages 2-4). This work highlights the complex relationship between mitochondrial import stress, UPRmt, and longevity, where activation of UPRmt per se is neither necessary nor sufficient for lifespan extension (bennett2014activationofthe pages 2-3).</p>
+<h3 id="6-pathway-involvement">6. Pathway Involvement</h3>
+<p>TOMM-22 functions within the <strong>mitochondrial protein import pathway</strong>, specifically as part of the <strong>TOM complex / presequence import pathway</strong>. This pathway encompasses:</p>
+<ol>
+<li><strong>Cytosolic recognition</strong>: Presequence-containing precursor proteins are recognized by Tom20 and Tom22 on the mitochondrial surface (genge2022coordinatedtranslocationof pages 1-2).</li>
+<li><strong>Outer membrane translocation</strong>: Precursors pass through the Tom40 channel (endo2010transportofproteins pages 2-3).</li>
+<li><strong>IMS transfer</strong>: Tom22's IMS domain, together with Tom40 and Tom7, forms the trans-site that captures presequences and facilitates their handoff to the TIM23 complex via interactions with Tim50, Tim23, and Tim21 (jain2025investigatingmitochondrialpresequence pages 20-23, genge2022coordinatedtranslocationof pages 2-4, laan2006mitochondrialpreproteintranslocases pages 5-7).</li>
+<li><strong>Inner membrane translocation</strong>: The TIM23 complex mediates insertion into or transport across the inner membrane (genge2022coordinatedtranslocationof pages 2-4).</li>
+</ol>
+<p>In <em>C. elegans</em>, perturbation of this pathway by tomm-22 depletion intersects with the <strong>ATFS-1-mediated UPRmt signaling cascade</strong> and <strong>DAF-28/insulin secretion physiology</strong>, linking mitochondrial import efficiency to developmental and metabolic signaling (billing2011mitochondrialfunctionis pages 8-9, haynes2022mitochondrialdysfunctionaging pages 5-6).</p>
+<h3 id="7-additional-conserved-functions-of-tom22-homologs">7. Additional Conserved Functions of Tom22 Homologs</h3>
+<p>While not yet demonstrated in <em>C. elegans</em> specifically, mammalian TOM22 has been shown to serve as a <strong>mitochondrial receptor for the pro-apoptotic protein Bax</strong>. TOM22 interacts with the first alpha helix (Ha1) of Bax, and blocking TOM22 with antibodies or reducing its expression prevents Bax translocation to mitochondria and inhibits Bax-dependent apoptosis (bellot2007tom22acore pages 2-3, bellot2007tom22acore pages 1-2, bellot2007tom22acore pages 3-5, bellot2007tom22acore pages 5-6). This function extends TOM22's role beyond general protein import to include regulation of programmed cell death. Additionally, TOM22 is a substrate of Parkin-mediated ubiquitylation in the PINK1/Parkin mitophagy pathway, where the ubiquitin-proteasome system monitors mitochondrial surface proteins.</p>
+<h3 id="8-summary-table-of-key-properties">8. Summary Table of Key Properties</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+<th>Evidence Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protein identity</td>
+<td><strong>tomm-22 / W10D9.5</strong> in <em>Caenorhabditis elegans</em> is annotated as a homolog of <strong>Tom22</strong>, a subunit of the translocase of the outer mitochondrial membrane (TOM) complex; recent worm work explicitly describes TOMM-22 as being involved in protein transport across the outer mitochondrial membrane.</td>
+<td>(tan2025metforminmodulatesthe pages 2-4, billing2011mitochondrialfunctionis pages 8-9)</td>
+</tr>
+<tr>
+<td>Molecular function</td>
+<td>Tom22 is a <strong>mitochondrial preprotein import receptor</strong> and organizer of the TOM complex. Its cytosolic domain binds positively charged mitochondrial targeting presequences, complementing Tom20 by recognizing the more hydrophilic face of amphipathic presequences; it then helps transfer precursor proteins toward the Tom40 channel.</td>
+<td>(endo2002functionsofouter pages 6-8, endo2010transportofproteins pages 3-4)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>Tom22 is a <strong>single-pass outer mitochondrial membrane protein</strong> with the <strong>N-terminus exposed to the cytosol</strong> and the <strong>C-terminus exposed to the intermembrane space (IMS)</strong>, placing it on both sides of the import pathway.</td>
+<td>(perry2008structuretopologyand pages 3-5, endo2010transportofproteins pages 3-4)</td>
+</tr>
+<tr>
+<td>Domain architecture</td>
+<td>Tom22 contains three major regions: <strong>(1) N-terminal cytosolic receptor/cis domain</strong>, often acidic and presequence-binding; <strong>(2) one transmembrane helix</strong> anchoring it in the outer membrane; and <strong>(3) a C-terminal IMS/trans domain</strong> involved in trans-site binding and transfer to downstream machinery. Human structural work further resolves acidic and amphipathic sequence features in the cytosolic region that support preprotein binding.</td>
+<td>(perry2008structuretopologyand pages 3-5, endo2010transportofproteins pages 3-4, guan2021structuralinsightsinto pages 3-4)</td>
+</tr>
+<tr>
+<td>Structural role in TOM complex</td>
+<td>Tom22 is a <strong>central structural organizer</strong> of the TOM core complex. Biochemical and structural studies show it associates tightly with Tom40 and small Tom proteins, and cryo-EM indicates <strong>two Tom22 molecules bridge/tether the two Tom40 β-barrels</strong> in the dimeric complex, helping stabilize higher-order TOM architecture.</td>
+<td>(model2002proteintranslocaseof pages 1-2, araiso2022structuraloverviewof pages 3-5, guan2021structuralinsightsinto pages 1-3)</td>
+</tr>
+<tr>
+<td>Role in precursor transfer</td>
+<td>Tom22 participates in a <strong>chain of low-affinity binding and handoff steps</strong>: presequences are recognized by Tom20/Tom22 at the cytosolic face, passed toward <strong>Tom5/Tom40</strong>, and then encounter a <strong>trans site</strong> formed by IMS-exposed regions of Tom22, Tom40, and Tom7.</td>
+<td>(genge2022coordinatedtranslocationof pages 2-4, genge2022coordinatedtranslocationof pages 1-2, endo2010transportofproteins pages 3-4, endo2010transportofproteins pages 2-3)</td>
+</tr>
+<tr>
+<td>Coupling to TIM23 pathway</td>
+<td>The <strong>IMS domain of Tom22</strong> helps connect TOM to the <strong>TIM23</strong> machinery. It contributes to the trans-site for presequence binding and directly or indirectly recruits <strong>Tim50/Tim23/Tim21</strong>, enabling efficient handoff of presequence-containing substrates into the inner-membrane import pathway.</td>
+<td>(genge2022coordinatedtranslocationof pages 2-4, araiso2022structuraloverviewof pages 5-7, laan2006mitochondrialpreproteintranslocases pages 5-7)</td>
+</tr>
+<tr>
+<td>Substrate specificity / what it transports</td>
+<td>TOMM-22 is <strong>not an enzyme</strong>; it functions as a receptor/organizer for <strong>nuclear-encoded mitochondrial precursor proteins</strong>, especially those carrying <strong>N-terminal cleavable presequences</strong>. Its binding preference is shaped by electrostatic recognition of positively charged targeting signals.</td>
+<td>(endo2002functionsofouter pages 6-8, perry2008structuretopologyand pages 3-5, endo2010transportofproteins pages 3-4)</td>
+</tr>
+<tr>
+<td>Role in UPRmt</td>
+<td>In <em>C. elegans</em>, <strong>tomm-22 knockdown activates the mitochondrial unfolded protein response (UPRmt)</strong>, as shown by induction of mitochondrial stress reporters. More broadly, TOM/TIM import impairment reduces mitochondrial import efficiency, allowing <strong>ATFS-1</strong> to escape mitochondrial import/degradation and activate the nuclear UPRmt program. UPRmt activation can also upregulate import machinery, including tomm-22.</td>
+<td>(billing2011mitochondrialfunctionis pages 8-9, xin2022theuprmtpreserves pages 1-2, haynes2022mitochondrialdysfunctionaging pages 5-6, xin2022theuprmtpreserves pages 4-6, bennett2014activationofthe pages 2-3)</td>
+</tr>
+<tr>
+<td>C. elegans RNAi phenotypes</td>
+<td><strong>tomm-22(RNAi)</strong> causes a <strong>DAF-28/insulin secretion defect</strong> and robust UPRmt activation, but unlike <strong>tomm-40</strong> depletion it does <strong>not</strong> cause strong larval arrest or sterility in the cited study, suggesting TOMM-22 is important for mitochondrial homeostasis yet less limiting than TOMM-40 under those RNAi conditions.</td>
+<td>(billing2011mitochondrialfunctionis pages 8-9, billing2011mitochondrialfunctionis pages 7-8, billing2011mitochondrialfunctionis pages 9-10)</td>
+</tr>
+<tr>
+<td>Lifespan / stress phenotypes in worms</td>
+<td>A genome-wide worm RNAi screen identified <strong>tomm-22</strong> as a UPRmt-inducing gene; in that dataset, <strong>tomm-22(RNAi)</strong> significantly <strong>reduced mean lifespan by 14.5%</strong> relative to empty-vector control. A later study used tomm-22 RNAi as a constitutive UPRmt model with shortened lifespan that could be extended by metformin treatment.</td>
+<td>(bennett2014activationofthe pages 2-3, tan2025metforminmodulatesthe pages 2-4)</td>
+</tr>
+<tr>
+<td>Pathway involvement</td>
+<td>TOMM-22 functions in <strong>mitochondrial protein import and biogenesis</strong>, specifically the <strong>TOM complex / presequence pathway</strong>, and in worms its perturbation intersects with <strong>mitochondrial stress signaling (UPRmt)</strong> and <strong>DAF-28/insulin secretion physiology</strong>.</td>
+<td>(billing2011mitochondrialfunctionis pages 8-9, genge2022coordinatedtranslocationof pages 2-4, genge2022coordinatedtranslocationof pages 1-2)</td>
+</tr>
+<tr>
+<td>Evolutionary/functional inference confidence</td>
+<td>Direct <em>C. elegans</em> mechanistic data on TOMM-22 are limited, but confidence in functional annotation is strengthened by strong <strong>family conservation</strong> across fungi, animals, and humans, plus consistent worm RNAi phenotypes tied to mitochondrial import stress.</td>
+<td>(billing2011mitochondrialfunctionis pages 8-9, araiso2022structuraloverviewof pages 3-5, guan2021structuralinsightsinto pages 3-4)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported functional properties of </em>C. elegans<em> TOMM-22/W10D9.5, combining direct worm evidence with conserved mechanistic evidence from TOM22 homologs. It is useful for functional annotation because it distinguishes experimentally observed worm phenotypes from higher-confidence family-based inferences about mitochondrial protein import.</em></p>
+<h3 id="9-conclusions">9. Conclusions</h3>
+<p><em>C. elegans</em> TOMM-22 (W10D9.5) is a conserved mitochondrial outer membrane protein that functions as a receptor subunit and structural organizer of the TOM complex. Its primary role is to recognize mitochondrial targeting presequences on the cytosolic face and facilitate their transfer through the Tom40 channel and onward to the TIM23 inner membrane translocase via its IMS domain. In <em>C. elegans</em>, tomm-22 depletion activates the mitochondrial unfolded protein response, impairs DAF-28/insulin secretion, and shortens lifespan, consistent with its role in maintaining mitochondrial protein homeostasis. While direct biochemical characterization of the <em>C. elegans</em> protein is limited, the high conservation of the Tom22 family across eukaryotes, combined with consistent RNAi phenotypes in worms, provides strong confidence in the functional annotation of TOMM-22 as a mitochondrial import receptor and TOM complex organizer.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(tan2025metforminmodulatesthe pages 2-4): Jerald Tan, Chutipong Chiamkunakorn, Kanpapat Boonchuay, Yiying Shi, Bart P. Braeckman, and Wichit Suthammarak. Metformin modulates the unfolded protein responses, altering lifespan and health-promoting effects in upr-activated worms. PLOS One, 20:e0326100, Jun 2025. URL: https://doi.org/10.1371/journal.pone.0326100, doi:10.1371/journal.pone.0326100. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(billing2011mitochondrialfunctionis pages 8-9): Ola Billing, Gautam Kao, and Peter Naredi. Mitochondrial function is required for secretion of daf-28/insulin in c. elegans. PLoS ONE, 6:e14507, Jan 2011. URL: https://doi.org/10.1371/journal.pone.0014507, doi:10.1371/journal.pone.0014507. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(endo2002functionsofouter pages 6-8): Toshiya Endo and Daisuke Kohda. Functions of outer membrane receptors in mitochondrial protein import. Biochimica et biophysica acta, 1592 1:3-14, Sep 2002. URL: https://doi.org/10.1016/s0167-4889(02)00259-8, doi:10.1016/s0167-4889(02)00259-8. This article has 182 citations.</p>
+</li>
+<li>
+<p>(endo2010transportofproteins pages 3-4): Toshiya Endo and Koji Yamano. Transport of proteins across or into the mitochondrial outer membrane. Biochimica et biophysica acta, 1803 6:706-14, Jun 2010. URL: https://doi.org/10.1016/j.bbamcr.2009.11.007, doi:10.1016/j.bbamcr.2009.11.007. This article has 168 citations.</p>
+</li>
+<li>
+<p>(jain2025investigatingmitochondrialpresequence pages 15-17): Naintara Jain. Investigating Mitochondrial Presequence Import. PhD thesis, University Goettingen, 2025. URL: https://doi.org/10.53846/goediss-11596, doi:10.53846/goediss-11596.</p>
+</li>
+<li>
+<p>(endo2010transportofproteins pages 2-3): Toshiya Endo and Koji Yamano. Transport of proteins across or into the mitochondrial outer membrane. Biochimica et biophysica acta, 1803 6:706-14, Jun 2010. URL: https://doi.org/10.1016/j.bbamcr.2009.11.007, doi:10.1016/j.bbamcr.2009.11.007. This article has 168 citations.</p>
+</li>
+<li>
+<p>(lionaki2023mitochondrialproteinimport pages 2-2): Eirini Lionaki, Ilias Gkikas, and Nektarios Tavernarakis. Mitochondrial protein import machinery conveys stress signals to the cytosol and beyond. BioEssays, Jan 2023. URL: https://doi.org/10.1002/bies.202200160, doi:10.1002/bies.202200160. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(genge2022coordinatedtranslocationof pages 2-4): Marcel G. Genge and Dejana Mokranjac. Coordinated translocation of presequence-containing precursor proteins across two mitochondrial membranes: knowns and unknowns of how tom and tim23 complexes cooperate with each other. Frontiers in Physiology, Jan 2022. URL: https://doi.org/10.3389/fphys.2021.806426, doi:10.3389/fphys.2021.806426. This article has 18 citations.</p>
+</li>
+<li>
+<p>(genge2022coordinatedtranslocationof pages 1-2): Marcel G. Genge and Dejana Mokranjac. Coordinated translocation of presequence-containing precursor proteins across two mitochondrial membranes: knowns and unknowns of how tom and tim23 complexes cooperate with each other. Frontiers in Physiology, Jan 2022. URL: https://doi.org/10.3389/fphys.2021.806426, doi:10.3389/fphys.2021.806426. This article has 18 citations.</p>
+</li>
+<li>
+<p>(araiso2022structuraloverviewof pages 5-7): Yuhei Araiso and Toshiya Endo. Structural overview of the translocase of the mitochondrial outer membrane complex. Biophysics and Physicobiology, 19:n/a, Jun 2022. URL: https://doi.org/10.2142/biophysico.bppb-v19.0022, doi:10.2142/biophysico.bppb-v19.0022. This article has 21 citations.</p>
+</li>
+<li>
+<p>(laan2006mitochondrialpreproteintranslocases pages 5-7): Martin van der Laan, Michael Rissler, and Peter Rehling. Mitochondrial preprotein translocases as dynamic molecular machines. FEMS yeast research, 6 6:849-61, Sep 2006. URL: https://doi.org/10.1111/j.1567-1364.2006.00134.x, doi:10.1111/j.1567-1364.2006.00134.x. This article has 76 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(model2002proteintranslocaseof pages 1-2): Kirstin Model, Thorsten Prinz, Teresa Ruiz, Michael Radermacher, Thomas Krimmer, Werner Kühlbrandt, Nikolaus Pfanner, and Chris Meisinger. Protein translocase of the outer mitochondrial membrane: role of import receptors in the structural organization of the tom complex. Journal of molecular biology, 316 3:657-66, Feb 2002. URL: https://doi.org/10.1006/jmbi.2001.5365, doi:10.1006/jmbi.2001.5365. This article has 174 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(model2002proteintranslocaseof pages 5-7): Kirstin Model, Thorsten Prinz, Teresa Ruiz, Michael Radermacher, Thomas Krimmer, Werner Kühlbrandt, Nikolaus Pfanner, and Chris Meisinger. Protein translocase of the outer mitochondrial membrane: role of import receptors in the structural organization of the tom complex. Journal of molecular biology, 316 3:657-66, Feb 2002. URL: https://doi.org/10.1006/jmbi.2001.5365, doi:10.1006/jmbi.2001.5365. This article has 174 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(araiso2022structuraloverviewof pages 3-5): Yuhei Araiso and Toshiya Endo. Structural overview of the translocase of the mitochondrial outer membrane complex. Biophysics and Physicobiology, 19:n/a, Jun 2022. URL: https://doi.org/10.2142/biophysico.bppb-v19.0022, doi:10.2142/biophysico.bppb-v19.0022. This article has 21 citations.</p>
+</li>
+<li>
+<p>(guan2021structuralinsightsinto pages 1-3): Zeyuan Guan, Ling Yan, Qiang Wang, Liangbo Qi, Sixing Hong, Zhou Gong, Chuangye Yan, and Ping Yin. Structural insights into assembly of human mitochondrial translocase tom complex. Cell Discovery, Apr 2021. URL: https://doi.org/10.1038/s41421-021-00252-7, doi:10.1038/s41421-021-00252-7. This article has 52 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guan2021structuralinsightsinto pages 3-4): Zeyuan Guan, Ling Yan, Qiang Wang, Liangbo Qi, Sixing Hong, Zhou Gong, Chuangye Yan, and Ping Yin. Structural insights into assembly of human mitochondrial translocase tom complex. Cell Discovery, Apr 2021. URL: https://doi.org/10.1038/s41421-021-00252-7, doi:10.1038/s41421-021-00252-7. This article has 52 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nussberger2024newinsightsinto pages 2-4): Stephan Nussberger, Robin Ghosh, and Shuo Wang. New insights into the structure and dynamics of the tom complex in mitochondria. Biochemical Society Transactions, 52:911-922, Apr 2024. URL: https://doi.org/10.1042/bst20231236, doi:10.1042/bst20231236. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(perry2008structuretopologyand pages 3-5): Andrew J. Perry, Kieran A. Rimmer, Haydyn D.T. Mertens, Ross F. Waller, Terrence D. Mulhern, Trevor Lithgow, and Paul R. Gooley. Structure, topology and function of the translocase of the outer membrane of mitochondria. Plant physiology and biochemistry : PPB, 46 3:265-74, Mar 2008. URL: https://doi.org/10.1016/j.plaphy.2007.12.012, doi:10.1016/j.plaphy.2007.12.012. This article has 88 citations.</p>
+</li>
+<li>
+<p>(billing2011mitochondrialfunctionis pages 7-8): Ola Billing, Gautam Kao, and Peter Naredi. Mitochondrial function is required for secretion of daf-28/insulin in c. elegans. PLoS ONE, 6:e14507, Jan 2011. URL: https://doi.org/10.1371/journal.pone.0014507, doi:10.1371/journal.pone.0014507. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bennett2014activationofthe pages 2-3): Christopher F. Bennett, Helen Vander Wende, Marissa Simko, Shannon Klum, Sarah Barfield, Haeri Choi, Victor V. Pineda, and Matt Kaeberlein. Activation of the mitochondrial unfolded protein response does not predict longevity in caenorhabditis elegans. Nature communications, 5:3483-3483, Mar 2014. URL: https://doi.org/10.1038/ncomms4483, doi:10.1038/ncomms4483. This article has 272 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xin2022theuprmtpreserves pages 1-2): Nan Xin, Jenni Durieux, Chunxia Yang, Suzanne Wolff, Hyun-Eui Kim, and Andrew Dillin. The uprmt preserves mitochondrial import to extend lifespan. May 2022. URL: https://doi.org/10.1083/jcb.202201071, doi:10.1083/jcb.202201071. This article has 64 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haynes2022mitochondrialdysfunctionaging pages 5-6): Cole M Haynes and Siegfried Hekimi. Mitochondrial dysfunction, aging, and the mitochondrial unfolded protein response in <i>caenorhabditis elegans</i>. Genetics, Nov 2022. URL: https://doi.org/10.1093/genetics/iyac160, doi:10.1093/genetics/iyac160. This article has 40 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xin2022theuprmtpreserves pages 4-6): Nan Xin, Jenni Durieux, Chunxia Yang, Suzanne Wolff, Hyun-Eui Kim, and Andrew Dillin. The uprmt preserves mitochondrial import to extend lifespan. May 2022. URL: https://doi.org/10.1083/jcb.202201071, doi:10.1083/jcb.202201071. This article has 64 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(billing2011mitochondrialfunctionis pages 9-10): Ola Billing, Gautam Kao, and Peter Naredi. Mitochondrial function is required for secretion of daf-28/insulin in c. elegans. PLoS ONE, 6:e14507, Jan 2011. URL: https://doi.org/10.1371/journal.pone.0014507, doi:10.1371/journal.pone.0014507. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jain2025investigatingmitochondrialpresequence pages 20-23): Naintara Jain. Investigating Mitochondrial Presequence Import. PhD thesis, University Goettingen, 2025. URL: https://doi.org/10.53846/goediss-11596, doi:10.53846/goediss-11596.</p>
+</li>
+<li>
+<p>(bellot2007tom22acore pages 2-3): G. Bellot, G. Bellot, P. Cartron, P. Cartron, E. Er, E. Er, L. Oliver, L. Oliver, P. Juin, P. Juin, L. C. Armstrong, P. Bornstein, K. Mihara, S. Manon, F. Vallette, and F. Vallette. Tom22, a core component of the mitochondria outer membrane protein translocation pore, is a mitochondrial receptor for the proapoptotic protein bax. Cell Death and Differentiation, 14:785-794, Apr 2007. URL: https://doi.org/10.1038/sj.cdd.4402055, doi:10.1038/sj.cdd.4402055. This article has 195 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bellot2007tom22acore pages 1-2): G. Bellot, G. Bellot, P. Cartron, P. Cartron, E. Er, E. Er, L. Oliver, L. Oliver, P. Juin, P. Juin, L. C. Armstrong, P. Bornstein, K. Mihara, S. Manon, F. Vallette, and F. Vallette. Tom22, a core component of the mitochondria outer membrane protein translocation pore, is a mitochondrial receptor for the proapoptotic protein bax. Cell Death and Differentiation, 14:785-794, Apr 2007. URL: https://doi.org/10.1038/sj.cdd.4402055, doi:10.1038/sj.cdd.4402055. This article has 195 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bellot2007tom22acore pages 3-5): G. Bellot, G. Bellot, P. Cartron, P. Cartron, E. Er, E. Er, L. Oliver, L. Oliver, P. Juin, P. Juin, L. C. Armstrong, P. Bornstein, K. Mihara, S. Manon, F. Vallette, and F. Vallette. Tom22, a core component of the mitochondria outer membrane protein translocation pore, is a mitochondrial receptor for the proapoptotic protein bax. Cell Death and Differentiation, 14:785-794, Apr 2007. URL: https://doi.org/10.1038/sj.cdd.4402055, doi:10.1038/sj.cdd.4402055. This article has 195 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bellot2007tom22acore pages 5-6): G. Bellot, G. Bellot, P. Cartron, P. Cartron, E. Er, E. Er, L. Oliver, L. Oliver, P. Juin, P. Juin, L. C. Armstrong, P. Bornstein, K. Mihara, S. Manon, F. Vallette, and F. Vallette. Tom22, a core component of the mitochondria outer membrane protein translocation pore, is a mitochondrial receptor for the proapoptotic protein bax. Cell Death and Differentiation, 14:785-794, Apr 2007. URL: https://doi.org/10.1038/sj.cdd.4402055, doi:10.1038/sj.cdd.4402055. This article has 195 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="tomm-22-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lionaki2023mitochondrialproteinimport pages 2-2</li>
+<li>laan2006mitochondrialpreproteintranslocases pages 5-7</li>
+<li>model2002proteintranslocaseof pages 1-2</li>
+<li>guan2021structuralinsightsinto pages 3-4</li>
+<li>bennett2014activationofthe pages 2-3</li>
+<li>xin2022theuprmtpreserves pages 4-6</li>
+<li>billing2011mitochondrialfunctionis pages 8-9</li>
+<li>tan2025metforminmodulatesthe pages 2-4</li>
+<li>genge2022coordinatedtranslocationof pages 1-2</li>
+<li>endo2010transportofproteins pages 2-3</li>
+<li>genge2022coordinatedtranslocationof pages 2-4</li>
+<li>endo2002functionsofouter pages 6-8</li>
+<li>endo2010transportofproteins pages 3-4</li>
+<li>jain2025investigatingmitochondrialpresequence pages 15-17</li>
+<li>araiso2022structuraloverviewof pages 5-7</li>
+<li>model2002proteintranslocaseof pages 5-7</li>
+<li>araiso2022structuraloverviewof pages 3-5</li>
+<li>guan2021structuralinsightsinto pages 1-3</li>
+<li>nussberger2024newinsightsinto pages 2-4</li>
+<li>perry2008structuretopologyand pages 3-5</li>
+<li>billing2011mitochondrialfunctionis pages 7-8</li>
+<li>xin2022theuprmtpreserves pages 1-2</li>
+<li>haynes2022mitochondrialdysfunctionaging pages 5-6</li>
+<li>billing2011mitochondrialfunctionis pages 9-10</li>
+<li>jain2025investigatingmitochondrialpresequence pages 20-23</li>
+<li>https://doi.org/10.1371/journal.pone.0326100,</li>
+<li>https://doi.org/10.1371/journal.pone.0014507,</li>
+<li>https://doi.org/10.1016/s0167-4889(02</li>
+<li>https://doi.org/10.1016/j.bbamcr.2009.11.007,</li>
+<li>https://doi.org/10.53846/goediss-11596,</li>
+<li>https://doi.org/10.1002/bies.202200160,</li>
+<li>https://doi.org/10.3389/fphys.2021.806426,</li>
+<li>https://doi.org/10.2142/biophysico.bppb-v19.0022,</li>
+<li>https://doi.org/10.1111/j.1567-1364.2006.00134.x,</li>
+<li>https://doi.org/10.1006/jmbi.2001.5365,</li>
+<li>https://doi.org/10.1038/s41421-021-00252-7,</li>
+<li>https://doi.org/10.1042/bst20231236,</li>
+<li>https://doi.org/10.1016/j.plaphy.2007.12.012,</li>
+<li>https://doi.org/10.1038/ncomms4483,</li>
+<li>https://doi.org/10.1083/jcb.202201071,</li>
+<li>https://doi.org/10.1093/genetics/iyac160,</li>
+<li>https://doi.org/10.1038/sj.cdd.4402055,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tomm-22-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O17287" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="tomm-22-c-elegans-research-notes">tomm-22 (C. elegans) — Research Notes</h1>
+<p>UniProt: O17287 (TOM22_CAEEL) · WormBase: WBGene00021133 · ORF: W10D9.5 · Chromosome II<br />
+Gene family: Tom22 (InterPro IPR005683; Pfam PF04281; PANTHER PTHR12504) · 109 aa</p>
+<h2 id="journal">Journal</h2>
+<h3 id="2026-07-03-initial-synthesis">2026-07-03 — initial synthesis</h3>
+<p>Deep research: falcon provider succeeded (<code>tomm-22-deep-research-falcon.md</code>, 41 citations,<br />
+Edison "Literature" model, 872 s). The perplexity-lite fallback failed (401 quota) but was<br />
+not needed. The falcon report is high quality and surfaced the key worm-genetic and<br />
+structural literature used below.</p>
+<h2 id="what-tomm-22-is">What TOMM-22 is</h2>
+<p>TOMM-22 is the <em>C. elegans</em> ortholog of TOM22, a conserved, small single-pass integral<br />
+protein of the mitochondrial <strong>outer membrane</strong> and a central receptor/scaffold subunit of<br />
+the <strong>TOM complex</strong> (translocase of the outer mitochondrial membrane). The TOM complex is<br />
+the main entry gate through which the ~99% of mitochondrial proteins that are<br />
+nucleus-encoded and made on cytosolic ribosomes are imported into the organelle.</p>
+<p>Topology (UniProt, by similarity to human Q9NS69): cytoplasmic 1–60, transmembrane helix<br />
+61–77, intermembrane-space (IMS) tail 78–109. This is the canonical TOM22 architecture: an<br />
+N-terminal cytosolic receptor domain, a single TM anchor, and a C-terminal IMS domain.</p>
+<p>UniProt curated FUNCTION (O17287): <em>"Central receptor component of the translocase of the<br />
+outer membrane of mitochondria (TOM complex) responsible for the recognition and<br />
+translocation of cytosolically synthesized mitochondrial preproteins"</em> (By similarity) and<br />
+<em>"Together with the peripheral receptor tomm-20 functions as the transit peptide receptor<br />
+and facilitates the movement of preproteins into the translocation pore"</em><br />
+[ECO:0000269|PubMed:21264209].</p>
+<h2 id="conserved-molecular-function-from-orthologs-yeasthumanmammalian">Conserved molecular function (from orthologs — yeast/human/mammalian)</h2>
+<ul>
+<li><strong>Presequence (targeting-sequence) receptor.</strong> TOM20 and TOM22 recognize the N-terminal<br />
+  amphipathic targeting presequences of preproteins; TOM22 has both a <em>cis</em> (cytosolic) and<br />
+  a higher-affinity <em>trans</em> (IMS) presequence-binding site, and hands substrates to the<br />
+  TIM23 inner-membrane translocase. <a href="https://pubmed.ncbi.nlm.nih.gov/35733257" title="Tom20 and Tom22 are involved in   targeting signal recognition during protein import">PMID:35733257</a> (human TOM cryo-EM, Su et al. 2022).</li>
+<li><strong>Chaperone-like activity.</strong> The cytosolic domain of mammalian Tom20/Tom22 suppresses<br />
+  aggregation of unfolded preprotein substrates, keeping them import-competent.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/14699115" title="Tom20 and Tom22 have chaperone-like activity">PMID:14699115</a> (Yano et al. 2004).</li>
+<li><strong>Structural organizer / scaffold.</strong> Two TOM22 molecules sit between the two TOM40<br />
+  β-barrels in the dimeric TOM core, tethering and stabilizing the complex (structural work<br />
+  in yeast/human; falcon report). TOM22 is one of the most ancient TOM subunits — the<br />
+  ancestral complex is thought to have consisted minimally of Tom40 + Tom22.</li>
+</ul>
+<p>TOMM-40 (the β-barrel) forms the actual conducting pore; TOMM-22 is the receptor/scaffold<br />
+that contributes to import but does not itself form the channel. This is why its GOA<br />
+molecular-function annotation (GO:0008320) carries the <strong>contributes_to</strong> qualifier.</p>
+<h2 id="direct-experimental-evidence-in-c-elegans-loss-of-function-only">Direct experimental evidence <em>in C. elegans</em> (loss-of-function only)</h2>
+<p>All worm data are RNAi/knockdown phenotypes; no biochemical assay of the worm protein and<br />
+no characterized null allele exist.</p>
+<ol>
+<li><strong>Billing, Kao &amp; Naredi 2011 (PMID:21264209)</strong> — the primary functional paper. RNAi of<br />
+<em>tomm-22</em> (as well as <em>tomm-20</em>) induces the mitochondrial unfolded protein response and<br />
+   causes a DAF-28/insulin secretion defect, but is milder than <em>tomm-40</em>:</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/21264209" title="RNAi against either tomm-20 or tomm-22 induced the mitochondrial      unfolded protein response, indicating a perturbed mitochondrial protein handling">PMID:21264209</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/21264209" title="inactivation of tomm-20 or tomm-22 caused a defect in DAF-28 secretion">PMID:21264209</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/21264209" title="did not produce the highly penetrant larval arrest phenotype seen in      tomm-40(RNAi) worms">PMID:21264209</a></li>
+<li>The secretion defect is specific: ANF::GFP and INS-22::VENUS are secreted normally,<br />
+     and coelomocyte endocytosis is intact.</li>
+<li>Framing of TOM receptor biology: <a href="https://pubmed.ncbi.nlm.nih.gov/21264209" title="TOM20 and TOM22, are receptors that      recognize different subgroups of mitochondria-destined preproteins">PMID:21264209</a> and<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21264209" title="it acts along with other components, such as Tom20 and Tom22, to import      proteins into the mitochondria">PMID:21264209</a>.</li>
+<li>
+<p>The authors explicitly note how little is known in worm:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21264209" title="In C. elegans, there are few reports describing functions of putative      TOM-complex subunit homologues">PMID:21264209</a>.</p>
+</li>
+<li>
+<p><strong>Bennett et al. 2014 (PMID:24662282)</strong> — genome-scale <em>hsp-6p::gfp</em> UPRmt RNAi screen.<br />
+<em>tomm-22</em> is a UPRmt inducer, classed as a protein-import gene:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24662282" title="These included tomm-22, a component of the TOM complex which functions as    a translocase in the outer mitochondrial membrane">PMID:24662282</a> and grouped with<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24662282" title="a subset of RNAi clones related to mitochondrial protein import (tomm-22,    E04A4.5, T09B4.9, F45G2.8, F15D3.7, and dnj-21)">PMID:24662282</a>. Note the paper's thesis: UPRmt<br />
+   activation does not predict longevity — lifespan effects of import-gene RNAi are<br />
+   context-dependent, not a core function.</p>
+</li>
+<li>
+<p><strong>Xin et al. 2022 (PMID:35608535)</strong> — the strongest worm evidence that <em>tomm-22</em> is<br />
+   functionally required for import: <a href="https://pubmed.ncbi.nlm.nih.gov/35608535" title="knocking down TOM complex component    tomm-22 abolished the effect of cco-1 RNAi on improving import capacity">PMID:35608535</a>. TOM genes are<br />
+   themselves upregulated during UPRmt as an adaptive response:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/35608535" title="Genes encoding TOM complex proteins, including tomm-20, tomm-22, and    tomm-40, were enhanced one- to twofold">PMID:35608535</a>.</p>
+</li>
+<li>
+<p><strong>Tan et al. 2025 (PMID:40522955)</strong> — uses <em>tomm-22(RNAi)</em> as the canonical<br />
+   "import-associated UPRmt" background for a metformin/aging study. Important for<br />
+   separating core function from downstream stress phenotype:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40522955" title="the primary role of tomm-22 is a mitochondrial outer membrane transporter    rather than a mitochondrial UPR stress regulator">PMID:40522955</a> and<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40522955" title="The activation of hsp-6 response in tomm-22 RNAi worms in our study was    likely a response to changes in the mitochondrial import machinery instead of a direct    regulatory response to mitochondrial stress.">PMID:40522955</a>.</p>
+</li>
+</ol>
+<p>Mechanistic UPRmt link (why an import defect activates UPRmt): the weak-MTS transcription<br />
+factor ATFS-1 fails to be imported when TOM/TIM capacity drops and instead goes to the<br />
+nucleus (Rolland et al. 2019, PMID:31412237, general mechanism — abstract does not name<br />
+<em>tomm-22</em>; treated as background, not tomm-22-specific evidence).</p>
+<h2 id="known-vs-not-known">KNOWN vs NOT KNOWN</h2>
+<p>KNOWN (well supported):<br />
+- Subunit of the TOM complex / mitochondrial outer membrane translocase complex (family +<br />
+  UniProt SUBUNIT + worm papers). CORE cellular component.<br />
+- Localizes to the mitochondrial outer membrane, single-pass (topology by similarity).<br />
+- Functions in protein import into mitochondria; required for import capacity in worm<br />
+  (Xin 2022). CORE biological process.<br />
+- Contributes to the complex's protein-transmembrane-transport activity as a<br />
+  receptor/scaffold (not the pore). CORE molecular contribution.<br />
+- Loss reduces import → activates ATFS-1/UPRmt (hsp-6) and impairs DAF-28/insulin<br />
+  secretion. These are downstream consequences of the import role, not separate functions.</p>
+<p>NOT KNOWN (genuine gaps):<br />
+- <strong>The worm protein's own biochemistry is unmeasured.</strong> Presequence-binding (cis/trans),<br />
+  chaperone-like activity, and substrate-class specificity are inferred from yeast/human<br />
+  orthologs; no in vitro or in vivo binding assay of <em>C. elegans</em> TOMM-22 exists. The field<br />
+  itself flags the paucity of worm data (PMID:21264209). → MF_DARK / residual sub-gap.<br />
+- <strong>Essentiality is unresolved.</strong> Only RNAi (partial) data exist; <em>tomm-22(RNAi)</em> is far<br />
+  milder than <em>tomm-40(RNAi)</em> and no null/deletion allele has been characterized, so whether<br />
+  complete loss is lethal in <em>C. elegans</em> is unknown. → BIOLOGY gap.<br />
+- <strong>Isoforms.</strong> Two splice isoforms are annotated: a (O17287-1, full length) and b<br />
+  (O17287-2, "Missing 1..94" = lacks essentially the entire cytosolic receptor domain and TM<br />
+  anchor). The existence, expression, and function of isoform b are uncharacterized.<br />
+- <strong>Lifespan direction is contradictory</strong> across studies (Bennett 2014 reports increased<br />
+  mean lifespan on <em>tomm-22</em> RNAi; Tan 2025 describes the background as short-lived) — a<br />
+  pleiotropic/context-dependent readout, explicitly not a core function.</p>
+<h2 id="annotation-review-plan">Annotation review plan</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Aspect</th>
+<th>Ev</th>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0005742 mito outer membrane translocase complex</td>
+<td>CC</td>
+<td>IBA</td>
+<td>ACCEPT (core)</td>
+<td>TOM complex subunit</td>
+</tr>
+<tr>
+<td>GO:0030150 protein import into mito matrix</td>
+<td>BP</td>
+<td>IBA</td>
+<td>ACCEPT (core)</td>
+<td>entry receptor; import required (Xin)</td>
+</tr>
+<tr>
+<td>GO:0008320 transmembrane protein transporter activity (contributes_to)</td>
+<td>MF</td>
+<td>IBA</td>
+<td>ACCEPT (core, contribution)</td>
+<td>receptor/scaffold, not pore — contributes_to correct</td>
+</tr>
+<tr>
+<td>GO:0005741 mitochondrial outer membrane</td>
+<td>CC</td>
+<td>IEA</td>
+<td>ACCEPT (core)</td>
+<td>single-pass OMM</td>
+</tr>
+<tr>
+<td>GO:0005741 mitochondrial outer membrane</td>
+<td>CC</td>
+<td>ISS</td>
+<td>ACCEPT</td>
+<td>same location, ISS from human ortholog</td>
+</tr>
+<tr>
+<td>GO:0006886 intracellular protein transport</td>
+<td>BP</td>
+<td>IEA</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>generic InterPro2GO parent of GO:0030150</td>
+</tr>
+</tbody>
+</table>
+<p>Core MF for synthesis: GO:0030943 mitochondrion targeting sequence binding (conserved<br />
+presequence-receptor activity; the human TOMM22 review uses the same term — note it is<br />
+slated for eventual GO obsoletion in favor of a "mitochondrial signal sequence receptor<br />
+activity" NTR, but is live as of 2026-05/07).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O17287
+gene_symbol: tomm-22
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  tomm-22 encodes the C. elegans ortholog of TOM22 (TOMM-22), a small single-pass
+  integral protein of the mitochondrial outer membrane and a central receptor/scaffold
+  subunit of the TOM complex (translocase of the outer mitochondrial membrane). The TOM
+  complex is the main entry gate through which nucleus-encoded, cytosolically synthesized
+  preproteins are imported into mitochondria. TOMM-22 exposes an N-terminal cytosolic
+  domain that, together with the peripheral receptor TOMM-20, recognizes the N-terminal
+  targeting presequences of incoming preproteins and helps transfer them toward the
+  TOMM-40 import channel; its transmembrane segment and intermembrane-space tail help
+  organize the dimeric TOM core and hand substrates to the inner-membrane TIM23 machinery.
+  In C. elegans, reducing TOMM-22 lowers mitochondrial protein-import capacity; the
+  resulting import stress activates the ATFS-1-dependent mitochondrial unfolded protein
+  response (marked by hsp-6 induction) and impairs the food-coupled secretion of the
+  insulin-like peptide DAF-28, while secretion of other neuropeptides is unaffected.
+  Because mitochondrial import stress modulates the UPRmt and organismal aging, partial
+  loss of tomm-22 is used experimentally to trigger import-associated UPRmt.
+alternative_products:
+- name: a
+  id: O17287-1
+  description: &gt;-
+    Full-length displayed isoform (WormBase W10D9.5a); contains the complete cytosolic
+    receptor domain, the transmembrane anchor, and the intermembrane-space tail.
+- name: b
+  id: O17287-2
+  sequence_note: VSP_058486
+  description: &gt;-
+    Shorter isoform (WormBase W10D9.5b) in which residues 1-94 are missing, removing
+    essentially the entire N-terminal cytosolic receptor domain and the transmembrane
+    anchor. Its expression and function have not been characterized.
+existing_annotations:
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Core cellular-component annotation. TOMM-22 is a conserved receptor/scaffold subunit
+      of the TOM complex (mitochondrial outer membrane translocase complex). Complex
+      membership is supported by the Tom22 family assignment (IPR005683/PF04281), the
+      UniProt SUBUNIT statement, and worm studies that treat tomm-22 as a TOM-complex
+      component.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:24662282
+      supporting_text: &gt;-
+        These included tomm-22, a component of the TOM complex which functions as a
+        translocase in the outer mitochondrial membrane
+    - reference_id: PMID:35608535
+      supporting_text: &gt;-
+        Genes encoding TOM complex proteins, including tomm-20, tomm-22, and tomm-40, were
+        enhanced one- to twofold
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological-process annotation. As a TOM receptor/scaffold subunit, TOMM-22
+      functions in the import of nucleus-encoded, presequence-bearing preproteins destined
+      for the matrix. Worm evidence shows tomm-22 is required for mitochondrial protein
+      import capacity: its knockdown abolishes the import improvement seen on UPRmt
+      activation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:35608535
+      supporting_text: &gt;-
+        knocking down TOM complex component tomm-22 abolished the effect of cco-1 RNAi on
+        improving import capacity
+    - reference_id: PMID:21264209
+      supporting_text: &gt;-
+        it acts along with other components, such as Tom20 and Tom22, to import proteins
+        into the mitochondria
+- term:
+    id: GO:0008320
+    label: transmembrane protein transporter activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: contributes_to
+  review:
+    summary: &gt;-
+      Accept as a contribution (contributes_to) to the TOM complex&#39;s protein
+      transmembrane transport activity. TOMM-22 is the presequence receptor/scaffold that
+      recognizes targeting signals and hands preproteins to the TOMM-40 pore; it does not
+      itself form the conducting channel, so the contributes_to qualifier is appropriate
+      rather than asserting standalone transporter activity.
+    action: ACCEPT
+    reason: &gt;-
+      TOMM-40 is the beta-barrel conducting pore of the TOM complex; TOMM-22 provides the
+      receptor/scaffold function needed for import. Retain only as a complex-level
+      contribution.
+    supported_by:
+    - reference_id: PMID:35733257
+      supporting_text: &gt;-
+        Tom20 and Tom22 are involved in targeting signal recognition during protein import
+    - reference_id: PMID:40522955
+      supporting_text: &gt;-
+        the primary role of tomm-22 is a mitochondrial outer membrane transporter rather
+        than a mitochondrial UPR stress regulator
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct core subcellular location. TOMM-22 is a single-pass integral protein of the
+      mitochondrial outer membrane (cytosolic N-terminus, single transmembrane helix,
+      intermembrane-space C-terminus).
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:40522955
+      supporting_text: &gt;-
+        TOMM-22 is involved in protein transport across the outer mitochondrial membrane
+    - reference_id: UniProt:O17287
+      supporting_text: Mitochondrion outer membrane
+- term:
+    id: GO:0006886
+    label: intracellular protein transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      True but over-general. This is an InterPro2GO inference from the Tom22 domain
+      (IPR005683) and is a broad parent of the specific process the protein performs,
+      protein import into mitochondria (GO:0030150), which is separately annotated and
+      represents the core biological process. Kept as a correct but non-core annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Generic ancestor of the more informative GO:0030150 (protein import into
+      mitochondrial matrix); does not add specificity beyond it.
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Same mitochondrial-outer-membrane location as the IEA annotation, here transferred
+      by sequence similarity from human TOMM22 (Q9NS69). Consistent with the conserved
+      single-pass outer-membrane topology of the Tom22 family.
+    action: ACCEPT
+    supported_by:
+    - reference_id: UniProt:O17287
+      supporting_text: Mitochondrion outer membrane
+- term:
+    id: GO:0030943
+    label: mitochondrion targeting sequence binding
+  evidence_type: ISS
+  original_reference_id: PMID:35733257
+  review:
+    summary: &gt;-
+      Proposed molecular-function annotation capturing TOMM-22&#39;s core, evolutionarily
+      conserved activity as a mitochondrial targeting-sequence (presequence) receptor that,
+      together with TOMM-20, recognizes incoming preproteins. This activity is not currently
+      represented in the worm GOA (which carries only the complex-level contributes_to
+      transporter term); it is proposed here on the basis of the conserved Tom22
+      presequence-receptor function and the UniProt transit-peptide-receptor annotation.
+      Note: GO:0030943 is slated for obsoletion in favor of a proposed &#34;mitochondrial signal
+      sequence receptor activity&#34; receptor term; if that term is minted it should replace
+      this one.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:35733257
+      supporting_text: &gt;-
+        Tom20 and Tom22 are involved in targeting signal recognition during protein import
+    - reference_id: PMID:21264209
+      supporting_text: &gt;-
+        TOM20 and TOM22, are receptors that recognize different subgroups of
+        mitochondria-destined preproteins
+core_functions:
+- description: &gt;-
+    Central receptor/scaffold subunit of the mitochondrial outer membrane TOM complex:
+    recognizes the N-terminal targeting presequences of nucleus-encoded mitochondrial
+    preproteins (together with the peripheral receptor TOMM-20) and contributes to their
+    translocation across the outer membrane toward the TOMM-40 pore, while helping organize
+    and stabilize the TOM complex. In C. elegans the receptor/chaperone-like biochemistry
+    is inferred from conserved yeast/human orthologs; the direct worm evidence establishes
+    that tomm-22 is required for mitochondrial protein-import capacity.
+  molecular_function:
+    id: GO:0030943
+    label: mitochondrion targeting sequence binding
+  contributes_to_molecular_function:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0030150
+    label: protein import into mitochondrial matrix
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+  in_complex:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  supported_by:
+  - reference_id: PMID:21264209
+    supporting_text: &gt;-
+      TOM20 and TOM22, are receptors that recognize different subgroups of
+      mitochondria-destined preproteins
+  - reference_id: PMID:35733257
+    supporting_text: &gt;-
+      Tom20 and Tom22 are involved in targeting signal recognition during protein import
+  - reference_id: PMID:35608535
+    supporting_text: &gt;-
+      knocking down TOM complex component tomm-22 abolished the effect of cco-1 RNAi on
+      improving import capacity
+proposed_new_terms: []
+knowledge_gaps:
+- gap_statement: &gt;-
+    The biochemical activity of C. elegans TOMM-22 itself has never been directly measured.
+    Its presequence-binding (cis/trans receptor) function, its chaperone-like activity, and
+    its preprotein substrate-class specificity are all inferred from yeast and human
+    orthologs; every direct worm experiment assays loss-of-function phenotypes (UPRmt
+    induction, DAF-28 secretion, import-capacity requirement) rather than the activity of
+    the TOMM-22 protein.
+  boundary: &gt;-
+    It is firmly established that TOMM-22 is a Tom22-family single-pass outer-membrane
+    subunit of the TOM complex, that reducing it activates the hsp-6/UPRmt response and
+    impairs DAF-28/insulin secretion (Billing 2011), and that tomm-22 is required for
+    mitochondrial import capacity in worm (Xin 2022). The conserved structural role
+    (presequence receptor with cis and trans sites, chaperone-like activity, TOM-core
+    scaffold) is well characterized in yeast and human Tom22.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    tomm-22 is routinely used as a generic &#34;import-defective&#34; RNAi background in worm UPRmt
+    and aging studies, yet whether the worm protein reproduces the cis/trans presequence
+    receptor and chaperone-like activities of its mammalian ortholog, or has
+    organism-specific substrate preferences, is untested. Anchoring the molecular function
+    in worm data would strengthen the interpretation of that large phenotypic literature.
+  resolution: &gt;-
+    In vitro presequence/preprotein-binding and aggregation-suppression assays with
+    recombinant C. elegans TOMM-22 cytosolic and IMS domains; structure-function analysis
+    of a tagged worm TOMM-22; substrate-class profiling of import defects on tomm-22 loss.
+  provenance:
+  - reference_id: PMID:21264209
+    supporting_text: &gt;-
+      In C. elegans, there are few reports describing functions of putative TOM-complex
+      subunit homologues
+  - reference_id: PMID:40522955
+    supporting_text: &gt;-
+      The activation of hsp-6 response in tomm-22 RNAi worms in our study was likely a
+      response to changes in the mitochondrial import machinery instead of a direct
+      regulatory response to mitochondrial stress.
+- gap_statement: &gt;-
+    Whether tomm-22 is essential in C. elegans is unresolved. Only partial-knockdown (RNAi)
+    data exist, and no null/deletion allele has been characterized, so it is unknown whether
+    complete loss of TOMM-22 is lethal (as for TOM22 in mouse) or tolerated.
+  boundary: &gt;-
+    tomm-22(RNAi) reproducibly activates UPRmt and impairs DAF-28 secretion but is much
+    milder than tomm-40(RNAi): it does not cause the highly penetrant larval arrest seen on
+    tomm-40 depletion. This is a knockdown, not a genetic null.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    The severity gradient among TOM subunits (tomm-40 &gt;&gt; tomm-22/tomm-20) is used to argue
+    that TOMM-22 is not as rate-limiting as the TOM40 channel; a defined null is needed to
+    test essentiality and separate residual RNAi activity from a genuine partial requirement.
+  resolution: &gt;-
+    Characterize a tomm-22 deletion/null allele (e.g. CRISPR or an existing balanced
+    deletion) for viability, developmental arrest, and mitochondrial import phenotypes.
+  provenance:
+  - reference_id: PMID:21264209
+    supporting_text: &gt;-
+      did not produce the highly penetrant larval arrest phenotype seen in tomm-40(RNAi)
+      worms
+- gap_statement: &gt;-
+    The existence, expression, and function of the shorter tomm-22 isoform b (O17287-2),
+    which lacks residues 1-94 and therefore essentially the entire cytosolic receptor domain
+    and transmembrane anchor, are uncharacterized.
+  boundary: &gt;-
+    UniProt annotates two alternative-splicing products of tomm-22; isoform b differs from
+    the full-length isoform a by a large N-terminal deletion. No transcript-level, protein-
+    level, or functional data distinguish the isoforms.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    An isoform lacking the receptor domain and membrane anchor could be non-functional,
+    regulatory, or an annotation artifact; resolving this affects how TOMM-22 dosage and
+    domain requirements are interpreted.
+  resolution: &gt;-
+    Isoform-specific RT-PCR / long-read transcriptomics to confirm isoform b, and
+    isoform-specific rescue/localization to test whether it retains any activity.
+  provenance:
+  - reference_id: UniProt:O17287
+    supporting_text: Missing (in isoform b)
+suggested_questions:
+- question: &gt;-
+    Does C. elegans TOMM-22 bind mitochondrial targeting presequences directly at cis and
+    trans sites, as demonstrated for yeast and human Tom22, and does it have the
+    chaperone-like activity reported for mammalian Tom22?
+  experts: []
+- question: &gt;-
+    Is tomm-22 essential in C. elegans, and how does a genetic null differ from RNAi
+    knockdown in developmental and mitochondrial-import phenotypes?
+  experts: []
+- question: &gt;-
+    Which classes of C. elegans mitochondrial preproteins depend most on TOMM-22 versus the
+    peripheral receptor TOMM-20?
+  experts: []
+suggested_experiments:
+- hypothesis: &gt;-
+    C. elegans TOMM-22 is a bona fide presequence receptor with cis (cytosolic) and trans
+    (IMS) binding sites.
+  description: &gt;-
+    Purify recombinant TOMM-22 cytosolic and IMS domains and measure binding to synthetic
+    mitochondrial presequence peptides (e.g. by ITC/fluorescence anisotropy); test
+    aggregation-suppression (chaperone-like) activity on a model preprotein substrate.
+  experiment_type: biochemical binding / chaperone assay
+- hypothesis: &gt;-
+    TOMM-22 is required for bulk mitochondrial protein import in C. elegans but less
+    essential than the TOMM-40 channel.
+  description: &gt;-
+    Generate a tomm-22 null allele and quantify import of matrix-targeted reporters (e.g.
+    an MTS::GFP) versus wild type and tomm-40 mutants, alongside viability and UPRmt
+    (hsp-6p::gfp) readouts.
+  experiment_type: genetics / in vivo import assay
+references:
+- id: GO_REF:0000002
+  title: &gt;-
+    Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: &gt;-
+    Manual transfer of experimentally-verified manual GO annotation data to orthologs by
+    curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:21264209
+  title: &gt;-
+    Mitochondrial function is required for secretion of DAF-28/insulin in C. elegans.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary functional paper for C. elegans tomm-22. Full text (PMC3022011) verified;
+      directly assays tomm-22(RNAi): UPRmt (hsp-6) induction and DAF-28 secretion defect,
+      milder than tomm-40. The quoted sentences are verbatim from the cached full text.
+- id: PMID:24662282
+  title: &gt;-
+    Activation of the mitochondrial unfolded protein response does not predict longevity in
+    Caenorhabditis elegans.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome-scale hsp-6p::gfp UPRmt RNAi screen; classifies tomm-22 as a TOM-complex /
+      mitochondrial-import inducer of UPRmt. Also the source of the caution that UPRmt
+      activation (and thus tomm-22 RNAi lifespan effects) does not predict longevity.
+- id: PMID:35608535
+  title: The UPRmt preserves mitochondrial import to extend lifespan.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Provides the strongest worm evidence that tomm-22 is functionally required for
+      mitochondrial import capacity (its knockdown abolishes the import improvement from
+      cco-1 RNAi). Full text verified.
+- id: PMID:40522955
+  title: &gt;-
+    Metformin modulates the unfolded protein responses, altering lifespan and
+    health-promoting effects in UPR-activated worms.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Uses tomm-22(RNAi) as the canonical import-associated UPRmt background; explicitly
+      frames tomm-22&#39;s primary role as an outer-membrane transporter rather than a stress
+      regulator, useful for separating core function from downstream UPRmt phenotype.
+- id: PMID:35733257
+  title: &gt;-
+    Structural basis of Tom20 and Tom22 cytosolic domains as the human TOM complex
+    receptors.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Human TOM cryo-EM structural study supporting the conserved presequence-receptor
+      molecular function of Tom22 (cis/trans targeting-signal recognition). Used to justify
+      the receptor MF in core_functions as a by-similarity inference for the worm ortholog.
+- id: PMID:14699115
+  title: &gt;-
+    Mitochondrial import receptors Tom20 and Tom22 have chaperone-like activity.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Mammalian biochemistry establishing the chaperone-like activity of the Tom22
+      cytosolic domain; background for a conserved activity not yet tested in C. elegans.
+- id: UniProt:O17287
+  title: Mitochondrial import receptor subunit TOM22 homolog (tomm-22, C. elegans)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      UniProt/Swiss-Prot record; source of the curated FUNCTION (central TOM receptor; with
+      tomm-20 the transit-peptide receptor), the outer-membrane single-pass topology (by
+      similarity to human Q9NS69), and the two annotated splice isoforms.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
