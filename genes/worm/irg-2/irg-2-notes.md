@@ -121,14 +121,22 @@ internally consistent with the literature. The honest gap is the missing MF, cap
 in `knowledge_gaps`, not fixable by re-labeling an existing annotation.
 
 ## Deep research provenance note
-- `just deep-research-falcon worm irg-2 --fallback perplexity-lite` was launched but
-  the Edison/Falcon API was saturated by concurrent jobs and did not return a report
-  within the run window (no `irg-2-deep-research-falcon.md` produced). No fabricated
-  deep-research file was written. This review is therefore grounded entirely in
-  UniProt (O16224), the GOA TSV, and the six cached primary/secondary publications
-  below, all quote-verified against the local `publications/` cache. Where a claim
-  could not be verified from these sources it is recorded as a knowledge gap rather
-  than asserted.
+- `just deep-research-falcon worm irg-2 --fallback perplexity-lite`: the first falcon
+  attempt timed out (Edison API saturated by many concurrent jobs) and the
+  perplexity-lite fallback 401'd on quota; the falcon RETRY then succeeded and wrote a
+  genuine `irg-2-deep-research-falcon.md` (Edison Scientific Literature, 39 citations,
+  ~1300s). It is committed and cited only for its high-level synthesis that IRG-2 is
+  functionally uncharacterized ("No enzymatic activity has been assigned to the
+  protein"), which independently corroborates the GOA ND molecular_function.
+- IMPORTANT: the falcon report also makes specific claims via unverifiable PMID-token
+  citations — notably an ENDU-2/heat-stress transcriptional-regulation model (Xu 2023)
+  and a WormCat/immunity-linked-genes framing (Fanelli 2023), and it alludes to
+  loss-of-function phenotypes. None of these token citations could be resolved to
+  cached, PubMed-verified papers, so they are DELIBERATELY NOT imported into the
+  review. If those papers are later located and verified, the "effector-vs-reporter"
+  knowledge gap (gap 2) should be revisited. The review otherwise rests on UniProt
+  (O16224), the GOA TSV, and the six cached publications below, all quote-verified
+  against the local `publications/` cache.
 
 ## References gathered (verified against cache)
 - PMID:20133860 Estes 2010 PNAS — irg class definition, zip-2 (abstract-only). HIGH.
