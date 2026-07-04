@@ -173,33 +173,35 @@ RETURN = (
 )
 
 INTRO_MD = '''\
-        # Pathway satisfiability — live, in your browser
+        # Pathway satisfiability
 
-        This entire notebook is running **in your browser** via WebAssembly (Pyodide) — no
-        server, no install. The satisfiability engine, the module definitions, and the GTEx /
-        KEGG data are all embedded. A curation **module** is read as a boolean formula over
-        steps; a **context oracle** supplies the truth values. Same engine, different oracle →
-        the pathway resolves *into* a context. Move the slider and watch textbook biology fall
-        out of the logic.
+        **Is a pathway wired up *here* — in this tissue, this genome?** A pathway is read as a
+        logic formula over its steps, and a context — which genes are expressed, or encoded —
+        decides which steps are on. Move the slider below: human gluconeogenesis switches on in
+        exactly the tissues known to make glucose, and every other tissue fails at the same
+        control point. The same logic then reconstructs methionine biosynthesis across microbial
+        genomes.
 '''
 
 ROUTES_MD = '''\
-        ## 1. Compile the module → boolean circuit
+        ## The pathway, and its bottleneck
 
-        `gluconeogenesis_human` compiles to **{n_routes} routes** (each a choice of isozymes).
-        The **gate** — atoms required by *every* route — is:
+        Human gluconeogenesis can run by **{n_routes}** different isozyme combinations — but they
+        all funnel through the same required steps:
 
         > **{gate}**
 
-        `SLC37A4` + `G6PC1` are the terminal ER glucose-release system. Any tissue that fails to
-        express the gate cannot release free glucose, no matter what else it expresses.
+        `G6PC1` + `SLC37A4` are the terminal system that releases free glucose. A tissue missing
+        this gate can't make glucose, no matter what else it expresses — which is exactly why
+        only some tissues are gluconeogenic.
 '''
 
 NOTICE_MD = '''\
         ---
-        **What this demonstrates, live in your browser:** one ~330-line pure-logic engine,
-        evaluated against interchangeable oracles, recovers tissue-restricted gluconeogenesis,
-        its molecular gate, and microbial pathway completeness — from data, not lookup.
+        **One idea, many contexts.** The same step-logic finds which tissues run gluconeogenesis
+        and the molecular gate that restricts them, then reconstructs microbial methionine
+        biosynthesis — all read off data, not looked up. And when a pathway is known to run but a
+        step has no candidate, that gap becomes a specific, gene-localised hypothesis to chase.
 
         Source & context: [Methods](methods.md) · [Background](background.md) ·
         [main project page](../PATHWAY_SATISFIABILITY.md).
@@ -260,13 +262,13 @@ NOTEBOOK = (
         "    mo.vstack([\n"
         "        mo.md(\n"
         '            f"""\n'
-        "            ## 2. Resolve across 54 GTEx tissues (TPM ≥ {threshold.value})\n\n"
-        '            **Satisfiable in {len(_sat)} tissue(s):** {", ".join(_sat) or "—"}\n\n'
-        '            - textbook set recovered: **{", ".join(_recovered) or "—"}**\n'
+        "            ## Which tissues can make glucose? (expression ≥ {threshold.value} TPM)\n\n"
+        '            **Yes, in {len(_sat)} of 54 tissues:** {", ".join(_sat) or "—"}\n\n'
+        '            - matches the textbook set: **{", ".join(_recovered) or "—"}**\n'
         '            - false positives: {", ".join(_extra) or "none"} · missed: {", ".join(_missed) or "none"}\n\n'
         "            *Raise the slider:* tissues drop out **liver → kidney → intestine**, the order of their\n"
-        "            known quantitative contribution. Every non-gluconeogenic tissue fails at the **same**\n"
-        "            gate atom, `G6PC1`, resisting the ubiquitous paralog `G6PC3`.\n"
+        "            real contribution to blood glucose. Every other tissue fails at the **same** step —\n"
+        "            `G6PC1` — and the near-ubiquitous look-alike `G6PC3` is correctly not accepted for it.\n"
         '            """\n'
         "        ),\n"
         "        mo.ui.table(\n"
@@ -283,11 +285,11 @@ NOTEBOOK = (
         "    mo.vstack([\n"
         "        mo.md(\n"
         '            """\n'
-        "            ## 3. Same engine, other kingdom: GapMind-style genome reconstruction\n\n"
-        "            Swap the oracle from *expression* to *genome ortholog presence* (KEGG) and the identical\n"
-        "            engine reconstructs **L-methionine biosynthesis** per genome — picking the encoded route,\n"
-        "            or flagging the missing step as a gap. `cgl` completes via direct sulfhydrylation despite\n"
-        "            lacking `metC`; `buc` and the auxotroph `rpr` are flagged as gaps.\n"
+        "            ## The same idea across microbial genomes\n\n"
+        "            Now the context is *which genes a genome encodes* instead of expression. The same logic\n"
+        "            reconstructs **methionine biosynthesis** per organism — picking the route each one actually\n"
+        "            uses, or flagging the missing step. `cgl` still completes through an alternative branch\n"
+        "            despite lacking `metC`; `buc` and `rpr` (a known methionine auxotroph) come up short.\n"
         '            """\n'
         "        ),\n"
         "        mo.ui.table(_rows, selection=None),\n"
