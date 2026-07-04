@@ -97,14 +97,15 @@ satisfiable only toward the **periportal** pole and is blocked at the **pericent
 at the same gate atom (Figure 2). The porto-central orientation is inferred from landmark genes
 (not assumed), so the periportal restriction is a derivation, not a restatement.
 
-![The liver lobule from pericentral to periportal, with the satisfiable zone shaded and the pericentral pole blocked at G6PC1](PATHWAY_SATISFIABILITY/fig-lobule.svg)
+![Three liver-lobule hex-spot grids; as the expression gate tightens the satisfiable zone retreats from the pericentral core to the periportal rim](PATHWAY_SATISFIABILITY/fig-spatial.svg)
 
-*Figure 2. The same engine, one scale down: the liver lobule (Halpern 2017, nine reconstructed
-layers, pericentral → periportal). Bars are `G6pc` expression as a fraction of its own peak;
-**green** layers are where gluconeogenesis is satisfiable. The pericentral pole is blocked at the
-very same gate atom, `G6PC1`. Because the porto-central axis is oriented from independent landmark
-genes, the periportal restriction is a result, not an assumption — the identical gate operates
-between organs (Figure 1) and within one.*
+*Figure 2. The same engine, one scale down — the liver lobule as a spatial grid (Halpern 2017).
+Each Visium-style spot is coloured by the engine's satisfiability verdict for its zonation layer;
+as the expression gate tightens (left → right) the satisfiable zone (**green**) retreats from the
+pericentral core (blocked at the very same gate atom, `G6PC1`) to the **periportal** rim. The
+porto-central axis is oriented from independent landmark genes, so the periportal restriction is a
+result, not an assumption — the identical gate operates between organs (Figure 1) and within one.
+Geometry is the canonical lobule idealisation; the colour is the real per-layer result.*
 
 ### Which precursor? (substrate-entry routes)
 A precursor-resolved module makes lactate / alanine (via pyruvate) and glycerol (bypassing

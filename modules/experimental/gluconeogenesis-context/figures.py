@@ -108,6 +108,70 @@ def fig_lobule() -> Path:
     return path
 
 
+def _hex_lattice(R: float, s: float):
+    """Hex-packed lattice points inside a circle of radius R (Visium-style spots)."""
+    import math
+    dy = s * math.sqrt(3) / 2
+    pts, j, y = [], 0, -R
+    while y <= R:
+        x = -R + (s / 2 if j % 2 else 0)
+        while x <= R:
+            if math.hypot(x, y) <= R * 0.99:
+                pts.append((x, y))
+            x += s
+        y += dy
+        j += 1
+    return pts
+
+
+def fig_spatial() -> Path:
+    """Spatial view: gluconeogenesis retreats to the periportal rim as the gate tightens.
+
+    The liver lobule's canonical radial geometry (central vein at the centre = pericentral;
+    portal tracts at the rim = periportal) is tiled with Visium-style spots. Each spot's
+    radial position is mapped to one of Halpern 2017's nine zonation layers, and coloured by
+    the engine's satisfiability verdict for that layer. Geometry is the idealised lobule;
+    colour is the real per-layer result.
+    """
+    import math
+    from matplotlib.patches import RegularPolygon
+
+    thresholds = [0.3, 0.6, 0.9]
+    pts = _hex_lattice(1.0, 0.11)
+    fig, axes = plt.subplots(1, len(thresholds), figsize=(9.4, 3.7))
+    for ax, t in zip(axes, thresholds):
+        layers = resolve_zones(str(MODULE), t)["layers"]  # L1 pericentral .. L9 periportal
+        sat = [row["satisfiable"] for row in layers]
+        for (x, y) in pts:
+            r = math.hypot(x, y)
+            li = min(8, int(round(r * 8)))          # centre -> L1, rim -> L9
+            ax.scatter(x, y, s=26, color=SAT if sat[li] else BLOCK,
+                       edgecolor="white", lw=0.3, zorder=2)
+        hexv = RegularPolygon((0, 0), numVertices=6, radius=1.06, orientation=0,
+                              fill=False, edgecolor="#999", lw=1.2, zorder=1)
+        ax.add_patch(hexv)
+        ax.scatter(0, 0, s=42, color="#5b6b8c", zorder=3)  # central vein
+        ax.set_title(f"gate bar: rel ≥ {t}", fontsize=10)
+        ax.set_xlim(-1.25, 1.25)
+        ax.set_ylim(-1.3, 1.25)
+        ax.set_aspect("equal")
+        ax.axis("off")
+    axes[0].annotate("central vein\n(pericentral)", xy=(0, 0), xytext=(0, -1.22),
+                     ha="center", va="top", fontsize=7, color="#5b6b8c")
+    axes[-1].annotate("portal / periportal", xy=(0.75, 0.75), xytext=(0.2, 1.16),
+                      ha="center", fontsize=7, color="#555")
+    fig.suptitle("Gluconeogenesis retreats to the periportal rim as the gate tightens",
+                 fontsize=12.5, x=0.02, ha="left", y=1.02)
+    fig.text(0.02, -0.02, "Canonical lobule geometry (schematic); spot colour = engine "
+             "satisfiability verdict per Halpern-2017 zonation layer. Green = satisfiable.",
+             fontsize=7, color="#777")
+    fig.tight_layout()
+    path = OUT / "fig-spatial.svg"
+    fig.savefig(path, format="svg", bbox_inches="tight")
+    plt.close(fig)
+    return path
+
+
 def fig_genomes() -> Path:
     """Across genomes: the same engine reconstructs methionine biosynthesis (KEGG)."""
     circuit = compile_module_file(str(MET_MODULE))
@@ -203,5 +267,6 @@ def fig_abduction() -> Path:
 
 
 if __name__ == "__main__":
-    for p in (fig_tissues(), fig_lobule(), fig_genomes(), fig_abduction()):
+    # fig_lobule() (bar chart) is kept as an alternative but superseded by fig_spatial().
+    for p in (fig_tissues(), fig_spatial(), fig_genomes(), fig_abduction()):
         print("wrote", p.relative_to(ROOT))
