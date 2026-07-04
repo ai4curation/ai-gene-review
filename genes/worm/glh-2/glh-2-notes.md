@@ -4,6 +4,8 @@ UniProt: Q966L9 (GLH2_CAEEL). WormBase: WBGene00001599 / C55B7.1. NCBI taxon 623
 Family: DEAD-box helicase, DDX4/VASA subfamily. 974 aa, EC 3.6.4.13.
 Human ortholog: DDX4 (VASA). Part of the CAEEL_P_GRANULES flagship project; glh-1 and glh-4
 are already reviewed, glh-2 is the last GLH paralog.
+See also the completed sibling reviews for paralog context:
+genes/worm/glh-1/glh-1-ai-review.yaml and genes/worm/glh-4/glh-4-ai-review.yaml.
 
 ## Protein architecture (from UniProt Q966L9)
 - Central DEAD-box helicase core: Helicase ATP-binding domain (583-767), Helicase C-terminal
