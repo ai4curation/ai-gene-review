@@ -110,13 +110,18 @@ confirmation of an endogenous, functionally significant nuclear pool in the worm
    has no "coenzyme Q biosynthesis complex" cellular-component term to capture this membership.
 
 ## Provenance note on deep research
-Falcon deep research (`just deep-research-falcon worm clk-1 --fallback perplexity-lite`) was
-launched but did not complete within ~30 min (the shared Edison/falcon endpoint was congested
-by several concurrent gene jobs). No `clk-1-deep-research-*.md` file was produced. This review
-is therefore grounded entirely in the UniProt record, the GOA TSV, and the 11 cached primary
-publications (PMID_9020081, 10202142, 11244089, 11959146, 12709403, 14517217, 16920626,
-17189267, 17277769, 19783783, 25961505), all of which were read in full where full text was
-available. Every annotation is verifiable from these sources; there are no UNDECIDED calls.
+Falcon deep research (`just deep-research-falcon worm clk-1 --fallback perplexity-lite`) took
+~29 min on the congested shared Edison endpoint and the wrapper recipe ultimately reported a
+timeout, but the Edison run did land a real report at the boundary:
+`clk-1-deep-research-falcon.md` (provider: falcon, model: Edison Scientific Literature,
+cached: false, 40 cited sources). It was verified as genuine and on-target (di-iron DMQ9->UQ9
+hydroxylase, COQ metabolon/CoQ-synthome membership, debated nuclear moonlighting "requires
+further confirmation", 2,4-DHB bypass showing phenotypes are attributable to UQ deficiency) and
+is committed as corroborating context. The review itself is grounded in the UniProt record, the
+GOA TSV, and the 11 cached primary publications (PMID_9020081, 10202142, 11244089, 11959146,
+12709403, 14517217, 16920626, 17189267, 17277769, 19783783, 25961505); every `supporting_text`
+is a verbatim PMID quote. The falcon file is cited only once (core_functions corroboration) with
+a verbatim quote from the committed file. There are no UNDECIDED calls.
 
 ## Annotation-review plan (core vs non-core)
 - CORE (keep, ACCEPT): 3-demethoxyubiquinone 3-hydroxylase (NADH) activity (GO:0160224);
