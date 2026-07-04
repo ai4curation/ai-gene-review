@@ -95,11 +95,14 @@ function gives long, misshapen, misaligned cilia with IFT-protein accumulation (
   body, intracellular protein localization).
 
 ## Provenance / methods note
-- `just deep-research-falcon worm dyf-5 --fallback perplexity-lite` was launched but did
-  not return within the working window (no output produced). This review is therefore
-  grounded directly in the three primary references below plus the UniProt (B3WFY8) and
-  GOA records; no deep-research provider file was fabricated. If a real falcon/perplexity
-  file lands later it can be added without changing the grounded conclusions.
+- `just deep-research-falcon worm dyf-5 --fallback perplexity-lite` completed after ~21 min
+  (falcon/Edison, 33 citations): `dyf-5-deep-research-falcon.md`. The perplexity-lite
+  fallback 401'd on quota but was not needed. The falcon report is genuine model output and
+  corroborates this review (conserved DYF-5/LF4/ICK-CILK1/MAK/LmxMPK9 module; upstream
+  DYF-18/CCRK activation; ICK phosphorylation of kinesin-2 KIF3A Thr674). It reinforces the
+  two knowledge gaps (substrate set; kinesin-II->OSM-3 handoff) and the upstream-activation
+  suggested question. The review's graded conclusions remain grounded in the primary
+  literature below plus UniProt (B3WFY8) and GOA; no deep-research file was fabricated.
 - Reference-validation caveat: the repo reference validator only sees each paper's
   PubMed ABSTRACT (not the full text cached in `publications/`). All `supporting_text`
   quotes here were therefore drawn from abstract text (verbatim, whitespace/punctuation-
