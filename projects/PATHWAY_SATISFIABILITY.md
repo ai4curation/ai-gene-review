@@ -77,17 +77,34 @@ up *in this context*, and here is the gene and place where it fails."
 ### Between organs (GTEx bulk tissue)
 Evaluating the human gluconeogenesis module across 54 tissues recovers exactly the textbook
 gluconeogenic set — **liver, kidney cortex, small intestine** — with no false positives and
-no misses. Every non-gluconeogenic tissue fails at the *same* gate atom, the gluconeogenic
-glucose-6-phosphatase catalytic subunit, and the engine resists the ubiquitous paralog
-(expressed everywhere but not gluconeogenic). The gate is graded: raising the expression
-threshold drops tissues in the order liver → kidney → intestine, matching their known
-quantitative contribution.
+no misses (Figure 1). Every non-gluconeogenic tissue fails at the *same* gate atom, the
+gluconeogenic glucose-6-phosphatase catalytic subunit `G6PC1`, and the engine resists the
+ubiquitous paralog `G6PC3` (expressed everywhere but not gluconeogenic). The gate is graded:
+raising the expression threshold drops tissues in the order liver → kidney → intestine, matching
+their known quantitative contribution.
+
+![Across 54 GTEx tissues, G6PC1 expression with the three satisfiable tissues highlighted](PATHWAY_SATISFIABILITY/fig-tissues.svg)
+
+*Figure 1. Across all 54 GTEx tissues: median expression of `G6PC1`, the terminal gate gene, on a
+log axis. **Green** = tissues where the whole gluconeogenesis module is satisfiable — exactly the
+three that clear the gate threshold (dashed line). Every grey tissue fails at that same step, and
+the near-ubiquitous look-alike `G6PC3` is correctly not accepted for it. Colouring is derived from
+the satisfiability engine, not annotated by hand.*
 
 ### Within an organ (Halpern 2017 liver zonation)
 Reusing the same engine with a liver-lobule zonation oracle, the gluconeogenesis route is
 satisfiable only toward the **periportal** pole and is blocked at the **pericentral** pole —
-at the same gate atom. The porto-central orientation is inferred from landmark genes (not
-assumed), so the periportal restriction is a derivation, not a restatement.
+at the same gate atom (Figure 2). The porto-central orientation is inferred from landmark genes
+(not assumed), so the periportal restriction is a derivation, not a restatement.
+
+![The liver lobule from pericentral to periportal, with the satisfiable zone shaded and the pericentral pole blocked at G6PC1](PATHWAY_SATISFIABILITY/fig-lobule.svg)
+
+*Figure 2. The same engine, one scale down: the liver lobule (Halpern 2017, nine reconstructed
+layers, pericentral → periportal). Bars are `G6pc` expression as a fraction of its own peak;
+**green** layers are where gluconeogenesis is satisfiable. The pericentral pole is blocked at the
+very same gate atom, `G6PC1`. Because the porto-central axis is oriented from independent landmark
+genes, the periportal restriction is a result, not an assumption — the identical gate operates
+between organs (Figure 1) and within one.*
 
 ### Which precursor? (substrate-entry routes)
 A precursor-resolved module makes lactate / alanine (via pyruvate) and glycerol (bypassing
