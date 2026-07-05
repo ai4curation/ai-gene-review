@@ -123,7 +123,7 @@ section plus domain/orthology-grounded (not invented) reasoning.
 
 ## Provenance index
 - [PMID:19300474] Hess et al. 2009 PLoS Genet — mitochondrial biogenesis / petite frequency screen; source of DISRUPTION PHENOTYPE. Full text cached (abstract + body; AIM33 in supp tables only).
-- [PMID:16847258] Kim et al. 2006 PNAS — global membrane topology map; AIM33 topology model. Full text cached.
+- [PMID:16847258] Kim et al. 2006 PNAS — global membrane topology map; AIM33 topology model. Cache has abstract plus a partial full-text (Results intro) section only, not the complete article; the quoted supporting_text is a verbatim substring of that cached text.
 - [PMID:9169872] Bowman et al. 1997 Nature — chromosome XIII sequence (genome). Abstract only.
 - [PMID:24374639] Engel et al. 2014 G3 — reference genome reannotation. Full text cached.
 - SGD S000004552 (WebFetch), NCBI Gene 854887 (WebFetch), WebSearch — family/paralog/ortholog and additional phenotypes.
